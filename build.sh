@@ -3,7 +3,7 @@
 rm -rf bin
 mkdir bin
 cd src
-gcc -Wall -I /home/aldrik/Projects/project-base/src/ -g -rdynamic -Wno-unused-variable text_search.c -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -lasound
+gcc -Wall -g -rdynamic -Wno-unused-variable text_search.c -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -lasound
 
 if [ $? -ne 0 ]; then
 	cd ../
