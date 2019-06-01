@@ -53,7 +53,7 @@ file_content platform_read_file_content(char *path, const char *mode);
 void platform_destroy_file_content(file_content *content);
 bool get_active_directory(char *buffer);
 bool set_active_directory(char *path);
-void platform_list_files(array *list, char *start_dir, char *filter, bool recursive);
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer);
 
 u64 platform_get_time(time_type time_type, time_precision precision);

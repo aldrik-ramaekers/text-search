@@ -12,9 +12,10 @@ u64 find_duration_us = 0;
 char *find_status_text;
 bool show_error_message = false;
 array errors;
-bool found_matches = false;
+bool found_file_matches = false;
 s32 search_result_source_dir_len;
 s32 files_searched = 0;
+bool match_found = false;
 
 image *search_img;
 image *error_img;
@@ -25,27 +26,61 @@ font *font_mini;
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): make constant ui max input len and check everywhere, also in platform layer.
 
+char *text_to_find;
+
+static void *find_text_in_file_t(void *arg)
+{
+	text_match *match = arg;
+	
+	file_content content = platform_read_file_content(match->file.path, "r");
+	
+	if (content.content && strstr(content.content, text_to_find) != 0)
+	{
+		match_found = true;
+		match->match_count++;
+	}
+	
+	platform_destroy_file_content(&content);
+	
+	files_searched++;
+	
+	// TODO(Aldrik): can this be moved down to thread loop?
+	sprintf(find_status_text, "%.0f%% of files processed",  (files_searched/(float)files.length)*100);
+	
+	return 0;
+}
+
 static void* find_text_in_files_t(void *arg)
 {
-	found_matches = false;
+	files_searched = 0;
+	found_file_matches = true;
+	match_found = false;
 	
 	u64 start_f = platform_get_time(TIME_FULL, TIME_US);
+	array threads = array_create(sizeof(thread));
 	
-	char *text_to_find = arg;
+	text_to_find = arg;
 	for (s32 i = 0; i < files.length; i++)
 	{
-		char **full_path = array_at(&files, i);
-		files_searched++;
-		//file_content content = platform_read_file_content(*full_path, "r");
-		//platform_destroy_file_content(&content);
+		text_match *match = array_at(&files, i);
+		match->match_count = 0;
+		
+		thread new_thr = thread_start(find_text_in_file_t, match);
+		array_push(&threads, &new_thr);
 	}
+	
+	for (s32 i = 0; i < threads.length; i++)
+	{
+		thread *thr = array_at(&threads, i);
+		thread_join(thr);
+	}
+	
 	u64 end_f = platform_get_time(TIME_FULL, TIME_US);
 	
 	find_duration_us = end_f - start_f;
 	sprintf(find_status_text, "%d out of %d files matched in %.2fms", files.length, files.length, find_duration_us/1000.0);
-	printf("%s\n", find_status_text);
 	
-	found_matches = true;
+	array_destroy(&threads);
 	
 	return 0;
 }
@@ -73,22 +108,49 @@ static void render_result(platform_window *window, font *font_small)
 	s32 y = global_ui_context.layout.offset_y;
 	s32 h = 24;
 	
-	s32 render_y = y - 8;
-	s32 render_h = window->height - 30 - render_y; // TODO(Aldrik): make constants..
+	s32 render_y = y - WIDGET_PADDING;
+	s32 render_h = window->height - 30 - render_y; // TODO(Aldrik): make constants.. 30 is status bar height
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
-	if (files.length)
+	if (match_found)
 	{
-		render_rectangle(0, y-8, (files_searched/files.length)*window->width, 20, rgb(0,200,0));
+		render_rectangle(0, y-WIDGET_PADDING, (files_searched/(float)files.length)*window->width, 20, rgb(0,200,0));
 		y += 11;
+		
+		s32 path_width = window->width / 2;
+		s32 pattern_width = window->width / 4;
+		
+		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+		
+		render_rectangle(-1, y+1, window->width+2, h-2, rgb(225,225,225));
+		
+		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, "File path", global_ui_context.style.foreground);
+		
+		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, "File pattern", global_ui_context.style.foreground);
+		
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, "# Matches", global_ui_context.style.foreground);
+		
+		y += h-1;
 		
 		for (s32 i = 0; i < files.length; i++)
 		{
 			text_match *match = array_at(&files, i);
-			render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
-			render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, match->file.path, global_ui_context.style.foreground);
 			
-			y += h-1;
+			if (match->match_count)
+			{
+				render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+				render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, match->file.path + search_result_source_dir_len, global_ui_context.style.foreground);
+				
+				render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, match->file.matched_filter, global_ui_context.style.foreground);
+				
+				char snum[10];
+				sprintf(snum, "%d", match->match_count);
+				
+				render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, snum, global_ui_context.style.foreground);
+				
+				
+				y += h-1;
+			}
 		}
 	}
 	else
@@ -151,14 +213,16 @@ static void render_info(platform_window *window, font *font_small)
 	}
 }
 
-static void prepare_search_directory_path(char *path, s32 len)
+static s32 prepare_search_directory_path(char *path, s32 len)
 {
 	// TODO(Aldrik): check max length
 	if (path[len-1] != '/')
 	{
 		path[len] = '/';
 		path[len+1] = 0;
+		return len+1;
 	}
+	return len;
 }
 
 static void clear_errors()
@@ -170,7 +234,7 @@ static void clear_errors()
 static void set_error(char *message)
 {
 	show_error_message = true;
-	found_matches = false;
+	found_file_matches = false;
 	
 	array_push(&errors, message);
 }
@@ -232,6 +296,8 @@ int main(int argc, char **argv)
 	strcpy(textbox_file_filter.buffer, "*.c");
 	strcpy(textbox_search_text.buffer, "hello");
 #endif
+	
+	bool done_finding_files = false;
 	
 	while(window.is_open) {
 		platform_handle_events(&window, &mouse, &keyboard);
@@ -295,6 +361,8 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
+					found_file_matches = false;
+					done_finding_files = false;
 					reset_status_text();
 					clear_errors();
 					
@@ -320,14 +388,13 @@ int main(int argc, char **argv)
 					if (continue_search)
 					{
 						search_result_source_dir_len = strlen(textbox_path.buffer);
-						prepare_search_directory_path(textbox_path.buffer, search_result_source_dir_len);
+						search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
+																					 search_result_source_dir_len);
 						
 						files.length = 0;
 						u64 start_f = platform_get_time(TIME_FULL, TIME_US);
-						platform_list_files(&files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state);
-						printf("file find time: %luus [%d files]\n", platform_get_time(TIME_FULL, TIME_US) - start_f, files.length);
-						
-						find_text_in_files(textbox_search_text.buffer);
+						platform_list_files(&files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
+											&done_finding_files);
 					}
 				}
 				ui_push_checkbox(&checkbox_recursive, "Folders");
@@ -339,11 +406,17 @@ int main(int argc, char **argv)
 		ui_end();
 		// end ui
 		
+		if (done_finding_files)
+		{
+			find_text_in_files(textbox_search_text.buffer);
+			done_finding_files = false;
+		}
+		
 		// draw info or results
 		{
 			render_status_bar(&window, font_small);
 			
-			if (!found_matches)
+			if (!found_file_matches)
 			{
 				render_info(&window, font_small);
 			}

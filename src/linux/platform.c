@@ -903,8 +903,26 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	}
 }
 
-void platform_list_files(array *list, char *start_dir, char *pattern, bool recursive)
+typedef struct t_list_file_args
 {
+	array *list;
+	char *start_dir;
+	char *pattern;
+	bool recursive;
+	bool *state;
+} list_file_args;
+
+void* platform_list_files_t_t(void *args)
+{
+	list_file_args *info = args;
+	platform_list_files_d(info->list, info->start_dir, info->pattern, info->recursive);
+	return 0;
+}
+
+void *platform_list_files_t(void *args)
+{
+	list_file_args *info = args;
+	
 	// TODO(Aldrik): hardcoded max filter length
 	s32 max_filter_len = 60;
 	
@@ -912,6 +930,11 @@ void platform_list_files(array *list, char *start_dir, char *pattern, bool recur
 	
 	char current_filter[max_filter_len];
 	s32 filter_len = 0;
+	
+	array *list = info->list;
+	char *start_dir = info->start_dir;
+	char *pattern = info->pattern;
+	bool recursive = info->recursive;
 	
 	while(*pattern)
 	{
@@ -936,11 +959,47 @@ void platform_list_files(array *list, char *start_dir, char *pattern, bool recur
 	current_filter[filter_len] = 0;
 	array_push(&filters, current_filter);
 	
+	array threads = array_create(sizeof(thread));
+	
 	for (s32 i = 0; i < filters.length; i++)
 	{
 		char *filter = array_at(&filters, i);
-		platform_list_files_d(list, start_dir, filter, recursive);
+		
+		list_file_args *args_2 = malloc(sizeof(list_file_args));
+		args_2->list = list;
+		args_2->start_dir = start_dir;
+		args_2->pattern = filter;
+		args_2->recursive = recursive;
+		
+		thread thr = thread_start(platform_list_files_t_t, args_2);
+		array_push(&threads, &thr);
 	}
 	
+	for (s32 i = 0; i < threads.length; i++)
+	{
+		thread* thr = array_at(&threads, i);
+		thread_join(thr);
+	}
+	
+	*(info->state) = !(*info->state);
+	
+	array_destroy(&threads);
+	
 	array_destroy(&filters);
+	
+	return 0;
+}
+
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
+{
+	
+	list_file_args *args = malloc(sizeof(list_file_args));
+	args->list = list;
+	args->start_dir = start_dir;
+	args->pattern = filter;
+	args->recursive = recursive;
+	args->state = state;
+	
+	thread thr = thread_start(platform_list_files_t, args);
+	thread_detach(&thr);
 }
