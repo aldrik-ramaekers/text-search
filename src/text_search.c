@@ -15,6 +15,7 @@ array errors;
 bool found_file_matches = false;
 s32 search_result_source_dir_len;
 s32 files_searched = 0;
+s32 files_matched = 0;
 bool match_found = false;
 
 image *search_img;
@@ -38,6 +39,7 @@ static void *find_text_in_file_t(void *arg)
 	{
 		match_found = true;
 		match->match_count++;
+		files_matched++;
 	}
 	
 	platform_destroy_file_content(&content);
@@ -52,10 +54,6 @@ static void *find_text_in_file_t(void *arg)
 
 static void* find_text_in_files_t(void *arg)
 {
-	files_searched = 0;
-	found_file_matches = true;
-	match_found = false;
-	
 	u64 start_f = platform_get_time(TIME_FULL, TIME_US);
 	array threads = array_create(sizeof(thread));
 	
@@ -78,7 +76,7 @@ static void* find_text_in_files_t(void *arg)
 	u64 end_f = platform_get_time(TIME_FULL, TIME_US);
 	
 	find_duration_us = end_f - start_f;
-	sprintf(find_status_text, "%d out of %d files matched in %.2fms", files.length, files.length, find_duration_us/1000.0);
+	sprintf(find_status_text, "%d out of %d files matched in %.2fms", files_matched, files.length, find_duration_us/1000.0);
 	
 	array_destroy(&threads);
 	
@@ -87,7 +85,11 @@ static void* find_text_in_files_t(void *arg)
 
 static void find_text_in_files(char *text_to_find)
 {
-	//find_text_in_files_t(text_to_find);
+	files_matched = 0;
+	files_searched = 0;
+	found_file_matches = true;
+	match_found = false;
+	
 	thread thr = thread_start(find_text_in_files_t, text_to_find);
 	thread_detach(&thr);
 }

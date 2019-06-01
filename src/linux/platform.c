@@ -816,17 +816,27 @@ struct open_dialog_args
 static void* platform_open_file_dialog_d(void *data)
 {
 	struct open_dialog_args *args = data;
+	
+	FILE *f;
+	
+	char current_val[1024];
+	strcpy(current_val, args->buffer);
+	
 	if (args->type == OPEN_FILE)
 	{
-		FILE *f = popen("zenity --file-selection", "r");
-		fgets(args->buffer, 1024, f);
-		s32 len = strlen(args->buffer);
-		args->buffer[len-1] = 0;
+		f = popen("zenity --file-selection", "r");
 	}
 	else
 	{
-		FILE *f = popen("zenity --file-selection --directory", "r");
-		fgets(args->buffer, 1024, f);
+		f = popen("zenity --file-selection --directory", "r");
+	}
+	
+	char buffer[1024];
+	fgets(buffer, 1024, f);
+	
+	if (strcmp(buffer, current_val) == 0)
+	{
+		strcpy(args->buffer, buffer);
 		s32 len = strlen(args->buffer);
 		args->buffer[len-1] = 0;
 	}
@@ -838,7 +848,7 @@ static void *platform_open_file_dialog_dd(void *arg)
 {
 	thread thr = thread_start(platform_open_file_dialog_d, arg);
 	thread_join(&thr);
-	
+	free(arg);
 	return 0;
 }
 
@@ -916,6 +926,7 @@ void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
 	platform_list_files_d(info->list, info->start_dir, info->pattern, info->recursive);
+	free(info);
 	return 0;
 }
 
@@ -986,6 +997,7 @@ void *platform_list_files_t(void *args)
 	array_destroy(&threads);
 	
 	array_destroy(&filters);
+	free(args);
 	
 	return 0;
 }
