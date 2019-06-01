@@ -12,6 +12,7 @@ typedef struct t_array
 
 array array_create(u16 entry_size);
 int array_push(array *array, void *data);
+int array_push_size(array *array, void *data, s32 data_size);
 void array_remove_at(array *array, u32 at);
 void array_remove(array *array, void *ptr);
 void array_remove_by(array *array, void *data);

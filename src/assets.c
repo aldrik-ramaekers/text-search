@@ -118,9 +118,9 @@ bool assets_queue_worker_load_font(font *font)
 	}
 	
 	// ascii 32 - 126
-	int b_w = 95*font->size; /* bitmap width */
-    int b_h = font->size; /* bitmap height */
-	int l_h = font->size; /* line height */
+	int b_w = 95*(font->size*2); /* bitmap width */
+    int b_h = font->size*2; /* bitmap height */
+	int l_h = font->size*2; /* line height */
 	
 	font->palette_width = b_w;
 	font->palette_height = b_h;
@@ -156,7 +156,7 @@ bool assets_queue_worker_load_font(font *font)
         /* how wide is this character */
         int ax;
         stbtt_GetCodepointHMetrics(&info, i, &ax, 0);
-        x += font->size;
+        x += font->size*2;
         
 		font->glyph_widths[i-32] = (ax*scale);
 	}

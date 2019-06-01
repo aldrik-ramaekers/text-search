@@ -95,6 +95,7 @@
 #include "camera.h"
 #include "audio.h"
 #include "ui.h"
+#include "string_utils.h"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.h"
@@ -122,6 +123,7 @@
 #include "render.c"
 #include "camera.c"
 #include "ui.c"
+#include "string_utils.c"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.c"

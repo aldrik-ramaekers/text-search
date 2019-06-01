@@ -341,7 +341,23 @@ static void create_key_tables(platform_window window)
 platform_window platform_open_window(char *name, u16 width, u16 height)
 {
 	platform_window window;
-	GLint att[] = { GLX_RGBA, GLX_DEPTH_SIZE, 24, GLX_DOUBLEBUFFER, None };
+	static int att[] =
+    {
+		GLX_X_RENDERABLE    , True,
+		GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
+		GLX_RENDER_TYPE     , GLX_RGBA_BIT,
+		GLX_X_VISUAL_TYPE   , GLX_TRUE_COLOR,
+		GLX_RED_SIZE        , 8,
+		GLX_GREEN_SIZE      , 8,
+		GLX_BLUE_SIZE       , 8,
+		GLX_ALPHA_SIZE      , 8,
+		GLX_DEPTH_SIZE      , 24,
+		GLX_STENCIL_SIZE    , 8,
+		GLX_DOUBLEBUFFER    , True,
+		//GLX_SAMPLE_BUFFERS  , 1,
+		//GLX_SAMPLES         , 4,
+		None
+    };
 	
 	window.display = XOpenDisplay(NULL);
 	
@@ -351,7 +367,33 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	
 	window.parent = DefaultRootWindow(window.display);
 	
-	window.visual_info = glXChooseVisual(window.display, 0, att);
+	int fbcount;
+	GLXFBConfig* fbc = glXChooseFBConfig(window.display, DefaultScreen(window.display), att, &fbcount);
+	int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
+	
+	int i;
+	for (i=0; i<fbcount; ++i)
+	{
+		XVisualInfo *vi = glXGetVisualFromFBConfig(window.display, fbc[i] );
+		if ( vi )
+		{
+			int samp_buf, samples;
+			glXGetFBConfigAttrib(window.display, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf );
+			glXGetFBConfigAttrib(window.display, fbc[i], GLX_SAMPLES       , &samples  );
+			
+			if ( best_fbc < 0 || (samp_buf && samples > best_num_samp))
+				best_fbc = i, best_num_samp = samples;
+			if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
+				worst_fbc = i, worst_num_samp = samples;
+		}
+		XFree( vi );
+	}
+	
+	GLXFBConfig bestFbc = fbc[ best_fbc ];
+	XFree( fbc );
+	
+	XVisualInfo *vi = glXGetVisualFromFBConfig(window.display, bestFbc );
+	window.visual_info = vi;
 	
 	if(window.visual_info == NULL) {
 		return window;
@@ -810,11 +852,15 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer)
 	thread_detach(&thr);
 }
 
-void platform_list_files(array *list, char *start_dir, bool recursive)
+void platform_list_files_d(array *list, char *start_dir, char *filter, bool recursive)
 {
 	assert(list);
 	
 	// TODO(Aldrik): should we include symbolic links?
+	
+	s32 len = strlen(filter);
+	
+	char subdirname_buf[PATH_MAX];
 	
 	DIR *d;
 	struct dirent *dir;
@@ -828,17 +874,73 @@ void platform_list_files(array *list, char *start_dir, bool recursive)
 				if ((strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0))
 					continue;
 				
+				strcpy(subdirname_buf, start_dir);
+				strcat(subdirname_buf, dir->d_name);
+				strcat(subdirname_buf, "/");
+				
 				// do recursive search
-				platform_list_files(list, dir->d_name, recursive);
+				platform_list_files_d(list, subdirname_buf, filter, recursive);
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.
 			else if (dir->d_type == DT_REG || dir->d_type == DT_UNKNOWN)
 			{
-				char *buf = malloc(PATH_MAX);
-				realpath(dir->d_name, buf);
-				array_push(list, &buf);
+				// check if name matches pattern
+				if (string_match(filter, dir->d_name))
+				{
+					char *buf = malloc(PATH_MAX);
+					//realpath(dir->d_name, buf);
+					sprintf(buf, "%s%s",start_dir, dir->d_name);
+					
+					found_file f;
+					f.path = buf;
+					f.matched_filter = malloc(len);
+					strcpy(f.matched_filter, filter);
+					array_push_size(list, &f, sizeof(found_file));
+				}
 			}
 		}
 		closedir(d);
 	}
+}
+
+void platform_list_files(array *list, char *start_dir, char *pattern, bool recursive)
+{
+	// TODO(Aldrik): hardcoded max filter length
+	s32 max_filter_len = 60;
+	
+	array filters = array_create(max_filter_len);
+	
+	char current_filter[max_filter_len];
+	s32 filter_len = 0;
+	
+	while(*pattern)
+	{
+		char ch = *pattern;
+		
+		if (ch == ',')
+		{
+			current_filter[filter_len] = 0;
+			array_push(&filters, current_filter);
+			filter_len = 0;
+		}
+		else
+		{
+			// TODO(Aldrik): show error and dont continue search
+			assert(filter_len < 60);
+			
+			current_filter[filter_len++] = ch;
+		}
+		
+		pattern++;
+	}
+	current_filter[filter_len] = 0;
+	array_push(&filters, current_filter);
+	
+	for (s32 i = 0; i < filters.length; i++)
+	{
+		char *filter = array_at(&filters, i);
+		platform_list_files_d(list, start_dir, filter, recursive);
+	}
+	
+	array_destroy(&filters);
 }

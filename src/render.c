@@ -106,15 +106,15 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	{
 		char ch = *text;
 		char ch_next = *(text+1);
-		s32 offsetx = font->size*(ch-32);
+		s32 offsetx = (font->size*2)*(ch-32);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
 		float sx0, sy0, sx1, sy1;
 		sx0 = ipw*offsetx;
 		sy0 = 0;
-		sx1 = ipw*(offsetx+font->size);
-		sy1 = iph*font->size;
+		sx1 = ipw*(offsetx+font->size*2);
+		sy1 = iph*font->size*2;
 		
 		s32 width = font->glyph_widths[ch-32];
 		glTexCoord2f(sx0,sy0); glVertex3i(x_,y, render_depth);
@@ -133,7 +133,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		//}
 		
 		if (ch != '.')
-			x_+=width;//+(kern*font->scale);
+			x_+=width/2;//+(kern*font->scale);
 		else
 			x_+=font->size/4;
 		
@@ -174,15 +174,15 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	{
 		char ch = *text;
 		char ch_next = *(text+1);
-		s32 offsetx = font->size*(ch-32);
+		s32 offsetx = (font->size*2)*(ch-32);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
 		float sx0, sy0, sx1, sy1;
 		sx0 = ipw*offsetx;
 		sy0 = 0;
-		sx1 = ipw*(offsetx+font->size);
-		sy1 = iph*font->size;
+		sx1 = ipw*(offsetx+font->size*2);
+		sy1 = iph*font->size*2;
 		
 		s32 width = font->glyph_widths[ch-32];
 		
@@ -191,7 +191,7 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 		glTexCoord2f(sx1,sy1); glVertex3i(x_,y_+font->size, render_depth);
 		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y_+font->size, render_depth);
 		
-		y_+=width;
+		y_+=width/2;
 		
 		++text;
 	}
@@ -229,20 +229,20 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	//glTexCoord2i(1, 0); glVertex2i(x+font->palette_width, y);
 	
 	s32 x_ = x;
-	s32 y_ = y;
+	s32 y_ = y + font->size;
 	while(*text)
 	{
 		char ch = *text;
 		char ch_next = *(text+1);
-		s32 offsetx = font->size*(ch-32);
+		s32 offsetx = (font->size*2)*(ch-32);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
 		float sx0, sy0, sx1, sy1;
 		sx0 = ipw*offsetx;
 		sy0 = 0;
-		sx1 = ipw*(offsetx+font->size);
-		sy1 = iph*font->size;
+		sx1 = ipw*(offsetx+font->size*2);
+		sy1 = iph*font->size*2;
 		
 		s32 width = font->glyph_widths[ch-32];
 		
@@ -262,7 +262,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		//}
 		
 		if (ch != '.')
-			x_+=width;//+(kern*font->scale);
+			x_+=width / 2;//+(kern*font->scale);
 		else
 			x_+=font->size/4;
 		
@@ -303,7 +303,7 @@ s32 calculate_text_width(font *font, char *text)
 		s32 width = font->glyph_widths[ch-32];
 		
 		if (ch != '.')
-			x+=width;//+(kern*font->scale);
+			x+=width / 2;//+(kern*font->scale);
 		else
 			x+=font->size/4;
 		
@@ -326,7 +326,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];
 		
-		x_ += width;
+		x_ += width / 2;
 		
 		if (x_ > cutoff_width)
 		{

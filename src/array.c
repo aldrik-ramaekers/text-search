@@ -38,6 +38,34 @@ int array_push(array *array, void *data)
 	return result;
 }
 
+int array_push_size(array *array, void *data, s32 data_size)
+{
+	assert(array);
+	assert(data);
+	
+	mutex_lock(&array->mutex);
+	array->length++;
+	
+	if (!array->data)
+	{
+		array->data = malloc(array->entry_size);
+		array->reserved_length = 1;
+	}
+	
+	if (array->reserved_length < array->length)
+	{
+		array->reserved_length = array->length;
+		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+	}
+	
+	memcpy(array->data + ((array->length-1) * array->entry_size),
+		   data, data_size);
+	
+	s32 result = array->length -1;
+	mutex_unlock(&array->mutex);
+	return result;
+}
+
 void array_reserve(array *array, u32 reserve_count)
 {
 	assert(array);

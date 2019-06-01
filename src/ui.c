@@ -368,10 +368,11 @@ bool ui_push_checkbox(checkbox_state *state, char *title)
 {
 	bool result = false;
 	
+	s32 spacing_y = (BLOCK_HEIGHT - CHECKBOX_SIZE)/2;
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
-	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
 	s32 text_x = x + CHECKBOX_SIZE + WIDGET_PADDING;
-	s32 text_y = y + (CHECKBOX_SIZE/2) - (global_ui_context.font_small->size/2);
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
 	s32 total_w = calculate_text_width(global_ui_context.font_small, title) +
 		CHECKBOX_SIZE + WIDGET_PADDING + WIDGET_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
