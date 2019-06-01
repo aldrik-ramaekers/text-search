@@ -35,7 +35,7 @@ static void *find_text_in_file_t(void *arg)
 	
 	file_content content = platform_read_file_content(match->file.path, "r");
 	
-	if (content.content && strstr(content.content, text_to_find) != 0)
+	if (content.content && string_contains(content.content, text_to_find) != 0)
 	{
 		match_found = true;
 		match->match_count++;
@@ -248,6 +248,36 @@ static void reset_status_text()
 
 int main(int argc, char **argv)
 {
+#if 0
+	printf("[lll][llll*] : %d\n", string_contains("lll", "llll*"));
+	printf("[lllll][l*lop] : %d\n", string_contains("lllll", "l*lop"));
+	printf("[22lllll][l*l] : %d\n", string_contains("22lllll", "l*l"));
+	
+	printf("[hello world][h?lo] : %d\n", string_contains("hello world", "h?lo"));
+	printf("\n");
+	printf("[22lllll pi23hjp rbksje LSKJDh l][LS*] : %d\n",
+		   string_contains("22lllll pi23hjp rbksje LSKJDh l", "LS*"));
+	printf("[22lllll lal][l*l] : %d\n", string_contains("22lllll lal", "l*l"));
+	printf("[22lllll][*l*l] : %d\n", string_contains("lllll", "*l*l"));
+	printf("[hello world][hello] : %d\n", string_contains("hello world", "hello"));
+	printf("[hello world][h?llo] : %d\n", string_contains("hello world", "h?llo"));
+	printf("[hello world][h????] : %d\n", string_contains("hello world", "h????"));
+	printf("[hello world][h*lo] : %d\n", string_contains("hello world", "h*lo"));
+	printf("[hello world][*] : %d\n", string_contains("hello world", "*"));
+	printf("[hello world][h*] : %d\n", string_contains("hello world", "h*"));
+	printf("[hello world][*o] : %d\n", string_contains("hello world", "*o"));
+	printf("[hello world][h*o] : %d\n", string_contains("hello world", "h*o"));
+	printf("[hello world][*lo] : %d\n", string_contains("hello world", "*lo"));
+	printf("[hello world][hel*lo] : %d\n", string_contains("hello world", "hel*lo"));
+	
+	printf("[lllll][l*l] : %d\n", string_contains("lllll", "l*l"));
+	printf("[llllllll][l*llll] : %d\n", string_contains("lllll", "l*llll"));
+	printf("[llllllll][llll*l] : %d\n", string_contains("lllll", "llll*l"));
+	printf("[llllllll][*] : %d\n", string_contains("lllll", "*"));
+	
+	printf("[lllll][l*lll] : %d\n", string_contains("lllll", "l*lll"));
+#endif
+	
 	platform_window window = platform_open_window("Text-search", 800, 600);
 	
 	assets_create();
@@ -328,7 +358,7 @@ int main(int argc, char **argv)
 					if (ui_push_menu_item("Open", "Ctrl + O")) { }
 					if (ui_push_menu_item("Find", "Ctrl + F")) { }
 					ui_push_menu_item_separator();
-					if (ui_push_menu_item("Close", "Ctrl + C")) { }
+					if (ui_push_menu_item("Exit", "Ctrl + C")) { window.is_open = false; }
 				}
 				if (ui_push_menu("Options"))
 				{
@@ -351,7 +381,6 @@ int main(int argc, char **argv)
 				}
 				
 				ui_push_textbox(&textbox_file_filter, "File filter...");
-				
 			}
 			ui_block_end();
 			
