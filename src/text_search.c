@@ -254,7 +254,13 @@ int main(int argc, char **argv)
 	printf("[22lllll][l*l] : %d\n", string_contains("22lllll", "l*l"));
 	
 	printf("[hello world][h?lo] : %d\n", string_contains("hello world", "h?lo"));
+	printf("[\"hello sailor\"][sailor] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "sailor"));
+	printf("[\"hello sailor\"][*sailor] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor"));
 	printf("\n");
+	
+	printf("[\"hello sailor\"][*sailor\"] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor\""));
+	printf("[\"hello sailor\"][*sailor*] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor*"));
+	printf("[\"hello sailor\"][sailor*] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "sailor*"));
 	printf("[22lllll pi23hjp rbksje LSKJDh l][LS*] : %d\n",
 		   string_contains("22lllll pi23hjp rbksje LSKJDh l", "LS*"));
 	printf("[22lllll lal][l*l] : %d\n", string_contains("22lllll lal", "l*l"));
@@ -272,10 +278,17 @@ int main(int argc, char **argv)
 	
 	printf("[lllll][l*l] : %d\n", string_contains("lllll", "l*l"));
 	printf("[llllllll][l*llll] : %d\n", string_contains("lllll", "l*llll"));
+	printf("[llllllll][l*lll] : %d\n", string_contains("lllll", "l*lll"));
 	printf("[llllllll][llll*l] : %d\n", string_contains("lllll", "llll*l"));
 	printf("[llllllll][*] : %d\n", string_contains("lllll", "*"));
+	printf("[lllll][l?lll] : %d\n", string_contains("lllll", "l?lll"));
 	
-	printf("[lllll][l*lll] : %d\n", string_contains("lllll", "l*lll"));
+	printf("[lllll][lllll] : %d\n", string_contains("lllll", "lllll"));
+	printf("[lllll][*llll] : %d\n", string_contains("lllll", "*llll"));
+	printf("[lllll][llll*] : %d\n", string_contains("lllll", "llll*"));
+	printf("[lllll][*llll*] : %d\n", string_contains("lllll", "*llll*"));
+	printf("[lllll][*lllll*] : %d\n", string_contains("lllll", "*lllll*"));
+	printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
 #endif
 	
 	platform_window window = platform_open_window("Text-search", 800, 600);

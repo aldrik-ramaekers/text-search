@@ -61,6 +61,14 @@ int array_push_size(array *array, void *data, s32 data_size)
 	memcpy(array->data + ((array->length-1) * array->entry_size),
 		   data, data_size);
 	
+	// fill remaining space with 0
+	if (array->entry_size > data_size)
+	{
+		s32 remaining = array->entry_size - data_size;
+		memset(array->data + ((array->length-1) * array->entry_size) + data_size,
+			   0, remaining);
+	}
+	
 	s32 result = array->length -1;
 	mutex_unlock(&array->mutex);
 	return result;
@@ -132,11 +140,14 @@ void array_remove_by(array *array, void *data)
 
 void *array_at(array *array, u32 at)
 {
+	mutex_lock(&array->mutex);
 	assert(array);
 	assert(at >= 0);
 	assert(at < array->length);
 	
-	return array->data + (at * array->entry_size);
+	void *result =  array->data + (at * array->entry_size);
+	mutex_unlock(&array->mutex);
+	return result;
 }
 
 void array_destroy(array *array)
