@@ -7,6 +7,7 @@ typedef struct t_file_content
 {
 	s64 content_length;
 	void *content;
+	s16 file_error;
 } file_content;
 
 typedef enum t_time_type
@@ -44,6 +45,20 @@ typedef struct t_found_file
 	char *matched_filter;
 	char *path;
 } found_file;
+
+typedef enum t_file_open_error
+{
+	FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS = 1,
+	FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM = 2,
+	FILE_ERROR_NO_ACCESS = 3,
+	FILE_ERROR_NOT_FOUND = 4,
+	FILE_ERROR_CONNECTION_ABORTED = 5,
+	FILE_ERROR_CONNECTION_REFUSED = 6,
+	FILE_ERROR_NETWORK_DOWN = 7,
+	FILE_ERROR_REMOTE_IO_ERROR = 8,
+	FILE_ERROR_STALE = 9, // NFS server file is removed/renamed
+	FILE_ERROR_GENERIC = 10,
+} file_open_error;
 
 platform_window platform_open_window(char *name, u16 width, u16 height);
 void platform_close_window(platform_window *window);

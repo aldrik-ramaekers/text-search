@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <limits.h>
 #include <dirent.h> 
+#include <errno.h>
 
 struct t_platform_window
 {
@@ -46,9 +47,38 @@ file_content platform_read_file_content(char *path, const char *mode)
 	file_content result;
 	result.content = 0;
 	result.content_length = 0;
+	result.file_error = 0;
 	
 	FILE *file = fopen(path, mode);
-	if (!file) goto done_failure;
+	if (!file) 
+	{
+		// TODO(Aldrik): maybe handle more of these so we can give users more info about what happened.
+		// http://man7.org/linux/man-pages/man3/errno.3.html
+		if (errno == EMFILE)
+			result.file_error = FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS;
+		else if (errno == ENFILE)
+			result.file_error = FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM;
+		else if (errno == EACCES)
+			result.file_error = FILE_ERROR_NO_ACCESS;
+		else if (errno == EPERM)
+			result.file_error = FILE_ERROR_NO_ACCESS;
+		else if (errno == ENOENT)
+			result.file_error = FILE_ERROR_NOT_FOUND;
+		else if (errno == ECONNABORTED)
+			result.file_error = FILE_ERROR_CONNECTION_ABORTED;
+		else if (errno == ECONNREFUSED)
+			result.file_error = FILE_ERROR_CONNECTION_REFUSED;
+		else if (errno == ENETDOWN)
+			result.file_error = FILE_ERROR_NETWORK_DOWN;
+		else if (errno == EREMOTEIO)
+			result.file_error = FILE_ERROR_REMOTE_IO_ERROR;
+		else if (errno == ESTALE)
+			result.file_error = FILE_ERROR_STALE;
+		else
+			printf("ERROR: %d\n", errno);
+		
+		goto done_failure;
+	}
 	
 	fseek(file, 0 , SEEK_END);
 	int length = ftell(file);
@@ -499,6 +529,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->right_state &= ~MOUSE_CLICK;
 	mouse->left_state &= ~MOUSE_RELEASE;
 	mouse->right_state &= ~MOUSE_RELEASE;
+	mouse->move_x = 0;
+	mouse->move_y = 0;
 	
 	mouse->scroll_state = 0;
 	
@@ -515,8 +547,14 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == MotionNotify)
 		{
+			s32 x = mouse->x;
+			s32 y = mouse->y;
+			
 			mouse->x = window->event.xmotion.x;
 			mouse->y = window->event.xmotion.y;
+			
+			mouse->move_x = x - mouse->x;
+			mouse->move_y = y - mouse->y;
 		}
 		else if (window->event.type == ButtonPress)
 		{

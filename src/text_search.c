@@ -11,7 +11,7 @@ typedef struct t_text_match
 {
 	found_file file;
 	u32 match_count;
-	bool file_failure;
+	s16 file_error;
 } text_match;
 
 typedef struct t_status_bar
@@ -45,8 +45,9 @@ font *font_mini;
 
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): make constant ui max input len and check everywhere, also in platform layer.
-// TODO(Aldrik): handle file open errors.
 // TODO(Aldrik): localization.
+// TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
+// TODO(Aldrik): show loading message/icon when searching for files..
 
 char *text_to_find;
 
@@ -54,24 +55,41 @@ static void *find_text_in_file_t(void *arg)
 {
 	text_match *match = arg;
 	
-	file_content content = platform_read_file_content(match->file.path, "r");
-	
-	if (content.content)
+	file_content content;
+	try_again:
 	{
-		if (string_contains(content.content, text_to_find) != 0)
+		content = platform_read_file_content(match->file.path, "r");
+		
+		if (content.content && !content.file_error)
 		{
-			global_search_result.match_found = true;
-			match->match_count++;
-			
-			mutex_lock(&global_search_result.mutex);
-			global_search_result.files_matched++;
-			mutex_unlock(&global_search_result.mutex);
+			if (string_contains(content.content, text_to_find) != 0)
+			{
+				global_search_result.match_found = true;
+				match->match_count++;
+				
+				mutex_lock(&global_search_result.mutex);
+				global_search_result.files_matched++;
+				mutex_unlock(&global_search_result.mutex);
+			}
 		}
-	}
-	else
-	{
-		match->file_failure = true;
-		strcpy(global_status_bar.error_status_text, "One or more files could not be opened");
+		else
+		{
+			if (content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS ||
+				content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
+			{
+				// TODO(Aldrik): is this really necessary? were already hogging the entire system anyway...
+				thread_sleep(1000); 
+				
+				goto try_again;
+			}
+			
+			if (content.file_error)
+				match->file_error = content.file_error;
+			else
+				match->file_error = FILE_ERROR_GENERIC;
+			
+			strcpy(global_status_bar.error_status_text, "One or more files could not be opened");
+		}
 	}
 	
 	platform_destroy_file_content(&content);
@@ -94,7 +112,7 @@ static void* find_text_in_files_t(void *arg)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
 		match->match_count = 0;
-		match->file_failure = false;
+		match->file_error = 0;
 		
 		thread new_thr = thread_start(find_text_in_file_t, match);
 		
@@ -185,7 +203,7 @@ static void render_result(platform_window *window, font *font_small)
 		
 		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, "File pattern", global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, "# Matches", global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, "Information", global_ui_context.style.foreground);
 		/////////////////////////
 		
 		y += h-1;
@@ -201,7 +219,7 @@ static void render_result(platform_window *window, font *font_small)
 			text_match *match = array_at(&global_search_result.files, i);
 			
 			
-			if (match->match_count || match->file_failure)
+			if (match->match_count || match->file_error)
 			{
 				s32 text_y = y+scroll_y;
 				
@@ -221,7 +239,7 @@ static void render_result(platform_window *window, font *font_small)
 					
 					// state
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
-					if (!match->file_failure)
+					if (!match->file_error)
 					{
 						char snum[10];
 						sprintf(snum, "%d", match->match_count);
@@ -259,6 +277,7 @@ static void render_result(platform_window *window, font *font_small)
 			
 			s32 scroll_w = 14;
 			s32 scroll_h = 0;
+			s32 scroll_x = window->width - scroll_w;
 			
 			float scroll_h_percentage = total_h / (float)total_space;
 			scroll_h = total_space / scroll_h_percentage;
@@ -270,18 +289,18 @@ static void render_result(platform_window *window, font *font_small)
 			float scroll_y = start_y + (total_space - scroll_h) * percentage;
 			
 			// scroll background
-			render_rectangle(window->width-scroll_w,start_y,
+			render_rectangle(scroll_x,start_y,
 							 scroll_w,total_space,rgb(255,255,255));
 			
-			render_rectangle_outline(window->width-scroll_w,start_y,
+			render_rectangle_outline(scroll_x,start_y,
 									 scroll_w,total_space, 1,
 									 global_ui_context.style.border);
 			
 			// scrollbar
-			render_rectangle(window->width-scroll_w,scroll_y,
+			render_rectangle(scroll_x,scroll_y,
 							 scroll_w,scroll_h,rgb(225,225,225));
 			
-			render_rectangle_outline(window->width-scroll_w,scroll_y,
+			render_rectangle_outline(scroll_x,scroll_y,
 									 scroll_w,scroll_h, 1,
 									 global_ui_context.style.border);
 		}
