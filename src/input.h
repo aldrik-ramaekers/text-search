@@ -139,6 +139,18 @@
 #define SCROLL_UP 1
 #define SCROLL_DOWN -1
 
+
+// should be max path length
+#ifdef OS_LINUX
+#define MAX_INPUT_LENGTH 4096+1
+#define MAX_PATH_LENGTH 255+1
+#endif
+
+#ifdef OS_WINDOWS
+#define MAX_INPUT_LENGTH 32767+1
+#define MAX_PATH_LENGTH 259+1
+#endif
+
 typedef struct t_mouse_input
 {
 	s16 x;
@@ -156,6 +168,7 @@ typedef struct t_keyboard_input
 	bool take_input;
 	u32 cursor;
 	char *input_text;
+	s32 input_text_len;
 	bool keys[MAX_KEYCODE];
 } keyboard_input;
 

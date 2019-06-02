@@ -21,6 +21,7 @@ inline checkbox_state ui_create_checkbox(bool selected)
 inline textbox_state ui_create_textbox(u16 max_len)
 {
 	assert(max_len > 0);
+	assert(max_len <= MAX_INPUT_LENGTH);
 	
 	textbox_state state;
 	state.max_len = max_len;
@@ -314,15 +315,16 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	if (state->state)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
-		strcpy(state->buffer, global_ui_context.keyboard->input_text);
+		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 		
 		// draw cursor
-		char calculate_text[2500];
+		char *calculate_text = malloc(MAX_INPUT_LENGTH);
 		strcpy(calculate_text, global_ui_context.keyboard->input_text);
 		calculate_text[global_ui_context.keyboard->cursor] = 0;
 		
 		cursor_text_w = calculate_text_width(global_ui_context.font_small, 
 											 calculate_text);
+		free(calculate_text);
 		
 		cursor_x = text_x + cursor_text_w;
 		
@@ -562,8 +564,8 @@ bool ui_push_button_image(button_state *state, char *title, image *img)
 	if (global_ui_context.layout.block_height < h)
 		global_ui_context.layout.block_height = h;
 	
-	int icon_w;
-	int icon_h;
+	int icon_w = 1;
+	int icon_h = 1;
 	if (img->loaded)
 	{
 		float max_icon_size = BUTTON_HEIGHT - (BUTTON_IMAGE_PADDING*2);

@@ -628,8 +628,12 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				if (ch)
 				{
-					strcat(keyboard->input_text, ch);
-					keyboard->cursor++;
+					if (keyboard->input_text_len < MAX_INPUT_LENGTH)
+					{
+						strcat(keyboard->input_text, ch);
+						keyboard->cursor++;
+						keyboard->input_text_len++;
+					}
 				}
 				
 				if (ksym == XK_BackSpace)
@@ -639,6 +643,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 					if (is_lctrl_down)
 					{
 						keyboard->input_text[0] = '\0';
+						keyboard->input_text_len = 0;
+						keyboard->cursor = 0;
 					}
 					else
 					{
@@ -646,7 +652,10 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 						keyboard->input_text[len-1] = '\0';
 						
 						if (len > 0)
+						{
 							keyboard->cursor--;
+							keyboard->input_text_len--;
+						}
 					}
 				}
 			}
@@ -819,7 +828,7 @@ static void* platform_open_file_dialog_d(void *data)
 	
 	FILE *f;
 	
-	char current_val[1024];
+	char *current_val = malloc(MAX_INPUT_LENGTH);
 	strcpy(current_val, args->buffer);
 	
 	if (args->type == OPEN_FILE)
@@ -831,8 +840,8 @@ static void* platform_open_file_dialog_d(void *data)
 		f = popen("zenity --file-selection --directory", "r");
 	}
 	
-	char buffer[1024];
-	fgets(buffer, 1024, f);
+	char *buffer = malloc(MAX_INPUT_LENGTH);
+	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
 	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
@@ -840,6 +849,9 @@ static void* platform_open_file_dialog_d(void *data)
 		s32 len = strlen(args->buffer);
 		args->buffer[len-1] = 0;
 	}
+	
+	free(current_val);
+	free(buffer);
 	
 	return 0;
 }
@@ -874,7 +886,7 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	
 	s32 len = strlen(filter);
 	
-	char subdirname_buf[PATH_MAX];
+	char *subdirname_buf = malloc(PATH_MAX);
 	
 	DIR *d;
 	struct dirent *dir;
@@ -916,6 +928,8 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 		}
 		closedir(d);
 	}
+	
+	free(subdirname_buf);
 }
 
 typedef struct t_list_file_args
@@ -940,7 +954,7 @@ void *platform_list_files_t(void *args)
 	list_file_args *info = args;
 	
 	// TODO(Aldrik): hardcoded max filter length
-	s32 max_filter_len = 60;
+	s32 max_filter_len = MAX_PATH_LENGTH;
 	
 	array filters = array_create(max_filter_len);
 	
@@ -965,7 +979,7 @@ void *platform_list_files_t(void *args)
 		else
 		{
 			// TODO(Aldrik): show error and dont continue search
-			assert(filter_len < 60);
+			assert(filter_len < MAX_PATH_LENGTH);
 			
 			current_filter[filter_len++] = ch;
 		}
@@ -1005,7 +1019,6 @@ void *platform_list_files_t(void *args)
 		thread_join(thr);
 	}
 	
-	//thread_sleep(3000000);
 	*(info->state) = !(*info->state);
 	
 	array_destroy(&threads);
