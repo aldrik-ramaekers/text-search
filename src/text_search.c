@@ -5,11 +5,13 @@
 #define ERROR_RESERVE_COUNT 20
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
+#define ERROR_TEXT_COLOR rgb(224, 79, 95)
 
 typedef struct t_text_match
 {
 	found_file file;
 	u32 match_count;
+	bool file_failure;
 } text_match;
 
 typedef struct t_status_bar
@@ -68,6 +70,7 @@ static void *find_text_in_file_t(void *arg)
 	}
 	else
 	{
+		match->file_failure = true;
 		strcpy(global_status_bar.error_status_text, "One or more files could not be opened");
 	}
 	
@@ -91,6 +94,7 @@ static void* find_text_in_files_t(void *arg)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
 		match->match_count = 0;
+		match->file_failure = false;
 		
 		thread new_thr = thread_start(find_text_in_file_t, match);
 		
@@ -172,6 +176,7 @@ static void render_result(platform_window *window, font *font_small)
 		s32 path_width = window->width / 2;
 		s32 pattern_width = window->width / 4;
 		
+		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 		
 		render_rectangle(-1, y+1, window->width+2, h-2, rgb(225,225,225));
@@ -181,38 +186,65 @@ static void render_result(platform_window *window, font *font_small)
 		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, "File pattern", global_ui_context.style.foreground);
 		
 		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, "# Matches", global_ui_context.style.foreground);
+		/////////////////////////
 		
 		y += h-1;
 		
 		s32 total_h = 0;
 		s32 start_y = y;
-		
+		s32 total_space = window->height - start_y - 30 + 1;
 		render_set_scissor(window, 0, y, window->width, render_h - 43);
 		
+		/// draw entries ////////
 		for (s32 i = 0; i < global_search_result.files.length; i++)
 		{
 			text_match *match = array_at(&global_search_result.files, i);
 			
-			if (match->match_count)
+			
+			if (match->match_count || match->file_failure)
 			{
-				render_rectangle_outline(-1, y+scroll_y, window->width+2, h, 1, global_ui_context.style.border);
-				render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1 + scroll_y, match->file.path + global_search_result.search_result_source_dir_len, global_ui_context.style.foreground);
+				s32 text_y = y+scroll_y;
 				
-				render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1 + scroll_y, match->file.matched_filter, global_ui_context.style.foreground);
-				
-				char snum[10];
-				sprintf(snum, "%d", match->match_count);
-				
-				render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1 + scroll_y, snum, global_ui_context.style.foreground);
-				
+				if (text_y > start_y - h && text_y < start_y + total_space)
+				{
+					// outline
+					render_rectangle_outline(-1, text_y, window->width+2, h, 1, global_ui_context.style.border);
+					
+					// path
+					render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
+					render_text(font_small, 10, text_y + (h/2)-(font_small->size/2) + 1, match->file.path + global_search_result.search_result_source_dir_len, global_ui_context.style.foreground);
+					
+					// pattern
+					render_set_scissor(window, 0, start_y, 
+									   path_width+pattern_width-10, render_h - 43);
+					render_text(font_small, 10 + path_width, text_y + (h/2)-(font_small->size/2) + 1, match->file.matched_filter, global_ui_context.style.foreground);
+					
+					// state
+					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
+					if (!match->file_failure)
+					{
+						char snum[10];
+						sprintf(snum, "%d", match->match_count);
+						
+						render_text(font_small, 10 + path_width + pattern_width, text_y + (h/2)-(font_small->size/2) + 1, snum, global_ui_context.style.foreground);
+					}
+					else
+					{
+						s32 img_size = 14;
+						render_image(error_img, 6 + path_width + pattern_width, text_y + (h/2) - (img_size/2), img_size, img_size);
+						
+						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, text_y + (h/2)-(font_small->size/2) + 1, "Failed to open file", ERROR_TEXT_COLOR);
+					}
+				}
 				y += h-1;
 				total_h += h-1;
 			}
 		}
+		////////////////////////
 		
-		s32 total_space = window->height - start_y - 30 + 1;
 		s32 overflow = total_h - total_space;
 		
+		/// scrollbar //////////
 		if (overflow > 0)
 		{
 			if (global_ui_context.mouse->scroll_state == SCROLL_UP)
@@ -230,6 +262,9 @@ static void render_result(platform_window *window, font *font_small)
 			
 			float scroll_h_percentage = total_h / (float)total_space;
 			scroll_h = total_space / scroll_h_percentage;
+			
+			if (scroll_h < 10)
+				scroll_h = 10;
 			
 			float percentage = -scroll_y / (float)overflow;
 			float scroll_y = start_y + (total_space - scroll_h) * percentage;
@@ -250,6 +285,7 @@ static void render_result(platform_window *window, font *font_small)
 									 scroll_w,scroll_h, 1,
 									 global_ui_context.style.border);
 		}
+		////////////////////////
 	}
 	else
 	{
@@ -276,7 +312,7 @@ static void render_info(platform_window *window, font *font_small)
 			char *message = array_at(&global_search_result.errors, e);
 			
 			render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
-			render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, rgb(224, 79, 95));
+			render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, ERROR_TEXT_COLOR);
 			yy += font_small->size + 4;
 		}
 		
