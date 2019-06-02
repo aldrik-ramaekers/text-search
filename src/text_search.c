@@ -64,7 +64,15 @@ static void* find_text_in_files_t(void *arg)
 		match->match_count = 0;
 		
 		thread new_thr = thread_start(find_text_in_file_t, match);
-		array_push(&threads, &new_thr);
+		
+		if (new_thr.valid)
+		{
+			array_push(&threads, &new_thr);
+		}
+		else
+		{
+			i--;
+		}
 	}
 	
 	for (s32 i = 0; i < threads.length; i++)

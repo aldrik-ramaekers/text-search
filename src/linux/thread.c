@@ -18,7 +18,10 @@ thread thread_start(void *(*start_routine) (void *), void *arg)
 	
 	int start_thread_result = pthread_create(&result.thread, &attr, start_routine, arg);
 	if (start_thread_result)
+	{
+		pthread_attr_destroy(&attr);
 		return result;
+	}
 	
 	result.valid = true;
 	pthread_attr_destroy(&attr);

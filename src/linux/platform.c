@@ -834,7 +834,7 @@ static void* platform_open_file_dialog_d(void *data)
 	char buffer[1024];
 	fgets(buffer, 1024, f);
 	
-	if (strcmp(buffer, current_val) == 0)
+	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
 		strcpy(args->buffer, buffer);
 		s32 len = strlen(args->buffer);
@@ -858,7 +858,11 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer)
 	args->buffer = buffer;
 	args->type = type;
 	
-	thread thr = thread_start(platform_open_file_dialog_dd, args);
+	thread thr;
+	thr.valid = false;
+	
+	while (!thr.valid)
+		thr = thread_start(platform_open_file_dialog_dd, args);
 	thread_detach(&thr);
 }
 
@@ -876,6 +880,7 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	struct dirent *dir;
 	d = opendir(start_dir);
 	if (d) {
+		set_active_directory(start_dir);
 		while ((dir = readdir(d)) != NULL) {
 			set_active_directory(start_dir);
 			
@@ -983,7 +988,15 @@ void *platform_list_files_t(void *args)
 		args_2->recursive = recursive;
 		
 		thread thr = thread_start(platform_list_files_t_t, args_2);
-		array_push(&threads, &thr);
+		
+		if (thr.valid)
+		{
+			array_push(&threads, &thr);
+		}
+		else
+		{
+			i--;
+		}
 	}
 	
 	for (s32 i = 0; i < threads.length; i++)
@@ -992,10 +1005,10 @@ void *platform_list_files_t(void *args)
 		thread_join(thr);
 	}
 	
+	//thread_sleep(3000000);
 	*(info->state) = !(*info->state);
 	
 	array_destroy(&threads);
-	
 	array_destroy(&filters);
 	free(args);
 	

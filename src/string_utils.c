@@ -23,7 +23,7 @@ bool string_match(char *first, char *second)
     return false; 
 }
 
-#define SEARCH_WITHIN_STRING 1
+#define SEARCH_WITHIN_STRING 0
 
 static s32 length_of_word(char *word)
 {
@@ -54,6 +54,7 @@ static s32 length_of_expr(char *word)
 	return len;
 }
 
+// TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
 bool string_contains(char *big, char *small)
 {
 	bool match_started = false;
@@ -101,7 +102,8 @@ bool string_contains(char *big, char *small)
 				small++;
 #else
 				char text_prev = *(big-1);
-				if ((index > 0 && text_prev != ' ') && text_ch != ' ')
+				if (index > 0 && ((text_prev != ' ') && (text_prev != '\n'))
+					&& text_ch != ' ')
 				{
 					match_started = false;
 					ignore_word = true;
@@ -113,7 +115,7 @@ bool string_contains(char *big, char *small)
 				}
 #endif
 			}
-			else if (expr_ch == '?') 
+			else if (expr_ch == '?')
 			{
 				match_started = true;
 				small++;
