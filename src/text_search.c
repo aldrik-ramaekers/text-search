@@ -191,8 +191,8 @@ static void render_result(platform_window *window, font *font_small)
 		render_rectangle(0, y-WIDGET_PADDING, (global_search_result.files_searched/(float)global_search_result.files.length)*window->width, 20, rgb(0,200,0));
 		y += 11;
 		
-		s32 path_width = window->width / 2;
-		s32 pattern_width = window->width / 4;
+		s32 path_width = window->width / 1.8;
+		s32 pattern_width = window->width / 6;
 		
 		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
@@ -251,7 +251,20 @@ static void render_result(platform_window *window, font *font_small)
 						s32 img_size = 14;
 						render_image(error_img, 6 + path_width + pattern_width, text_y + (h/2) - (img_size/2), img_size, img_size);
 						
-						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, text_y + (h/2)-(font_small->size/2) + 1, "Failed to open file", ERROR_TEXT_COLOR);
+						char *open_file_error = 0;
+						switch(match->file_error)
+						{
+							case FILE_ERROR_NO_ACCESS: open_file_error = "No permission"; break;
+							case FILE_ERROR_NOT_FOUND: open_file_error = "Not found"; break;
+							case FILE_ERROR_CONNECTION_ABORTED: open_file_error = "Connection aborted"; break;
+							case FILE_ERROR_CONNECTION_REFUSED: open_file_error = "Connection refused"; break;
+							case FILE_ERROR_NETWORK_DOWN: open_file_error = "Network down"; break;
+							case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = "Remote error"; break;
+							case FILE_ERROR_STALE: open_file_error = "Remotely removed"; break;
+							case FILE_ERROR_GENERIC: open_file_error = "Failed to open file"; break;
+						}
+						
+						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, text_y + (h/2)-(font_small->size/2) + 1, open_file_error, ERROR_TEXT_COLOR);
 					}
 				}
 				y += h-1;

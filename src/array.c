@@ -174,3 +174,18 @@ void array_swap(array *array, u32 swap1, u32 swap2)
 	memcpy(swap2_at, swap1_buffer, array->entry_size);
 	mutex_unlock(&array->mutex);
 }
+
+array array_copy(array *arr)
+{
+	array new_array;
+	new_array.length = arr->length;
+	new_array.reserved_length = arr->reserved_length;
+	new_array.entry_size = arr->entry_size;
+	new_array.data = malloc(new_array.entry_size*new_array.reserved_length);
+	new_array.mutex = mutex_create();
+	
+	mutex_lock(&arr->mutex);
+	memcpy(new_array.data, arr->data, new_array.entry_size*new_array.reserved_length);
+	mutex_unlock(&arr->mutex);
+	return new_array;
+}

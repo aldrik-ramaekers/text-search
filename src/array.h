@@ -20,5 +20,6 @@ void *array_at(array *array, u32 at);
 void array_destroy(array *array);
 void array_swap(array *array, u32 swap1, u32 swap2);
 void array_reserve(array *array, u32 reserve_count);
+array array_copy(array *array);
 
 #endif

@@ -84,10 +84,16 @@ file_content platform_read_file_content(char *path, const char *mode)
 	int length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	
-	if (!length) goto done;
+	// if file i empty alloc 1 byte
+	s32 length_to_alloc = length;
+	if (!length)
+		length_to_alloc = 1;
 	
-	result.content = malloc(length);
+	result.content = malloc(length_to_alloc);
 	if (!result.content) goto done;
+	
+	if (!length)
+		((char*)result.content)[0] = 0;
 	
 	fread(result.content, 1, length, file);
 	result.content_length = length;
