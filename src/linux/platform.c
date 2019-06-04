@@ -900,7 +900,7 @@ static void* platform_open_file_dialog_d(void *data)
 	{
 		f = popen("zenity --file-selection", "r");
 	}
-	else
+	else if (args->type == OPEN_DIRECTORY)
 	{
 		f = popen("zenity --file-selection --directory", "r");
 	}
@@ -908,7 +908,8 @@ static void* platform_open_file_dialog_d(void *data)
 	char *buffer = malloc(MAX_INPUT_LENGTH);
 	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
-	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
+	// NOTE(Aldrik): buffer should be longer then 1 because zenity returns a single garbage character when closed without selecting a path. (lol?)
+	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0 && strlen(buffer) > 1)
 	{
 		strcpy(args->buffer, buffer);
 		s32 len = strlen(args->buffer);

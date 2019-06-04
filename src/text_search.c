@@ -555,7 +555,7 @@ int main(int argc, char **argv)
 				if (ui_push_menu("File"))
 				{
 					if (ui_push_menu_item("Import results", "Ctrl + O")) { }
-					if (ui_push_menu_item("Export results", "Ctrl + F")) { export_results(global_search_result.files); }
+					if (ui_push_menu_item("Export results", "Ctrl + F")) { export_results(&global_search_result); }
 					ui_push_menu_item_separator();
 					if (ui_push_menu_item("Exit", "Ctrl + C")) { window.is_open = false; }
 				}
