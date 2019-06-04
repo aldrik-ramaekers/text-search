@@ -42,6 +42,27 @@ bool set_active_directory(char *path)
 	return !chdir(path);
 }
 
+bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
+{
+	bool result = false;
+	
+	FILE *file = fopen(path, mode);
+	
+	if (!file)
+	{
+		goto done_failure;
+	}
+	else
+	{
+		fprintf(file, buffer);
+	}
+	
+	//done:
+	fclose(file);
+	done_failure:
+	return result;
+}
+
 file_content platform_read_file_content(char *path, const char *mode)
 {
 	file_content result;
@@ -974,6 +995,13 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	}
 	
 	free(subdirname_buf);
+}
+
+char *platform_get_full_path(char *file)
+{
+	char *buf = malloc(PATH_MAX);
+	realpath(file, buf);
+	return buf;
 }
 
 typedef struct t_list_file_args

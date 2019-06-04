@@ -1,6 +1,11 @@
 
 void assets_create()
 {
+	char active_dir_buf[MAX_INPUT_LENGTH];
+	get_active_directory(active_dir_buf);
+	binary_path = platform_get_full_path(active_dir_buf);
+	
+	
 	assets asset_collection;
 	asset_collection.images = array_create(sizeof(image));
 	asset_collection.fonts = array_create(sizeof(font));
@@ -92,6 +97,8 @@ void assets_do_post_process()
 
 bool assets_queue_worker_load_image(image *image)
 {
+	set_active_directory(binary_path);
+	
 	image->data = stbi_load(image->path,
 							&image->width,
 							&image->height,
@@ -103,6 +110,8 @@ bool assets_queue_worker_load_image(image *image)
 
 bool assets_queue_worker_load_font(font *font)
 {
+	set_active_directory(binary_path);
+	
 	font->bitmap = 0;
 	file_content content = platform_read_file_content(font->path, "rb");
 	if (!content.content) return false;
@@ -368,6 +377,8 @@ sample *assets_load_sample(char *file)
 	strcpy(new_sample.path, file);
 	new_sample.loaded = true;
 	new_sample.references = 1;
+	
+	set_active_directory(binary_path);
 	
 	unsigned int channels;
     unsigned int sampleRate;

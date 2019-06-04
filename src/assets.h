@@ -85,6 +85,8 @@ typedef struct t_assets {
 	bool valid;
 } assets;
 
+char *binary_path;
+
 // TODO(Aldrik): remove asset from load queue and post process queue when destroyed
 
 // TODO(Aldrik): we are destroying assets right now by comparing the names of every asset first while we have the pointer within the array..

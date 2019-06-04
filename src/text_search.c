@@ -43,6 +43,10 @@ image *directory_img;
 font *font_small;
 font *font_mini;
 
+#include "save.h"
+#include "save.c"
+
+// TODO(Aldrik): import/export
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): make constant ui max input len and check everywhere, also in platform layer.
 // TODO(Aldrik): localization.
@@ -62,12 +66,12 @@ static void *find_text_in_file_t(void *arg)
 		
 		if (content.content && !content.file_error)
 		{
-			if (string_contains(content.content, text_to_find) != 0)
+			if (string_contains(content.content, text_to_find))
 			{
 				global_search_result.match_found = true;
-				match->match_count++;
 				
 				mutex_lock(&global_search_result.mutex);
+				match->match_count++;
 				global_search_result.files_matched++;
 				mutex_unlock(&global_search_result.mutex);
 			}
@@ -88,7 +92,9 @@ static void *find_text_in_file_t(void *arg)
 			else
 				match->file_error = FILE_ERROR_GENERIC;
 			
+			mutex_lock(&global_search_result.mutex);
 			strcpy(global_status_bar.error_status_text, "One or more files could not be opened");
+			mutex_unlock(&global_search_result.mutex);
 		}
 	}
 	
@@ -96,6 +102,7 @@ static void *find_text_in_file_t(void *arg)
 	
 	mutex_lock(&global_search_result.mutex);
 	global_search_result.files_searched++;
+	sprintf(global_status_bar.result_status_text, "%.0f%% of files processed",  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
 	mutex_unlock(&global_search_result.mutex);
 	
 	return 0;
@@ -130,8 +137,6 @@ static void* find_text_in_files_t(void *arg)
 	{
 		thread *thr = array_at(&threads, i);
 		thread_join(thr);
-		
-		sprintf(global_status_bar.result_status_text, "%.0f%% of files processed",  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
 	}
 	
 	u64 end_f = platform_get_time(TIME_FULL, TIME_US);
@@ -549,8 +554,8 @@ int main(int argc, char **argv)
 			{
 				if (ui_push_menu("File"))
 				{
-					if (ui_push_menu_item("Open", "Ctrl + O")) { }
-					if (ui_push_menu_item("Find", "Ctrl + F")) { }
+					if (ui_push_menu_item("Import results", "Ctrl + O")) { }
+					if (ui_push_menu_item("Export results", "Ctrl + F")) { export_results(global_search_result.files); }
 					ui_push_menu_item_separator();
 					if (ui_push_menu_item("Exit", "Ctrl + C")) { window.is_open = false; }
 				}
