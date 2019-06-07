@@ -881,13 +881,7 @@ cpu_info platform_get_cpu_info()
 	return result;
 }
 
-struct open_dialog_args
-{
-	char *buffer;
-	file_dialog_type type;
-};
-
-static void* platform_open_file_dialog_d(void *data)
+static void* platform_open_file_dialog_dd(void *data)
 {
 	struct open_dialog_args *args = data;
 	
@@ -903,6 +897,10 @@ static void* platform_open_file_dialog_d(void *data)
 	else if (args->type == OPEN_DIRECTORY)
 	{
 		f = popen("zenity --file-selection --directory", "r");
+	}
+	else if (args->type == SAVE_FILE)
+	{
+		f = popen("zenity --file-selection --save --confirm-overwrite", "r");
 	}
 	
 	char *buffer = malloc(MAX_INPUT_LENGTH);
@@ -922,9 +920,9 @@ static void* platform_open_file_dialog_d(void *data)
 	return 0;
 }
 
-static void *platform_open_file_dialog_dd(void *arg)
+void *platform_open_file_dialog_d(void *arg)
 {
-	thread thr = thread_start(platform_open_file_dialog_d, arg);
+	thread thr = thread_start(platform_open_file_dialog_dd, arg);
 	thread_join(&thr);
 	free(arg);
 	return 0;
@@ -940,7 +938,7 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer)
 	thr.valid = false;
 	
 	while (!thr.valid)
-		thr = thread_start(platform_open_file_dialog_dd, args);
+		thr = thread_start(platform_open_file_dialog_d, args);
 	thread_detach(&thr);
 }
 
@@ -1113,4 +1111,45 @@ void platform_list_files(array *list, char *start_dir, char *filter, bool recurs
 	
 	thread thr = thread_start(platform_list_files_t, args);
 	thread_detach(&thr);
+}
+
+
+inline u64 string_to_u64(char *str)
+{
+	return (u64)strtoull(str, 0, 10);
+}
+
+inline u32 string_to_u32(char *str)
+{
+	return (u32)strtoul(str, 0, 10);
+}
+
+inline u16 string_to_u16(char *str)
+{
+	return (u16)strtoul(str, 0, 10);
+}
+
+inline u8 string_to_u8(char *str)
+{
+	return (u8)strtoul(str, 0, 10);
+}
+
+inline s64 string_to_s64(char *str)
+{
+	return (s64)strtoll(str, 0, 10);
+}
+
+inline s32 string_to_s32(char *str)
+{
+	return (u32)strtol(str, 0, 10);
+}
+
+inline s16 string_to_s16(char *str)
+{
+	return (s16)strtol(str, 0, 10);
+}
+
+inline s8 string_to_s8(char *str)
+{
+	return (s8)strtol(str, 0, 10);
 }

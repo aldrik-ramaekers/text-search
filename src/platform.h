@@ -38,6 +38,7 @@ typedef enum t_file_dialog_type
 {
 	OPEN_FILE,
 	OPEN_DIRECTORY,
+	SAVE_FILE,
 } file_dialog_type;
 
 typedef struct t_found_file
@@ -60,6 +61,12 @@ typedef enum t_file_open_error
 	FILE_ERROR_GENERIC = 10,
 } file_open_error;
 
+struct open_dialog_args
+{
+	char *buffer;
+	file_dialog_type type;
+};
+
 platform_window platform_open_window(char *name, u16 width, u16 height);
 void platform_close_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
@@ -72,10 +79,21 @@ bool set_active_directory(char *path);
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer);
 char *platform_get_full_path(char *file);
+void *platform_open_file_dialog_d(void *arg);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();
 s32 platform_get_cpu_count();
 cpu_info platform_get_cpu_info();
+
+u64 string_to_u64(char *str);
+u32 string_to_u32(char *str);
+u16 string_to_u16(char *str);
+u8 string_to_u8(char *str);
+
+s64 string_to_s64(char *str);
+s32 string_to_s32(char *str);
+s16 string_to_s16(char *str);
+s8 string_to_s8(char *str);
 
 #endif

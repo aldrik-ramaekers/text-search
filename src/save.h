@@ -2,6 +2,6 @@
 #define INCLUDE_SAVE
 
 bool export_results(search_result *result);
-search_result import_results();
+void import_results(search_result *result);
 
 #endif
