@@ -32,6 +32,9 @@ typedef struct t_search_result
 	s32 search_result_source_dir_len;
 	bool match_found;
 	mutex mutex;
+	bool walking_file_system;
+	bool cancel_search;
+	bool done_finding_matches;
 } search_result;
 
 status_bar global_status_bar;
@@ -42,30 +45,36 @@ image *error_img;
 image *directory_img;
 font *font_small;
 font *font_mini;
+s32 scroll_y = 0;
 
 #include "save.h"
 #include "save.c"
 
-// TODO(Aldrik): import/export
+// TODO(Aldrik): rename platform_open_file_dialog_d to platform_open_file_dialog_block
 // TODO(Aldrik): refactor globals into structs
-// TODO(Aldrik): make constant ui max input len and check everywhere, also in platform layer.
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
 // TODO(Aldrik): show loading message/icon when searching for files..
+// TODO(Aldrik): cancel search button
 
 char *text_to_find;
 
 static void *find_text_in_file_t(void *arg)
 {
 	text_match *match = arg;
+	if (global_search_result.cancel_search) return 0;
 	
 	file_content content;
 	try_again:
 	{
+		if (global_search_result.cancel_search) return 0;
+		
 		content = platform_read_file_content(match->file.path, "r");
 		
 		if (content.content && !content.file_error)
 		{
+			if (global_search_result.cancel_search) return 0;
+			
 			if (string_contains(content.content, text_to_find))
 			{
 				global_search_result.match_found = true;
@@ -82,7 +91,7 @@ static void *find_text_in_file_t(void *arg)
 				content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
 			{
 				// TODO(Aldrik): is this really necessary? were already hogging the entire system anyway...
-				thread_sleep(1000); 
+				thread_sleep(1000);
 				
 				goto try_again;
 			}
@@ -123,6 +132,8 @@ static void* find_text_in_files_t(void *arg)
 		
 		thread new_thr = thread_start(find_text_in_file_t, match);
 		
+		if (global_search_result.cancel_search) break;
+		
 		if (new_thr.valid)
 		{
 			array_push(&threads, &new_thr);
@@ -145,6 +156,7 @@ static void* find_text_in_files_t(void *arg)
 	sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 	
 	array_destroy(&threads);
+	global_search_result.done_finding_matches = true;
 	
 	return 0;
 }
@@ -181,7 +193,6 @@ static void render_status_bar(platform_window *window, font *font_small)
 	}
 }
 
-static s32 scroll_y = 0;
 static void render_result(platform_window *window, font *font_small)
 {
 	s32 y = global_ui_context.layout.offset_y;
@@ -337,49 +348,56 @@ static void render_result(platform_window *window, font *font_small)
 
 static void render_info(platform_window *window, font *font_small)
 {
-	if (global_search_result.show_error_message)
+	if (!global_search_result.walking_file_system)
 	{
-		s32 h = 30;
-		s32 yy = global_ui_context.layout.offset_y;
-		
-		s32 img_size = 16;
-		
-		for (s32 e = 0; e < global_search_result.errors.length; e++)
+		if (global_search_result.show_error_message)
 		{
-			char *message = array_at(&global_search_result.errors, e);
+			s32 h = 30;
+			s32 yy = global_ui_context.layout.offset_y;
 			
-			render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
-			render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, ERROR_TEXT_COLOR);
-			yy += font_small->size + 4;
+			s32 img_size = 16;
+			
+			for (s32 e = 0; e < global_search_result.errors.length; e++)
+			{
+				char *message = array_at(&global_search_result.errors, e);
+				
+				render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
+				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, ERROR_TEXT_COLOR);
+				yy += font_small->size + 4;
+			}
+			
+			global_ui_context.layout.offset_y = yy;
 		}
 		
-		global_ui_context.layout.offset_y = yy;
-	}
-	
-	s32 y = global_ui_context.layout.offset_y;
-	
-	s32 directory_info_count = 11;
-	char *info_text[] = 
-	{
-		"1. Search directory",
-		" - The absolute path to the folder that should be searched through for text matches.", 
-		"2. File filter",
-		" - Filter files that should be included in the search.",
-		" - Multiple filters can be split using ','.",
-		" - Supports wildcard '*' in filter. (e.g. \"*.jpg,*.png\")",
-		"3. Text filter",
-		" - Filter on text within the filtered files.",
-		" - Supports wildcard '*' in filter. (e.g. \"my name is *\")",
-		"4. Folders",
-		" - Specifies whether or not folders will be recursively searched for file matches."
-	};
-	
-	// draw info text
-	for (s32 i = 0; i < directory_info_count; i++)
-	{
-		y += render_text_cutoff(font_small, 10, y, 
-								info_text[i], global_ui_context.style.foreground, window->width - 20);
+		s32 y = global_ui_context.layout.offset_y;
 		
+		s32 directory_info_count = 11;
+		char *info_text[] = 
+		{
+			"1. Search directory",
+			" - The absolute path to the folder that should be searched through for text matches.", 
+			"2. File filter",
+			" - Filter files that should be included in the search.",
+			" - Multiple filters can be split using ','.",
+			" - Supports wildcard '*' in filter. (e.g. \"*.jpg,*.png\")",
+			"3. Text filter",
+			" - Filter on text within the filtered files.",
+			" - Supports wildcard '*' in filter. (e.g. \"my name is *\")",
+			"4. Folders",
+			" - Specifies whether or not folders will be recursively searched for file matches."
+		};
+		
+		// draw info text
+		for (s32 i = 0; i < directory_info_count; i++)
+		{
+			y += render_text_cutoff(font_small, 10, y, 
+									info_text[i], global_ui_context.style.foreground, window->width - 20);
+		}
+	}
+	else
+	{
+		// TODO(Aldrik): loading animation
+		render_rectangle(50, 50, 300, 300, rgb(200,0,0));
 	}
 }
 
@@ -493,6 +511,7 @@ int main(int argc, char **argv)
 	textbox_state textbox_file_filter = ui_create_textbox(MAX_INPUT_LENGTH);
 	button_state button_select_directory = ui_create_button();
 	button_state button_find_text = ui_create_button();
+	button_state button_cancel = ui_create_button();
 	
 	global_status_bar.result_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.result_status_text[0] = 0;
@@ -500,6 +519,7 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
+	global_search_result.done_finding_matches = true;
 	global_search_result.find_duration_us = 0;
 	global_search_result.show_error_message = false;
 	global_search_result.found_file_matches = false;
@@ -507,6 +527,7 @@ int main(int argc, char **argv)
 	global_search_result.files_matched = 0;
 	global_search_result.search_result_source_dir_len = 0;
 	global_search_result.match_found = false;
+	global_search_result.cancel_search = false;
 	global_search_result.mutex = mutex_create();
 	
 	global_search_result.errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
@@ -524,7 +545,7 @@ int main(int argc, char **argv)
 	
 	strcpy(textbox_path.buffer, "/home/aldrik/Projects/text-search/");
 	strcpy(textbox_file_filter.buffer, "*");
-	strcpy(textbox_search_text.buffer, "*");
+	strcpy(textbox_search_text.buffer, "*test*");
 	checkbox_recursive.state = 1;
 #endif
 	
@@ -554,8 +575,8 @@ int main(int argc, char **argv)
 			{
 				if (ui_push_menu("File"))
 				{
-					if (ui_push_menu_item("Import results", "Ctrl + O")) { import_results(&global_search_result); }
-					if (ui_push_menu_item("Export results", "Ctrl + F")) { export_results(&global_search_result); }
+					if (ui_push_menu_item("Import", "Ctrl + O")) { import_results(&global_search_result); }
+					if (ui_push_menu_item("Export", "Ctrl + F")) { export_results(&global_search_result); }
 					ui_push_menu_item_separator();
 					if (ui_push_menu_item("Exit", "Ctrl + C")) { window.is_open = false; }
 				}
@@ -591,7 +612,10 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
+					global_search_result.done_finding_matches = false;
+					global_search_result.cancel_search = false;
 					scroll_y = 0;
+					global_search_result.walking_file_system = true;
 					global_search_result.found_file_matches = false;
 					done_finding_files = false;
 					reset_status_text();
@@ -637,6 +661,16 @@ int main(int argc, char **argv)
 					}
 				}
 				ui_push_checkbox(&checkbox_recursive, "Folders");
+				
+				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
+				{
+					if (ui_push_button_image(&button_cancel, "Cancel", directory_img))
+					{
+						platform_cancel_search = true;
+						global_search_result.cancel_search = true;
+						global_search_result.done_finding_matches = true;
+					}
+				}
 			}
 			ui_block_end();
 			
@@ -649,6 +683,7 @@ int main(int argc, char **argv)
 		{
 			find_text_in_files(textbox_search_text.buffer);
 			done_finding_files = false;
+			global_search_result.walking_file_system = false;
 		}
 		
 		// draw info or results

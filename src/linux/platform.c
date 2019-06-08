@@ -958,6 +958,7 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	if (d) {
 		set_active_directory(start_dir);
 		while ((dir = readdir(d)) != NULL) {
+			if (platform_cancel_search) break;
 			set_active_directory(start_dir);
 			
 			if (dir->d_type == DT_DIR && recursive)
@@ -1074,6 +1075,8 @@ void *platform_list_files_t(void *args)
 		
 		thread thr = thread_start(platform_list_files_t_t, args_2);
 		
+		if (platform_cancel_search) break;
+		
 		if (thr.valid)
 		{
 			array_push(&threads, &thr);
@@ -1090,7 +1093,8 @@ void *platform_list_files_t(void *args)
 		thread_join(thr);
 	}
 	
-	*(info->state) = !(*info->state);
+	if (!platform_cancel_search)
+		*(info->state) = !(*info->state);
 	
 	array_destroy(&threads);
 	array_destroy(&filters);
@@ -1101,7 +1105,7 @@ void *platform_list_files_t(void *args)
 
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
 {
-	
+	platform_cancel_search = false;
 	list_file_args *args = malloc(sizeof(list_file_args));
 	args->list = list;
 	args->start_dir = start_dir;

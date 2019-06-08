@@ -17,7 +17,7 @@ static void *export_result_d(void *arg)
 	if (path_buf[0] == 0) return 0;
 	if (path_buf[1] == 0) return 0;
 	
-	s32 size = matches.length * matches.entry_size * MAX_INPUT_LENGTH;
+	s32 size = matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
 	char *buffer = malloc(size);
 	memset(buffer, 0, size);
 	
@@ -102,6 +102,15 @@ bool export_results(search_result *search_result)
 
 static void* import_results_d(void *arg)
 {
+	for (s32 i = 0; i < global_search_result.files.length; i++)
+	{
+		text_match *match = array_at(&global_search_result.files, i);
+		free(match->file.path);
+		free(match->file.matched_filter);
+	}
+	global_search_result.files.length = 0;
+	scroll_y = 0;
+	
 	search_result *search_result = arg;
 	
 	array matches = search_result->files;
@@ -126,6 +135,7 @@ static void* import_results_d(void *arg)
 	}
 	
 	char *buffer = content.content;
+	char *buffer_start = buffer;
 	
 	char *find_duration_us; find_duration_us = buffer; buffer[16] = 0; buffer += 17;
 	char *show_error_message; show_error_message = buffer; buffer[1] = 0; buffer += 2;
@@ -133,7 +143,7 @@ static void* import_results_d(void *arg)
 	char *files_searched; files_searched = buffer; buffer[8] = 0; buffer += 9;
 	char *files_matched; files_matched = buffer; buffer[8] = 0; buffer += 9;
 	char *search_result_source_dir_len; search_result_source_dir_len = buffer; buffer[8] = 0; buffer += 9;
-	char *match_found; match_found = buffer; buffer[8+1] = 0; buffer += 9;
+	char *match_found; match_found = buffer; buffer[1] = 0; buffer += 2;
 	
 	search_result->find_duration_us = string_to_u64(find_duration_us);
 	search_result->show_error_message = string_to_u8(show_error_message);
@@ -142,6 +152,68 @@ static void* import_results_d(void *arg)
 	search_result->files_matched = string_to_s32(files_matched);
 	search_result->search_result_source_dir_len = string_to_s32(search_result_source_dir_len);
 	search_result->match_found = string_to_u8(match_found);
+	
+	s32 offset = buffer_start - buffer;
+	s32 expect = 0;
+	s32 current_data_start = 0;
+	
+	text_match match;
+	for (s32 i = 0; i < content.content_length-offset; i++)
+	{
+		char ch = buffer[i];
+		
+		if (ch == '\n')
+		{
+			if (expect == 0)
+			{
+				buffer[i] = 0;
+				char *path = malloc(PATH_MAX);
+				strcpy(path, buffer+current_data_start);
+				
+				match.file.path = path;
+				
+				expect = 1;
+				current_data_start = i+1;
+			}
+			else if (expect == 1)
+			{
+				buffer[i] = 0;
+				char *filter = malloc(PATH_MAX);
+				strcpy(filter, buffer+current_data_start);
+				
+				match.file.matched_filter = filter;
+				
+				expect = 2;
+				current_data_start = i+1;
+			}
+			else if (expect == 2)
+			{
+				buffer[i] = 0;
+				char file_error[10];
+				strcpy(file_error, buffer+current_data_start);
+				
+				match.file_error = atoi(file_error);
+				
+				expect = 3;
+				current_data_start = i+1;
+			}
+			else if (expect == 3)
+			{
+				buffer[i] = 0;
+				char match_count[10];
+				strcpy(match_count, buffer+current_data_start);
+				
+				match.match_count = atoi(match_count);
+				
+				expect = 0;
+				current_data_start = i+1;
+				
+				array_push(&search_result->files, &match);
+			}
+		}
+	}
+	
+	sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 	
 #if 0
 	printf("\nduration: %lu\n"

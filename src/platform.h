@@ -67,6 +67,8 @@ struct open_dialog_args
 	file_dialog_type type;
 };
 
+bool platform_cancel_search = false;
+
 platform_window platform_open_window(char *name, u16 width, u16 height);
 void platform_close_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
