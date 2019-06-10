@@ -6,6 +6,10 @@
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
+#define COMPANY_NAME "Aldrik Ramaekers"
+#define WEBSITE_URL "https://google.com"
+#define WEBSITE_CONTACT_URL "https://google.com"
+#define WEBSITE_MANUAL_URL "https://google.com"
 
 typedef struct t_text_match
 {
@@ -50,7 +54,10 @@ font *font_mini;
 s32 scroll_y = 0;
 
 #include "save.h"
+#include "about.h"
+
 #include "save.c"
+#include "about.c"
 
 // TODO(Aldrik): filter on file formats in import/export
 // TODO(Aldrik): keybindings
@@ -448,53 +455,13 @@ static void reset_status_text()
 
 int main(int argc, char **argv)
 {
-#if 0
-	printf("[lll][llll*] : %d\n", string_contains("lll", "llll*"));
-	printf("[lllll][l*lop] : %d\n", string_contains("lllll", "l*lop"));
-	printf("[22lllll][l*l] : %d\n", string_contains("22lllll", "l*l"));
-	
-	printf("[hello world][h?lo] : %d\n", string_contains("hello world", "h?lo"));
-	printf("[\"hello sailor\"][sailor] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "sailor"));
-	printf("[\"hello sailor\"][*sailor] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor"));
-	printf("\n");
-	
-	printf("[\"hello sailor\"][*sailor\"] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor\""));
-	printf("[\"hello sailor\"][*sailor*] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "*sailor*"));
-	printf("[\"hello sailor\"][sailor*] : %d\n", string_contains(" wsdf asd \"hello sailor\" asdf asdf ", "sailor*"));
-	printf("[22lllll pi23hjp rbksje LSKJDh l][LS*] : %d\n",
-		   string_contains("22lllll pi23hjp rbksje LSKJDh l", "LS*"));
-	printf("[22lllll lal][l*l] : %d\n", string_contains("22lllll lal", "l*l"));
-	printf("[22lllll][*l*l] : %d\n", string_contains("lllll", "*l*l"));
-	printf("[hello world][hello] : %d\n", string_contains("hello world", "hello"));
-	printf("[hello world][h?llo] : %d\n", string_contains("hello world", "h?llo"));
-	printf("[hello world][h????] : %d\n", string_contains("hello world", "h????"));
-	printf("[hello world][h*lo] : %d\n", string_contains("hello world", "h*lo"));
-	printf("[hello world][*] : %d\n", string_contains("hello world", "*"));
-	printf("[hello world][h*] : %d\n", string_contains("hello world", "h*"));
-	printf("[hello world][*o] : %d\n", string_contains("hello world", "*o"));
-	printf("[hello world][h*o] : %d\n", string_contains("hello world", "h*o"));
-	printf("[hello world][*lo] : %d\n", string_contains("hello world", "*lo"));
-	printf("[hello world][hel*lo] : %d\n", string_contains("hello world", "hel*lo"));
-	
-	printf("[lllll][l*l] : %d\n", string_contains("lllll", "l*l"));
-	printf("[llllllll][l*llll] : %d\n", string_contains("lllll", "l*llll"));
-	printf("[llllllll][l*lll] : %d\n", string_contains("lllll", "l*lll"));
-	printf("[llllllll][llll*l] : %d\n", string_contains("lllll", "llll*l"));
-	printf("[llllllll][*] : %d\n", string_contains("lllll", "*"));
-	printf("[lllll][l?lll] : %d\n", string_contains("lllll", "l?lll"));
-	
-	printf("[lllll][lllll] : %d\n", string_contains("lllll", "lllll"));
-	printf("[lllll][*llll] : %d\n", string_contains("lllll", "*llll"));
-	printf("[lllll][llll*] : %d\n", string_contains("lllll", "llll*"));
-	printf("[lllll][*llll*] : %d\n", string_contains("lllll", "*llll*"));
-	printf("[lllll][*lllll*] : %d\n", string_contains("lllll", "*lllll*"));
-	printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
-#endif
+	platform_init();
 	
 	platform_window window = platform_open_window("Text-search", 800, 600);
 	
 	assets_create();
 	audio_system_create();
+	about_page_create();
 	
 #ifdef MODE_DEVELOPER
 	info_menu_create();
@@ -518,9 +485,11 @@ int main(int argc, char **argv)
 	
 	ui_create(&window, &keyboard, &mouse, &camera, font_small);
 	
+	// asset worker
 	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
 	thread_detach(&asset_queue_worker1);
 	
+	// ui widgets
 	checkbox_state checkbox_recursive = ui_create_checkbox(false);
 	textbox_state textbox_search_text = ui_create_textbox(MAX_INPUT_LENGTH);
 	textbox_state textbox_path = ui_create_textbox(MAX_INPUT_LENGTH);
@@ -529,12 +498,13 @@ int main(int argc, char **argv)
 	button_state button_find_text = ui_create_button();
 	button_state button_cancel = ui_create_button();
 	
+	// status bar
 	global_status_bar.result_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.result_status_text[0] = 0;
-	
 	global_status_bar.error_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
+	// starting values
 	global_search_result.done_finding_matches = true;
 	global_search_result.find_duration_us = 0;
 	global_search_result.show_error_message = false;
@@ -569,6 +539,11 @@ int main(int argc, char **argv)
 	
 	while(window.is_open) {
 		platform_handle_events(&window, &mouse, &keyboard);
+		about_page_update_render();
+		platform_window_make_current(&window);
+		
+		global_ui_context.keyboard = &keyboard;
+		global_ui_context.mouse = &mouse;
 		
 		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -623,6 +598,23 @@ int main(int argc, char **argv)
 				if (ui_push_menu("Options"))
 				{
 					if (ui_push_menu_item("Edit", "Ctrl + E")) { }
+				}
+				if (ui_push_menu("Help"))
+				{
+					if (ui_push_menu_item("User Manual", ""))
+					{
+						platform_open_url(WEBSITE_MANUAL_URL);
+					}
+					if (ui_push_menu_item("About", "")) 
+					{
+						// TODO(Aldrik): about page
+						about_page_show();
+					}
+					ui_push_menu_item_separator();
+					if (ui_push_menu_item("Contact", "")) 
+					{
+						platform_open_url(WEBSITE_CONTACT_URL);
+					}
 				}
 			}
 			ui_end_menu_bar();
@@ -695,7 +687,6 @@ int main(int argc, char **argv)
 						}
 						global_search_result.files.length = 0;
 						
-						
 						u64 start_f = platform_get_time(TIME_FULL, TIME_US);
 						platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
 											&done_finding_files);
@@ -741,7 +732,9 @@ int main(int argc, char **argv)
 			}
 		}
 		
+		
 		assets_do_post_process();
+		
 		platform_window_swap_buffers(&window);
 	}
 	
@@ -751,6 +744,7 @@ int main(int argc, char **argv)
 	info_menu_destroy();
 #endif
 	
+	about_page_destroy();
 	ui_destroy();
 	
 	mutex_destroy(&global_search_result.mutex);
@@ -772,6 +766,7 @@ int main(int argc, char **argv)
 	
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
+	platform_destroy_window(&window);
 	
 	return 0;
 }

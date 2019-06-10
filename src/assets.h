@@ -50,7 +50,7 @@ typedef struct t_font
 	GLuint textureID;
 	s32 palette_width;
 	s32 palette_height;
-	s16 glyph_widths[96];
+	s16 glyph_widths[223];
 	float32 scale;
 	stbtt_fontinfo info;
 	void *bitmap;

@@ -71,6 +71,7 @@ bool platform_cancel_search = false;
 
 platform_window platform_open_window(char *name, u16 width, u16 height);
 void platform_close_window(platform_window *window);
+void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);
 file_content platform_read_file_content(char *path, const char *mode);
@@ -82,6 +83,10 @@ void platform_list_files(array *list, char *start_dir, char *filter, bool recurs
 void platform_open_file_dialog(file_dialog_type type, char *buffer);
 char *platform_get_full_path(char *file);
 void *platform_open_file_dialog_d(void *arg);
+void platform_open_url(char *command);
+void platform_run_command(char *command);
+void platform_window_make_current(platform_window *window);
+void platform_init();
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

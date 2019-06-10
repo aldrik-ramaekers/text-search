@@ -395,6 +395,16 @@ static void create_key_tables(platform_window window)
 	XkbFreeKeyboard(desc, 0, True);
 }
 
+inline void platform_init()
+{
+	XInitThreads();
+}
+
+inline void platform_window_make_current(platform_window *window)
+{
+	glXMakeCurrent(window->display, window->window, window->gl_context);
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height)
 {
 	platform_window window;
@@ -493,8 +503,12 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	Atom wmDelete=XInternAtom(window.display, "WM_DELETE_WINDOW", True);
 	XSetWMProtocols(window.display, window.window, &wmDelete, 1);
 	
+	static GLXContext share_list = 0;
+	
 	// get opengl context
-	window.gl_context = glXCreateContext(window.display, window.visual_info, NULL, GL_TRUE);
+	window.gl_context = glXCreateContext(window.display, window.visual_info, 
+										 share_list, GL_TRUE);
+	share_list = window.gl_context;
 	glXMakeCurrent(window.display, window.window, window.gl_context);
 	
 	// blending
@@ -543,12 +557,18 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 
 void platform_close_window(platform_window *window)
 {
-	glXMakeCurrent(window->display, None, NULL);
-	glXDestroyContext(window->display, window->gl_context);
+	//glXMakeCurrent(window->display, None, NULL);
+	//glXDestroyContext(window->display, window->gl_context);
 	XDestroyWindow(window->display, window->window);
-	XCloseDisplay(window->display);
+	//XCloseDisplay(window->display);
 }
 
+void platform_destroy_window(platform_window *window)
+{
+	glXMakeCurrent(window->display, None, NULL);
+	glXDestroyContext(window->display, window->gl_context);
+	XCloseDisplay(window->display);
+}
 
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
 {
@@ -697,9 +717,50 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				{
 					if (keyboard->input_text_len < MAX_INPUT_LENGTH)
 					{
-						strcat(keyboard->input_text, ch);
+						if (keyboard->input_text_len)
+						{
+							char buffer[MAX_INPUT_LENGTH];
+							if (keyboard->cursor)
+							{
+								char ch2 = keyboard->input_text[keyboard->cursor-1];
+								keyboard->input_text[keyboard->cursor-1] = 0;
+								
+								sprintf(buffer, "%s%c%c%s", keyboard->input_text, ch2, *ch, keyboard->input_text+keyboard->cursor);
+							}
+							else
+							{
+								sprintf(buffer, "%c%s", *ch, keyboard->input_text);
+							}
+							
+							strcpy(keyboard->input_text, buffer);
+						}
+						else
+						{
+							strcat(keyboard->input_text, ch);
+						}
+						
 						keyboard->cursor++;
 						keyboard->input_text_len++;
+					}
+				}
+				else
+				{
+					bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+					
+					// cursor movement
+					if (keyboard_is_key_down(keyboard, KEY_LEFT) && keyboard->cursor > 0)
+					{
+						if (is_lctrl_down)
+							keyboard->cursor = 0;
+						else
+							keyboard->cursor--;
+					}
+					if (keyboard_is_key_down(keyboard, KEY_RIGHT) && keyboard->cursor < keyboard->input_text_len)
+					{
+						if (is_lctrl_down)
+							keyboard->cursor = keyboard->input_text_len;
+						else
+							keyboard->cursor++;
 					}
 				}
 				
@@ -710,19 +771,18 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 					if (is_lctrl_down)
 					{
 						keyboard->input_text[0] = '\0';
-						keyboard->input_text_len = 0;
+						strcpy(keyboard->input_text, keyboard->input_text+keyboard->cursor);
+						keyboard->input_text_len -= keyboard->cursor;
 						keyboard->cursor = 0;
 					}
-					else
+					else if (keyboard->cursor > 0)
 					{
 						s32 len = strlen(keyboard->input_text);
-						keyboard->input_text[len-1] = '\0';
+						//keyboard->input_text[len-1] = '\0';
+						strcpy(keyboard->input_text+keyboard->cursor-1, keyboard->input_text+keyboard->cursor);
 						
-						if (len > 0)
-						{
-							keyboard->cursor--;
-							keyboard->input_text_len--;
-						}
+						keyboard->cursor--;
+						keyboard->input_text_len--;
 					}
 				}
 			}
@@ -1158,4 +1218,18 @@ inline s16 string_to_s16(char *str)
 inline s8 string_to_s8(char *str)
 {
 	return (s8)strtol(str, 0, 10);
+}
+
+inline void platform_open_url(char *url)
+{
+	//https://stackoverflow.com/questions/3037088/how-to-open-the-default-web-browser-in-windows-in-c
+	char buffer[MAX_INPUT_LENGTH];
+	sprintf(buffer, "xdg-open %s", url);
+	platform_run_command(buffer);
+}
+
+inline void platform_run_command(char *command)
+{
+	// ShellExecute for windows
+	system(command);
 }
