@@ -87,6 +87,7 @@ void platform_open_url(char *command);
 void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);
 void platform_init();
+void platform_set_icon(platform_window *window, image *img);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

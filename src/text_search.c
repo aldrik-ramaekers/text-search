@@ -51,6 +51,7 @@ image *sloth_img;
 font *font_medium;
 font *font_small;
 font *font_mini;
+image *sloth_small_img;
 s32 scroll_y = 0;
 
 #include "save.h"
@@ -59,8 +60,9 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
+// TODO(Aldrik): percentage processed goes over 100% when previous is cancelled
+// TODO(Aldrik): save filter,path,text on exit and load on start
 // TODO(Aldrik): filter on file formats in import/export
-// TODO(Aldrik): keybindings
 // TODO(Aldrik): rename platform_open_file_dialog_d to platform_open_file_dialog_block
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
@@ -467,10 +469,12 @@ int main(int argc, char **argv)
 	info_menu_create();
 #endif
 	
-	search_img = assets_load_image("data/imgs/search.png");
-	sloth_img = assets_load_image("data/imgs/sloth.png");
-	directory_img = assets_load_image("data/imgs/folder.png");
-	error_img = assets_load_image("data/imgs/error.png");
+	search_img = assets_load_image("data/imgs/search.png", false);
+	sloth_img = assets_load_image("data/imgs/sloth.png", false);
+	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
+	directory_img = assets_load_image("data/imgs/folder.png", false);
+	error_img = assets_load_image("data/imgs/error.png", false);
+	
 	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
 	font_small = assets_load_font("data/fonts/mono.ttf", 16);
 	font_mini = assets_load_font("data/fonts/mono.ttf", 12);
@@ -541,6 +545,13 @@ int main(int argc, char **argv)
 		platform_handle_events(&window, &mouse, &keyboard);
 		about_page_update_render();
 		platform_window_make_current(&window);
+		
+		static bool loaded = false;
+		if (!loaded && sloth_small_img->loaded)
+		{
+			loaded = true;
+			platform_set_icon(&window, sloth_small_img);
+		}
 		
 		global_ui_context.keyboard = &keyboard;
 		global_ui_context.mouse = &mouse;
@@ -644,6 +655,7 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
+					global_search_result.files_searched = 0;
 					global_search_result.cancel_search = false;
 					scroll_y = 0;
 					global_search_result.found_file_matches = false;
@@ -755,6 +767,7 @@ int main(int argc, char **argv)
 	
 	assets_destroy_image(search_img);
 	assets_destroy_image(sloth_img);
+	assets_destroy_image(sloth_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
 	

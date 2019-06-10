@@ -3,6 +3,7 @@
 #include <X11/X.h>
 #include <X11/Xlib.h>
 #include <X11/extensions/Xrandr.h>
+#include <X11/Xatom.h>
 #include <time.h>
 #include <X11/XKBlib.h>
 #include <unistd.h>
@@ -1232,4 +1233,35 @@ inline void platform_run_command(char *command)
 {
 	// ShellExecute for windows
 	system(command);
+}
+
+void platform_set_icon(platform_window *window, image *img)
+{
+	s32 w = img->width;
+	s32 h = img->height;
+	
+	s32 nelements = (w * h) + 2;
+	
+	unsigned long data[nelements];
+	int i = 0;
+	(data)[i++] = w;
+	(data)[i++] = h;
+	
+	for (s32 y = 0; y < h; y++)
+	{
+		for (s32 x = 0; x < w; x++)
+		{
+			s32 *pixel = (s32*)(&((data)[i++]));
+			
+			s32 img_pixel = *(((s32*)img->data+(x+(y*w))));
+			*pixel = img_pixel;
+		}
+	}
+	
+	Atom property = XInternAtom(window->display, "_NET_WM_ICON", 0);
+	Atom cardinal = XInternAtom(window->display, "CARDINAL", False);
+	
+	int result = XChangeProperty(window->display, window->window, 
+								 property, cardinal, 32, PropModeReplace, 
+								 (unsigned char *)data, nelements);
 }

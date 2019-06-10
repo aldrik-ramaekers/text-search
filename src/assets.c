@@ -64,8 +64,8 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				task->image->loaded = true;
 				
-				// TODO: should we keep the memory to create sub images?
-				stbi_image_free(task->image->data);
+				if (!task->image->keep_in_memory)
+					stbi_image_free(task->image->data);
 			}
 		}
 		else if (task->type == ASSET_FONT)
@@ -224,7 +224,7 @@ void *assets_queue_worker()
 	return 0;
 }
 
-image *assets_load_image(char *file)
+image *assets_load_image(char *file, bool keep_in_memory)
 {
 	// check if image is already loaded or loading
 	for (int i = 0; i < global_asset_collection.images.length; i++)
@@ -245,6 +245,7 @@ image *assets_load_image(char *file)
 	new_image.loaded = false;
 	
 	new_image.references = 1;
+	new_image.keep_in_memory = keep_in_memory;
 	
 	// NOTE(Aldrik): we should never realloc the image array because pointers will be 
 	// invalidated.
@@ -282,6 +283,9 @@ void assets_destroy_image(image *image_to_destroy)
 	image_found:
 	if (image_at->references <= 0)
 	{
+		if (image_at->keep_in_memory)
+			stbi_image_free(image_at->data);
+		
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &image_at->textureID);
 		

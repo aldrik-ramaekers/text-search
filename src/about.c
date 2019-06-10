@@ -2,7 +2,8 @@
 void about_page_create()
 {
 	global_about_page.active = false;
-	global_about_page.sloth_img = assets_load_image("data/imgs/sloth.png");
+	global_about_page.sloth_img = assets_load_image("data/imgs/sloth.png", false);
+	global_about_page.sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
 	global_about_page.font_big = assets_load_font("data/fonts/mono.ttf", 32);
 	global_about_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
 	
@@ -36,7 +37,7 @@ void about_page_update_render()
 		char copyright_text[30];
 		sprintf(copyright_text, "Copyright 2019-%d", tp->tm_year+1900);
 		
-		char *info_text = "Filer files and find text within files.";
+		char *info_text = "Filter files and find text within files.";
 		char *names_text = "Aldrik Ramaekers";
 		
 		s32 text_w = calculate_text_width(global_about_page.font_big, title_text);
@@ -105,6 +106,7 @@ void about_page_show()
 	global_about_page.keyboard = keyboard_input_create();
 	global_about_page.mouse = mouse_input_create();
 	global_about_page.active = true;
+	platform_set_icon(&global_about_page.window, global_about_page.sloth_small_img);
 }
 
 void about_page_hide()

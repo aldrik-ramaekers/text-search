@@ -8,6 +8,7 @@ typedef struct t_about_page
 	mouse_input mouse;
 	bool active;
 	image *sloth_img;
+	image *sloth_small_img;
 	font *font_big;
 	font *font_small;
 	button_state btn_close;

@@ -33,6 +33,7 @@ typedef struct t_sample
 typedef struct t_image {
 	char *path;
 	bool loaded;
+	bool keep_in_memory;
 	s32 width;
 	s32 height;
 	s32 channels;
@@ -104,7 +105,7 @@ void assets_destroy();
 void assets_do_post_process();
 void *assets_queue_worker();
 
-image *assets_load_image(char *file);
+image *assets_load_image(char *file, bool keep_in_memory);
 void assets_destroy_image(image *image);
 
 font *assets_load_font(char *file, s16 size);
