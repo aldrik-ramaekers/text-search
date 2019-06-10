@@ -45,4 +45,6 @@ void render_set_scissor(platform_window *window, s32 x, s32 y, s32 w, s32 h);
 vec4 render_get_scissor();
 void render_reset_scissor();
 
+void render_set_rotation(float32 rotation, float32 x, float32 y, s32 depth);
+
 #endif

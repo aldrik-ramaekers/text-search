@@ -170,6 +170,7 @@ typedef struct t_keyboard_input
 	char *input_text;
 	s32 input_text_len;
 	bool keys[MAX_KEYCODE];
+	bool input_keys[MAX_KEYCODE];
 } keyboard_input;
 
 int keycode_map[MAX_KEYCODE];
@@ -182,6 +183,7 @@ bool is_right_released(mouse_input *input);
 bool is_right_clicked(mouse_input *input);
 
 bool keyboard_is_key_down(keyboard_input *keyboard, s16 key);
+bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key);
 void keyboard_set_input_text(keyboard_input *keyboard, char *text);
 
 mouse_input mouse_input_create();

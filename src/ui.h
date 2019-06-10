@@ -106,6 +106,7 @@ button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
 
 // widgets
+bool is_shortcut_down(s32 shortcut_keys[2]);
 void ui_begin_menu_bar();
 bool ui_push_menu(char *title);
 bool ui_push_menu_item(char *title, char *shortcut);

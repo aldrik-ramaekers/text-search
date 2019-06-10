@@ -556,6 +556,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->right_state &= ~MOUSE_CLICK;
 	mouse->left_state &= ~MOUSE_RELEASE;
 	mouse->right_state &= ~MOUSE_RELEASE;
+	memset(keyboard->input_keys, 0, MAX_KEYCODE);
 	mouse->move_x = 0;
 	mouse->move_y = 0;
 	
@@ -626,6 +627,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		{
 			s32 key = window->event.xkey.keycode;
 			keyboard->keys[keycode_map[key]] = true;
+			keyboard->input_keys[keycode_map[key]] = true;
 			
 			// https://gist.github.com/rickyzhang82/8581a762c9f9fc6ddb8390872552c250
 			//printf("state: %d\n", window->event.xkey.state);

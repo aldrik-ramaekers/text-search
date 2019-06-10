@@ -1,5 +1,10 @@
 
-void set_render_depth(s32 depth)
+inline void render_set_rotation(float32 rotation, float32 x, float32 y, s32 depth)
+{
+	glRotatef(rotation, x, y, depth);
+}
+
+inline void set_render_depth(s32 depth)
 {
 	render_depth = depth;
 }

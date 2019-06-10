@@ -422,6 +422,12 @@ bool ui_push_checkbox(checkbox_state *state, char *title)
 	return result;
 }
 
+inline bool is_shortcut_down(s32 shortcut_keys[2])
+{
+	return keyboard_is_key_down(global_ui_context.keyboard, shortcut_keys[0]) &&
+		keyboard_is_key_pressed(global_ui_context.keyboard, shortcut_keys[1]);
+}
+
 bool ui_push_menu_item(char *title, char *shortcut)
 {
 	bool result = false;
@@ -449,7 +455,7 @@ bool ui_push_menu_item(char *title, char *shortcut)
 	
 	color bg_color = global_ui_context.style.background;
 	
-	if (mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h)
+	if ((mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h))
 	{
 		bg_color = global_ui_context.style.background_hover;
 		

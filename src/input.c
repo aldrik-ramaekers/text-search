@@ -34,6 +34,11 @@ inline bool keyboard_is_key_down(keyboard_input *keyboard, s16 key)
 	return keyboard->keys[key];
 }
 
+inline bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
+{
+	return keyboard->input_keys[key];
+}
+
 inline void keyboard_set_input_text(keyboard_input *keyboard, char *text)
 {
 	strncpy(keyboard->input_text, text, MAX_INPUT_LENGTH);

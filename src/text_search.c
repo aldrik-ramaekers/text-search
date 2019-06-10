@@ -43,6 +43,8 @@ search_result global_search_result;
 image *search_img;
 image *error_img;
 image *directory_img;
+image *sloth_img;
+font *font_medium;
 font *font_small;
 font *font_mini;
 s32 scroll_y = 0;
@@ -50,12 +52,12 @@ s32 scroll_y = 0;
 #include "save.h"
 #include "save.c"
 
+// TODO(Aldrik): filter on file formats in import/export
+// TODO(Aldrik): keybindings
 // TODO(Aldrik): rename platform_open_file_dialog_d to platform_open_file_dialog_block
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
-// TODO(Aldrik): show loading message/icon when searching for files..
-// TODO(Aldrik): cancel search button
 
 char *text_to_find;
 
@@ -396,14 +398,26 @@ static void render_info(platform_window *window, font *font_small)
 	}
 	else
 	{
-		// TODO(Aldrik): loading animation
-		render_rectangle(50, 50, 300, 300, rgb(200,0,0));
+		s32 img_c = window->width/2;
+		s32 img_w = 200;
+		s32 img_h = 200;
+		s32 img_x = window->width/2-img_w/2;
+		s32 img_y = window->height/2-img_h/2-50;
+		char text[20];
+		
+		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MS);
+		s32 dot_count = (dot_count_t % 1000) / 250;
+		
+		sprintf(text, "%s%.*s", "Finding files", dot_count, "...");
+		
+		render_image(sloth_img, img_x, img_y, img_w, img_h);
+		s32 text_w = calculate_text_width(font_medium, text);
+		render_text(font_medium, img_c - (text_w/2), img_y + img_h + 50, text, global_ui_context.style.foreground);
 	}
 }
 
 static s32 prepare_search_directory_path(char *path, s32 len)
 {
-	// TODO(Aldrik): check max length
 	if (path[len-1] != '/' && len < MAX_INPUT_LENGTH)
 	{
 		path[len] = '/';
@@ -486,11 +500,13 @@ int main(int argc, char **argv)
 	info_menu_create();
 #endif
 	
-	search_img = assets_load_image("data/search.png");
-	directory_img = assets_load_image("data/folder.png");
-	error_img = assets_load_image("data/error.png");
-	font_small = assets_load_font("data/mono.ttf", 16);
-	font_mini = assets_load_font("data/mono.ttf", 12);
+	search_img = assets_load_image("data/imgs/search.png");
+	sloth_img = assets_load_image("data/imgs/sloth.png");
+	directory_img = assets_load_image("data/imgs/folder.png");
+	error_img = assets_load_image("data/imgs/error.png");
+	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
+	font_small = assets_load_font("data/fonts/mono.ttf", 16);
+	font_mini = assets_load_font("data/fonts/mono.ttf", 12);
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
@@ -562,7 +578,7 @@ int main(int argc, char **argv)
 		// begin ui
 		ui_begin();
 		{
-			global_ui_context.style.background_hover = rgb(180,180,180);
+			global_ui_context.style.background_hover = rgb(190,190,190);
 			global_ui_context.style.background = rgb(225,225,225);
 			global_ui_context.style.border = rgb(180,180,180);
 			global_ui_context.style.foreground = rgb(10, 10, 10);
@@ -573,12 +589,36 @@ int main(int argc, char **argv)
 			
 			ui_begin_menu_bar();
 			{
+				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
+				{
+					import_results(&global_search_result);
+				}
+				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
+				{
+					if (global_search_result.found_file_matches)
+						export_results(&global_search_result);
+				}
+				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_Q}))
+				{
+					window.is_open = false;
+				}
+				
 				if (ui_push_menu("File"))
 				{
-					if (ui_push_menu_item("Import", "Ctrl + O")) { import_results(&global_search_result); }
-					if (ui_push_menu_item("Export", "Ctrl + F")) { export_results(&global_search_result); }
+					if (ui_push_menu_item("Import", "Ctrl + O")) 
+					{ 
+						import_results(&global_search_result); 
+					}
+					if (ui_push_menu_item("Export", "Ctrl + S")) 
+					{ 
+						if (global_search_result.found_file_matches)
+							export_results(&global_search_result); 
+					}
 					ui_push_menu_item_separator();
-					if (ui_push_menu_item("Exit", "Ctrl + C")) { window.is_open = false; }
+					if (ui_push_menu_item("Quit", "Ctrl + Q")) 
+					{ 
+						window.is_open = false; 
+					}
 				}
 				if (ui_push_menu("Options"))
 				{
@@ -612,10 +652,8 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
-					global_search_result.done_finding_matches = false;
 					global_search_result.cancel_search = false;
 					scroll_y = 0;
-					global_search_result.walking_file_system = true;
 					global_search_result.found_file_matches = false;
 					done_finding_files = false;
 					reset_status_text();
@@ -642,6 +680,9 @@ int main(int argc, char **argv)
 					
 					if (continue_search)
 					{
+						global_search_result.walking_file_system = true;
+						global_search_result.done_finding_matches = false;
+						
 						global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
 						global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
 																										  global_search_result.search_result_source_dir_len);
@@ -719,10 +760,13 @@ int main(int argc, char **argv)
 	free(global_status_bar.error_status_text);
 	
 	assets_destroy_image(search_img);
+	assets_destroy_image(sloth_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
 	
 	assets_destroy_font(font_small);
+	assets_destroy_font(font_mini);
+	assets_destroy_font(font_medium);
 	assets_destroy();
 	audio_system_destroy();
 	
