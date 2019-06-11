@@ -88,12 +88,35 @@ static void *find_text_in_file_t(void *arg)
 			
 			if (string_contains(content.content, text_to_find))
 			{
+#if 0
+				if (strcmp("/home/aldrik/Projects/allegro5/README_msvc.txt",
+						   match->file.path) == 0)
+				{
+					printf("MATCH!\n");
+					printf("%s\n", (char*)content.content);
+					//printf("%s\n", match->file.path);
+					//printf("%s\n", (char*)content.content);
+				}
+#endif
+				
 				global_search_result.match_found = true;
 				
 				mutex_lock(&global_search_result.mutex);
 				match->match_count++;
 				global_search_result.files_matched++;
 				mutex_unlock(&global_search_result.mutex);
+			}
+			else
+			{
+#if 0
+				if (strcmp("/home/aldrik/Projects/allegro5/README_msvc.txt",
+						   match->file.path) == 0)
+				{printf("%s", (char*)content.content);
+					printf("NO MATCH!\n");
+					//printf("%s\n", match->file.path);
+					//printf("%s\n", (char*)content.content);
+				}
+#endif
 			}
 		}
 		else
@@ -148,6 +171,7 @@ static void* find_text_in_files_t(void *arg)
 		if (new_thr.valid)
 		{
 			array_push(&threads, &new_thr);
+			//thread_join(&new_thr);
 		}
 		else
 		{
@@ -533,8 +557,8 @@ int main(int argc, char **argv)
 	//strcpy(textbox_file_filter.buffer, "*.c,*.h");
 	//strcpy(textbox_search_text.buffer, "*hello*");
 	
-	strcpy(textbox_path.buffer, "/home/aldrik/Projects/text-search/");
-	strcpy(textbox_file_filter.buffer, "*");
+	strcpy(textbox_path.buffer, "/home/aldrik/Projects/");
+	strcpy(textbox_file_filter.buffer, "*.txt");
 	strcpy(textbox_search_text.buffer, "*test*");
 	checkbox_recursive.state = 1;
 #endif
