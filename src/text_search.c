@@ -555,6 +555,9 @@ int main(int argc, char **argv)
 	checkbox_recursive.state = 1;
 #endif
 	
+	settings_config config = settings_config_load_from_file("data/config.txt");
+	settings_config_destroy(&config);
+	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
 	global_search_result.search_directory_buffer = textbox_path.buffer;
