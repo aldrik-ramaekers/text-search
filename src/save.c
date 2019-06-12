@@ -11,13 +11,13 @@ static void *export_result_d(void *arg)
 	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = SAVE_FILE;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
 	
-	platform_open_file_dialog_d(args);
+	platform_open_file_dialog_block(args);
 	
 	if (path_buf[0] == 0) return 0;
-	if (path_buf[1] == 0) return 0;
 	
-	s32 size = matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
+	s32 size = 51 + matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
 	char *buffer = malloc(size);
 	memset(buffer, 0, size);
 	
@@ -82,6 +82,11 @@ static void *export_result_d(void *arg)
 		buffer[cursor++] = '\n';
 	}
 	
+	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
+	{
+		strcat(path_buf, ".tts");
+	}
+	
 	platform_write_file_content(path_buf, "w", buffer, size);
 	free(buffer);
 	
@@ -102,6 +107,22 @@ bool export_results(search_result *search_result)
 
 static void* import_results_d(void *arg)
 {
+	search_result *search_result = arg;
+	
+	array matches = search_result->files;
+	
+	char path_buf[MAX_INPUT_LENGTH];
+	path_buf[0] = 0;
+	
+	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
+	args->buffer = path_buf;
+	args->type = OPEN_FILE;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
+	
+	platform_open_file_dialog_block(args);
+	
+	if (path_buf[0] == 0) return 0;
+	
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
@@ -111,19 +132,6 @@ static void* import_results_d(void *arg)
 	global_search_result.files.length = 0;
 	scroll_y = 0;
 	
-	search_result *search_result = arg;
-	
-	array matches = search_result->files;
-	
-	char path_buf[MAX_INPUT_LENGTH];
-	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
-	args->buffer = path_buf;
-	args->type = OPEN_FILE;
-	
-	platform_open_file_dialog_d(args);
-	
-	if (path_buf[0] == 0) return 0;
-	if (path_buf[1] == 0) return 0;
 	
 	// sprintf(buffer, "%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
 	file_content content = platform_read_file_content(path_buf, "r");

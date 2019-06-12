@@ -60,10 +60,9 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
+// TODO(Aldrik): export/import search text and search directory in tts files
 // TODO(Aldrik): percentage processed goes over 100% when previous is cancelled
 // TODO(Aldrik): save filter,path,text on exit and load on start
-// TODO(Aldrik): filter on file formats in import/export
-// TODO(Aldrik): rename platform_open_file_dialog_d to platform_open_file_dialog_block
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
@@ -664,7 +663,7 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_select_directory, "", directory_img))
 				{
-					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer);
+					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0);
 				}
 				
 				ui_push_textbox(&textbox_file_filter, "File filter...");

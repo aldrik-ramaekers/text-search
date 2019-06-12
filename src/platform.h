@@ -64,6 +64,7 @@ typedef enum t_file_open_error
 struct open_dialog_args
 {
 	char *buffer;
+	char *file_filter;
 	file_dialog_type type;
 };
 
@@ -80,9 +81,9 @@ void platform_destroy_file_content(file_content *content);
 bool get_active_directory(char *buffer);
 bool set_active_directory(char *path);
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
-void platform_open_file_dialog(file_dialog_type type, char *buffer);
+void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter);
+void *platform_open_file_dialog_block(void *arg);
 char *platform_get_full_path(char *file);
-void *platform_open_file_dialog_d(void *arg);
 void platform_open_url(char *command);
 void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);

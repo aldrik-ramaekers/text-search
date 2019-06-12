@@ -952,18 +952,27 @@ static void* platform_open_file_dialog_dd(void *data)
 	char *current_val = malloc(MAX_INPUT_LENGTH);
 	strcpy(current_val, args->buffer);
 	
+	char file_filter[50];
+	file_filter[0] = 0;
+	if (args->file_filter)
+		sprintf(file_filter, "--file-filter=\"%s\"", args->file_filter);
+	
+	char command[150];
+	
 	if (args->type == OPEN_FILE)
 	{
-		f = popen("zenity --file-selection", "r");
+		sprintf(command, "zenity --file-selection %s", file_filter);
 	}
 	else if (args->type == OPEN_DIRECTORY)
 	{
-		f = popen("zenity --file-selection --directory", "r");
+		sprintf(command, "zenity --file-selection --directory %s", file_filter);
 	}
 	else if (args->type == SAVE_FILE)
 	{
-		f = popen("zenity --file-selection --save --confirm-overwrite", "r");
+		sprintf(command, "zenity --file-selection --save --confirm-overwrite %s", file_filter);
 	}
+	
+	f = popen(command, "r");
 	
 	char *buffer = malloc(MAX_INPUT_LENGTH);
 	fgets(buffer, MAX_INPUT_LENGTH, f);
@@ -985,7 +994,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	return 0;
 }
 
-void *platform_open_file_dialog_d(void *arg)
+void *platform_open_file_dialog_block(void *arg)
 {
 	thread thr = thread_start(platform_open_file_dialog_dd, arg);
 	thread_join(&thr);
@@ -993,17 +1002,18 @@ void *platform_open_file_dialog_d(void *arg)
 	return 0;
 }
 
-void platform_open_file_dialog(file_dialog_type type, char *buffer)
+void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter)
 {
 	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
 	args->buffer = buffer;
 	args->type = type;
+	args->file_filter = file_filter;
 	
 	thread thr;
 	thr.valid = false;
 	
 	while (!thr.valid)
-		thr = thread_start(platform_open_file_dialog_d, args);
+		thr = thread_start(platform_open_file_dialog_block, args);
 	thread_detach(&thr);
 }
 
