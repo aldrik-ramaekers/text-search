@@ -42,6 +42,7 @@ typedef struct t_search_result
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
+	bool *recursive_state_buffer;
 } search_result;
 
 status_bar global_status_bar;
@@ -63,7 +64,8 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
-// TODO(Aldrik): save filter,path,text on exit and load on start
+// TODO(Aldrik): set start path of file dialog to export folder
+// TODO(Aldrik): save filter,path,text on exit and load on start (write config file interface)
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
@@ -556,6 +558,7 @@ int main(int argc, char **argv)
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
 	global_search_result.search_directory_buffer = textbox_path.buffer;
+	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
 	
 	bool done_finding_files = false;
 	

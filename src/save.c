@@ -17,12 +17,12 @@ static void *export_result_d(void *arg)
 	
 	if (path_buf[0] == 0) return 0;
 	
-	s32 size = ((MAX_INPUT_LENGTH*3) + 51)
+	s32 size = ((MAX_INPUT_LENGTH*3) + 53)
 		+ matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
 	char *buffer = mem_alloc(size);
 	memset(buffer, 0, size);
 	
-	sprintf(buffer, "%s\n%s\n%s\n%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
+	sprintf(buffer, "%s\n%s\n%s\n%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n%.1d\n",
 			search_result->search_directory_buffer,
 			search_result->filter_buffer,
 			search_result->text_to_find_buffer,
@@ -32,7 +32,8 @@ static void *export_result_d(void *arg)
 			search_result->files_searched,
 			search_result->files_matched,
 			search_result->search_result_source_dir_len,
-			search_result->match_found);
+			search_result->match_found,
+			*search_result->recursive_state_buffer);
 	
 	s32 cursor = 0;
 	cursor += strlen(buffer);
@@ -187,6 +188,10 @@ static void* import_results_d(void *arg)
 	strcpy(search_result->filter_buffer, file_filter);
 	strcpy(search_result->text_to_find_buffer, text_to_find);
 	
+	mem_free(search_directory);
+	mem_free(file_filter);
+	mem_free(text_to_find);
+	
 	char *find_duration_us; find_duration_us = buffer; buffer[16] = 0; buffer += 17;
 	char *show_error_message; show_error_message = buffer; buffer[1] = 0; buffer += 2;
 	char *found_file_matches; found_file_matches = buffer; buffer[1] = 0; buffer += 2;
@@ -194,6 +199,10 @@ static void* import_results_d(void *arg)
 	char *files_matched; files_matched = buffer; buffer[8] = 0; buffer += 9;
 	char *search_result_source_dir_len; search_result_source_dir_len = buffer; buffer[8] = 0; buffer += 9;
 	char *match_found; match_found = buffer; buffer[1] = 0; buffer += 2;
+	char *recursive_search; recursive_search = buffer; buffer[1] = 0; buffer += 2;
+	
+	
+	*search_result->recursive_state_buffer = atoi(recursive_search);
 	
 	search_result->find_duration_us = string_to_u64(find_duration_us);
 	search_result->show_error_message = string_to_u8(show_error_message);
