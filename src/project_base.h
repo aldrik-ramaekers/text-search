@@ -77,6 +77,10 @@
 #define OS_OSX
 #endif
 
+#include "thread.h"
+#include "array.h"
+#include "memory.h"
+
 #define STB_IMAGE_IMPLEMENTATION
 #include "external/stb_image.h"
 
@@ -86,8 +90,6 @@
 #define DR_WAV_IMPLEMENTATION
 #include "external/dr_wav.h"
 
-#include "thread.h"
-#include "array.h"
 #include "input.h"
 #include "assets.h"
 #include "platform.h"
@@ -96,7 +98,6 @@
 #include "audio.h"
 #include "ui.h"
 #include "string_utils.h"
-#include "memory.h"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.h"

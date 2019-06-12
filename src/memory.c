@@ -66,7 +66,8 @@ void memory_print_leaks()
 		printf("%s:%d:%d:%p\n", entry->name, entry->line, entry->size, entry->ptr);
 	}
 	mutex_unlock(&global_memory_mutex);
-	
+	array_destroy(&global_memory_usage);
+	mutex_destroy(&global_memory_mutex);
 }
 
 #endif
