@@ -265,7 +265,7 @@ static void* import_results_d(void *arg)
 	
 	sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 	
-#if 1
+#if 0
 	
 	printf("SEARCH: %s\n",  search_directory);
 	printf("FILTER: %s\n",  file_filter);

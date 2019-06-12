@@ -63,7 +63,6 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
-// TODO(Aldrik): percentage processed goes over 100% when previous is cancelled
 // TODO(Aldrik): save filter,path,text on exit and load on start
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
@@ -74,50 +73,28 @@ char *text_to_find;
 static void *find_text_in_file_t(void *arg)
 {
 	text_match *match = arg;
-	if (global_search_result.cancel_search) return 0;
 	
 	file_content content;
+	content.content = 0;
+	
 	try_again:
 	{
-		if (global_search_result.cancel_search) return 0;
+		if (global_search_result.cancel_search) { goto finish_early; }
 		
 		content = platform_read_file_content(match->file.path, "r");
 		
+		if (global_search_result.cancel_search) { goto finish_early; }
+		
 		if (content.content && !content.file_error)
 		{
-			if (global_search_result.cancel_search) return 0;
-			
 			if (string_contains(content.content, text_to_find))
 			{
-#if 0
-				if (strcmp("/home/aldrik/Projects/allegro5/README_msvc.txt",
-						   match->file.path) == 0)
-				{
-					printf("MATCH!\n");
-					printf("%s\n", (char*)content.content);
-					//printf("%s\n", match->file.path);
-					//printf("%s\n", (char*)content.content);
-				}
-#endif
-				
 				global_search_result.match_found = true;
 				
 				mutex_lock(&global_search_result.mutex);
 				match->match_count++;
 				global_search_result.files_matched++;
 				mutex_unlock(&global_search_result.mutex);
-			}
-			else
-			{
-#if 0
-				if (strcmp("/home/aldrik/Projects/allegro5/README_msvc.txt",
-						   match->file.path) == 0)
-				{printf("%s", (char*)content.content);
-					printf("NO MATCH!\n");
-					//printf("%s\n", match->file.path);
-					//printf("%s\n", (char*)content.content);
-				}
-#endif
 			}
 		}
 		else
@@ -142,12 +119,18 @@ static void *find_text_in_file_t(void *arg)
 		}
 	}
 	
-	platform_destroy_file_content(&content);
-	
-	mutex_lock(&global_search_result.mutex);
-	global_search_result.files_searched++;
-	sprintf(global_status_bar.result_status_text, "%.0f%% of files processed",  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
-	mutex_unlock(&global_search_result.mutex);
+	finish_early:
+	{
+		platform_destroy_file_content(&content);
+		
+		if (!global_search_result.cancel_search)
+		{
+			mutex_lock(&global_search_result.mutex);
+			global_search_result.files_searched++;
+			sprintf(global_status_bar.result_status_text, "%.0f%% of files processed",  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
+			mutex_unlock(&global_search_result.mutex);
+		}
+	}
 	
 	return 0;
 }
@@ -167,7 +150,10 @@ static void* find_text_in_files_t(void *arg)
 		
 		thread new_thr = thread_start(find_text_in_file_t, match);
 		
-		if (global_search_result.cancel_search) break;
+		if (global_search_result.cancel_search) 
+		{
+			goto finish_early;
+		}
 		
 		if (new_thr.valid)
 		{
@@ -186,13 +172,17 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	u64 end_f = platform_get_time(TIME_FULL, TIME_US);
-	
-	global_search_result.find_duration_us = end_f - start_f;
-	sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
-	
-	array_destroy(&threads);
-	global_search_result.done_finding_matches = true;
+	finish_early:
+	{
+		u64 end_f = platform_get_time(TIME_FULL, TIME_US);
+		
+		global_search_result.find_duration_us = end_f - start_f;
+		sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
+		
+		array_destroy(&threads);
+		global_search_result.done_finding_matches = true;
+		global_search_result.files_searched = global_search_result.files.length;
+	}
 	
 	return 0;
 }
