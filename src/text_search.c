@@ -64,7 +64,8 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
-// TODO(Aldrik): UI freezes while search is active after cancelling previous search
+// TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
+
 // TODO(Aldrik): set start path of file dialog to export folder
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
@@ -400,6 +401,7 @@ static void render_info(platform_window *window, font *font_small)
 		s32 y = global_ui_context.layout.offset_y;
 		
 		s32 directory_info_count = 11;
+		// TODO(Aldrik): rewrite this so we can use 1 string and split line on \n for translations.
 		char *info_text[] = 
 		{
 			"1. Search directory",
