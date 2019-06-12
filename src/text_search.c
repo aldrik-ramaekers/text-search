@@ -594,7 +594,7 @@ int main(int argc, char **argv)
 			global_ui_context.style.foreground = rgb(10, 10, 10);
 			global_ui_context.style.textbox_background = rgb(240,240,240);
 			global_ui_context.style.textbox_foreground = rgb(10,10,10);
-			global_ui_context.style.textbox_active_border = rgb(0,0,200);
+			global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
 			global_ui_context.style.button_background = rgb(225,225,225);
 			
 			ui_begin_menu_bar();

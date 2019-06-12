@@ -231,6 +231,8 @@ bool ui_push_menu(char *title)
 bool ui_push_textbox(textbox_state *state, char *placeholder)
 {
 	bool result = false;
+	static u64 cursor_tick = 0;
+	static u64 last_cursor_pos = 0;
 	
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
@@ -251,6 +253,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	}
 	else
 	{
+		cursor_tick++;
 		render_rectangle(x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, global_ui_context.style.textbox_background);
 		render_rectangle_outline(x, y, TEXTBOX_WIDTH, TEXTBOX_HEIGHT, 1, global_ui_context.style.textbox_active_border);
 	}
@@ -272,6 +275,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
+			cursor_tick = 0;
 			
 			state->state = !state->state;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
@@ -312,6 +316,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	s32 cursor_text_w;
 	s32 cursor_x;
 	s32 diff = 0;
+	
 	if (state->state)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
@@ -321,6 +326,10 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		char *calculate_text = malloc(MAX_INPUT_LENGTH);
 		strcpy(calculate_text, global_ui_context.keyboard->input_text);
 		calculate_text[global_ui_context.keyboard->cursor] = 0;
+		
+		if (last_cursor_pos != global_ui_context.keyboard->cursor)
+			cursor_tick = 0;
+		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
 		cursor_text_w = calculate_text_width(global_ui_context.font_small, 
 											 calculate_text);
@@ -342,7 +351,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		s32 cursor_h = global_ui_context.font_small->size + 1;
 		s32 cursor_w = 2;
 		
-		render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
+		if (cursor_tick % 50 < 25)
+			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
 	
 	if (!has_text)

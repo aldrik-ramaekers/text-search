@@ -713,7 +713,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				if (ch)
 				{
-					if (keyboard->input_text_len < MAX_INPUT_LENGTH)
+					bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+					
+					if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
 					{
 						if (keyboard->input_text_len)
 						{
@@ -966,12 +968,15 @@ static void* platform_open_file_dialog_dd(void *data)
 	char *buffer = malloc(MAX_INPUT_LENGTH);
 	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
-	// NOTE(Aldrik): buffer should be longer then 1 because zenity returns a single garbage character when closed without selecting a path. (lol?)
-	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0 && strlen(buffer) > 1)
+	// NOTE(Aldrik): buffer should be longer then 2 because zenity returns a single garbage character when closed without selecting a path. (lol?)
+	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
-		strcpy(args->buffer, buffer);
-		s32 len = strlen(args->buffer);
-		args->buffer[len-1] = 0;
+		if (strlen(buffer) > 2 || strcmp(buffer, "/") == 0)
+		{
+			strcpy(args->buffer, buffer);
+			s32 len = strlen(args->buffer);
+			args->buffer[len-1] = 0;
+		}
 	}
 	
 	free(current_val);
