@@ -5,7 +5,6 @@ void assets_create()
 	get_active_directory(active_dir_buf);
 	binary_path = platform_get_full_path(active_dir_buf);
 	
-	
 	assets asset_collection;
 	asset_collection.images = array_create(sizeof(image));
 	asset_collection.fonts = array_create(sizeof(font));
@@ -80,7 +79,7 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				
 				task->font->loaded = true;
-				free(task->font->bitmap);
+				mem_free(task->font->bitmap);
 			}
 		}
 		
@@ -122,7 +121,7 @@ bool assets_queue_worker_load_font(font *font)
     stbtt_fontinfo info;
     if (!stbtt_InitFont(&info, ttf_buffer, 0))
     {
-		free(ttf_buffer);
+		mem_free(ttf_buffer);
 		return false;
 	}
 	
@@ -135,7 +134,7 @@ bool assets_queue_worker_load_font(font *font)
 	font->palette_height = b_h;
 	
 	/* create a bitmap for the phrase */
-    unsigned char* bitmap = malloc(b_w * b_h);
+    unsigned char* bitmap = mem_alloc(b_w * b_h);
 	memset(bitmap, 0, b_w * b_h);
 	
 	/* calculate font scaling */
@@ -174,7 +173,8 @@ bool assets_queue_worker_load_font(font *font)
 	font->scale = scale;
 	
 	font->bitmap = bitmap;
-	free(ttf_buffer);
+	platform_destroy_file_content(&content);
+	
 	return true;
 }
 
@@ -240,7 +240,7 @@ image *assets_load_image(char *file, bool keep_in_memory)
 	}
 	
 	image new_image;
-	new_image.path = malloc(strlen(file)+1);
+	new_image.path = mem_alloc(strlen(file)+1);
 	strcpy(new_image.path, file);
 	new_image.loaded = false;
 	
@@ -266,31 +266,20 @@ image *assets_load_image(char *file, bool keep_in_memory)
 
 void assets_destroy_image(image *image_to_destroy)
 {
-	image *image_at = 0;
-	for (int i = 0; i < global_asset_collection.images.length; i++)
+	if (image_to_destroy->references == 1)
 	{
-		image_at = array_at(&global_asset_collection.images, i);
-		
-		if (strcmp(image_at->path, image_to_destroy->path) == 0)
-		{
-			// image is already loaded/loading
-			image_at->references--;
-			goto image_found;
-		}
-	}
-	return;
-	
-	image_found:
-	if (image_at->references <= 0)
-	{
-		if (image_at->keep_in_memory)
-			stbi_image_free(image_at->data);
+		if (image_to_destroy->keep_in_memory)
+			stbi_image_free(image_to_destroy->data);
 		
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(1, &image_at->textureID);
+		glDeleteTextures(1, &image_to_destroy->textureID);
 		
-		free(image_at->path);
-		array_remove(&global_asset_collection.images, image_at);
+		mem_free(image_to_destroy->path);
+		//array_remove(&global_asset_collection.images, image_at);
+	}
+	else
+	{
+		image_to_destroy->references--;
 	}
 }
 
@@ -310,7 +299,7 @@ font *assets_load_font(char *file, s16 size)
 	}
 	
 	font new_font;
-	new_font.path = malloc(strlen(file)+1);
+	new_font.path = mem_alloc(strlen(file)+1);
 	new_font.size = size;
 	strcpy(new_font.path, file);
 	new_font.loaded = false;
@@ -337,28 +326,17 @@ font *assets_load_font(char *file, s16 size)
 
 void assets_destroy_font(font *font_to_destroy)
 {
-	font *font_at = 0;
-	for (int i = 0; i < global_asset_collection.fonts.length; i++)
-	{
-		font_at = array_at(&global_asset_collection.fonts, i);
-		
-		if (font_at->size == font_to_destroy->size &&
-			strcmp(font_at->path, font_to_destroy->path) == 0)
-		{
-			font_at->references--;
-			goto font_found;
-		}
-	}
-	return;
-	
-	font_found:
-	if (font_at->references <= 0)
+	if (font_to_destroy->references == 1)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(1, &font_at->textureID);
+		glDeleteTextures(1, &font_to_destroy->textureID);
 		
-		free(font_at->path);
-		array_remove(&global_asset_collection.fonts, font_at);
+		mem_free(font_to_destroy->path);
+		//array_remove(&global_asset_collection.fonts, font_at);
+	}
+	else
+	{
+		font_to_destroy->references--;
 	}
 }
 
@@ -377,7 +355,7 @@ sample *assets_load_sample(char *file)
 	}
 	
 	sample new_sample;
-	new_sample.path = malloc(strlen(file)+1);
+	new_sample.path = mem_alloc(strlen(file)+1);
 	strcpy(new_sample.path, file);
 	new_sample.loaded = true;
 	new_sample.references = 1;
@@ -435,8 +413,8 @@ void assets_destroy_sample(sample *sample_to_destroy)
 	if (sample_at->references <= 0)
 	{
 		drwav_free(sample_at->data);
-		free(sample_at->path);
-		array_remove(&global_asset_collection.samples, sample_at);
+		mem_free(sample_at->path);
+		//array_remove(&global_asset_collection.samples, sample_at);
 	}
 }
 
@@ -451,6 +429,8 @@ void assets_destroy()
 	
 	array_destroy(&global_asset_collection.queue.queue);
 	array_destroy(&global_asset_collection.post_process_queue);
+	
+	mem_free(binary_path);
 	
 	mutex_destroy(&asset_mutex);
 }

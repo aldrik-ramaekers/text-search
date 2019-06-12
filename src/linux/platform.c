@@ -109,7 +109,7 @@ file_content platform_read_file_content(char *path, const char *mode)
 	// if file i empty alloc 1 byte
 	s32 length_to_alloc = length+1;
 	
-	result.content = malloc(length_to_alloc);
+	result.content = mem_alloc(length_to_alloc);
 	if (!result.content) goto done;
 	
 	fread(result.content, 1, length, file);
@@ -126,7 +126,7 @@ file_content platform_read_file_content(char *path, const char *mode)
 inline void platform_destroy_file_content(file_content *content)
 {
 	assert(content);
-	free(content->content);
+	mem_free(content->content);
 }
 
 // Translate an X11 key code to a GLFW key code.
@@ -879,7 +879,7 @@ cpu_info platform_get_cpu_info()
 	s64 file_size = ftell(data);
 	fseek(data, 0, SEEK_SET);
 	
-	char *file_buffer = malloc(50000);
+	char *file_buffer = mem_alloc(50000);
 	fread(file_buffer, 1, 50000, data);
 	
 	// 3 = model, 4 = model name, 7 = frequency, 8 = cache size, 22  = cache alignment
@@ -938,7 +938,7 @@ cpu_info platform_get_cpu_info()
 	
 	done:
 	fclose(data);
-	free(file_buffer);
+	mem_free(file_buffer);
 	
 	return result;
 }
@@ -949,7 +949,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	
 	FILE *f;
 	
-	char *current_val = malloc(MAX_INPUT_LENGTH);
+	char *current_val = mem_alloc(MAX_INPUT_LENGTH);
 	strcpy(current_val, args->buffer);
 	
 	char file_filter[50];
@@ -974,7 +974,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	
 	f = popen(command, "r");
 	
-	char *buffer = malloc(MAX_INPUT_LENGTH);
+	char *buffer = mem_alloc(MAX_INPUT_LENGTH);
 	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
 	// NOTE(Aldrik): buffer should be longer then 2 because zenity returns a single garbage character when closed without selecting a path. (lol?)
@@ -988,8 +988,8 @@ static void* platform_open_file_dialog_dd(void *data)
 		}
 	}
 	
-	free(current_val);
-	free(buffer);
+	mem_free(current_val);
+	mem_free(buffer);
 	
 	return 0;
 }
@@ -998,13 +998,13 @@ void *platform_open_file_dialog_block(void *arg)
 {
 	thread thr = thread_start(platform_open_file_dialog_dd, arg);
 	thread_join(&thr);
-	free(arg);
+	mem_free(arg);
 	return 0;
 }
 
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter)
 {
-	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
+	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = buffer;
 	args->type = type;
 	args->file_filter = file_filter;
@@ -1025,7 +1025,7 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 	
 	s32 len = strlen(filter);
 	
-	char *subdirname_buf = malloc(PATH_MAX);
+	char *subdirname_buf = mem_alloc(PATH_MAX);
 	
 	DIR *d;
 	struct dirent *dir;
@@ -1054,13 +1054,13 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 				// check if name matches pattern
 				if (string_match(filter, dir->d_name))
 				{
-					char *buf = malloc(PATH_MAX);
+					char *buf = mem_alloc(PATH_MAX);
 					//realpath(dir->d_name, buf);
 					sprintf(buf, "%s%s",start_dir, dir->d_name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = malloc(len);
+					f.matched_filter = mem_alloc(len);
 					strcpy(f.matched_filter, filter);
 					array_push_size(list, &f, sizeof(found_file));
 				}
@@ -1069,12 +1069,12 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 		closedir(d);
 	}
 	
-	free(subdirname_buf);
+	mem_free(subdirname_buf);
 }
 
 char *platform_get_full_path(char *file)
 {
-	char *buf = malloc(PATH_MAX);
+	char *buf = mem_alloc(PATH_MAX);
 	realpath(file, buf);
 	return buf;
 }
@@ -1092,7 +1092,7 @@ void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
 	platform_list_files_d(info->list, info->start_dir, info->pattern, info->recursive);
-	free(info);
+	mem_free(info);
 	return 0;
 }
 
@@ -1137,18 +1137,25 @@ void *platform_list_files_t(void *args)
 	array_push(&filters, current_filter);
 	
 	array threads = array_create(sizeof(thread));
+	array_reserve(&threads, filters.length);
 	
 	for (s32 i = 0; i < filters.length; i++)
 	{
 		char *filter = array_at(&filters, i);
 		
-		list_file_args *args_2 = malloc(sizeof(list_file_args));
-		args_2->list = list;
-		args_2->start_dir = start_dir;
-		args_2->pattern = filter;
-		args_2->recursive = recursive;
+		thread thr;
+		thr.valid = false;
 		
-		thread thr = thread_start(platform_list_files_t_t, args_2);
+		list_file_args *args_2 = mem_alloc(sizeof(list_file_args));
+		if (args_2)
+		{
+			args_2->list = list;
+			args_2->start_dir = start_dir;
+			args_2->pattern = filter;
+			args_2->recursive = recursive;
+			
+			thr = thread_start(platform_list_files_t_t, args_2);
+		}
 		
 		if (platform_cancel_search) break;
 		
@@ -1173,7 +1180,7 @@ void *platform_list_files_t(void *args)
 	
 	array_destroy(&threads);
 	array_destroy(&filters);
-	free(args);
+	mem_free(args);
 	
 	return 0;
 }
@@ -1181,7 +1188,7 @@ void *platform_list_files_t(void *args)
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
 {
 	platform_cancel_search = false;
-	list_file_args *args = malloc(sizeof(list_file_args));
+	list_file_args *args = mem_alloc(sizeof(list_file_args));
 	args->list = list;
 	args->start_dir = start_dir;
 	args->pattern = filter;

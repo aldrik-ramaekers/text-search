@@ -20,14 +20,14 @@ int array_push(array *array, void *data)
 	
 	if (!array->data)
 	{
-		array->data = malloc(array->entry_size);
+		array->data = mem_alloc(array->entry_size);
 		array->reserved_length = 1;
 	}
 	
 	if (array->reserved_length < array->length)
 	{
 		array->reserved_length = array->length;
-		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
 	}
 	
 	memcpy(array->data + ((array->length-1) * array->entry_size),
@@ -48,14 +48,14 @@ int array_push_size(array *array, void *data, s32 data_size)
 	
 	if (!array->data)
 	{
-		array->data = malloc(array->entry_size);
+		array->data = mem_alloc(array->entry_size);
 		array->reserved_length = 1;
 	}
 	
 	if (array->reserved_length < array->length)
 	{
 		array->reserved_length = array->length;
-		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
 	}
 	
 	memcpy(array->data + ((array->length-1) * array->entry_size),
@@ -85,7 +85,7 @@ void array_reserve(array *array, u32 reserve_count)
 	if (reserve_count > 0)
 	{
 		array->reserved_length += reserve_count;
-		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
 	}
 	mutex_unlock(&array->mutex);
 }
@@ -153,7 +153,7 @@ void *array_at(array *array, u32 at)
 void array_destroy(array *array)
 {
 	assert(array);
-	free(array->data);
+	mem_free(array->data);
 	mutex_destroy(&array->mutex);
 }
 
@@ -181,7 +181,7 @@ array array_copy(array *arr)
 	new_array.length = arr->length;
 	new_array.reserved_length = arr->reserved_length;
 	new_array.entry_size = arr->entry_size;
-	new_array.data = malloc(new_array.entry_size*new_array.reserved_length);
+	new_array.data = mem_alloc(new_array.entry_size*new_array.reserved_length);
 	new_array.mutex = mutex_create();
 	
 	mutex_lock(&arr->mutex);

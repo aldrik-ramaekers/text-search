@@ -96,6 +96,7 @@
 #include "audio.h"
 #include "ui.h"
 #include "string_utils.h"
+#include "memory.h"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.h"
@@ -103,7 +104,9 @@
 #include "asset_pipeline_watch.h"
 #include "console.h"
 #include "info_menu.h"
+#include "memory.c"
 #endif
+
 
 #ifdef OS_LINUX
 #include "linux/thread.c"

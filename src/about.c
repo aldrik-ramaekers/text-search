@@ -122,6 +122,7 @@ void about_page_hide()
 void about_page_destroy()
 {
 	assets_destroy_image(global_about_page.sloth_img);
+	assets_destroy_image(global_about_page.sloth_small_img);
 	assets_destroy_font(global_about_page.font_big);
 	assets_destroy_font(global_about_page.font_small);
 }

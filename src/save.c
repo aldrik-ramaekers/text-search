@@ -8,7 +8,7 @@ static void *export_result_d(void *arg)
 	char path_buf[MAX_INPUT_LENGTH];
 	path_buf[0] = 0;
 	
-	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
+	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = SAVE_FILE;
 	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
@@ -19,7 +19,7 @@ static void *export_result_d(void *arg)
 	
 	s32 size = ((MAX_INPUT_LENGTH*3) + 51)
 		+ matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
-	char *buffer = malloc(size);
+	char *buffer = mem_alloc(size);
 	memset(buffer, 0, size);
 	
 	sprintf(buffer, "%s\n%s\n%s\n%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
@@ -92,7 +92,7 @@ static void *export_result_d(void *arg)
 	}
 	
 	platform_write_file_content(path_buf, "w", buffer, size);
-	free(buffer);
+	mem_free(buffer);
 	
 	return 0;
 }
@@ -118,7 +118,7 @@ static void* import_results_d(void *arg)
 	char path_buf[MAX_INPUT_LENGTH];
 	path_buf[0] = 0;
 	
-	struct open_dialog_args *args = malloc(sizeof(struct open_dialog_args));
+	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = OPEN_FILE;
 	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
@@ -130,8 +130,8 @@ static void* import_results_d(void *arg)
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
-		free(match->file.path);
-		free(match->file.matched_filter);
+		mem_free(match->file.path);
+		mem_free(match->file.matched_filter);
 	}
 	global_search_result.files.length = 0;
 	scroll_y = 0;
@@ -149,9 +149,9 @@ static void* import_results_d(void *arg)
 	char *buffer = content.content;
 	char *buffer_start = buffer;
 	
-	char *search_directory = malloc(MAX_INPUT_LENGTH);
-	char *file_filter = malloc(MAX_INPUT_LENGTH);
-	char *text_to_find = malloc(MAX_INPUT_LENGTH);
+	char *search_directory = mem_alloc(MAX_INPUT_LENGTH);
+	char *file_filter = mem_alloc(MAX_INPUT_LENGTH);
+	char *text_to_find = mem_alloc(MAX_INPUT_LENGTH);
 	
 	s32 index = 0;
 	s32 offset_ = 0;
@@ -217,7 +217,7 @@ static void* import_results_d(void *arg)
 			if (expect == 0)
 			{
 				buffer[i] = 0;
-				char *path = malloc(PATH_MAX);
+				char *path = mem_alloc(PATH_MAX);
 				strcpy(path, buffer+current_data_start);
 				
 				match.file.path = path;
@@ -228,7 +228,7 @@ static void* import_results_d(void *arg)
 			else if (expect == 1)
 			{
 				buffer[i] = 0;
-				char *filter = malloc(PATH_MAX);
+				char *filter = mem_alloc(PATH_MAX);
 				strcpy(filter, buffer+current_data_start);
 				
 				match.file.matched_filter = filter;

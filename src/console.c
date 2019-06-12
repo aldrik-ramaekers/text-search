@@ -54,7 +54,7 @@ void console_print(char *message, console_print_type type, ...)
 	vsprintf(tmp, message, args);
 	va_end(args);
 	
-	char *msg = malloc(300);
+	char *msg = mem_alloc(300);
 	
 	u64 ms = platform_get_time(TIME_PROCESS, TIME_MS);
 	u32 time_ms = ms % 1000;
@@ -78,7 +78,7 @@ void console_destroy()
 	for (int i = 0; i < global_console.log.length; i++)
 	{
 		console_message *m = array_at(&global_console.log, i);
-		free(m->message);
+		mem_free(m->message);
 	}
 	array_destroy(&global_console.log);
 	mutex_destroy(&console_mutex);

@@ -105,6 +105,8 @@ textbox_state ui_create_textbox(u16 max_len);
 button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
 
+void ui_destroy_textbox(textbox_state *state);
+
 // widgets
 bool is_shortcut_down(s32 shortcut_keys[2]);
 void ui_begin_menu_bar();

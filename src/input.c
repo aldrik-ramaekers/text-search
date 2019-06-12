@@ -64,7 +64,7 @@ keyboard_input keyboard_input_create()
 {
 	keyboard_input keyboard;
 	keyboard.modifier_state = 0;
-	keyboard.input_text = malloc(MAX_INPUT_LENGTH);
+	keyboard.input_text = mem_alloc(MAX_INPUT_LENGTH);
 	keyboard.input_text[0] = '\0';
 	keyboard.take_input = false;
 	keyboard.cursor = 0;
@@ -76,5 +76,5 @@ keyboard_input keyboard_input_create()
 
 inline void keyboard_input_destroy(keyboard_input *keyboard)
 {
-	free(keyboard->input_text);
+	mem_free(keyboard->input_text);
 }

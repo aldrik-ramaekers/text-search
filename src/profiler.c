@@ -2,6 +2,7 @@ inline void profiler_create()
 {
 	profiler_mutex = mutex_create();
 	global_profiler.results = array_create(sizeof(profiler_result));
+	array_reserve(&global_profiler.results, 50);
 }
 
 inline u64 profiler_begin_d()
@@ -31,8 +32,8 @@ inline void profiler_end_d(u64 begin_stamp, const char *function_name, const cha
 	new_result.sample_count = 1;
 	new_result.total_ns = elapsed;
 	
-	new_result.name = malloc(255);
-	new_result.file = malloc(255);
+	new_result.name = mem_alloc(255);
+	new_result.file = mem_alloc(255);
 	strcpy(new_result.name, function_name);
 	strcpy(new_result.file, file_name);
 	new_result.line_nr = line_nr;
@@ -47,8 +48,8 @@ inline void profiler_destroy()
 	for (int i = 0; i < global_profiler.results.length; i++)
 	{
 		profiler_result *result = array_at(&global_profiler.results, i);
-		free(result->name);
-		free(result->file);
+		mem_free(result->name);
+		mem_free(result->file);
 	}
 	
 	array_destroy(&global_profiler.results);

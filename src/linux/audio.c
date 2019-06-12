@@ -42,7 +42,7 @@ static array load_audio_devices()
 			}
 			else
 			{
-				char *name = malloc(80); // TODO(Aldrik): can device names be longer?
+				char *name = mem_alloc(80); // TODO(Aldrik): can device names be longer?
 				bool is_output = false;
 				
 				strcpy(name, snd_ctl_card_info_get_name(card_info));
@@ -60,7 +60,7 @@ static array load_audio_devices()
 					if (type != NULL && 0 == strcmp("Output", type)) {
 						is_output = true;
 					}
-					free(type);
+					mem_free(type);
 					n++;
 				}
 				

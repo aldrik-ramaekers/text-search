@@ -25,12 +25,17 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	
 	textbox_state state;
 	state.max_len = max_len;
-	state.buffer = malloc(max_len);
+	state.buffer = mem_alloc(max_len);
 	state.buffer[0] = 0;
 	state.state = false;
 	state.text_offset_x = 0;
 	
 	return state;
+}
+
+void ui_destroy_textbox(textbox_state *state)
+{
+	mem_free(state->buffer);
 }
 
 inline button_state ui_create_button()
@@ -323,7 +328,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 		
 		// draw cursor
-		char *calculate_text = malloc(MAX_INPUT_LENGTH);
+		char *calculate_text = mem_alloc(MAX_INPUT_LENGTH);
 		strcpy(calculate_text, global_ui_context.keyboard->input_text);
 		calculate_text[global_ui_context.keyboard->cursor] = 0;
 		
@@ -333,7 +338,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		cursor_text_w = calculate_text_width(global_ui_context.font_small, 
 											 calculate_text);
-		free(calculate_text);
+		mem_free(calculate_text);
 		
 		cursor_x = text_x + cursor_text_w;
 		

@@ -477,7 +477,6 @@ int main(int argc, char **argv)
 	platform_window window = platform_open_window("Text-search", 800, 600);
 	
 	assets_create();
-	audio_system_create();
 	about_page_create();
 	
 #ifdef MODE_DEVELOPER
@@ -518,9 +517,9 @@ int main(int argc, char **argv)
 	button_state button_cancel = ui_create_button();
 	
 	// status bar
-	global_status_bar.result_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
+	global_status_bar.result_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.result_status_text[0] = 0;
-	global_status_bar.error_status_text = malloc(MAX_STATUS_TEXT_LENGTH);
+	global_status_bar.error_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
 	// starting values
@@ -674,53 +673,60 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
-					global_search_result.files_searched = 0;
-					global_search_result.cancel_search = false;
-					scroll_y = 0;
-					global_search_result.found_file_matches = false;
-					done_finding_files = false;
-					reset_status_text();
-					clear_errors();
-					
 					bool continue_search = true;
-					if (strcmp(textbox_path.buffer, "") == 0)
-					{
-						set_error("No search directory specified.");
-						continue_search = false;
-					}
 					
-					if (strcmp(textbox_file_filter.buffer, "") == 0)
-					{
-						set_error("No file filter specified.");
-						continue_search = false;
-					}
-					
-					if (strcmp(textbox_search_text.buffer, "") == 0)
-					{
-						set_error("No search text specified.");
-						continue_search = false;
-					}
+					if (global_search_result.walking_file_system) continue_search = false;
+					if (!global_search_result.done_finding_matches) continue_search = false;
 					
 					if (continue_search)
 					{
-						global_search_result.walking_file_system = true;
-						global_search_result.done_finding_matches = false;
+						global_search_result.files_searched = 0;
+						global_search_result.cancel_search = false;
+						scroll_y = 0;
+						global_search_result.found_file_matches = false;
+						done_finding_files = false;
+						reset_status_text();
+						clear_errors();
 						
-						global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
-						global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
-																										  global_search_result.search_result_source_dir_len);
-						
-						for (s32 i = 0; i < global_search_result.files.length; i++)
+						if (strcmp(textbox_path.buffer, "") == 0)
 						{
-							text_match *match = array_at(&global_search_result.files, i);
-							free(match->file.path);
-							free(match->file.matched_filter);
+							set_error("No search directory specified.");
+							continue_search = false;
 						}
-						global_search_result.files.length = 0;
 						
-						u64 start_f = platform_get_time(TIME_FULL, TIME_US);
-						platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
-											&done_finding_files);
+						if (strcmp(textbox_file_filter.buffer, "") == 0)
+						{
+							set_error("No file filter specified.");
+							continue_search = false;
+						}
+						
+						if (strcmp(textbox_search_text.buffer, "") == 0)
+						{
+							set_error("No search text specified.");
+							continue_search = false;
+						}
+						
+						if (continue_search)
+						{
+							global_search_result.walking_file_system = true;
+							global_search_result.done_finding_matches = false;
+							
+							global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
+							global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
+																											  global_search_result.search_result_source_dir_len);
+							
+							for (s32 i = 0; i < global_search_result.files.length; i++)
+							{
+								text_match *match = array_at(&global_search_result.files, i);
+								mem_free(match->file.path);
+								mem_free(match->file.matched_filter);
+							}
+							global_search_result.files.length = 0;
+							
+							u64 start_f = platform_get_time(TIME_FULL, TIME_US);
+							platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
+												&done_finding_files);
+						}
 					}
 				}
 				ui_push_checkbox(&checkbox_recursive, "Folders");
@@ -732,6 +738,7 @@ int main(int argc, char **argv)
 						platform_cancel_search = true;
 						global_search_result.cancel_search = true;
 						global_search_result.done_finding_matches = true;
+						global_search_result.walking_file_system = false;
 					}
 				}
 			}
@@ -775,14 +782,25 @@ int main(int argc, char **argv)
 	info_menu_destroy();
 #endif
 	
+	for (s32 i = 0; i < global_search_result.files.length; i++)
+	{
+		text_match *match = array_at(&global_search_result.files, i);
+		mem_free(match->file.path);
+		mem_free(match->file.matched_filter);
+	}
+	
 	about_page_destroy();
+	
+	ui_destroy_textbox(&textbox_path);
+	ui_destroy_textbox(&textbox_search_text);
+	ui_destroy_textbox(&textbox_file_filter);
 	ui_destroy();
 	
 	mutex_destroy(&global_search_result.mutex);
 	array_destroy(&global_search_result.files);
 	array_destroy(&global_search_result.errors);
-	free(global_status_bar.result_status_text);
-	free(global_status_bar.error_status_text);
+	mem_free(global_status_bar.result_status_text);
+	mem_free(global_status_bar.error_status_text);
 	
 	assets_destroy_image(search_img);
 	assets_destroy_image(sloth_img);
@@ -794,11 +812,14 @@ int main(int argc, char **argv)
 	assets_destroy_font(font_mini);
 	assets_destroy_font(font_medium);
 	assets_destroy();
-	audio_system_destroy();
 	
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
 	platform_destroy_window(&window);
+	
+#ifdef MODE_DEVELOPER
+	memory_print_leaks();
+#endif
 	
 	return 0;
 }
