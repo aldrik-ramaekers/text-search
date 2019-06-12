@@ -17,11 +17,15 @@ static void *export_result_d(void *arg)
 	
 	if (path_buf[0] == 0) return 0;
 	
-	s32 size = 51 + matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
+	s32 size = ((MAX_INPUT_LENGTH*3) + 51)
+		+ matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
 	char *buffer = malloc(size);
 	memset(buffer, 0, size);
 	
-	sprintf(buffer, "%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
+	sprintf(buffer, "%s\n%s\n%s\n%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
+			search_result->search_directory_buffer,
+			search_result->filter_buffer,
+			search_result->text_to_find_buffer,
 			search_result->find_duration_us,
 			search_result->show_error_message,
 			search_result->found_file_matches,
@@ -145,6 +149,44 @@ static void* import_results_d(void *arg)
 	char *buffer = content.content;
 	char *buffer_start = buffer;
 	
+	char *search_directory = malloc(MAX_INPUT_LENGTH);
+	char *file_filter = malloc(MAX_INPUT_LENGTH);
+	char *text_to_find = malloc(MAX_INPUT_LENGTH);
+	
+	s32 index = 0;
+	s32 offset_ = 0;
+	// get path, filter and search text
+	for (s32 i = 0; i < content.content_length; i++)
+	{
+		char ch = buffer[i];
+		if (ch == '\n')
+		{
+			buffer[i] = 0;
+			
+			if (index == 0)
+			{
+				strcpy(search_directory, buffer+ offset_);
+			}
+			else if (index == 1)
+			{
+				strcpy(file_filter, buffer+ offset_);
+			}
+			else if (index == 2)
+			{
+				strcpy(text_to_find, buffer+ offset_);
+				buffer += i + 1;
+				break;
+			}
+			
+			offset_ = i + 1;
+			index++;
+		}
+	}
+	
+	strcpy(search_result->search_directory_buffer, search_directory);
+	strcpy(search_result->filter_buffer, file_filter);
+	strcpy(search_result->text_to_find_buffer, text_to_find);
+	
 	char *find_duration_us; find_duration_us = buffer; buffer[16] = 0; buffer += 17;
 	char *show_error_message; show_error_message = buffer; buffer[1] = 0; buffer += 2;
 	char *found_file_matches; found_file_matches = buffer; buffer[1] = 0; buffer += 2;
@@ -223,7 +265,12 @@ static void* import_results_d(void *arg)
 	
 	sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 	
-#if 0
+#if 1
+	
+	printf("SEARCH: %s\n",  search_directory);
+	printf("FILTER: %s\n",  file_filter);
+	printf("FIND: %s\n",  text_to_find);
+	
 	printf("\nduration: %lu\n"
 		   "show error: %d\n"
 		   "found match: %d\n"

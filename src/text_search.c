@@ -39,6 +39,9 @@ typedef struct t_search_result
 	bool walking_file_system;
 	bool cancel_search;
 	bool done_finding_matches;
+	char *filter_buffer;
+	char *text_to_find_buffer;
+	char *search_directory_buffer;
 } search_result;
 
 status_bar global_status_bar;
@@ -60,7 +63,6 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
-// TODO(Aldrik): export/import search text and search directory in tts files
 // TODO(Aldrik): percentage processed goes over 100% when previous is cancelled
 // TODO(Aldrik): save filter,path,text on exit and load on start
 // TODO(Aldrik): refactor globals into structs
@@ -561,6 +563,10 @@ int main(int argc, char **argv)
 	strcpy(textbox_search_text.buffer, "*test*");
 	checkbox_recursive.state = 1;
 #endif
+	
+	global_search_result.filter_buffer = textbox_file_filter.buffer;
+	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
+	global_search_result.search_directory_buffer = textbox_path.buffer;
 	
 	bool done_finding_files = false;
 	
