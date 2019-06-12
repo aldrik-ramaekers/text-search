@@ -64,8 +64,8 @@ s32 scroll_y = 0;
 #include "save.c"
 #include "about.c"
 
+// TODO(Aldrik): UI freezes while search is active after cancelling previous search
 // TODO(Aldrik): set start path of file dialog to export folder
-// TODO(Aldrik): save filter,path,text on exit and load on start (write config file interface)
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
@@ -544,19 +544,16 @@ int main(int argc, char **argv)
 	global_search_result.files = array_create(sizeof(text_match));
 	array_reserve(&global_search_result.files, MATCH_RESERVE_COUNT);
 	
-#ifdef MODE_DEVELOPER
-	//strcpy(textbox_path.buffer, "/home/aldrik/Projects/text-search/src");
-	//strcpy(textbox_file_filter.buffer, "*.c,*.h");
-	//strcpy(textbox_search_text.buffer, "*hello*");
-	
-	strcpy(textbox_path.buffer, "/home/aldrik/Projects/");
-	strcpy(textbox_file_filter.buffer, "*.txt");
-	strcpy(textbox_search_text.buffer, "*test*");
-	checkbox_recursive.state = 1;
-#endif
-	
+	// load config
 	settings_config config = settings_config_load_from_file("data/config.txt");
-	settings_config_destroy(&config);
+	char *path = settings_config_get_string(&config, "SEARCH_DIRECTORY");
+	bool recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
+	char *search_text = settings_config_get_string(&config, "SEARCH_TEXT");
+	char *search_filter = settings_config_get_string(&config, "FILE_FILTER");
+	strcpy(textbox_path.buffer, path);
+	strcpy(textbox_file_filter.buffer, search_filter);
+	strcpy(textbox_search_text.buffer, search_text);
+	checkbox_recursive.state = recursive;
 	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
@@ -797,17 +794,32 @@ int main(int argc, char **argv)
 	
 	about_page_destroy();
 	
+	// write config file
+	settings_config_set_string(&config, "SEARCH_DIRECTORY", textbox_path.buffer);
+	settings_config_set_number(&config, "SEARCH_DIRECTORIES", checkbox_recursive.state);
+	settings_config_set_string(&config, "SEARCH_TEXT", textbox_search_text.buffer);
+	settings_config_set_string(&config, "FILE_FILTER", textbox_file_filter.buffer);
+	settings_config_write_to_file(&config, "data/config.txt");
+#ifdef MODE_DEVELOPER
+	settings_config_write_to_file(&config, "../data/config.txt");
+#endif
+	settings_config_destroy(&config);
+	
+	
+	// cleanup ui
 	ui_destroy_textbox(&textbox_path);
 	ui_destroy_textbox(&textbox_search_text);
 	ui_destroy_textbox(&textbox_file_filter);
 	ui_destroy();
-	
-	mutex_destroy(&global_search_result.mutex);
-	array_destroy(&global_search_result.files);
-	array_destroy(&global_search_result.errors);
 	mem_free(global_status_bar.result_status_text);
 	mem_free(global_status_bar.error_status_text);
 	
+	// cleanup resuls
+	mutex_destroy(&global_search_result.mutex);
+	array_destroy(&global_search_result.files);
+	array_destroy(&global_search_result.errors);
+	
+	// delete assets
 	assets_destroy_image(search_img);
 	assets_destroy_image(sloth_img);
 	assets_destroy_image(sloth_small_img);
