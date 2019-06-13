@@ -479,7 +479,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	XSetWindowAttributes window_attributes;
 	window_attributes.colormap = window.cmap;
 	window_attributes.event_mask = KeyPressMask | KeyReleaseMask | PointerMotionMask |
-		ButtonPressMask | ButtonReleaseMask;
+		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask;
 	
 	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask, &window_attributes);
 	
@@ -545,7 +545,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(0, width, height, 0, -1, 1);
+	//glOrtho(0, width, height, 0, -1, 1);
 	glMatrixMode(GL_MODELVIEW);
 	
 	create_key_tables(window);
@@ -585,11 +585,15 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	{
 		XNextEvent(window->display, &window->event);
 		
-		// TODO: handle resizing
-		
 		if (window->event.type == ClientMessage)
 		{
 			window->is_open = false;
+		}
+		else if (window->event.type == ConfigureNotify)
+		{
+			XConfigureEvent xce = window->event.xconfigure;
+			window->width = xce.width;
+			window->height = xce.height;
 		}
 		else if (window->event.type == MotionNotify)
 		{

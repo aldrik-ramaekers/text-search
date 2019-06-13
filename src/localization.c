@@ -106,6 +106,7 @@ void destroy_available_localizations()
 	{
 		mo_file *file = array_at(&global_localization.mo_files, i);
 		array_destroy(&file->translations);
+		mem_free(file->locale);
 		platform_destroy_file_content(&file->content);
 	}
 }

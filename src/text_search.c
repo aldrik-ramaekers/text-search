@@ -43,7 +43,15 @@ typedef struct t_search_result
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
 	bool *recursive_state_buffer;
+	s32 search_id;
+	u64 start_time;
 } search_result;
+
+typedef struct t_find_text_args
+{
+	text_match *match;
+	s32 search_id;
+} find_text_args;
 
 status_bar global_status_bar;
 search_result global_search_result;
@@ -66,8 +74,12 @@ s32 scroll_y = 0;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): layout dependant keyboard press/release for shortcuts
+// TODO(Aldrik): we should really limit thread count, im pretty sure maxing out is slowing us down at this point.
+// TODO(Aldrik): make window resizable
+// TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik): replace strncpy because its behaviour is so weird
-// TODO(Aldrik): percentage goes above 100% percent after cancelling previous search
+// TODO(Aldrik): percentage goes above 100% percent after cancelling previous search, (give every search an ID and check if ID matches current ID when incrementing values and settings text)
 // TODO(Aldrik): set start path of file dialog to export folder
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
@@ -77,7 +89,9 @@ char *text_to_find;
 
 static void *find_text_in_file_t(void *arg)
 {
-	text_match *match = arg;
+	find_text_args *args = arg;
+	text_match *match = args->match;
+	s32 search_id = args->search_id;
 	
 	file_content content;
 	content.content = 0;
@@ -96,10 +110,13 @@ static void *find_text_in_file_t(void *arg)
 			{
 				global_search_result.match_found = true;
 				
-				mutex_lock(&global_search_result.mutex);
-				match->match_count++;
-				global_search_result.files_matched++;
-				mutex_unlock(&global_search_result.mutex);
+				if (search_id == global_search_result.search_id)
+				{
+					mutex_lock(&global_search_result.mutex);
+					match->match_count++;
+					global_search_result.files_matched++;
+					mutex_unlock(&global_search_result.mutex);
+				}
 			}
 		}
 		else
@@ -118,9 +135,12 @@ static void *find_text_in_file_t(void *arg)
 			else
 				match->file_error = FILE_ERROR_GENERIC;
 			
-			mutex_lock(&global_search_result.mutex);
-			strcpy(global_status_bar.error_status_text, localize("generic_file_open_error"));
-			mutex_unlock(&global_search_result.mutex);
+			if (search_id == global_search_result.search_id)
+			{
+				mutex_lock(&global_search_result.mutex);
+				strcpy(global_status_bar.error_status_text, localize("generic_file_open_error"));
+				mutex_unlock(&global_search_result.mutex);
+			}
 		}
 	}
 	
@@ -128,7 +148,7 @@ static void *find_text_in_file_t(void *arg)
 	{
 		platform_destroy_file_content(&content);
 		
-		if (!global_search_result.cancel_search)
+		if (!global_search_result.cancel_search && global_search_result.search_id == search_id)
 		{
 			mutex_lock(&global_search_result.mutex);
 			global_search_result.files_searched++;
@@ -137,23 +157,28 @@ static void *find_text_in_file_t(void *arg)
 		}
 	}
 	
+	mem_free(arg);
+	
 	return 0;
 }
 
 static void* find_text_in_files_t(void *arg)
 {
-	u64 start_f = platform_get_time(TIME_FULL, TIME_US);
+	s32 current_search_id = global_search_result.search_id;
+	
 	array threads = array_create(sizeof(thread));
 	strcpy(global_status_bar.error_status_text, "");
 	
 	text_to_find = arg;
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
-		text_match *match = array_at(&global_search_result.files, i);
-		match->match_count = 0;
-		match->file_error = 0;
+		find_text_args *args = mem_alloc(sizeof(find_text_args));
+		args->match = array_at(&global_search_result.files, i);
+		args->match->match_count = 0;
+		args->match->file_error = 0;
+		args->search_id = current_search_id;
 		
-		thread new_thr = thread_start(find_text_in_file_t, match);
+		thread new_thr = thread_start(find_text_in_file_t, args);
 		
 		if (global_search_result.cancel_search) 
 		{
@@ -179,14 +204,17 @@ static void* find_text_in_files_t(void *arg)
 	
 	finish_early:
 	{
-		u64 end_f = platform_get_time(TIME_FULL, TIME_US);
-		
-		global_search_result.find_duration_us = end_f - start_f;
-		sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
-		
+		if (current_search_id == global_search_result.search_id)
+		{
+			u64 end_f = platform_get_time(TIME_FULL, TIME_US);
+			
+			global_search_result.find_duration_us = end_f - global_search_result.start_time;
+			sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
+			
+			global_search_result.done_finding_matches = true;
+			global_search_result.files_searched = global_search_result.files.length;
+		}
 		array_destroy(&threads);
-		global_search_result.done_finding_matches = true;
-		global_search_result.files_searched = global_search_result.files.length;
 	}
 	
 	return 0;
@@ -542,6 +570,7 @@ int main(int argc, char **argv)
 	global_search_result.match_found = false;
 	global_search_result.cancel_search = false;
 	global_search_result.mutex = mutex_create();
+	global_search_result.search_id = 0;
 	
 	global_search_result.errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
 	array_reserve(&global_search_result.errors, MATCH_RESERVE_COUNT);
@@ -646,7 +675,6 @@ int main(int argc, char **argv)
 					}
 					if (ui_push_menu_item(localize("about"), "")) 
 					{
-						// TODO(Aldrik): about page
 						about_page_show();
 					}
 					ui_push_menu_item_separator();
@@ -718,6 +746,8 @@ int main(int argc, char **argv)
 						
 						if (continue_search)
 						{
+							global_search_result.search_id++;
+							
 							global_search_result.walking_file_system = true;
 							global_search_result.done_finding_matches = false;
 							
@@ -733,7 +763,7 @@ int main(int argc, char **argv)
 							}
 							global_search_result.files.length = 0;
 							
-							u64 start_f = platform_get_time(TIME_FULL, TIME_US);
+							global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
 							platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
 												&done_finding_files);
 						}
