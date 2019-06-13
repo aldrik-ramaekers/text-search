@@ -1017,7 +1017,7 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 	thread_detach(&thr);
 }
 
-void platform_list_files_d(array *list, char *start_dir, char *filter, bool recursive)
+void platform_list_files_block(array *list, char *start_dir, char *filter, bool recursive)
 {
 	assert(list);
 	
@@ -1046,7 +1046,7 @@ void platform_list_files_d(array *list, char *start_dir, char *filter, bool recu
 				strcat(subdirname_buf, "/");
 				
 				// do recursive search
-				platform_list_files_d(list, subdirname_buf, filter, recursive);
+				platform_list_files_block(list, subdirname_buf, filter, recursive);
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.
 			else if (dir->d_type == DT_REG || dir->d_type == DT_UNKNOWN)
@@ -1091,7 +1091,7 @@ typedef struct t_list_file_args
 void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
-	platform_list_files_d(info->list, info->start_dir, info->pattern, info->recursive);
+	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive);
 	mem_free(info);
 	return 0;
 }

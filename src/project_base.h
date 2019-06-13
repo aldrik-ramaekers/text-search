@@ -99,6 +99,7 @@
 #include "ui.h"
 #include "string_utils.h"
 #include "settings_config.h"
+#include "localization.h"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.h"
@@ -128,6 +129,7 @@
 #include "ui.c"
 #include "string_utils.c"
 #include "settings_config.c"
+#include "localization.c"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.c"

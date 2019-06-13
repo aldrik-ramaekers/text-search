@@ -80,6 +80,7 @@ bool platform_write_file_content(char *path, const char *mode, char *buffer, s32
 void platform_destroy_file_content(file_content *content);
 bool get_active_directory(char *buffer);
 bool set_active_directory(char *path);
+void platform_list_files_block(array *list, char *start_dir, char *filter, bool recursive);
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter);
 void *platform_open_file_dialog_block(void *arg);

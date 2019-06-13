@@ -66,6 +66,8 @@ s32 scroll_y = 0;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): replace strncpy because its behaviour is so weird
+// TODO(Aldrik): percentage goes above 100% percent after cancelling previous search
 // TODO(Aldrik): set start path of file dialog to export folder
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
@@ -117,7 +119,7 @@ static void *find_text_in_file_t(void *arg)
 				match->file_error = FILE_ERROR_GENERIC;
 			
 			mutex_lock(&global_search_result.mutex);
-			strcpy(global_status_bar.error_status_text, "One or more files could not be opened");
+			strcpy(global_status_bar.error_status_text, localize("generic_file_open_error"));
 			mutex_unlock(&global_search_result.mutex);
 		}
 	}
@@ -130,7 +132,7 @@ static void *find_text_in_file_t(void *arg)
 		{
 			mutex_lock(&global_search_result.mutex);
 			global_search_result.files_searched++;
-			sprintf(global_status_bar.result_status_text, "%.0f%% of files processed",  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
+			sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
 			mutex_unlock(&global_search_result.mutex);
 		}
 	}
@@ -180,7 +182,7 @@ static void* find_text_in_files_t(void *arg)
 		u64 end_f = platform_get_time(TIME_FULL, TIME_US);
 		
 		global_search_result.find_duration_us = end_f - start_f;
-		sprintf(global_status_bar.result_status_text, "%d out of %d files matched in %.2fms", global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
+		sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 		
 		array_destroy(&threads);
 		global_search_result.done_finding_matches = true;
@@ -244,11 +246,11 @@ static void render_result(platform_window *window, font *font_small)
 		
 		render_rectangle(-1, y+1, window->width+2, h-2, rgb(225,225,225));
 		
-		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, "File path", global_ui_context.style.foreground);
+		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, "File pattern", global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, localize("file_pattern"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, "Information", global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, localize("information"), global_ui_context.style.foreground);
 		/////////////////////////
 		
 		y += h-1;
@@ -299,14 +301,14 @@ static void render_result(platform_window *window, font *font_small)
 						char *open_file_error = 0;
 						switch(match->file_error)
 						{
-							case FILE_ERROR_NO_ACCESS: open_file_error = "No permission"; break;
-							case FILE_ERROR_NOT_FOUND: open_file_error = "Not found"; break;
-							case FILE_ERROR_CONNECTION_ABORTED: open_file_error = "Connection aborted"; break;
-							case FILE_ERROR_CONNECTION_REFUSED: open_file_error = "Connection refused"; break;
-							case FILE_ERROR_NETWORK_DOWN: open_file_error = "Network down"; break;
-							case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = "Remote error"; break;
-							case FILE_ERROR_STALE: open_file_error = "Remotely removed"; break;
-							case FILE_ERROR_GENERIC: open_file_error = "Failed to open file"; break;
+							case FILE_ERROR_NO_ACCESS: open_file_error = localize("no_permission"); break;
+							case FILE_ERROR_NOT_FOUND: open_file_error = localize("not_found"); break;
+							case FILE_ERROR_CONNECTION_ABORTED: open_file_error = localize("connection_aborted"); break;
+							case FILE_ERROR_CONNECTION_REFUSED: open_file_error = localize("connection_refused"); break;
+							case FILE_ERROR_NETWORK_DOWN: open_file_error = localize("network_down"); break;
+							case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = localize("remote_error"); break;
+							case FILE_ERROR_STALE: open_file_error = localize("remotely_removed"); break;
+							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
 						}
 						
 						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, text_y + (h/2)-(font_small->size/2) + 1, open_file_error, ERROR_TEXT_COLOR);
@@ -366,7 +368,7 @@ static void render_result(platform_window *window, font *font_small)
 	}
 	else
 	{
-		char *message = "no matches found";
+		char *message = localize("no_matches_found");
 		s32 w = calculate_text_width(font_small, message);
 		s32 x = (window->width / 2) - (w / 2);
 		render_text(font_small, x, y, message, global_ui_context.style.foreground);
@@ -436,7 +438,7 @@ static void render_info(platform_window *window, font *font_small)
 		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MS);
 		s32 dot_count = (dot_count_t % 1000) / 250;
 		
-		sprintf(text, "%s%.*s", "Finding files", dot_count, "...");
+		sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
 		
 		render_image(sloth_img, img_x, img_y, img_w, img_h);
 		s32 text_w = calculate_text_width(font_medium, text);
@@ -471,7 +473,7 @@ static void set_error(char *message)
 
 static void reset_status_text()
 {
-	strcpy(global_status_bar.result_status_text, "No search completed.");
+	strcpy(global_status_bar.result_status_text, localize("no_search_completed"));
 }
 
 int main(int argc, char **argv)
@@ -482,6 +484,9 @@ int main(int argc, char **argv)
 	
 	assets_create();
 	about_page_create();
+	
+	load_available_localizations();
+	set_locale("en");
 	
 #ifdef MODE_DEVELOPER
 	info_menu_create();
@@ -612,40 +617,40 @@ int main(int argc, char **argv)
 					window.is_open = false;
 				}
 				
-				if (ui_push_menu("File"))
+				if (ui_push_menu(localize("file")))
 				{
-					if (ui_push_menu_item("Import", "Ctrl + O")) 
+					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
 					{ 
 						import_results(&global_search_result); 
 					}
-					if (ui_push_menu_item("Export", "Ctrl + S")) 
+					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
 						if (global_search_result.found_file_matches)
 							export_results(&global_search_result); 
 					}
 					ui_push_menu_item_separator();
-					if (ui_push_menu_item("Quit", "Ctrl + Q")) 
+					if (ui_push_menu_item(localize("quit"), "Ctrl + Q")) 
 					{ 
 						window.is_open = false; 
 					}
 				}
-				if (ui_push_menu("Options"))
+				if (ui_push_menu(localize("options")))
 				{
-					if (ui_push_menu_item("Edit", "Ctrl + E")) { }
+					if (ui_push_menu_item(localize("edit"), "Ctrl + E")) { }
 				}
-				if (ui_push_menu("Help"))
+				if (ui_push_menu(localize("help")))
 				{
-					if (ui_push_menu_item("User Manual", ""))
+					if (ui_push_menu_item(localize("user_manual"), ""))
 					{
 						platform_open_url(WEBSITE_MANUAL_URL);
 					}
-					if (ui_push_menu_item("About", "")) 
+					if (ui_push_menu_item(localize("about"), "")) 
 					{
 						// TODO(Aldrik): about page
 						about_page_show();
 					}
 					ui_push_menu_item_separator();
-					if (ui_push_menu_item("Contact", "")) 
+					if (ui_push_menu_item(localize("contact"), "")) 
 					{
 						platform_open_url(WEBSITE_CONTACT_URL);
 					}
@@ -659,14 +664,14 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
-				ui_push_textbox(&textbox_path, "Search directory");
+				ui_push_textbox(&textbox_path, localize("search_directory"));
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_select_directory, "", directory_img))
 				{
 					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0);
 				}
 				
-				ui_push_textbox(&textbox_file_filter, "File filter...");
+				ui_push_textbox(&textbox_file_filter, localize("file_filter"));
 			}
 			ui_block_end();
 			
@@ -674,7 +679,7 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
-				ui_push_textbox(&textbox_search_text, "Text to find..");
+				ui_push_textbox(&textbox_search_text, localize("text_to_find"));
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
@@ -695,19 +700,19 @@ int main(int argc, char **argv)
 						
 						if (strcmp(textbox_path.buffer, "") == 0)
 						{
-							set_error("No search directory specified.");
+							set_error(localize("no_search_directory_specified"));
 							continue_search = false;
 						}
 						
 						if (strcmp(textbox_file_filter.buffer, "") == 0)
 						{
-							set_error("No file filter specified.");
+							set_error(localize("no_file_filter_specified"));
 							continue_search = false;
 						}
 						
 						if (strcmp(textbox_search_text.buffer, "") == 0)
 						{
-							set_error("No search text specified.");
+							set_error(localize("no_search_text_specified"));
 							continue_search = false;
 						}
 						
@@ -734,11 +739,11 @@ int main(int argc, char **argv)
 						}
 					}
 				}
-				ui_push_checkbox(&checkbox_recursive, "Folders");
+				ui_push_checkbox(&checkbox_recursive, localize("folders"));
 				
 				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
 				{
-					if (ui_push_button_image(&button_cancel, "Cancel", directory_img))
+					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
 					{
 						platform_cancel_search = true;
 						global_search_result.cancel_search = true;
@@ -836,6 +841,8 @@ int main(int argc, char **argv)
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
 	platform_destroy_window(&window);
+	
+	destroy_available_localizations();
 	
 #ifdef MODE_DEVELOPER
 	memory_print_leaks();
