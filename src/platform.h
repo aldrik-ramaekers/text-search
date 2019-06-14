@@ -72,6 +72,7 @@ struct open_dialog_args
 bool platform_cancel_search = false;
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
+void platform_window_set_size(platform_window *window, u16 width, u16 height);
 void platform_close_window(platform_window *window);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);

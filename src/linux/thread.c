@@ -1,10 +1,7 @@
-#include <pthread.h>
-#include <unistd.h>
-#include <sys/types.h>
-#include <sys/syscall.h>
 
 // stop gcc from reporting implicit declaration warning..
 extern long int syscall (long int __sysno, ...);
+extern int pthread_tryjoin_np(pthread_t thread, void **retval);
 
 thread thread_start(void *(*start_routine) (void *), void *arg)
 {
@@ -44,6 +41,19 @@ inline void thread_join(thread *thread)
 		void *retval;
 		pthread_join(thread->thread, &retval);
 	}
+}
+
+bool thread_tryjoin(thread *thread)
+{
+	// windows: https://docs.microsoft.com/en-us/windows/desktop/api/synchapi/nf-synchapi-waitforsingleobject
+	
+	if (thread->valid)
+	{
+		void *retval;
+		bool thread_joined = !pthread_tryjoin_np(thread->thread, &retval);
+		return thread_joined;
+	}
+	return false;
 }
 
 inline void thread_stop(thread *thread)

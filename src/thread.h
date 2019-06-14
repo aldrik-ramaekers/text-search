@@ -24,6 +24,7 @@ typedef struct t_mutex mutex;
 
 thread thread_start(void *(*start_routine) (void *), void *arg);
 void thread_join(thread *thread);
+bool thread_tryjoin(thread *thread);
 void thread_detach(thread *thread);
 void thread_stop(thread *thread);
 u32 thread_get_id();

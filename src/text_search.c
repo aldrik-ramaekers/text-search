@@ -186,6 +186,24 @@ static void* find_text_in_files_t(void *arg)
 		args->match->file_error = 0;
 		args->search_id = current_search_id;
 		
+		// limit thread usage
+		if (global_settings_page.max_thread_count)
+		{
+			if (threads.length >= global_settings_page.max_thread_count)
+			{
+				for (s32 i = 0; i < threads.length; i++)
+				{
+					thread *thr = array_at(&threads, i);
+					bool joined = thread_tryjoin(thr);
+					if (joined)
+					{
+						array_remove(&threads, thr);
+						break;
+					}
+				}
+			}
+		}
+		
 		thread new_thr = thread_start(find_text_in_file_t, args);
 		
 		if (global_search_result.cancel_search) 
@@ -598,6 +616,8 @@ int main(int argc, char **argv)
 	s32 max_thread_count = settings_config_get_number(&config, "MAX_THEAD_COUNT");
 	s32 max_file_size = settings_config_get_number(&config, "MAX_FILE_SIZE");
 	char *locale_id = settings_config_get_string(&config, "LOCALE");
+	s32 window_w = settings_config_get_number(&config, "WINDOW_WIDTH");
+	s32 window_h = settings_config_get_number(&config, "WINDOW_HEIGHT");
 	strcpy(textbox_path.buffer, path);
 	strcpy(textbox_file_filter.buffer, search_filter);
 	strcpy(textbox_search_text.buffer, search_text);
@@ -605,6 +625,9 @@ int main(int argc, char **argv)
 	global_settings_page.max_thread_count = max_thread_count;
 	global_settings_page.max_file_size = max_file_size;
 	set_locale(locale_id);
+	
+	if (window_w >= 800 && window_h >= 600)
+		platform_window_set_size(&window, window_w, window_h);
 	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
@@ -868,7 +891,8 @@ int main(int argc, char **argv)
 	settings_config_set_string(&config, "FILE_FILTER", textbox_file_filter.buffer);
 	settings_config_set_number(&config, "MAX_THEAD_COUNT", global_settings_page.max_thread_count);
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
-	settings_config_write_to_file(&config, "data/config.txt");
+	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
+	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
 	
 	char *current_locale_id = localize_get_id();
 	if (current_locale_id)
@@ -876,6 +900,7 @@ int main(int argc, char **argv)
 		settings_config_set_string(&config, "LOCALE", current_locale_id);
 	}
 	
+	settings_config_write_to_file(&config, "data/config.txt");
 #ifdef MODE_DEVELOPER
 	settings_config_write_to_file(&config, "../data/config.txt");
 #endif

@@ -404,6 +404,11 @@ inline void platform_window_make_current(platform_window *window)
 	glXMakeCurrent(window->display, window->window, window->gl_context);
 }
 
+void platform_window_set_size(platform_window *window, u16 width, u16 height)
+{
+	XResizeWindow(window->display, window->window, width, height);
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
 	bool has_max_size = max_w || max_h;
