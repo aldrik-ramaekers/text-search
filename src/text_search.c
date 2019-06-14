@@ -68,19 +68,21 @@ s32 scroll_y = 0;
 
 #include "save.h"
 #include "about.h"
+#include "settings.h"
 
 #include "save.c"
 #include "about.c"
+#include "settings.c"
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): results scrollbar works everywhere
+// TODO(Aldrik): settings page
 // TODO(Aldrik): layout dependant keyboard press/release for shortcuts
 // TODO(Aldrik): we should really limit thread count, im pretty sure maxing out is slowing us down at this point.
-// TODO(Aldrik): make window resizable
+// TODO(Aldrik): window resize flickers
 // TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik): replace strncpy because its behaviour is so weird
-// TODO(Aldrik): percentage goes above 100% percent after cancelling previous search, (give every search an ID and check if ID matches current ID when incrementing values and settings text)
-// TODO(Aldrik): set start path of file dialog to export folder
 // TODO(Aldrik): refactor globals into structs
 // TODO(Aldrik): localization.
 // TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
@@ -508,10 +510,11 @@ int main(int argc, char **argv)
 {
 	platform_init();
 	
-	platform_window window = platform_open_window("Text-search", 800, 600);
+	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
 	
 	assets_create();
 	about_page_create();
+	settings_page_create();
 	
 	load_available_localizations();
 	set_locale("en");
@@ -601,6 +604,7 @@ int main(int argc, char **argv)
 	while(window.is_open) {
 		platform_handle_events(&window, &mouse, &keyboard);
 		about_page_update_render();
+		settings_page_update_render();
 		platform_window_make_current(&window);
 		
 		static bool loaded = false;
@@ -610,6 +614,7 @@ int main(int argc, char **argv)
 			platform_set_icon(&window, sloth_small_img);
 		}
 		
+		global_ui_context.layout.active_window = &window;
 		global_ui_context.keyboard = &keyboard;
 		global_ui_context.mouse = &mouse;
 		
@@ -618,8 +623,9 @@ int main(int argc, char **argv)
 		
 		camera_apply_transformations(&window, &camera);
 		
+		global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 		// begin ui
-		ui_begin();
+		ui_begin(1);
 		{
 			global_ui_context.style.background_hover = rgb(190,190,190);
 			global_ui_context.style.background = rgb(225,225,225);
@@ -665,7 +671,10 @@ int main(int argc, char **argv)
 				}
 				if (ui_push_menu(localize("options")))
 				{
-					if (ui_push_menu_item(localize("edit"), "Ctrl + E")) { }
+					if (ui_push_menu_item(localize("settings"), "Ctrl + O")) 
+					{
+						settings_page_show();
+					}
 				}
 				if (ui_push_menu(localize("help")))
 				{
@@ -692,14 +701,21 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
-				ui_push_textbox(&textbox_path, localize("search_directory"));
+				if (ui_push_textbox(&textbox_path, localize("search_directory")))
+				{
+					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+				}
+				
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_select_directory, "", directory_img))
 				{
-					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0);
+					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0, 0);
 				}
 				
-				ui_push_textbox(&textbox_file_filter, localize("file_filter"));
+				if (ui_push_textbox(&textbox_file_filter, localize("file_filter")))
+				{
+					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+				}
 			}
 			ui_block_end();
 			
@@ -707,7 +723,11 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
-				ui_push_textbox(&textbox_search_text, localize("text_to_find"));
+				if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
+				{
+					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+				}
+				
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
@@ -830,6 +850,7 @@ int main(int argc, char **argv)
 	}
 	
 	about_page_destroy();
+	settings_page_destroy();
 	
 	// write config file
 	settings_config_set_string(&config, "SEARCH_DIRECTORY", textbox_path.buffer);

@@ -68,23 +68,23 @@ void about_page_update_render()
 		render_text(global_about_page.font_small, text_x, text_y, 
 					names_text, rgb(20,20,20));
 		
+		global_ui_context.layout.active_window = &global_about_page.window;
 		global_ui_context.keyboard = &global_about_page.keyboard;
 		global_ui_context.mouse = &global_about_page.mouse;
 		
-		ui_begin();
+		ui_begin(2);
 		{
 			global_ui_context.layout.offset_y = global_about_page.window.height - 33;
-			global_ui_context.layout.offset_x = global_about_page.window.width - 180;
 			
-			if (ui_push_button(&global_about_page.btn_website, "website"))
-			{
-				platform_open_url(WEBSITE_URL);
-			}
-			if (ui_push_button(&global_about_page.btn_close, "close"))
+			if (ui_push_button(&global_about_page.btn_close, localize("close")))
 			{
 				global_about_page.active = false;
 				about_page_hide();
 				return;
+			}
+			if (ui_push_button(&global_about_page.btn_website, localize("website")))
+			{
+				platform_open_url(WEBSITE_URL);
 			}
 		}
 		ui_end();
@@ -102,7 +102,7 @@ void about_page_update_render()
 
 void about_page_show()
 {
-	global_about_page.window = platform_open_window("About text-search", 450, 250);
+	global_about_page.window = platform_open_window("About text-search", 450, 250, 450, 450);
 	global_about_page.keyboard = keyboard_input_create();
 	global_about_page.mouse = mouse_input_create();
 	global_about_page.active = true;

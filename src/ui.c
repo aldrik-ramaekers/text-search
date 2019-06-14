@@ -1,6 +1,6 @@
-inline void ui_begin()
+inline void ui_begin(s32 id)
 {
-	global_ui_context.next_id = 0;
+	global_ui_context.next_id = id * 100;
 	global_ui_context.layout.offset_x = 0;
 	global_ui_context.layout.offset_y = 0;
 }
@@ -239,6 +239,11 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	static u64 cursor_tick = 0;
 	static u64 last_cursor_pos = 0;
 	
+	if (!global_ui_context.layout.active_window->has_focus)
+	{
+		state->state = false;
+	}
+	
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + 5;
@@ -326,11 +331,17 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
+		if (global_ui_context.keyboard->cursor > state->max_len)
+		{
+			global_ui_context.keyboard->cursor = state->max_len;
+			global_ui_context.keyboard->input_text[global_ui_context.keyboard->cursor] = 0;
+		}
 		
 		// draw cursor
 		char *calculate_text = mem_alloc(MAX_INPUT_LENGTH);
-		strcpy(calculate_text, global_ui_context.keyboard->input_text);
+		strcpy(calculate_text, state->buffer);
 		calculate_text[global_ui_context.keyboard->cursor] = 0;
+		
 		
 		if (last_cursor_pos != global_ui_context.keyboard->cursor)
 			cursor_tick = 0;
@@ -379,6 +390,27 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		global_ui_context.layout.offset_y += TEXTBOX_HEIGHT + WIDGET_PADDING;
 	
 	return result;
+}
+
+void ui_push_text(char *text)
+{
+	s32 spacing_y = (BLOCK_HEIGHT - CHECKBOX_SIZE)/2;
+	s32 x = global_ui_context.layout.offset_x + global_ui_context.camera->x;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
+	s32 text_x = x + WIDGET_PADDING;
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
+	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
+		WIDGET_PADDING + WIDGET_PADDING;
+	
+	if (global_ui_context.layout.block_height < global_ui_context.font_small->size)
+		global_ui_context.layout.block_height = global_ui_context.font_small->size;
+	
+	render_text(global_ui_context.font_small, text_x, text_y, text, global_ui_context.style.foreground);
+	
+	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
+		global_ui_context.layout.offset_x += total_w;
+	else
+		global_ui_context.layout.offset_y += CHECKBOX_SIZE + WIDGET_PADDING;
 }
 
 bool ui_push_checkbox(checkbox_state *state, char *title)

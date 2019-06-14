@@ -69,9 +69,15 @@ keyboard_input keyboard_input_create()
 	keyboard.take_input = false;
 	keyboard.cursor = 0;
 	keyboard.input_text_len = 0;
+	keyboard.input_mode = INPUT_FULL;
 	memset(keyboard.keys, 0, MAX_KEYCODE);
 	
 	return keyboard;
+}
+
+void keyboard_set_input_mode(keyboard_input *keyboard, keyboard_input_mode mode)
+{
+	keyboard->input_mode = mode;
 }
 
 inline void keyboard_input_destroy(keyboard_input *keyboard)

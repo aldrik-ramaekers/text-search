@@ -63,6 +63,12 @@ void set_locale(char *country_id)
 
 char* localize(const char *identifier)
 {
+	if (!global_localization.active_localization)
+	{
+		printf("NO LOCALE SELECTED.");
+		return (char*)identifier;
+	}
+	
 	s32 len = strlen(identifier);
 	for (s32 i = 0; i < global_localization.active_localization->translations.length; i++)
 	{
@@ -73,7 +79,7 @@ char* localize(const char *identifier)
 			return trans->translation;
 		}
 	}
-	
+	printf("MISSING TRANSLATION: [%s][%s]", identifier, global_localization.active_localization->locale);
 	return "MISSING";
 }
 

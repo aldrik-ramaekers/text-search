@@ -162,8 +162,15 @@ typedef struct t_mouse_input
 	s8 scroll_state;
 } mouse_input;
 
+typedef enum t_keyboard_input_mode
+{
+	INPUT_NUMERIC,
+	INPUT_FULL,
+} keyboard_input_mode;
+
 typedef struct t_keyboard_input
 {
+	keyboard_input_mode input_mode;
 	int modifier_state;
 	bool take_input;
 	u32 cursor;
@@ -185,6 +192,7 @@ bool is_right_clicked(mouse_input *input);
 bool keyboard_is_key_down(keyboard_input *keyboard, s16 key);
 bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key);
 void keyboard_set_input_text(keyboard_input *keyboard, char *text);
+void keyboard_set_input_mode(keyboard_input *keyboard, keyboard_input_mode mode);
 
 mouse_input mouse_input_create();
 keyboard_input keyboard_input_create();

@@ -25,6 +25,7 @@ struct t_platform_window
 	s32 width;
 	s32 height;
 	bool is_open;
+	bool has_focus;
 };
 
 bool get_active_directory(char *buffer)
@@ -403,9 +404,13 @@ inline void platform_window_make_current(platform_window *window)
 	glXMakeCurrent(window->display, window->window, window->gl_context);
 }
 
-platform_window platform_open_window(char *name, u16 width, u16 height)
+platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
+	bool has_max_size = max_w || max_h;
+	
 	platform_window window;
+	window.has_focus = true;
+	
 	static int att[] =
     {
 		GLX_X_RENDERABLE    , True,
@@ -479,12 +484,16 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	XSetWindowAttributes window_attributes;
 	window_attributes.colormap = window.cmap;
 	window_attributes.event_mask = KeyPressMask | KeyReleaseMask | PointerMotionMask |
-		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask;
+		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | FocusChangeMask;
 	
 	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask, &window_attributes);
 	
 	XSizeHints hints;
-	hints.flags = PMaxSize | PMinSize | USPosition;
+	
+	if (has_max_size)
+		hints.flags = PMaxSize | PMinSize | USPosition;
+	else
+		hints.flags = PMinSize | USPosition;
 	hints.x = center_x;
 	hints.y = center_y;
 	hints.max_width = width;
@@ -545,7 +554,12 @@ platform_window platform_open_window(char *name, u16 width, u16 height)
 	
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	//glOrtho(0, width, height, 0, -1, 1);
+	glOrtho(0, width, height, 0, -1, 1);
+	
+	//GLint m_viewport[4];
+	//glGetIntegerv( GL_VIEWPORT, m_viewport );
+	//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
+	
 	glMatrixMode(GL_MODELVIEW);
 	
 	create_key_tables(window);
@@ -594,6 +608,15 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			XConfigureEvent xce = window->event.xconfigure;
 			window->width = xce.width;
 			window->height = xce.height;
+			glViewport(0, 0, window->width, window->height);
+		}
+		else if (window->event.type == FocusIn)
+		{
+			window->has_focus = true;
+		}
+		else if (window->event.type == FocusOut)
+		{
+			window->has_focus = false;
 		}
 		else if (window->event.type == MotionNotify)
 		{
@@ -713,6 +736,14 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				if ((ksym >= XK_A && ksym <= XK_Z) || (ksym >= XK_a && ksym <= XK_z))
 				{
 					ch = XKeysymToString(ksym);
+				}
+				
+				if (ch && keyboard->input_mode == INPUT_NUMERIC)
+				{
+					if (!(*ch >= 48 && *ch <= 57))
+					{
+						ch = 0;
+					}
 				}
 				
 				if (ch)
@@ -956,24 +987,30 @@ static void* platform_open_file_dialog_dd(void *data)
 	char *current_val = mem_alloc(MAX_INPUT_LENGTH);
 	strcpy(current_val, args->buffer);
 	
-	char file_filter[50];
+	char file_filter[MAX_INPUT_LENGTH];
 	file_filter[0] = 0;
 	if (args->file_filter)
 		sprintf(file_filter, "--file-filter=\"%s\"", args->file_filter);
 	
-	char command[150];
+	char start_path[MAX_INPUT_LENGTH];
+	start_path[0] = 0;
+	if (args->start_path)
+		sprintf(start_path, "--filename=\"%s\"", args->start_path);
+	
+	
+	char command[MAX_INPUT_LENGTH];
 	
 	if (args->type == OPEN_FILE)
 	{
-		sprintf(command, "zenity --file-selection %s", file_filter);
+		sprintf(command, "zenity --file-selection %s %s", file_filter, start_path);
 	}
 	else if (args->type == OPEN_DIRECTORY)
 	{
-		sprintf(command, "zenity --file-selection --directory %s", file_filter);
+		sprintf(command, "zenity --file-selection --directory %s %s", file_filter, start_path);
 	}
 	else if (args->type == SAVE_FILE)
 	{
-		sprintf(command, "zenity --file-selection --save --confirm-overwrite %s", file_filter);
+		sprintf(command, "zenity --file-selection --save --confirm-overwrite %s %s", file_filter, start_path);
 	}
 	
 	f = popen(command, "r");
@@ -1006,12 +1043,13 @@ void *platform_open_file_dialog_block(void *arg)
 	return 0;
 }
 
-void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter)
+void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path)
 {
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = buffer;
 	args->type = type;
 	args->file_filter = file_filter;
+	args->start_path = start_path;
 	
 	thread thr;
 	thr.valid = false;

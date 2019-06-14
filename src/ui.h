@@ -78,6 +78,7 @@ typedef struct t_button_state
 
 typedef struct t_ui_context
 {
+	
 	ui_style style;
 	ui_layout layout;
 	keyboard_input *keyboard;
@@ -88,6 +89,7 @@ typedef struct t_ui_context
 	u32 next_id;
 	s32 menu_item_count;
 } ui_context;
+
 
 ui_context global_ui_context;
 
@@ -117,6 +119,7 @@ void ui_push_separator();
 void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
+void ui_push_text(char *text);
 bool ui_push_checkbox(checkbox_state *state, char *title);
 bool ui_push_textbox(textbox_state *state, char *title);
 bool ui_push_button(button_state *button, char *title);
