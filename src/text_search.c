@@ -463,7 +463,7 @@ static void render_info(platform_window *window, font *font_small)
 		s32 img_h = 200;
 		s32 img_x = window->width/2-img_w/2;
 		s32 img_y = window->height/2-img_h/2-50;
-		char text[20];
+		char text[40];
 		
 		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MS);
 		s32 dot_count = (dot_count_t % 1000) / 250;
@@ -589,10 +589,16 @@ int main(int argc, char **argv)
 	bool recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
 	char *search_text = settings_config_get_string(&config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(&config, "FILE_FILTER");
+	s32 max_thread_count = settings_config_get_number(&config, "MAX_THEAD_COUNT");
+	s32 max_file_size = settings_config_get_number(&config, "MAX_FILE_SIZE");
+	char *locale_id = settings_config_get_string(&config, "LOCALE");
 	strcpy(textbox_path.buffer, path);
 	strcpy(textbox_file_filter.buffer, search_filter);
 	strcpy(textbox_search_text.buffer, search_text);
 	checkbox_recursive.state = recursive;
+	global_settings_page.max_thread_count = max_thread_count;
+	global_settings_page.max_file_size = max_file_size;
+	set_locale(locale_id);
 	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
@@ -671,7 +677,7 @@ int main(int argc, char **argv)
 				}
 				if (ui_push_menu(localize("options")))
 				{
-					if (ui_push_menu_item(localize("settings"), "Ctrl + O")) 
+					if (ui_push_menu_item(localize("settings"), "")) 
 					{
 						settings_page_show();
 					}
@@ -849,20 +855,28 @@ int main(int argc, char **argv)
 		mem_free(match->file.matched_filter);
 	}
 	
-	about_page_destroy();
-	settings_page_destroy();
-	
 	// write config file
 	settings_config_set_string(&config, "SEARCH_DIRECTORY", textbox_path.buffer);
 	settings_config_set_number(&config, "SEARCH_DIRECTORIES", checkbox_recursive.state);
 	settings_config_set_string(&config, "SEARCH_TEXT", textbox_search_text.buffer);
 	settings_config_set_string(&config, "FILE_FILTER", textbox_file_filter.buffer);
+	settings_config_set_number(&config, "MAX_THEAD_COUNT", global_settings_page.max_thread_count);
+	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
 	settings_config_write_to_file(&config, "data/config.txt");
+	
+	char *current_locale_id = localize_get_id();
+	if (current_locale_id)
+	{
+		settings_config_set_string(&config, "LOCALE", current_locale_id);
+	}
+	
 #ifdef MODE_DEVELOPER
 	settings_config_write_to_file(&config, "../data/config.txt");
 #endif
 	settings_config_destroy(&config);
 	
+	about_page_destroy();
+	settings_page_destroy();
 	
 	// cleanup ui
 	ui_destroy_textbox(&textbox_path);

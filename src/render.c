@@ -345,6 +345,24 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	return y;
 }
 
+void render_triangle(s32 x, s32 y, s32 w, s32 h, color tint)
+{
+#ifdef MODE_DEVELOPER
+	profiler_begin(profiler_start);
+#endif
+	
+	glBegin(GL_TRIANGLES);
+	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
+	glVertex3i(x+(w/2), y+h, render_depth);
+	glVertex3i(x, y, render_depth);
+	glVertex3i(x+w, y, render_depth);
+	glEnd();
+	
+#ifdef MODE_DEVELOPER
+	profiler_end(profiler_start);
+#endif
+}
+
 void render_rectangle(s32 x, s32 y, s32 width, s32 height, color tint)
 {
 #ifdef MODE_DEVELOPER

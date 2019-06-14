@@ -6,7 +6,7 @@
 #define MENU_HORIZONTAL_PADDING 10
 #define WIDGET_PADDING 8
 #define BUTTON_HORIZONTAL_TEXT_PADDING 15
-#define MENU_ITEM_WIDTH 170
+#define MENU_ITEM_WIDTH 190
 #define CHECKBOX_SIZE BLOCK_HEIGHT - 8
 #define TEXTBOX_WIDTH 270
 #define TEXTBOX_HEIGHT BLOCK_HEIGHT
@@ -42,6 +42,8 @@ typedef struct t_scroll_state
 
 typedef struct t_ui_layout
 {
+	s32 dropdown_item_count;
+	s32 dropdown_x;
 	s32 offset_x;
 	s32 offset_y;
 	platform_window *active_window;
@@ -76,9 +78,13 @@ typedef struct t_button_state
 	bool state;
 } button_state;
 
+typedef struct t_dropdown_state
+{
+	bool state;
+} dropdown_state;
+
 typedef struct t_ui_context
 {
-	
 	ui_style style;
 	ui_layout layout;
 	keyboard_input *keyboard;
@@ -106,6 +112,7 @@ checkbox_state ui_create_checkbox(bool selected);
 textbox_state ui_create_textbox(u16 max_len);
 button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
+dropdown_state ui_create_dropdown();
 
 void ui_destroy_textbox(textbox_state *state);
 
@@ -115,6 +122,8 @@ void ui_begin_menu_bar();
 bool ui_push_menu(char *title);
 bool ui_push_menu_item(char *title, char *shortcut);
 void ui_push_menu_item_separator();
+bool ui_push_dropdown(dropdown_state *state, char *title);
+bool ui_push_dropdown_item(image *icon, char *title);
 void ui_push_separator();
 void ui_block_begin(layout_direction direction);
 void ui_block_end();

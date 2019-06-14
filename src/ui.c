@@ -55,6 +55,13 @@ inline scroll_state ui_create_scroll(s32 scroll)
 	return state;
 }
 
+inline dropdown_state ui_create_dropdown()
+{
+	dropdown_state state;
+	state.state = 0;
+	return state;
+}
+
 inline void ui_create(platform_window *window, keyboard_input *keyboard, mouse_input *mouse, camera *camera, font *font_small)
 {
 	global_ui_context.style.foreground = rgb(250,250,250);
@@ -175,6 +182,97 @@ static s32 ui_get_scroll()
 	}
 	
 	return 0;
+}
+
+bool ui_push_dropdown_item(image *icon, char *title)
+{
+	bool result = false;
+	
+	u32 id = ui_get_id();
+	global_ui_context.layout.dropdown_item_count++;
+	s32 h = BUTTON_HEIGHT;
+	s32 x = global_ui_context.layout.dropdown_x + WIDGET_PADDING + global_ui_context.camera->x;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() + ((global_ui_context.layout.dropdown_item_count)*h-(1*global_ui_context.layout.dropdown_item_count));
+	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 total_w = 200 + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
+	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
+	
+	color bg_color = global_ui_context.style.button_background;
+	
+	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
+	{
+		if (is_left_clicked(global_ui_context.mouse))
+		{
+			result = true;
+		}
+		
+		bg_color = global_ui_context.style.background_hover;
+	}
+	
+	
+	render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
+	render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
+	render_image(icon, x+(BUTTON_HORIZONTAL_TEXT_PADDING/2), y + (h - (h-10))/2, h-10, h-10);
+	render_text(global_ui_context.font_small, text_x+(BUTTON_HORIZONTAL_TEXT_PADDING/2)+h-15, text_y, title, global_ui_context.style.foreground);
+	
+	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
+		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
+	else
+		global_ui_context.layout.offset_y += BUTTON_HEIGHT + WIDGET_PADDING;
+	
+	return result;
+}
+
+bool ui_push_dropdown(dropdown_state *state, char *title)
+{
+	bool result = false;
+	
+	u32 id = ui_get_id();
+	global_ui_context.layout.dropdown_item_count = 0;
+	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
+	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 total_w = 200 + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
+	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
+	s32 h = BUTTON_HEIGHT;
+	
+	if (global_ui_context.layout.block_height < h)
+		global_ui_context.layout.block_height = h;
+	
+	color bg_color = global_ui_context.style.button_background;
+	
+	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
+	{
+		if (is_left_clicked(global_ui_context.mouse))
+		{
+			state->state = !state->state;
+		}
+		
+		bg_color = global_ui_context.style.background_hover;
+	}
+	else if (is_left_down(global_ui_context.mouse) && state->state)
+	{
+		state->state = false;
+		// render dropdown this frame so item can be selected
+		result = true;
+	}
+	
+	render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
+	render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
+	render_text(global_ui_context.font_small, text_x, text_y, title, global_ui_context.style.foreground);
+	
+	render_triangle(x+total_w - h, y+(h-(h-12))/2, h-12, h-12, global_ui_context.style.border);
+	global_ui_context.layout.dropdown_x = global_ui_context.layout.offset_x;
+	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
+		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
+	else
+		global_ui_context.layout.offset_y += BUTTON_HEIGHT + WIDGET_PADDING;
+	
+	return result || state->state;
 }
 
 bool ui_push_menu(char *title)

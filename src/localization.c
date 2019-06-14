@@ -1,3 +1,50 @@
+static void locale_get_id_from_path(char *buffer, char *path)
+{
+	s32 len = strlen(path);
+	s32 start = 0;
+	for (s32 i = len-1; i >= 0; i--)
+	{
+		char ch = path[i];
+		
+		if (ch == '-')
+		{
+			start = i;
+		}
+		if (ch == '/')
+		{
+			char cc = path[start];
+			path[start] = 0;
+			strcpy(buffer, path+i+1);
+			path[start] = cc;
+			
+			return;
+		}
+	}
+}
+
+static void locale_get_name_from_path(char *buffer, char *path)
+{
+	s32 len = strlen(path);
+	s32 start = 0;
+	for (s32 i = len-1; i >= 0; i--)
+	{
+		char ch = path[i];
+		
+		if (ch == '.')
+		{
+			start = i;
+		}
+		if (ch == '-')
+		{
+			char cc = path[start];
+			path[start] = 0;
+			strcpy(buffer, path+i+1);
+			path[start] = cc;
+			return;
+		}
+	}
+}
+
 mo_file load_localization_file(char *path)
 {
 	mo_file mo;
@@ -13,9 +60,15 @@ mo_file load_localization_file(char *path)
 		
 		// get country id
 		s32 len = strlen(path);
-		mo.locale = mem_alloc(len);
-		strcpy(mo.locale, path+len-5);
-		mo.locale[2] = 0;
+		mo.locale_id = mem_alloc(len);
+		locale_get_id_from_path(mo.locale_id, path);
+		
+		mo.locale_full = mem_alloc(len);
+		locale_get_name_from_path(mo.locale_full, path);
+		
+		char icon_path_buf[50];
+		sprintf(icon_path_buf, "data/imgs/%s.png", mo.locale_id);
+		mo.icon = assets_load_image(icon_path_buf, false);
 		
 #if 0
 		printf("magic: %d\nfile revision: %d\nstring count: %d\nidentifier offset: %d\ntranslation offset: %d\nhashtable size: %d\nhashtable offset: %d\n", mo.header.magic_number, mo.header.file_format_revision, mo.header.number_of_strings, mo.header.identifier_table_offset, mo.header.translation_table_offset, mo.header.hashtable_size, mo.header.hashtable_offset);
@@ -41,16 +94,41 @@ mo_file load_localization_file(char *path)
 		}
 	}
 	
-	
 	return mo;
+}
+
+char* localize_get_name()
+{
+	if (!global_localization.active_localization)
+	{
+		return "[NO LOCALE]";
+	}
+	
+	return global_localization.active_localization->locale_full;
+}
+
+char* localize_get_id()
+{
+	if (!global_localization.active_localization)
+	{
+		return "[NO LOCALE]";
+	}
+	
+	return global_localization.active_localization->locale_id;
 }
 
 void set_locale(char *country_id)
 {
+	if (country_id == 0)
+	{
+		global_localization.active_localization = array_at(&global_localization.mo_files, 0);
+		return;
+	}
+	
 	for (s32 i = 0; i < global_localization.mo_files.length; i++)
 	{
 		mo_file *file = array_at(&global_localization.mo_files, i);
-		if (strcmp(file->locale, country_id) == 0)
+		if (strcmp(file->locale_id, country_id) == 0)
 		{
 			global_localization.active_localization = file;
 			return;
@@ -65,7 +143,7 @@ char* localize(const char *identifier)
 {
 	if (!global_localization.active_localization)
 	{
-		printf("NO LOCALE SELECTED.");
+		//printf("NO LOCALE SELECTED.");
 		return (char*)identifier;
 	}
 	
@@ -79,7 +157,7 @@ char* localize(const char *identifier)
 			return trans->translation;
 		}
 	}
-	printf("MISSING TRANSLATION: [%s][%s]", identifier, global_localization.active_localization->locale);
+	printf("MISSING TRANSLATION: [%s][%s]", identifier, global_localization.active_localization->locale_id);
 	return "MISSING";
 }
 
@@ -112,7 +190,11 @@ void destroy_available_localizations()
 	{
 		mo_file *file = array_at(&global_localization.mo_files, i);
 		array_destroy(&file->translations);
-		mem_free(file->locale);
+		mem_free(file->locale_id);
+		mem_free(file->locale_full);
 		platform_destroy_file_content(&file->content);
+		
+		if (file->icon)
+			assets_destroy_image(file->icon);
 	}
 }

@@ -39,6 +39,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text);
 void render_rectangle(s32 x, s32 y, s32 width, s32 height, color tint);
 void render_rectangle_tint(s32 x, s32 y, s32 width, s32 height, color tint[4]);
 void render_rectangle_outline(s32 x, s32 y, s32 width, s32 height, u16 outline_w, color tint);
+void render_triangle(s32 x, s32 y, s32 w, s32 h, color tint);
 
 // utils
 void render_set_scissor(platform_window *window, s32 x, s32 y, s32 w, s32 h);

@@ -2,8 +2,6 @@
 #define INCLUDE_LOCALIZATION
 
 // https://www.science.co.il/language/Locale-codes.php
-// NOTE(Aldrik): country codes with more then 2 chars are not supported. 
-// (Dhivehi and Sinhalese)
 
 typedef struct t_mo_entry
 {
@@ -33,7 +31,8 @@ typedef struct t_mo_file
 {
 	mo_header header;
 	array translations;
-	char *locale;
+	char *locale_id;
+	char *locale_full;
 	image *icon;
 	file_content content;
 } mo_file;
@@ -46,6 +45,8 @@ typedef struct t_localization
 
 localization global_localization;
 
+char* localize_get_id();
+char* localize_get_name();
 char* localize(const char *identifier);
 void set_locale(char *country_id);
 void load_available_localizations();
