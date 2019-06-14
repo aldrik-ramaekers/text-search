@@ -104,6 +104,12 @@ static void *find_text_in_file_t(void *arg)
 		
 		content = platform_read_file_content(match->file.path, "r");
 		
+		s32 kb_to_b = global_settings_page.max_file_size * 1000;
+		if (global_settings_page.max_file_size && content.content_length > kb_to_b)
+		{
+			goto finish_early;
+		}
+		
 		if (global_search_result.cancel_search) { goto finish_early; }
 		
 		if (content.content && !content.file_error)
