@@ -3,7 +3,7 @@
 # download translations
 # https://poeditor.com/projects/
 
-###### ENLISH
+###### ENGLISH
 code=$(curl -X POST https://poeditor.com/api/ \
      -d api_token="89856d745c143ad91aca0f91c9e7640b" \
      -d action="export" \

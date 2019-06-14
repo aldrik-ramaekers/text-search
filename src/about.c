@@ -6,6 +6,8 @@ void about_page_create()
 	global_about_page.sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
 	global_about_page.font_big = assets_load_font("data/fonts/mono.ttf", 32);
 	global_about_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
+	global_about_page.keyboard = keyboard_input_create();
+	global_about_page.mouse = mouse_input_create();
 	
 	global_about_page.btn_close = ui_create_button();
 	global_about_page.btn_website = ui_create_button();
@@ -103,8 +105,6 @@ void about_page_update_render()
 void about_page_show()
 {
 	global_about_page.window = platform_open_window("About text-search", 450, 250, 450, 450);
-	global_about_page.keyboard = keyboard_input_create();
-	global_about_page.mouse = mouse_input_create();
 	global_about_page.active = true;
 	platform_set_icon(&global_about_page.window, global_about_page.sloth_small_img);
 }
