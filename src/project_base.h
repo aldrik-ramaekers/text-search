@@ -38,6 +38,8 @@
 #ifndef INCLUDE_PROJECT_BASE
 #define INCLUDE_PROJECT_BASE
 
+int main_loop();
+
 #ifdef _WIN32
 #define OS_WINDOWS
 #include <windows.h>

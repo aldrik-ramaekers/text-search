@@ -524,7 +524,7 @@ static void reset_status_text()
 	strcpy(global_status_bar.result_status_text, localize("no_search_completed"));
 }
 
-int main(int argc, char **argv)
+int main_loop()
 {
 	platform_init();
 	

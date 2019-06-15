@@ -7,7 +7,7 @@
 
 struct t_platform_window
 {
-	HWND *window_handle;
+	HWND window_handle;
 	HDC hdc;
 	HGLRC gl_context;
 	
@@ -19,29 +19,197 @@ struct t_platform_window
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
 
+static HINSTANCE instance;
+platform_window *current_window_to_handle;
+int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+					 LPSTR lpCmdLine, int nCmdShow)
+{
+	instance = hInstance;
+	return main_loop();
+}
+
+LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
+{
+	LRESULT result = 0;
+	
+	if (message == WM_SIZE)
+	{
+		u16 width = lparam << 16;
+		u16 height = lparam;
+	}
+	else if (message == WM_GETMINMAXINFO)
+	{
+		
+	}
+	else if (message == WM_DESTROY)
+	{
+		current_window_to_handle->is_open = false;
+	}
+	else if (message == WM_CLOSE)
+	{
+		current_window_to_handle->is_open = false;
+	}
+	else
+	{
+		result = DefWindowProc(window, message, wparam, lparam);
+	}
+	
+	return result;
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
+	platform_window window;
+	window.window_handle = 0;
+	window.hdc = 0;
 	
+	WNDCLASS window_class;
+	window_class.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
+	window_class.lpfnWndProc = main_window_callback;
+	window_class.hInstance = instance;
+	window_class.lpszClassName = "TextSearchWindowClass";
+	
+	if (RegisterClass(&window_class))
+	{
+		window.window_handle = CreateWindowEx(0,
+											  window_class.lpszClassName,
+											  name,
+											  WS_VISIBLE,
+											  CW_USEDEFAULT,
+											  CW_USEDEFAULT,
+											  width,
+											  height,
+											  0,
+											  0,
+											  instance,
+											  0);
+		
+		if (window.window_handle)
+		{
+			window.hdc = GetDC(window.window_handle);
+			
+			PIXELFORMATDESCRIPTOR format;
+			memset(&format, 0, sizeof(PIXELFORMATDESCRIPTOR));
+			format.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+			format.nVersion = 1;
+			format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+			format.cColorBits = 24;
+			format.cAlphaBits = 8;
+			format.iLayerType = PFD_MAIN_PLANE;
+			s32 suggested_format_index = ChoosePixelFormat(window.hdc, &format);
+			
+			PIXELFORMATDESCRIPTOR actual_format;
+			DescribePixelFormat(window.hdc, suggested_format_index, sizeof(actual_format), &actual_format);
+			SetPixelFormat(window.hdc, suggested_format_index, &actual_format);
+			
+			window.gl_context = wglCreateContext(window.hdc);
+			
+			static HGLRC share_list = 0;
+			if (share_list == 0)
+			{
+				share_list = window.gl_context;
+			}
+			else
+			{
+				wglShareLists(window.gl_context, share_list);
+			}
+			
+			wglMakeCurrent(window.hdc, window.gl_context);
+			
+			// blending
+			glEnable(GL_DEPTH_TEST);
+			//glDepthMask(true);
+			//glClearDepth(50);
+			glDepthFunc(GL_LEQUAL);
+			
+			glEnable(GL_BLEND);
+			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			
+			// setup multisampling
+#if 0
+			glEnable(GL_ALPHA_TEST);
+			glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glEnable(GL_SAMPLE_ALPHA_TO_ONE);
+			glEnable(GL_MULTISAMPLE);
+			glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
+#endif
+			
+			// TODO: is this correct?
+			// https://stackoverflow.com/questions/5627229/sub-pixel-drawing-with-opengl
+			//glHint(GL_POINT_SMOOTH, GL_NICEST);
+			//glHint(GL_LINE_SMOOTH, GL_NICEST);
+			//glHint(GL_POLYGON_SMOOTH, GL_NICEST);
+			
+			//glEnable(GL_SMOOTH);
+			//glEnable(GL_POINT_SMOOTH);
+			//glEnable(GL_LINE_SMOOTH);
+			//glEnable(GL_POLYGON_SMOOTH);
+			//////////////////
+			
+			window.is_open = true;
+			window.width = width;
+			window.height = height;
+			
+			glMatrixMode(GL_PROJECTION);
+			glLoadIdentity();
+			glOrtho(0, width, height, 0, -1, 1);
+			
+			//GLint m_viewport[4];
+			//glGetIntegerv( GL_VIEWPORT, m_viewport );
+			//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
+			
+			glMatrixMode(GL_MODELVIEW);
+			
+		}
+	}
+	
+	return window;
 }
 
 void platform_window_set_size(platform_window *window, u16 width, u16 height)
 {
-	
+	RECT rec;
+	GetWindowRect(window->window_handle, &rec);
+	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
+}
+
+u8 platform_window_is_valid(platform_window *window)
+{
+	return window->hdc && window->window_handle;
 }
 
 void platform_close_window(platform_window *window)
 {
-	
+	window->hdc = 0;
+	window->window_handle = 0;
+	ReleaseDC(window->window_handle, window->hdc);
+	CloseWindow(window->window_handle);
+	wglDeleteContext(window->gl_context);
 }
 
 void platform_destroy_window(platform_window *window)
 {
-	
+	if (!window->hdc || !window->window_handle) return;
+	wglMakeCurrent(window->hdc, NULL);
+	ReleaseDC(window->window_handle, window->hdc);
+	CloseWindow(window->window_handle);
+	wglDeleteContext(window->gl_context);
 }
 
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
 {
+	current_window_to_handle = window;
 	
+	MSG message;
+	BOOL message_result = GetMessage(&message, window->window_handle, 0, 0);
+	
+	if (!message_result)
+	{
+		window->is_open = false;
+	}
+	
+	TranslateMessage(&message); 
+	DispatchMessage(&message); 
 }
 
 void platform_window_swap_buffers(platform_window *window)
@@ -143,12 +311,169 @@ u8 set_active_directory(char *path)
 
 void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
 {
+	assert(list);
 	
+	s32 len = strlen(filter);
+	
+	char *subdirname_buf = mem_alloc(PATH_MAX);
+	
+	WIN32_FIND_DATAA file_info;
+	HWND handle = FindFirstFileA(start_dir, &file_info);
+	
+	if (handle == INVALID_HANDLE_VALUE)
+	{
+		return;
+	}
+	
+	do
+	{
+		char *name = file_info.cFileName;
+		
+		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && recursive)
+		{
+			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
+				continue;
+			
+			strcpy(subdirname_buf, start_dir);
+			strcat(subdirname_buf, name);
+			strcat(subdirname_buf, "/");
+			
+			// is directory
+			platform_list_files_block(list, subdirname_buf, filter, recursive);
+		}
+		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) ||
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ||
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_NORMAL) || 
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+		{
+			// is file
+			char *buf = mem_alloc(PATH_MAX);
+			sprintf(buf, "%s%s",start_dir, name);
+			
+			found_file f;
+			f.path = buf;
+			f.matched_filter = mem_alloc(len);
+			strcpy(f.matched_filter, filter);
+			array_push_size(list, &f, sizeof(found_file));
+		}
+	}
+	while (FindNextFile(handle, &file_info) != 0);
+	
+	FindClose(handle);
+	
+	mem_free(subdirname_buf);
+}
+
+void* platform_list_files_t_t(void *args)
+{
+	list_file_args *info = args;
+	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive);
+	mem_free(info);
+	return 0;
+}
+
+void *platform_list_files_t(void *args)
+{
+	list_file_args *info = args;
+	
+	// TODO(Aldrik): hardcoded max filter length
+	s32 max_filter_len = MAX_PATH_LENGTH;
+	
+	array filters = array_create(max_filter_len);
+	
+	char current_filter[max_filter_len];
+	s32 filter_len = 0;
+	
+	array *list = info->list;
+	char *start_dir = info->start_dir;
+	char *pattern = info->pattern;
+	u8 recursive = info->recursive;
+	
+	while(*pattern)
+	{
+		char ch = *pattern;
+		
+		if (ch == ',')
+		{
+			current_filter[filter_len] = 0;
+			array_push(&filters, current_filter);
+			filter_len = 0;
+		}
+		else
+		{
+			// TODO(Aldrik): show error and dont continue search
+			assert(filter_len < MAX_PATH_LENGTH);
+			
+			current_filter[filter_len++] = ch;
+		}
+		
+		pattern++;
+	}
+	current_filter[filter_len] = 0;
+	array_push(&filters, current_filter);
+	
+	array threads = array_create(sizeof(thread));
+	array_reserve(&threads, filters.length);
+	
+	for (s32 i = 0; i < filters.length; i++)
+	{
+		char *filter = array_at(&filters, i);
+		
+		thread thr;
+		thr.valid = false;
+		
+		list_file_args *args_2 = mem_alloc(sizeof(list_file_args));
+		if (args_2)
+		{
+			args_2->list = list;
+			args_2->start_dir = start_dir;
+			args_2->pattern = filter;
+			args_2->recursive = recursive;
+			
+			thr = thread_start(platform_list_files_t_t, args_2);
+		}
+		
+		if (platform_cancel_search) break;
+		
+		if (thr.valid)
+		{
+			array_push(&threads, &thr);
+		}
+		else
+		{
+			i--;
+		}
+	}
+	
+	for (s32 i = 0; i < threads.length; i++)
+	{
+		thread* thr = array_at(&threads, i);
+		thread_join(thr);
+	}
+	
+	if (!platform_cancel_search)
+		*(info->state) = !(*info->state);
+	
+	array_destroy(&threads);
+	array_destroy(&filters);
+	mem_free(args);
+	
+	return 0;
 }
 
 void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state)
 {
+	platform_cancel_search = false;
+	list_file_args *args = mem_alloc(sizeof(list_file_args));
+	args->list = list;
+	args->start_dir = start_dir;
+	args->pattern = filter;
+	args->recursive = recursive;
+	args->state = state;
 	
+	thread thr = thread_start(platform_list_files_t, args);
+	thread_detach(&thr);
 }
 
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path)
@@ -210,7 +535,7 @@ void platform_init()
 
 void platform_set_icon(platform_window *window, image *img)
 {
-	
+	// TODO(Aldrik): implement
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)

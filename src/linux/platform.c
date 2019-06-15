@@ -28,6 +28,11 @@ struct t_platform_window
 	u8 has_focus;
 };
 
+int main(int argc, char **argv)
+{
+	return main_loop();
+}
+
 u8 get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
@@ -521,7 +526,9 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	// get opengl context
 	window.gl_context = glXCreateContext(window.display, window.visual_info, 
 										 share_list, GL_TRUE);
-	share_list = window.gl_context;
+	
+	if (share_list == 0)
+		share_list = window.gl_context;
 	glXMakeCurrent(window.display, window.window, window.gl_context);
 	
 	// blending
@@ -1135,15 +1142,6 @@ char *platform_get_full_path(char *file)
 	return buf;
 }
 
-typedef struct t_list_file_args
-{
-	array *list;
-	char *start_dir;
-	char *pattern;
-	u8 recursive;
-	u8 *state;
-} list_file_args;
-
 void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
@@ -1254,7 +1252,6 @@ void platform_list_files(array *list, char *start_dir, char *filter, u8 recursiv
 	thread thr = thread_start(platform_list_files_t, args);
 	thread_detach(&thr);
 }
-
 
 inline u64 string_to_u64(char *str)
 {

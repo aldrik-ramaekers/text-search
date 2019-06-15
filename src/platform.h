@@ -69,6 +69,15 @@ struct open_dialog_args
 	file_dialog_type type;
 };
 
+typedef struct t_list_file_args
+{
+	array *list;
+	char *start_dir;
+	char *pattern;
+	u8 recursive;
+	u8 *state;
+} list_file_args;
+
 u8 platform_cancel_search = false;
 
 u8 platform_window_is_valid(platform_window *window);
