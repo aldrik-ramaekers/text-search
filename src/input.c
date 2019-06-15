@@ -1,40 +1,40 @@
 
-inline bool is_left_down(mouse_input *input)
+inline u8 is_left_down(mouse_input *input)
 {
 	return input->left_state & MOUSE_DOWN;
 }
 
-inline bool is_left_released(mouse_input *input)
+inline u8 is_left_released(mouse_input *input)
 {
 	return input->left_state & MOUSE_RELEASE;
 }
 
-inline bool is_left_clicked(mouse_input *input)
+inline u8 is_left_clicked(mouse_input *input)
 {
 	return input->left_state & MOUSE_CLICK;
 }
 
-inline bool is_right_down(mouse_input *input)
+inline u8 is_right_down(mouse_input *input)
 {
 	return input->right_state & MOUSE_DOWN;
 }
 
-inline bool is_right_released(mouse_input *input)
+inline u8 is_right_released(mouse_input *input)
 {
 	return input->right_state & MOUSE_RELEASE;
 }
 
-inline bool is_right_clicked(mouse_input *input)
+inline u8 is_right_clicked(mouse_input *input)
 {
 	return input->right_state & MOUSE_CLICK;
 }
 
-inline bool keyboard_is_key_down(keyboard_input *keyboard, s16 key)
+inline u8 keyboard_is_key_down(keyboard_input *keyboard, s16 key)
 {
 	return keyboard->keys[key];
 }
 
-inline bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
+inline u8 keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
 {
 	return keyboard->input_keys[key];
 }

@@ -24,11 +24,11 @@ struct t_platform_window
 	
 	s32 width;
 	s32 height;
-	bool is_open;
-	bool has_focus;
+	u8 is_open;
+	u8 has_focus;
 };
 
-bool get_active_directory(char *buffer)
+u8 get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -39,14 +39,14 @@ bool get_active_directory(char *buffer)
 	return true;
 }
 
-bool set_active_directory(char *path)
+u8 set_active_directory(char *path)
 {
 	return !chdir(path);
 }
 
-bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
+u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
 {
-	bool result = false;
+	u8 result = false;
 	
 	FILE *file = fopen(path, mode);
 	
@@ -411,7 +411,7 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
-	bool has_max_size = max_w || max_h;
+	u8 has_max_size = max_w || max_h;
 	
 	platform_window window;
 	window.has_focus = true;
@@ -488,10 +488,11 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	XSetWindowAttributes window_attributes;
 	window_attributes.colormap = window.cmap;
+	window_attributes.border_pixel = 0;
 	window_attributes.event_mask = KeyPressMask | KeyReleaseMask | PointerMotionMask |
 		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | FocusChangeMask;
 	
-	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask, &window_attributes);
+	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask | CWBorderPixel, &window_attributes);
 	
 	XSizeHints hints;
 	
@@ -572,16 +573,24 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	return window;
 }
 
+inline u8 platform_window_is_valid(platform_window *window)
+{
+	return window->display && window->window;
+}
+
 void platform_close_window(platform_window *window)
 {
+	XDestroyWindow(window->display, window->window);
+	window->display = 0;
+	window->window = 0;
 	//glXMakeCurrent(window->display, None, NULL);
 	//glXDestroyContext(window->display, window->gl_context);
-	XDestroyWindow(window->display, window->window);
 	//XCloseDisplay(window->display);
 }
 
 void platform_destroy_window(platform_window *window)
 {
+	if (!window->display || !window->display) return;
 	glXMakeCurrent(window->display, None, NULL);
 	glXDestroyContext(window->display, window->gl_context);
 	XCloseDisplay(window->display);
@@ -636,11 +645,11 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == ButtonPress)
 		{
-			bool is_left_down = window->event.xbutton.button == Button1;
-			bool is_right_down = window->event.xbutton.button == Button3;
-			bool is_middle_down = window->event.xbutton.button == Button2;
-			bool scroll_up = window->event.xbutton.button == Button4;
-			bool scroll_down = window->event.xbutton.button == Button5;
+			u8 is_left_down = window->event.xbutton.button == Button1;
+			u8 is_right_down = window->event.xbutton.button == Button3;
+			u8 is_middle_down = window->event.xbutton.button == Button2;
+			u8 scroll_up = window->event.xbutton.button == Button4;
+			u8 scroll_down = window->event.xbutton.button == Button5;
 			
 			if (scroll_up)
 				mouse->scroll_state = SCROLL_UP;
@@ -660,9 +669,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == ButtonRelease)
 		{
-			bool is_left_up = window->event.xbutton.button == Button1;
-			bool is_right_up = window->event.xbutton.button == Button3;
-			bool is_middle_up = window->event.xbutton.button == Button2;
+			u8 is_left_up = window->event.xbutton.button == Button1;
+			u8 is_right_up = window->event.xbutton.button == Button3;
+			u8 is_middle_up = window->event.xbutton.button == Button2;
 			
 			if (is_left_up)
 			{
@@ -753,7 +762,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				if (ch)
 				{
-					bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 					
 					if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
 					{
@@ -785,7 +794,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				}
 				else
 				{
-					bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 					
 					// cursor movement
 					if (keyboard_is_key_down(keyboard, KEY_LEFT) && keyboard->cursor > 0)
@@ -806,7 +815,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				if (ksym == XK_BackSpace)
 				{
-					bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 					
 					if (is_lctrl_down)
 					{
@@ -875,7 +884,7 @@ u64 platform_get_time(time_type time_type, time_precision precision)
 			++result;
 		}
 	}
-	else if (precision == TIME_MS)
+	else if (precision == TIME_MILI_S)
 	{
 		result = tms.tv_sec * 1000;
 		result += tms.tv_nsec/1000000;
@@ -926,7 +935,7 @@ cpu_info platform_get_cpu_info()
 	
 	char tmp_buffer[1000];
 	int tmp_buffer_len = 0;
-	bool collect_string = false;
+	u8 collect_string = false;
 	int line_nr = 0;
 	for (int i = 0; i < 5000; i++)
 	{
@@ -1064,7 +1073,7 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 	thread_detach(&thr);
 }
 
-void platform_list_files_block(array *list, char *start_dir, char *filter, bool recursive)
+void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
 {
 	assert(list);
 	
@@ -1131,8 +1140,8 @@ typedef struct t_list_file_args
 	array *list;
 	char *start_dir;
 	char *pattern;
-	bool recursive;
-	bool *state;
+	u8 recursive;
+	u8 *state;
 } list_file_args;
 
 void* platform_list_files_t_t(void *args)
@@ -1158,7 +1167,7 @@ void *platform_list_files_t(void *args)
 	array *list = info->list;
 	char *start_dir = info->start_dir;
 	char *pattern = info->pattern;
-	bool recursive = info->recursive;
+	u8 recursive = info->recursive;
 	
 	while(*pattern)
 	{
@@ -1232,7 +1241,7 @@ void *platform_list_files_t(void *args)
 	return 0;
 }
 
-void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
+void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state)
 {
 	platform_cancel_search = false;
 	list_file_args *args = mem_alloc(sizeof(list_file_args));

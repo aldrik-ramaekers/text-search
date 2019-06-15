@@ -166,11 +166,9 @@ void settings_page_show()
 
 void settings_page_hide()
 {
-	if (global_settings_page.window.display)
+	if (platform_window_is_valid(&global_settings_page.window))
 	{
 		platform_close_window(&global_settings_page.window);
-		global_settings_page.window.display = 0;
-		global_settings_page.window.window = 0;
 		
 		global_settings_page.btn_close.state = false;
 		global_settings_page.btn_save.state = false;

@@ -111,11 +111,9 @@ void about_page_show()
 
 void about_page_hide()
 {
-	if (global_about_page.window.display)
+	if (platform_window_is_valid(&global_about_page.window))
 	{
 		platform_close_window(&global_about_page.window);
-		global_about_page.window.display = 0;
-		global_about_page.window.window = 0;
 		
 		global_about_page.btn_close.state = false;
 		global_about_page.btn_website.state = false;

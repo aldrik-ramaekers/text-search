@@ -20,7 +20,7 @@
 typedef struct t_sample
 {
 	char *path;
-	bool loaded;
+	u8 loaded;
 	
 	s32 channels;
 	s32 sample_rate;
@@ -32,8 +32,8 @@ typedef struct t_sample
 
 typedef struct t_image {
 	char *path;
-	bool loaded;
-	bool keep_in_memory;
+	u8 loaded;
+	u8 keep_in_memory;
 	s32 width;
 	s32 height;
 	s32 channels;
@@ -45,7 +45,7 @@ typedef struct t_image {
 typedef struct t_font
 {
 	char *path;
-	bool loaded;
+	u8 loaded;
 	s16 references;
 	s16 size;
 	GLuint textureID;
@@ -66,7 +66,7 @@ typedef enum t_asset_task_type
 typedef struct t_asset_task
 {
 	s8 type;
-	bool valid;
+	u8 valid;
 	union {
 		image *image;
 		font *font;
@@ -83,7 +83,7 @@ typedef struct t_assets {
 	array samples;
 	asset_queue queue;
 	array post_process_queue;
-	bool valid;
+	u8 valid;
 } assets;
 
 char *binary_path;
@@ -105,7 +105,7 @@ void assets_destroy();
 void assets_do_post_process();
 void *assets_queue_worker();
 
-image *assets_load_image(char *file, bool keep_in_memory);
+image *assets_load_image(char *file, u8 keep_in_memory);
 void assets_destroy_image(image *image);
 
 font *assets_load_font(char *file, s16 size);

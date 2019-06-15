@@ -56,7 +56,7 @@ void console_print(char *message, console_print_type type, ...)
 	
 	char *msg = mem_alloc(300);
 	
-	u64 ms = platform_get_time(TIME_PROCESS, TIME_MS);
+	u64 ms = platform_get_time(TIME_PROCESS, TIME_MILI_S);
 	u32 time_ms = ms % 1000;
 	u32 time_s = ms / 1000;
 	

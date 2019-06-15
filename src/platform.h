@@ -21,7 +21,7 @@ typedef enum t_time_precision
 {
 	TIME_NS, // nanoseconds
 	TIME_US, // microseconds
-	TIME_MS, // miliseconds
+	TIME_MILI_S, // miliseconds
 	TIME_S,  // seconds
 } time_precision;
 
@@ -69,8 +69,9 @@ struct open_dialog_args
 	file_dialog_type type;
 };
 
-bool platform_cancel_search = false;
+u8 platform_cancel_search = false;
 
+u8 platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
 void platform_window_set_size(platform_window *window, u16 width, u16 height);
 void platform_close_window(platform_window *window);
@@ -78,12 +79,12 @@ void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);
 file_content platform_read_file_content(char *path, const char *mode);
-bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
+u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
 void platform_destroy_file_content(file_content *content);
-bool get_active_directory(char *buffer);
-bool set_active_directory(char *path);
-void platform_list_files_block(array *list, char *start_dir, char *filter, bool recursive);
-void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
+u8 get_active_directory(char *buffer);
+u8 set_active_directory(char *path);
+void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive);
+void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);
 void *platform_open_file_dialog_block(void *arg);
 char *platform_get_full_path(char *file);

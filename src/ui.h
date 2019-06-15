@@ -37,7 +37,7 @@ typedef struct t_scroll_state
 	s32 height;
 	s32 scroll;
 	s32 scroll_start_offset_y;
-	bool in_scroll;
+	u8 in_scroll;
 } scroll_state;
 
 typedef struct t_ui_layout
@@ -61,7 +61,7 @@ typedef struct t_ui_layout
 typedef struct t_textbox_state
 {
 	char *buffer;
-	bool state;
+	u8 state;
 	s32 selection_start_cursor;
 	s32 selection_length;
 	s32 max_len;
@@ -70,17 +70,17 @@ typedef struct t_textbox_state
 
 typedef struct t_checkbox_state
 {
-	bool state;
+	u8 state;
 } checkbox_state;
 
 typedef struct t_button_state
 {
-	bool state;
+	u8 state;
 } button_state;
 
 typedef struct t_dropdown_state
 {
-	bool state;
+	u8 state;
 } dropdown_state;
 
 typedef struct t_ui_context
@@ -105,10 +105,10 @@ void ui_set_active_window(platform_window *window);
 void ui_destroy();
 void ui_begin();
 void ui_end();
-bool ui_is_menu_active(u32 id);
+u8 ui_is_menu_active(u32 id);
 
 // widget initialization
-checkbox_state ui_create_checkbox(bool selected);
+checkbox_state ui_create_checkbox(u8 selected);
 textbox_state ui_create_textbox(u16 max_len);
 button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
@@ -117,22 +117,22 @@ dropdown_state ui_create_dropdown();
 void ui_destroy_textbox(textbox_state *state);
 
 // widgets
-bool is_shortcut_down(s32 shortcut_keys[2]);
+u8 is_shortcut_down(s32 shortcut_keys[2]);
 void ui_begin_menu_bar();
-bool ui_push_menu(char *title);
-bool ui_push_menu_item(char *title, char *shortcut);
+u8 ui_push_menu(char *title);
+u8 ui_push_menu_item(char *title, char *shortcut);
 void ui_push_menu_item_separator();
-bool ui_push_dropdown(dropdown_state *state, char *title);
-bool ui_push_dropdown_item(image *icon, char *title);
+u8 ui_push_dropdown(dropdown_state *state, char *title);
+u8 ui_push_dropdown_item(image *icon, char *title);
 void ui_push_separator();
 void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
 void ui_push_text(char *text);
-bool ui_push_checkbox(checkbox_state *state, char *title);
-bool ui_push_textbox(textbox_state *state, char *title);
-bool ui_push_button(button_state *button, char *title);
-bool ui_push_button_image(button_state *button, char *title, image *img);
+u8 ui_push_checkbox(checkbox_state *state, char *title);
+u8 ui_push_textbox(textbox_state *state, char *title);
+u8 ui_push_button(button_state *button, char *title);
+u8 ui_push_button_image(button_state *button, char *title, image *img);
 void ui_scroll_begin(s32 height);
 void ui_scroll_end();
 

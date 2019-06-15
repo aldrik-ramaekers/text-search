@@ -10,7 +10,7 @@ inline void ui_end()
 	
 }
 
-inline checkbox_state ui_create_checkbox(bool selected)
+inline checkbox_state ui_create_checkbox(u8 selected)
 {
 	checkbox_state state;
 	state.state = selected;
@@ -144,7 +144,7 @@ inline void ui_begin_menu_bar()
 	global_ui_context.layout.menu_offset_y = 0;
 }
 
-inline bool ui_is_menu_active(u32 id)
+inline u8 ui_is_menu_active(u32 id)
 {
 	for (int i = 0; i < global_ui_context.active_menus.length; i++)
 	{
@@ -184,9 +184,9 @@ static s32 ui_get_scroll()
 	return 0;
 }
 
-bool ui_push_dropdown_item(image *icon, char *title)
+u8 ui_push_dropdown_item(image *icon, char *title)
 {
-	bool result = false;
+	u8 result = false;
 	
 	u32 id = ui_get_id();
 	global_ui_context.layout.dropdown_item_count++;
@@ -201,7 +201,7 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	
 	color bg_color = global_ui_context.style.button_background;
 	
-	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
+	if (mouse_x >= x && mouse_x < x + total_w && mouse_y > y && mouse_y < y + h)
 	{
 		if (is_left_clicked(global_ui_context.mouse))
 		{
@@ -225,9 +225,9 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	return result;
 }
 
-bool ui_push_dropdown(dropdown_state *state, char *title)
+u8 ui_push_dropdown(dropdown_state *state, char *title)
 {
-	bool result = false;
+	u8 result = false;
 	
 	u32 id = ui_get_id();
 	global_ui_context.layout.dropdown_item_count = 0;
@@ -275,9 +275,9 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 	return result || state->state;
 }
 
-bool ui_push_menu(char *title)
+u8 ui_push_menu(char *title)
 {
-	bool result = false;
+	u8 result = false;
 	
 	global_ui_context.layout.menu_offset_y = 0;
 	global_ui_context.menu_item_count = 0;
@@ -297,7 +297,7 @@ bool ui_push_menu(char *title)
 	
 	color bg_color = global_ui_context.style.background;
 	
-	bool is_open = ui_is_menu_active(id);
+	u8 is_open = ui_is_menu_active(id);
 	result = is_open;
 	
 	if (mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h)
@@ -331,9 +331,9 @@ bool ui_push_menu(char *title)
 	return result;
 }
 
-bool ui_push_textbox(textbox_state *state, char *placeholder)
+u8 ui_push_textbox(textbox_state *state, char *placeholder)
 {
-	bool result = false;
+	u8 result = false;
 	static u64 cursor_tick = 0;
 	static u64 last_cursor_pos = 0;
 	
@@ -352,7 +352,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	if (global_ui_context.layout.block_height < TEXTBOX_HEIGHT)
 		global_ui_context.layout.block_height = TEXTBOX_HEIGHT;
 	
-	bool has_text = state->buffer[0] != 0;
+	u8 has_text = state->buffer[0] != 0;
 	
 	if (!state->state)
 	{
@@ -511,9 +511,9 @@ void ui_push_text(char *text)
 		global_ui_context.layout.offset_y += CHECKBOX_SIZE + WIDGET_PADDING;
 }
 
-bool ui_push_checkbox(checkbox_state *state, char *title)
+u8 ui_push_checkbox(checkbox_state *state, char *title)
 {
-	bool result = false;
+	u8 result = false;
 	
 	s32 spacing_y = (BLOCK_HEIGHT - CHECKBOX_SIZE)/2;
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
@@ -567,15 +567,15 @@ bool ui_push_checkbox(checkbox_state *state, char *title)
 	return result;
 }
 
-inline bool is_shortcut_down(s32 shortcut_keys[2])
+inline u8 is_shortcut_down(s32 shortcut_keys[2])
 {
 	return keyboard_is_key_down(global_ui_context.keyboard, shortcut_keys[0]) &&
 		keyboard_is_key_pressed(global_ui_context.keyboard, shortcut_keys[1]);
 }
 
-bool ui_push_menu_item(char *title, char *shortcut)
+u8 ui_push_menu_item(char *title, char *shortcut)
 {
-	bool result = false;
+	u8 result = false;
 	
 	set_render_depth(30);
 	
@@ -627,9 +627,9 @@ bool ui_push_menu_item(char *title, char *shortcut)
 	return result;
 }
 
-bool ui_push_button(button_state *state, char *title)
+u8 ui_push_button(button_state *state, char *title)
 {
-	bool result = false;
+	u8 result = false;
 	
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
@@ -691,9 +691,9 @@ bool ui_push_button(button_state *state, char *title)
 }
 
 
-bool ui_push_button_image(button_state *state, char *title, image *img)
+u8 ui_push_button_image(button_state *state, char *title, image *img)
 {
-	bool result = false;
+	u8 result = false;
 	
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();

@@ -29,20 +29,20 @@ typedef struct t_search_result
 	array files;
 	u64 find_duration_us;
 	array errors;
-	bool show_error_message; // error occured
-	bool found_file_matches; // found/finding matches
+	u8 show_error_message; // error occured
+	u8 found_file_matches; // found/finding matches
 	s32 files_searched;
 	s32 files_matched;
 	s32 search_result_source_dir_len;
-	bool match_found;
+	u8 match_found;
 	mutex mutex;
-	bool walking_file_system;
-	bool cancel_search;
-	bool done_finding_matches;
+	u8 walking_file_system;
+	u8 cancel_search;
+	u8 done_finding_matches;
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
-	bool *recursive_state_buffer;
+	u8 *recursive_state_buffer;
 	s32 search_id;
 	u64 start_time;
 } search_result;
@@ -77,15 +77,9 @@ s32 scroll_y = 0;
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
 // TODO(Aldrik): results scrollbar works everywhere
-// TODO(Aldrik): settings page
 // TODO(Aldrik): layout dependant keyboard press/release for shortcuts
-// TODO(Aldrik): we should really limit thread count, im pretty sure maxing out is slowing us down at this point.
 // TODO(Aldrik): window resize flickers
 // TODO(Aldrik): what to show in information tab?
-// TODO(Aldrik): replace strncpy because its behaviour is so weird
-// TODO(Aldrik): refactor globals into structs
-// TODO(Aldrik): localization.
-// TODO(Aldrik): if we want to limit thread count we could use pthread_tryjoin_np
 
 char *text_to_find;
 
@@ -194,7 +188,7 @@ static void* find_text_in_files_t(void *arg)
 				for (s32 i = 0; i < threads.length; i++)
 				{
 					thread *thr = array_at(&threads, i);
-					bool joined = thread_tryjoin(thr);
+					u8 joined = thread_tryjoin(thr);
 					if (joined)
 					{
 						array_remove(&threads, thr);
@@ -489,7 +483,7 @@ static void render_info(platform_window *window, font *font_small)
 		s32 img_y = window->height/2-img_h/2-50;
 		char text[40];
 		
-		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MS);
+		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
 		s32 dot_count = (dot_count_t % 1000) / 250;
 		
 		sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
@@ -610,7 +604,7 @@ int main(int argc, char **argv)
 	// load config
 	settings_config config = settings_config_load_from_file("data/config.txt");
 	char *path = settings_config_get_string(&config, "SEARCH_DIRECTORY");
-	bool recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
+	u8 recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
 	char *search_text = settings_config_get_string(&config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(&config, "FILE_FILTER");
 	s32 max_thread_count = settings_config_get_number(&config, "MAX_THEAD_COUNT");
@@ -634,7 +628,7 @@ int main(int argc, char **argv)
 	global_search_result.search_directory_buffer = textbox_path.buffer;
 	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
 	
-	bool done_finding_files = false;
+	u8 done_finding_files = false;
 	
 	while(window.is_open) {
 		platform_handle_events(&window, &mouse, &keyboard);
@@ -642,7 +636,7 @@ int main(int argc, char **argv)
 		settings_page_update_render();
 		platform_window_make_current(&window);
 		
-		static bool loaded = false;
+		static u8 loaded = false;
 		if (!loaded && sloth_small_img->loaded)
 		{
 			loaded = true;
@@ -766,7 +760,7 @@ int main(int argc, char **argv)
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
-					bool continue_search = true;
+					u8 continue_search = true;
 					
 					if (global_search_result.walking_file_system) continue_search = false;
 					if (!global_search_result.done_finding_matches) continue_search = false;

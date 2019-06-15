@@ -1,4 +1,4 @@
-bool string_match(char *first, char *second)
+u8 string_match(char *first, char *second)
 {
 	// If we reach at the end of both strings, we are done 
     if (*first == '\0' && *second == '\0') 
@@ -55,15 +55,15 @@ static s32 length_of_expr(char *word)
 }
 
 // TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
-bool string_contains(char *big, char *small)
+u8 string_contains(char *big, char *small)
 {
-	bool match_started = false;
+	u8 match_started = false;
 	char *small_original = small;
 	
 	s32 index = 0;
 	char *word_start = big;
 #if !SEARCH_WITHIN_STRING
-	bool ignore_word = false;
+	u8 ignore_word = false;
 #endif
 	while(*big)
 	{

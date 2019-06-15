@@ -143,7 +143,7 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 	if (setting)
 	{
 		char num_buf[20];
-		sprintf(num_buf, "%lu", value);
+		sprintf(num_buf, "%"PRId64"", value);
 		
 		s32 len = strlen(num_buf);
 		mem_free(setting->value);
@@ -161,7 +161,7 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 		
 		// value
 		char num_buf[20];
-		sprintf(num_buf, "%lu", value);
+		sprintf(num_buf, "%"PRId64"", value);
 		
 		len = strlen(num_buf);
 		new_entry.value = mem_alloc(len+1);

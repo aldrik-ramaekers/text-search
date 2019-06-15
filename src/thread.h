@@ -19,6 +19,25 @@ struct t_mutex
 };
 #endif
 
+#ifdef OS_WINDOWS
+#include <windows.h>
+#include <process.h>    /* _beginthread, _endthread */
+#include <stddef.h>
+#include <stdlib.h>
+#include <conio.h>
+
+struct t_thread
+{
+	HANDLE thread;
+	bool valid;
+};
+
+struct t_mutex
+{
+	HANDLE mutex;
+};
+#endif
+
 typedef struct t_thread thread;
 typedef struct t_mutex mutex;
 

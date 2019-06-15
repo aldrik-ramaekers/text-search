@@ -3,7 +3,7 @@
 rm -rf bin
 mkdir bin
 cd src
-gcc -Wall -g -rdynamic -Wno-unused-variable text_search.c -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread
+x86_64-w64-mingw32-gcc -Wall -g -Wno-unused-variable text_search.c -o ../bin/text-search -lopengl32 -lkernel32 -lglu32
 
 if [ $? -ne 0 ]; then
 	cd ../

@@ -1,6 +1,8 @@
 #ifndef INCLUDE_ABOUT
 #define INCLUDE_ABOUT
 
+#include <time.h>
+
 typedef struct t_about_page
 {
 	platform_window window;

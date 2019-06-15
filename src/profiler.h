@@ -21,7 +21,7 @@ u64 profiler_begin_d();
 void profiler_end_d(u64 begin_stamp, const char *function_name, const char *file_name, s32 line_nr);
 void profiler_create();
 void profiler_destroy();
-void profiler_update_render(platform_window *window, s32 x, s32 y,s32 w, s32 h, camera *camera, bool render, mouse_input *mouse);
+void profiler_update_render(platform_window *window, s32 x, s32 y,s32 w, s32 h, camera *camera, u8 render, mouse_input *mouse);
 
 mutex profiler_mutex;
 

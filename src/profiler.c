@@ -56,13 +56,13 @@ inline void profiler_destroy()
 	mutex_destroy(&profiler_mutex);
 }
 
-inline static bool  profiler_push_entry(profiler_result *result, s32 x, s32 y, s32 tick, float64 avg, float64 highest_avg, mouse_input *mouse, camera *camera)
+inline static u8  profiler_push_entry(profiler_result *result, s32 x, s32 y, s32 tick, float64 avg, float64 highest_avg, mouse_input *mouse, camera *camera)
 {
 	char text_buffer[500];
 	char identifier_buffer[300];
 	char ns_buffer[100];
 	
-	bool hovered = (mouse->x >= x-camera->x && mouse->x <= x-camera->x+WATCH_WINDOW_WIDTH && mouse->y > y-camera->y && mouse->y <= y-camera->y + global_info_menu.font_small->size);
+	u8 hovered = (mouse->x >= x-camera->x && mouse->x <= x-camera->x+WATCH_WINDOW_WIDTH && mouse->y > y-camera->y && mouse->y <= y-camera->y + global_info_menu.font_small->size);
 	
 	if (avg < 1000)
 	{
@@ -94,7 +94,7 @@ inline static bool  profiler_push_entry(profiler_result *result, s32 x, s32 y, s
 	return hovered;
 }
 
-void profiler_update_render(platform_window *window, s32 x, s32 y, s32 w, s32 h, camera *camera, bool render, mouse_input *mouse)
+void profiler_update_render(platform_window *window, s32 x, s32 y, s32 w, s32 h, camera *camera, u8 render, mouse_input *mouse)
 {
 	mutex_lock(&profiler_mutex);
 	
@@ -134,8 +134,8 @@ void profiler_update_render(platform_window *window, s32 x, s32 y, s32 w, s32 h,
 		
 		if (render)
 		{
-			bool hovered = profiler_push_entry(result, x+camera->x, y+camera->y, 
-											   tick, avg, highest_avg, mouse, camera);
+			u8 hovered = profiler_push_entry(result, x+camera->x, y+camera->y, 
+											 tick, avg, highest_avg, mouse, camera);
 			
 			if (hovered)
 			{

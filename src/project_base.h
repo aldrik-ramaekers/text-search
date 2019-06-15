@@ -30,7 +30,7 @@
 *
 *
  *  Compile flags:
-*  Linux: -lX11 -lGL -lGLU -lXrandr -lm -lpthread -lasound
+*  Linux: -lX11 -lGL -lGLU -lXrandr -lm
 *  Windows:
 *
 */
@@ -38,12 +38,27 @@
 #ifndef INCLUDE_PROJECT_BASE
 #define INCLUDE_PROJECT_BASE
 
+#ifdef _WIN32
+#define OS_WINDOWS
+#include <windows.h>
+#endif
+#ifdef __linux__
+#define OS_LINUX
+#include <sys/times.h>
+#include <sys/vtimes.h>
+#endif
+#ifdef __APPLE__
+#define OS_OSX
+#endif
+
 #include "stdint.h"
 #include "string.h"
 #include "assert.h"
 
 #include <GL/gl.h>
+#ifdef OS_LINUX
 #include <GL/glx.h>
+#endif
 #include <GL/glu.h>
 #include <GL/glext.h>
 
@@ -64,19 +79,6 @@
 #define true 1
 #define false 0
 
-#ifdef _WIN32
-#define OS_WINDOWS
-#include <windows.h>
-#endif
-#ifdef __linux__
-#define OS_LINUX
-#include <sys/times.h>
-#include <sys/vtimes.h>
-#endif
-#ifdef __APPLE__
-#define OS_OSX
-#endif
-
 #include "thread.h"
 #include "array.h"
 #include "memory.h"
@@ -95,7 +97,7 @@
 #include "platform.h"
 #include "render.h"
 #include "camera.h"
-#include "audio.h"
+//#include "audio.h"
 #include "ui.h"
 #include "string_utils.h"
 #include "settings_config.h"
@@ -112,13 +114,13 @@
 #ifdef OS_LINUX
 #include "linux/thread.c"
 #include "linux/platform.c"
-#include "linux/audio.c"
+//#include "linux/audio.c"
 #endif
 
 #ifdef OS_WINDOWS
+#include "windows/thread.c"
 #include "windows/platform.c"
-#include "windows/thead.c"
-#include "windows/audio.c"
+//#include "windows/audio.c"
 #endif
 
 #include "input.c"

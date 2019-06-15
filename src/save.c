@@ -26,7 +26,7 @@ static void *export_result_d(void *arg)
 	char *buffer = mem_alloc(size);
 	memset(buffer, 0, size);
 	
-	sprintf(buffer, "%s\n%s\n%s\n%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n%.1d\n",
+	sprintf(buffer, "%s\n%s\n%s\n%.16"PRId64"\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n%.1d\n",
 			search_result->search_directory_buffer,
 			search_result->filter_buffer,
 			search_result->text_to_find_buffer,
@@ -288,7 +288,7 @@ static void* import_results_d(void *arg)
 	printf("FILTER: %s\n",  file_filter);
 	printf("FIND: %s\n",  text_to_find);
 	
-	printf("\nduration: %lu\n"
+	printf("\nduration: %"PRId64"\n"
 		   "show error: %d\n"
 		   "found match: %d\n"
 		   "files searched: %d\n"
