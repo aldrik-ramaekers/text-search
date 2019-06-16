@@ -527,6 +527,7 @@ static void reset_status_text()
 int main_loop()
 {
 	platform_init();
+	//global_memory_mutex = mutex_create();
 	
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
 	
@@ -538,7 +539,6 @@ int main_loop()
 	set_locale("en");
 	
 #ifdef MODE_DEVELOPER
-	mutex_create(&global_memory_mutex);
 	info_menu_create();
 #endif
 	

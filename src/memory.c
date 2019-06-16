@@ -7,7 +7,6 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 		global_memory_usage.data = (void*)(1);
 		global_memory_usage = array_create(sizeof(memory_usage_entry));
 		array_reserve(&global_memory_usage, 50000);
-		global_memory_mutex = mutex_create();
 	}
 	
 	memory_usage_entry entry;
@@ -25,6 +24,13 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 
 inline void* mem_realloc_d(void *ptr, size_t size, const char *caller_name, s32 caller_line)
 {
+    if (global_memory_usage.data == 0)
+	{
+		global_memory_usage.data = (void*)(1);
+		global_memory_usage = array_create(sizeof(memory_usage_entry));
+		array_reserve(&global_memory_usage, 50000);
+	}
+	
 	void *result = realloc(ptr, size);
 	
 	mutex_lock(&global_memory_mutex);

@@ -64,7 +64,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.hdc = 0;
 	
 	WNDCLASS window_class;
-	window_class.style = CS_OWNDC|CS_HREDRAW|CS_VREDRAW;
+    memset(&window_class, 0, sizeof(WNDCLASS));
+	window_class.style = CS_OWNDC;
 	window_class.lpfnWndProc = main_window_callback;
 	window_class.hInstance = instance;
 	window_class.lpszClassName = "TextSearchWindowClass";
@@ -92,7 +93,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			memset(&format, 0, sizeof(PIXELFORMATDESCRIPTOR));
 			format.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 			format.nVersion = 1;
-			format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
+			format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER | PFD_TYPE_RGBA;
 			format.cColorBits = 24;
 			format.cAlphaBits = 8;
 			format.iLayerType = PFD_MAIN_PLANE;
