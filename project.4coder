@@ -1,0 +1,50 @@
+version(1);
+
+project_name="project-base";
+
+patterns = {
+"*.h",
+"*.c",
+"*.sh",
+"*.4coder",
+};
+
+blacklist_patterns = {
+".*",
+};
+
+load_paths_linux = {
+{"."}
+};
+
+command_list = {
+	{ .name = "build",
+	  .out = "*compilation*", .footer_panel = true,
+	  .cmd = { 
+				{ "./build.sh", .os = "linux" },
+			 },
+	},
+	{ .name = "build-run",
+	  .out = "*compilation*", .footer_panel = true,
+	  .cmd = { 
+				{ "./build.sh -r", .os = "linux" },
+			 },
+	},
+	{ .name = "build-run-win",
+	  .out = "*compilation*", .footer_panel = true,
+	  .cmd = { 
+				{ "./build-win.sh -r", .os = "linux" },
+			 },
+	},
+	{ .name = "download-translations",
+	  .out = "*compilation*", .footer_panel = true,
+	  .cmd = { 
+				{ "./download-translations.sh", .os = "linux" },
+			 },
+	},
+};
+
+fkey_command[4] = "build";
+fkey_command[5] = "build-run";
+fkey_command[6] = "build-run-win";
+fkey_command[7] = "download-translations";
