@@ -538,6 +538,7 @@ int main_loop()
 	set_locale("en");
 	
 #ifdef MODE_DEVELOPER
+	mutex_create(&global_memory_mutex);
 	info_menu_create();
 #endif
 	
