@@ -524,10 +524,36 @@ static void reset_status_text()
 	strcpy(global_status_bar.result_status_text, localize("no_search_completed"));
 }
 
+#if defined(DONT_RUN)
 int main_loop()
 {
 	platform_init();
-	//global_memory_mutex = mutex_create();
+	
+	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
+	
+	keyboard_input keyboard = keyboard_input_create();
+	mouse_input mouse = mouse_input_create();
+	
+	while(window.is_open) {
+		platform_handle_events(&window, &mouse, &keyboard);
+		//platform_window_make_current(&window);
+		
+		//assets_do_post_process();
+		
+		platform_window_swap_buffers(&window);
+	}
+	
+	keyboard_input_destroy(&keyboard);
+	platform_close_window(&window);
+	platform_destroy_window(&window);
+	
+}
+#endif
+
+#if defined(OS_LINUX) || defined(OS_WINDOWS)
+int main_loop()
+{
+	platform_init();
 	
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
 	
@@ -542,7 +568,6 @@ int main_loop()
 	info_menu_create();
 #endif
 	
-#if 1
 	search_img = assets_load_image("data/imgs/search.png", false);
 	sloth_img = assets_load_image("data/imgs/sloth.png", false);
 	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
@@ -936,10 +961,10 @@ int main_loop()
 	
 	destroy_available_localizations();
 	
-#ifdef MODE_DEVELOPER
+#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 	memory_print_leaks();
 #endif
 	
-#endif
 	return 0;
 }
+#endif

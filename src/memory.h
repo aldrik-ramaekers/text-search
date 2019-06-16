@@ -1,7 +1,7 @@
 #ifndef INCLUDE_MEMORY
 #define INCLUDE_MEMORY
 
-#ifdef MODE_DEVELOPER
+#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 
 void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line);
 void mem_free_d(void *ptr, const char *caller_name, s32 caller_line);

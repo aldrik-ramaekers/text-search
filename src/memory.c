@@ -1,12 +1,14 @@
-#ifdef MODE_DEVELOPER
+#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 
+static u8 initializing = false;
 inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 {
-	if (global_memory_usage.data == 0)
+	if (global_memory_usage.data == 0 && !initializing)
 	{
-		global_memory_usage.data = (void*)(1);
+		initializing = true;
 		global_memory_usage = array_create(sizeof(memory_usage_entry));
 		array_reserve(&global_memory_usage, 50000);
+		global_memory_mutex = mutex_create();
 	}
 	
 	memory_usage_entry entry;
@@ -24,11 +26,12 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 
 inline void* mem_realloc_d(void *ptr, size_t size, const char *caller_name, s32 caller_line)
 {
-    if (global_memory_usage.data == 0)
+    if (global_memory_usage.data == 0 && !initializing)
 	{
-		global_memory_usage.data = (void*)(1);
+		initializing = true;
 		global_memory_usage = array_create(sizeof(memory_usage_entry));
 		array_reserve(&global_memory_usage, 50000);
+		global_memory_mutex = mutex_create();
 	}
 	
 	void *result = realloc(ptr, size);

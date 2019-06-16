@@ -21,10 +21,12 @@ extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes
 
 static HINSTANCE instance;
 platform_window *current_window_to_handle;
+int cmd_show;
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 					 LPSTR lpCmdLine, int nCmdShow)
 {
 	instance = hInstance;
+	cmd_show = nCmdShow;
 	return main_loop();
 }
 
@@ -93,10 +95,10 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			memset(&format, 0, sizeof(PIXELFORMATDESCRIPTOR));
 			format.nSize = sizeof(PIXELFORMATDESCRIPTOR);
 			format.nVersion = 1;
-			format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER | PFD_TYPE_RGBA;
+			format.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 			format.cColorBits = 24;
 			format.cAlphaBits = 8;
-			format.iLayerType = PFD_MAIN_PLANE;
+			format.iLayerType = PFD_MAIN_PLANE; // PFD_TYPE_RGBA
 			s32 suggested_format_index = ChoosePixelFormat(window.hdc, &format);
 			
 			PIXELFORMATDESCRIPTOR actual_format;
@@ -116,6 +118,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			}
 			
 			wglMakeCurrent(window.hdc, window.gl_context);
+			
+			ShowWindow(window.window_handle, cmd_show);
 			
 			// blending
 			glEnable(GL_DEPTH_TEST);
@@ -181,20 +185,17 @@ u8 platform_window_is_valid(platform_window *window)
 
 void platform_close_window(platform_window *window)
 {
-	window->hdc = 0;
-	window->window_handle = 0;
 	ReleaseDC(window->window_handle, window->hdc);
 	CloseWindow(window->window_handle);
-	wglDeleteContext(window->gl_context);
 }
 
 void platform_destroy_window(platform_window *window)
 {
-	if (!window->hdc || !window->window_handle) return;
-	wglMakeCurrent(window->hdc, NULL);
-	ReleaseDC(window->window_handle, window->hdc);
-	CloseWindow(window->window_handle);
+	wglMakeCurrent(NULL, NULL);
+	DestroyWindow(window->window_handle);
 	wglDeleteContext(window->gl_context);
+	window->hdc = 0;
+	window->window_handle = 0;
 }
 
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
