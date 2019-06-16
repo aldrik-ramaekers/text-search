@@ -54,7 +54,7 @@ u32 thread_get_id()
 
 void thread_sleep(u64 microseconds)
 {
-	Sleep(microseconds*1000);
+	Sleep(microseconds/1000);
 }
 
 mutex mutex_create()
@@ -67,16 +67,12 @@ mutex mutex_create()
 
 void mutex_lock(mutex *mutex)
 {
-	//printf("VALUE: %p\n", mutex->cs);
 	EnterCriticalSection(&mutex->cs);
 }
 
 bool mutex_trylock(mutex *mutex)
 {
-	// TODO: wrong
-	//s32 result = WaitForSingleObject(mutex->mutex, 0);
-	//return result == WAIT_OBJECT_0;
-	return false;
+	return TryEnterCriticalSection(&mutex->cs);
 }
 
 void mutex_unlock(mutex *mutex)

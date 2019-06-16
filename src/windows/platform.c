@@ -71,13 +71,15 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window_class.lpfnWndProc = main_window_callback;
 	window_class.hInstance = instance;
 	window_class.lpszClassName = "TextSearchWindowClass";
+    window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+    window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	
 	if (RegisterClass(&window_class))
 	{
 		window.window_handle = CreateWindowEx(0,
 											  window_class.lpszClassName,
 											  name,
-											  WS_VISIBLE,
+											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX,
 											  CW_USEDEFAULT,
 											  CW_USEDEFAULT,
 											  width,
