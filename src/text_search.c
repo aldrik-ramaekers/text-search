@@ -541,6 +541,7 @@ int main_loop()
 	info_menu_create();
 #endif
 	
+#if 1
 	search_img = assets_load_image("data/imgs/search.png", false);
 	sloth_img = assets_load_image("data/imgs/sloth.png", false);
 	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
@@ -938,5 +939,6 @@ int main_loop()
 	memory_print_leaks();
 #endif
 	
+#endif
 	return 0;
 }

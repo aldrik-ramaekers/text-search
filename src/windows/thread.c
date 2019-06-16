@@ -17,6 +17,7 @@ void thread_join(thread *thread)
 	if (thread->valid)
 	{
 		WaitForSingleObject(thread->thread, INFINITE);
+		CloseHandle(thread->thread);
 	}
 }
 
@@ -59,27 +60,31 @@ void thread_sleep(u64 microseconds)
 mutex mutex_create()
 {
 	mutex result;
-	result.mutex = CreateMutexA(NULL, TRUE, NULL);
+	InitializeCriticalSection(&result.cs);
+	
 	return result;
 }
 
 void mutex_lock(mutex *mutex)
 {
-	WaitForSingleObject(mutex->mutex, INFINITE);
+	//printf("VALUE: %p\n", mutex->cs);
+	EnterCriticalSection(&mutex->cs);
 }
 
 bool mutex_trylock(mutex *mutex)
 {
-	s32 result = WaitForSingleObject(mutex->mutex, 0);
-	return result == WAIT_OBJECT_0;
+	// TODO: wrong
+	//s32 result = WaitForSingleObject(mutex->mutex, 0);
+	//return result == WAIT_OBJECT_0;
+	return false;
 }
 
 void mutex_unlock(mutex *mutex)
 {
-	ReleaseMutex(mutex->mutex);
+	LeaveCriticalSection(&mutex->cs);
 }
 
 void mutex_destroy(mutex *mutex)
 {
-	CloseHandle(mutex->mutex);
+	DeleteCriticalSection(&mutex->cs);
 }

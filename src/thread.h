@@ -34,7 +34,7 @@ struct t_thread
 
 struct t_mutex
 {
-	HANDLE mutex;
+	CRITICAL_SECTION cs;
 };
 #endif
 
