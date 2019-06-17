@@ -122,6 +122,11 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	return result;
 }
 
+void platform_window_set_title(platform_window *window, char *name)
+{
+	
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
 	platform_window window;

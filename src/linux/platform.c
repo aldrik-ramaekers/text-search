@@ -70,6 +70,11 @@ u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 l
 	return result;
 }
 
+void platform_window_set_title(platform_window *window, char *name)
+{
+	XStoreName(window->display, window->window, name);
+}
+
 file_content platform_read_file_content(char *path, const char *mode)
 {
 	file_content result;

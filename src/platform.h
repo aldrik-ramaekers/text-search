@@ -87,6 +87,7 @@ void platform_close_window(platform_window *window);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);
+void platform_window_set_title(platform_window *window, char *name);
 file_content platform_read_file_content(char *path, const char *mode);
 u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
 void platform_destroy_file_content(file_content *content);

@@ -103,6 +103,8 @@ void settings_page_update_render()
 							if (ui_push_dropdown_item(file->icon, file->locale_full))
 							{
 								set_locale(file->locale_id);
+								platform_window_set_title(&global_settings_page.window,
+														  localize("text_search_settings"));
 							}
 						}
 					}

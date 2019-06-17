@@ -524,32 +524,6 @@ static void reset_status_text()
 	strcpy(global_status_bar.result_status_text, localize("no_search_completed"));
 }
 
-#if defined(DONT_RUN)
-int main_loop()
-{
-	platform_init();
-	
-	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
-	
-	keyboard_input keyboard = keyboard_input_create();
-	mouse_input mouse = mouse_input_create();
-	
-	while(window.is_open) {
-		platform_handle_events(&window, &mouse, &keyboard);
-		//platform_window_make_current(&window);
-		
-		//assets_do_post_process();
-		
-		platform_window_swap_buffers(&window);
-	}
-	
-	keyboard_input_destroy(&keyboard);
-	platform_close_window(&window);
-	platform_destroy_window(&window);
-	
-}
-#endif
-
 #if defined(OS_LINUX) || defined(OS_WINDOWS)
 int main_loop()
 {
