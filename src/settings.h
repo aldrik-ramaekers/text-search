@@ -26,6 +26,7 @@ typedef struct t_settings_page
 settings_page global_settings_page;
 
 void settings_page_create();
+void settings_page_hide_without_save();
 void settings_page_update_render();
 void settings_page_show();
 void settings_page_hide();

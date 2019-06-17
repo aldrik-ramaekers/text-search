@@ -156,6 +156,8 @@ void settings_page_update_render()
 
 void settings_page_show()
 {
+	if (platform_window_is_valid(&global_settings_page.window)) return;
+	
 	load_current_settings_into_ui();
 	
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
@@ -174,9 +176,23 @@ void settings_page_hide()
 		
 		global_settings_page.btn_close.state = false;
 		global_settings_page.btn_save.state = false;
+		global_settings_page.active = false;
 		
 		global_settings_page.mouse.x = -1;
 		global_settings_page.mouse.y = -1;
+	}
+}
+
+void settings_page_hide_without_save()
+{
+	if (platform_window_is_valid(&global_settings_page.window))
+	{
+		global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
+		global_settings_page.textbox_max_file_size.buffer[0] = 0; 
+		
+		global_settings_page.active = false;
+		set_locale(global_settings_page.current_locale_id);
+		settings_page_hide();
 	}
 }
 

@@ -104,6 +104,8 @@ void about_page_update_render()
 
 void about_page_show()
 {
+	if (platform_window_is_valid(&global_about_page.window)) return;
+	
 	global_about_page.window = platform_open_window(localize("about_text_search"), 450, 250, 450, 450);
 	global_about_page.active = true;
 	platform_set_icon(&global_about_page.window, global_about_page.sloth_small_img);
@@ -117,6 +119,7 @@ void about_page_hide()
 		
 		global_about_page.btn_close.state = false;
 		global_about_page.btn_website.state = false;
+		global_about_page.active = false;
 		
 		global_about_page.mouse.x = -1;
 		global_about_page.mouse.y = -1;

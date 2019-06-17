@@ -142,7 +142,7 @@ inline void platform_destroy_file_content(file_content *content)
 
 // Translate an X11 key code to a GLFW key code.
 //
-static s32 translate_keycode(platform_window window, s32 scancode)
+static s32 translate_keycode(platform_window *window, s32 scancode)
 {
     s32 keySym;
 	
@@ -156,7 +156,7 @@ static s32 translate_keycode(platform_window window, s32 scancode)
         // Note: This way we always force "NumLock = ON", which is intentional
         // since the returned key code should correspond to a physical
         // location.
-        keySym = XkbKeycodeToKeysym(window.display, scancode, 0, 1);
+        keySym = XkbKeycodeToKeysym(window->display, scancode, 0, 1);
         switch (keySym)
         {
             case XK_KP_0:           return KEY_KP_0;
@@ -178,7 +178,7 @@ static s32 translate_keycode(platform_window window, s32 scancode)
 		
         // Now try primary keysym for function keys (non-printable keys)
         // These should not depend on the current keyboard layout
-        keySym = XkbKeycodeToKeysym(window.display, scancode, 0, 0);
+        keySym = XkbKeycodeToKeysym(window->display, scancode, 0, 0);
     }
 	
     switch (keySym)
@@ -397,7 +397,7 @@ static void create_key_tables(platform_window window)
 		// lookups
 		
 		if (keycode_map[scancode] < 0)
-			keycode_map[scancode] = translate_keycode(window, scancode);
+			keycode_map[scancode] = translate_keycode(&window, scancode);
 	}
 	
 	XkbFreeNames(desc, XkbKeyNamesMask, True);
@@ -697,8 +697,13 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		else if(window->event.type == KeyPress) 
 		{
 			s32 key = window->event.xkey.keycode;
-			keyboard->keys[keycode_map[key]] = true;
-			keyboard->input_keys[keycode_map[key]] = true;
+			
+			// Below 2 lines is for game input
+			//keyboard->keys[keycode_map[key]] = true;
+			//keyboard->input_keys[keycode_map[key]] = true;
+			// below 2 lines is for localized key input
+			keyboard->keys[translate_keycode(window, key)] = true;
+			keyboard->input_keys[translate_keycode(window, key)] = true;
 			
 			// https://gist.github.com/rickyzhang82/8581a762c9f9fc6ddb8390872552c250
 			//printf("state: %d\n", window->event.xkey.state);
@@ -1002,6 +1007,13 @@ cpu_info platform_get_cpu_info()
 	mem_free(file_buffer);
 	
 	return result;
+}
+
+void platform_show_message(char *message, char *title)
+{
+	char command[MAX_INPUT_LENGTH];
+	sprintf(command, "zenity --info --text=\"%s\" --title=\"%s\" --width=240", message, title);
+	FILE *f = popen(command, "r");
 }
 
 static void* platform_open_file_dialog_dd(void *data)

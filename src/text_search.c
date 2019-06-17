@@ -452,7 +452,7 @@ static void render_info(platform_window *window, font *font_small)
 		
 		s32 directory_info_count = 11;
 		// TODO(Aldrik): rewrite this so we can use 1 string and split line on \n for translations.
-		char *info_text[] = 
+		char *info_text[]= 
 		{
 			"1. Search directory",
 			" - The absolute path to the folder that should be searched through for text matches.", 
@@ -676,6 +676,8 @@ int main_loop()
 				{
 					if (global_search_result.found_file_matches)
 						export_results(&global_search_result);
+					else
+						platform_show_message(localize("no_results_to_export"), localize("failed_to_export_results"));
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_Q}))
 				{
@@ -692,6 +694,8 @@ int main_loop()
 					{ 
 						if (global_search_result.found_file_matches)
 							export_results(&global_search_result); 
+						else
+							platform_show_message(localize("no_results_to_export"), localize("failed_to_export_results"));
 					}
 					ui_push_menu_item_separator();
 					if (ui_push_menu_item(localize("quit"), "Ctrl + Q")) 
@@ -871,6 +875,8 @@ int main_loop()
 #ifdef MODE_DEVELOPER
 	info_menu_destroy();
 #endif
+	
+	settings_page_hide_without_save();
 	
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
