@@ -915,10 +915,13 @@ int main_loop()
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
 	
-	char *current_locale_id = localize_get_id();
-	if (current_locale_id)
+	if (global_localization.active_localization != 0)
 	{
-		settings_config_set_string(&config, "LOCALE", current_locale_id);
+		char *current_locale_id = localize_get_id();
+		if (current_locale_id)
+		{
+			settings_config_set_string(&config, "LOCALE", current_locale_id);
+		}
 	}
 	
 	settings_config_write_to_file(&config, "data/config.txt");

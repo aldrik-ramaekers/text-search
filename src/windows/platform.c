@@ -10,6 +10,7 @@ struct t_platform_window
 	HWND window_handle;
 	HDC hdc;
 	HGLRC gl_context;
+	WNDCLASS window_class;
 	
 	s32 width;
 	s32 height;
@@ -21,6 +22,9 @@ extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes
 
 static HINSTANCE instance;
 platform_window *current_window_to_handle;
+keyboard_input *current_keyboard_to_handle;
+mouse_input *current_mouse_to_handle;
+
 int cmd_show;
 int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 					 LPSTR lpCmdLine, int nCmdShow)
@@ -36,8 +40,67 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	
 	if (message == WM_SIZE)
 	{
-		u16 width = lparam << 16;
-		u16 height = lparam;
+		u32 width = lparam&0xFFFF;
+		u32 height = lparam>>16;
+		
+		// CRASHES:
+		//current_window_to_handle->width = width;
+		//current_window_to_handle->height = height;
+	}
+	else if (message == WM_LBUTTONDOWN || 
+			 message == WM_RBUTTONDOWN ||
+			 message == WM_MBUTTONDOWN ||
+			 message == WM_MOUSEWHEEL)
+	{
+		u8 is_left_down = wparam & MK_LBUTTON;
+		u8 is_right_down = wparam & MK_RBUTTON;
+		u8 is_middle_down = wparam & MK_MBUTTON;
+		
+		if (message == WM_MOUSEWHEEL)
+		{
+			s32 scroll_val = wparam>>16;
+			
+			if (scroll_val > 120)
+				current_mouse_to_handle->scroll_state = SCROLL_UP;
+			else
+				current_mouse_to_handle->scroll_state = SCROLL_DOWN;
+		}
+		
+		if (is_left_down)
+		{
+			current_mouse_to_handle->left_state |= MOUSE_DOWN;
+			current_mouse_to_handle->left_state |= MOUSE_CLICK;
+		}
+		if (is_right_down)
+		{
+			current_mouse_to_handle->right_state |= MOUSE_DOWN;
+			current_mouse_to_handle->right_state |= MOUSE_CLICK;
+		}
+	}
+	else if (message == WM_LBUTTONUP || 
+			 message == WM_RBUTTONUP ||
+			 message == WM_MBUTTONUP)
+	{
+		u8 is_left_up = message == WM_LBUTTONUP;
+		u8 is_right_up = message == WM_RBUTTONUP;
+		u8 is_middle_up = message == WM_MBUTTONUP;
+		
+		if (is_left_up)
+		{
+			current_mouse_to_handle->left_state = MOUSE_RELEASE;
+		}
+		if (is_right_up)
+		{
+			current_mouse_to_handle->right_state = MOUSE_RELEASE;
+		}
+	}
+	else if (message == WM_MOUSEMOVE)
+	{
+		s32 x = lparam&0xFFFF;
+		s32 y = lparam>>16;
+		
+		current_mouse_to_handle->x = x;
+		current_mouse_to_handle->y = y;
 	}
 	else if (message == WM_GETMINMAXINFO)
 	{
@@ -65,19 +128,18 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.window_handle = 0;
 	window.hdc = 0;
 	
-	WNDCLASS window_class;
-    memset(&window_class, 0, sizeof(WNDCLASS));
-	window_class.style = CS_OWNDC;
-	window_class.lpfnWndProc = main_window_callback;
-	window_class.hInstance = instance;
-	window_class.lpszClassName = "TextSearchWindowClass";
-    window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-    window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+    memset(&window.window_class, 0, sizeof(WNDCLASS));
+	window.window_class.style = CS_OWNDC;
+	window.window_class.lpfnWndProc = main_window_callback;
+	window.window_class.hInstance = instance;
+	window.window_class.lpszClassName = name;
+    window.window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+    window.window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	
-	if (RegisterClass(&window_class))
+	if (RegisterClass(&window.window_class))
 	{
 		window.window_handle = CreateWindowEx(0,
-											  window_class.lpszClassName,
+											  window.window_class.lpszClassName,
 											  name,
 											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX,
 											  CW_USEDEFAULT,
@@ -116,7 +178,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			}
 			else
 			{
-				wglShareLists(window.gl_context, share_list);
+				wglShareLists(share_list, window.gl_context);
 			}
 			
 			wglMakeCurrent(window.hdc, window.gl_context);
@@ -166,7 +228,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
 			
 			glMatrixMode(GL_MODELVIEW);
-			
 		}
 	}
 	
@@ -189,31 +250,38 @@ void platform_close_window(platform_window *window)
 {
 	ReleaseDC(window->window_handle, window->hdc);
 	CloseWindow(window->window_handle);
+	DestroyWindow(window->window_handle);
+	UnregisterClassA(window->window_class.lpszClassName, instance);
+	window->hdc = 0;
+	window->window_handle = 0;
 }
 
 void platform_destroy_window(platform_window *window)
 {
 	wglMakeCurrent(NULL, NULL);
-	DestroyWindow(window->window_handle);
 	wglDeleteContext(window->gl_context);
-	window->hdc = 0;
-	window->window_handle = 0;
 }
 
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
 {
 	current_window_to_handle = window;
+	current_keyboard_to_handle = keyboard;
+	current_mouse_to_handle = mouse;
+	
+	mouse->left_state &= ~MOUSE_CLICK;
+	mouse->right_state &= ~MOUSE_CLICK;
+	mouse->left_state &= ~MOUSE_RELEASE;
+	mouse->right_state &= ~MOUSE_RELEASE;
+	memset(keyboard->input_keys, 0, MAX_KEYCODE);
+	mouse->move_x = 0;
+	mouse->move_y = 0;
 	
 	MSG message;
-	BOOL message_result = GetMessage(&message, window->window_handle, 0, 0);
-	
-	if (!message_result)
+	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
 	{
-		window->is_open = false;
+		TranslateMessage(&message); 
+		DispatchMessage(&message); 
 	}
-	
-	TranslateMessage(&message); 
-	DispatchMessage(&message); 
 }
 
 void platform_window_swap_buffers(platform_window *window)

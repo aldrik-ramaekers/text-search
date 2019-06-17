@@ -61,7 +61,7 @@ u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 l
 	}
 	else
 	{
-		fprintf(file, buffer);
+		fprintf(file, "%s", buffer);
 	}
 	
 	//done:
@@ -968,7 +968,7 @@ cpu_info platform_get_cpu_info()
 			}
 			else if (line_nr == 4)
 			{
-				sprintf(result.model_name, tmp_buffer);
+				sprintf(result.model_name, "%s", tmp_buffer);
 			}
 			else if (line_nr == 7)
 			{
