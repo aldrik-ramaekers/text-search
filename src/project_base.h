@@ -30,7 +30,7 @@
 *
 *
  *  Compile flags:
-*  Linux: -lX11 -lGL -lGLU -lXrandr -lm
+*  Linux: -lX11 -lGL -lGLU -lXrandr -lm -ldl
 *  Windows:
 *
 */

@@ -10,6 +10,7 @@
 #include <limits.h>
 #include <dirent.h> 
 #include <errno.h>
+#include <dlfcn.h>
 
 struct t_platform_window
 {
@@ -27,6 +28,19 @@ struct t_platform_window
 	u8 is_open;
 	u8 has_focus;
 };
+
+// --- libX11.so
+// XLookupKeysym
+
+// --- libXrandr.so
+// XRRGetScreenResources
+// XRRGetCrtcInfo
+// XRRFreeCrtcInfo
+// XRRFreeScreenResources
+
+//typedef int t_XResizeWindow(Display *display, Window window, unsigned int w, unsigned int h);
+//static t_XResizeWindow *XResizeWindow_;
+//#define XResizeWindow XResizeWindow_
 
 int main(int argc, char **argv)
 {
@@ -406,6 +420,15 @@ static void create_key_tables(platform_window window)
 
 inline void platform_init()
 {
+	dlerror(); // clear error
+	void *x11 = dlopen("libX11.so.6", RTLD_NOW | RTLD_GLOBAL);
+	void *randr = dlopen("libXrandr.so", RTLD_NOW | RTLD_GLOBAL);
+	
+	if (!x11 || !randr)
+	{
+		platform_show_message("Missing window manager library.", "Fatal error.");
+	}
+	
 	XInitThreads();
 }
 
@@ -427,7 +450,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.has_focus = true;
 	
 	static int att[] =
-    {
+	{
 		GLX_X_RENDERABLE    , True,
 		GLX_DRAWABLE_TYPE   , GLX_WINDOW_BIT,
 		GLX_RENDER_TYPE     , GLX_RGBA_BIT,
@@ -442,7 +465,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		//GLX_SAMPLE_BUFFERS  , 1,
 		//GLX_SAMPLES         , 4,
 		None
-    };
+	};
 	
 	window.display = XOpenDisplay(NULL);
 	
@@ -488,13 +511,13 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	// calculate window center
 	XRRScreenResources *screens = XRRGetScreenResources(window.display, window.parent);
-    XRRCrtcInfo *info = XRRGetCrtcInfo(window.display, screens, screens->crtcs[0]);
+	XRRCrtcInfo *info = XRRGetCrtcInfo(window.display, screens, screens->crtcs[0]);
 	
 	s32 center_x = (info->width / 2) - (width / 2);
 	s32 center_y = (info->height / 2) - (height / 2);
 	
 	XRRFreeCrtcInfo(info);
-    XRRFreeScreenResources(screens);
+	XRRFreeScreenResources(screens);
 	
 	XSetWindowAttributes window_attributes;
 	window_attributes.colormap = window.cmap;
@@ -880,8 +903,8 @@ u64 platform_get_time(time_type time_type, time_precision precision)
 	
 	struct timespec tms;
 	if (clock_gettime(type,&tms)) {
-        return -1;
-    }
+		return -1;
+	}
 	
 	long result = 0;
 	
