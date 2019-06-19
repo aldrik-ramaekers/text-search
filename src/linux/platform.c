@@ -420,6 +420,7 @@ static void create_key_tables(platform_window window)
 
 inline void platform_init()
 {
+#if 0
 	dlerror(); // clear error
 	void *x11 = dlopen("libX11.so.6", RTLD_NOW | RTLD_GLOBAL);
 	void *randr = dlopen("libXrandr.so", RTLD_NOW | RTLD_GLOBAL);
@@ -428,6 +429,7 @@ inline void platform_init()
 	{
 		platform_show_message("Missing window manager library.", "Fatal error.");
 	}
+#endif
 	
 	XInitThreads();
 }
