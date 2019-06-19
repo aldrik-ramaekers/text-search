@@ -193,6 +193,7 @@ u8 keyboard_is_key_down(keyboard_input *keyboard, s16 key);
 u8 keyboard_is_key_pressed(keyboard_input *keyboard, s16 key);
 void keyboard_set_input_text(keyboard_input *keyboard, char *text);
 void keyboard_set_input_mode(keyboard_input *keyboard, keyboard_input_mode mode);
+void keyboard_handle_input_string(keyboard_input *keyboard, char *text);
 
 mouse_input mouse_input_create();
 keyboard_input keyboard_input_create();

@@ -342,6 +342,8 @@ static void create_key_tables(platform_window window)
 	XkbDescPtr desc = XkbGetMap(window.display, 0, XkbUseCoreKbd);
 	XkbGetNames(window.display, XkbKeyNamesMask, desc);
 	
+	// uncomment for layout independant input for games.
+#if 0
 	for (scancode = desc->min_key_code;  scancode <= desc->max_key_code;  scancode++)
 	{
 		memcpy(name, desc->names->keys[scancode].name, XkbKeyNameLength);
@@ -404,14 +406,14 @@ static void create_key_tables(platform_window window)
 		if ((scancode >= 0) && (scancode < 256))
 			keycode_map[scancode] = key;
 	}
+#endif
 	
 	for (scancode = 0;  scancode < 256;  scancode++)
 	{
 		// Translate the un-translated key codes using traditional X11 KeySym
 		// lookups
 		
-		if (keycode_map[scancode] < 0)
-			keycode_map[scancode] = translate_keycode(&window, scancode);
+		keycode_map[scancode] = translate_keycode(&window, scancode);
 	}
 	
 	XkbFreeNames(desc, XkbKeyNamesMask, True);
@@ -723,12 +725,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		{
 			s32 key = window->event.xkey.keycode;
 			
-			// Below 2 lines is for game input
-			//keyboard->keys[keycode_map[key]] = true;
-			//keyboard->input_keys[keycode_map[key]] = true;
-			// below 2 lines is for localized key input
-			keyboard->keys[translate_keycode(window, key)] = true;
-			keyboard->input_keys[translate_keycode(window, key)] = true;
+			keyboard->keys[keycode_map[key]] = true;
+			keyboard->input_keys[keycode_map[key]] = true;
 			
 			// https://gist.github.com/rickyzhang82/8581a762c9f9fc6ddb8390872552c250
 			//printf("state: %d\n", window->event.xkey.state);
@@ -802,80 +800,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 					}
 				}
 				
-				if (ch)
-				{
-					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
-					
-					if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
-					{
-						if (keyboard->input_text_len)
-						{
-							char buffer[MAX_INPUT_LENGTH];
-							if (keyboard->cursor)
-							{
-								char ch2 = keyboard->input_text[keyboard->cursor-1];
-								keyboard->input_text[keyboard->cursor-1] = 0;
-								
-								sprintf(buffer, "%s%c%c%s", keyboard->input_text, ch2, *ch, keyboard->input_text+keyboard->cursor);
-							}
-							else
-							{
-								sprintf(buffer, "%c%s", *ch, keyboard->input_text);
-							}
-							
-							strcpy(keyboard->input_text, buffer);
-						}
-						else
-						{
-							strcat(keyboard->input_text, ch);
-						}
-						
-						keyboard->cursor++;
-						keyboard->input_text_len++;
-					}
-				}
-				else
-				{
-					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
-					
-					// cursor movement
-					if (keyboard_is_key_down(keyboard, KEY_LEFT) && keyboard->cursor > 0)
-					{
-						if (is_lctrl_down)
-							keyboard->cursor = 0;
-						else
-							keyboard->cursor--;
-					}
-					if (keyboard_is_key_down(keyboard, KEY_RIGHT) && keyboard->cursor < keyboard->input_text_len)
-					{
-						if (is_lctrl_down)
-							keyboard->cursor = keyboard->input_text_len;
-						else
-							keyboard->cursor++;
-					}
-				}
-				
-				if (ksym == XK_BackSpace)
-				{
-					u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
-					
-					if (is_lctrl_down)
-					{
-						keyboard->input_text[0] = '\0';
-						strcpy(keyboard->input_text, keyboard->input_text+keyboard->cursor);
-						keyboard->input_text_len -= keyboard->cursor;
-						keyboard->cursor = 0;
-					}
-					else if (keyboard->cursor > 0)
-					{
-						s32 len = strlen(keyboard->input_text);
-						//keyboard->input_text[len-1] = '\0';
-						strcpy(keyboard->input_text+keyboard->cursor-1, keyboard->input_text+keyboard->cursor);
-						
-						keyboard->cursor--;
-						keyboard->input_text_len--;
-					}
-				}
+				keyboard_handle_input_string(keyboard, ch);
 			}
 		}
 		else if (window->event.type == KeyRelease)
