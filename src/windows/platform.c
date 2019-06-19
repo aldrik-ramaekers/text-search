@@ -5,6 +5,9 @@
 #include <wingdi.h>
 #include <errno.h>
 
+#define BORDER_SPACE_HORIZONTAL 8
+#define BORDER_SPACE_VERTICAL 25
+
 struct t_platform_window
 {
 	HWND window_handle;
@@ -48,9 +51,10 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		u32 width = lparam&0xFFFF;
 		u32 height = lparam>>16;
 		
-		// CRASHES:
-		//current_window_to_handle->width = width;
-		//current_window_to_handle->height = height;
+		current_window_to_handle->width = width;
+		current_window_to_handle->height = height;
+		
+		glViewport(0, 0, width, height);
 	}
 	else if (message == WM_LBUTTONDOWN || 
 			 message == WM_RBUTTONDOWN ||
@@ -134,9 +138,15 @@ void platform_window_set_title(platform_window *window, char *name)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
+	
 	platform_window window;
+	window.has_focus = true;
 	window.window_handle = 0;
 	window.hdc = 0;
+	window.width = width;
+	window.height = height;
+	
+	current_window_to_handle = &window;
 	
     memset(&window.window_class, 0, sizeof(WNDCLASS));
 	window.window_class.style = CS_OWNDC;
@@ -148,14 +158,27 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	if (RegisterClass(&window.window_class))
 	{
-		window.window_handle = CreateWindowEx(0,
+		s32 ex_style = 0;
+		s32 style = 0;
+		
+		if (max_w == 0 && max_h == 0)
+		{
+			ex_style = 0;
+			style = WS_OVERLAPPEDWINDOW;
+		}
+		else
+		{
+			
+		}
+		
+		window.window_handle = CreateWindowEx(ex_style,
 											  window.window_class.lpszClassName,
 											  name,
-											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX,
+											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|style,
 											  CW_USEDEFAULT,
 											  CW_USEDEFAULT,
-											  width,
-											  height,
+											  width+BORDER_SPACE_HORIZONTAL,
+											  height+BORDER_SPACE_VERTICAL,
 											  0,
 											  0,
 											  instance,
@@ -248,7 +271,9 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 {
 	RECT rec;
 	GetWindowRect(window->window_handle, &rec);
-	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
+	MoveWindow(window->window_handle, rec.left, rec.top, width+BORDER_SPACE_HORIZONTAL, height+BORDER_SPACE_VERTICAL, FALSE);
+	window->width = width;
+	window->height = height;
 }
 
 u8 platform_window_is_valid(platform_window *window)
@@ -292,6 +317,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		TranslateMessage(&message); 
 		DispatchMessage(&message); 
 	}
+	
+	glViewport(0, 0, window->width, window->height);
 }
 
 void platform_window_swap_buffers(platform_window *window)
