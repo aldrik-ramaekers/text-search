@@ -34,6 +34,11 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	return main_loop();
 }
 
+void platform_show_message(char *message, char *title)
+{
+	
+}
+
 LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	LRESULT result = 0;
