@@ -76,91 +76,82 @@ static void create_key_tables()
     keycode_map[0x59] = KEY_Y;
     keycode_map[0x5A] = KEY_Z;
 	
-    keycode_map[0x028] = KEY_APOSTROPHE;
-    keycode_map[0x02B] = KEY_BACKSLASH;
-    keycode_map[0x033] = KEY_COMMA;
-    keycode_map[0x00D] = KEY_EQUAL;
+    keycode_map[VK_OEM_7] = KEY_APOSTROPHE;
+    keycode_map[VK_OEM_102] = KEY_BACKSLASH;
+    keycode_map[VK_OEM_COMMA] = KEY_COMMA;
     keycode_map[VK_OEM_3] = KEY_GRAVE_ACCENT;
     keycode_map[VK_OEM_4] = KEY_LEFT_BRACKET;
-    keycode_map[0xBD] = KEY_MINUS;
-    keycode_map[0xBE] = KEY_PERIOD;
-    keycode_map[0x01B] = KEY_RIGHT_BRACKET;
-    keycode_map[0x027] = KEY_SEMICOLON;
-    keycode_map[0x035] = KEY_SLASH;
-    keycode_map[0x056] = KEY_WORLD_2;
+    keycode_map[VK_OEM_MINUS] = KEY_MINUS;
+    keycode_map[VK_OEM_PERIOD] = KEY_PERIOD;
 	
-    keycode_map[0x00E] = KEY_BACKSPACE;
-    keycode_map[0x153] = KEY_DELETE;
-    keycode_map[0x14F] = KEY_END;
-    keycode_map[0x01C] = KEY_ENTER;
-    keycode_map[0x001] = KEY_ESCAPE;
-    keycode_map[0x147] = KEY_HOME;
-    keycode_map[0x152] = KEY_INSERT;
-    keycode_map[0x15D] = KEY_MENU;
-    keycode_map[0x151] = KEY_PAGE_DOWN;
-    keycode_map[0x149] = KEY_PAGE_UP;
-    keycode_map[0x045] = KEY_PAUSE;
-    keycode_map[0x146] = KEY_PAUSE;
-    keycode_map[0x039] = KEY_SPACE;
-    keycode_map[0x00F] = KEY_TAB;
-    keycode_map[0x03A] = KEY_CAPS_LOCK;
-    keycode_map[0x145] = KEY_NUM_LOCK;
-    keycode_map[0x046] = KEY_SCROLL_LOCK;
-    keycode_map[0x03B] = KEY_F1;
-    keycode_map[0x03C] = KEY_F2;
-    keycode_map[0x03D] = KEY_F3;
-    keycode_map[0x03E] = KEY_F4;
-    keycode_map[0x03F] = KEY_F5;
-    keycode_map[0x040] = KEY_F6;
-    keycode_map[0x041] = KEY_F7;
-    keycode_map[0x042] = KEY_F8;
-    keycode_map[0x043] = KEY_F9;
-    keycode_map[0x044] = KEY_F10;
-    keycode_map[0x057] = KEY_F11;
-    keycode_map[0x058] = KEY_F12;
-    keycode_map[0x064] = KEY_F13;
-    keycode_map[0x065] = KEY_F14;
-    keycode_map[0x066] = KEY_F15;
-    keycode_map[0x067] = KEY_F16;
-    keycode_map[0x068] = KEY_F17;
-    keycode_map[0x069] = KEY_F18;
-    keycode_map[0x06A] = KEY_F19;
-    keycode_map[0x06B] = KEY_F20;
-    keycode_map[0x06C] = KEY_F21;
-    keycode_map[0x06D] = KEY_F22;
-    keycode_map[0x06E] = KEY_F23;
-    keycode_map[0x076] = KEY_F24;
-    keycode_map[0x038] = KEY_LEFT_ALT;
-    keycode_map[0xA2] = KEY_LEFT_CONTROL;
-    keycode_map[0x02A] = KEY_LEFT_SHIFT;
-    keycode_map[0x15B] = KEY_LEFT_SUPER;
-    keycode_map[0x137] = KEY_PRINT_SCREEN;
-    keycode_map[0x138] = KEY_RIGHT_ALT;
-    keycode_map[0x11D] = KEY_RIGHT_CONTROL;
-    keycode_map[0x036] = KEY_RIGHT_SHIFT;
-    keycode_map[0x15C] = KEY_RIGHT_SUPER;
-    keycode_map[0x150] = KEY_DOWN;
-    keycode_map[0x14B] = KEY_LEFT;
-    keycode_map[0x14D] = KEY_RIGHT;
-    keycode_map[0x148] = KEY_UP;
+    keycode_map[VK_BACK] = KEY_BACKSPACE;
+    keycode_map[VK_DELETE] = KEY_DELETE;
+    keycode_map[VK_END] = KEY_END;
+    keycode_map[VK_RETURN] = KEY_ENTER;
+    keycode_map[VK_ESCAPE] = KEY_ESCAPE;
+    keycode_map[VK_HOME] = KEY_HOME;
+    keycode_map[VK_INSERT] = KEY_INSERT;
+    keycode_map[VK_MENU] = KEY_MENU;
+    keycode_map[VK_NEXT] = KEY_PAGE_DOWN;
+    keycode_map[VK_PRIOR] = KEY_PAGE_UP;
+    keycode_map[VK_PAUSE] = KEY_PAUSE;
+    keycode_map[VK_TAB] = KEY_TAB;
+    keycode_map[VK_CAPITAL] = KEY_CAPS_LOCK;
+    keycode_map[VK_NUMLOCK] = KEY_NUM_LOCK;
+    keycode_map[VK_SCROLL] = KEY_SCROLL_LOCK;
+    keycode_map[0x70] = KEY_F1;
+    keycode_map[0x71] = KEY_F2;
+    keycode_map[0x72] = KEY_F3;
+    keycode_map[0x73] = KEY_F4;
+    keycode_map[0x74] = KEY_F5;
+    keycode_map[0x75] = KEY_F6;
+    keycode_map[0x76] = KEY_F7;
+    keycode_map[0x77] = KEY_F8;
+    keycode_map[0x78] = KEY_F9;
+    keycode_map[0x79] = KEY_F10;
+    keycode_map[0x7A] = KEY_F11;
+    keycode_map[0x7B] = KEY_F12;
+    keycode_map[0x7C] = KEY_F13;
+    keycode_map[0x7D] = KEY_F14;
+    keycode_map[0x7E] = KEY_F15;
+    keycode_map[0x7F] = KEY_F16;
+    keycode_map[0x80] = KEY_F17;
+    keycode_map[0x81] = KEY_F18;
+    keycode_map[0x82] = KEY_F19;
+    keycode_map[0x83] = KEY_F20;
+    keycode_map[0x84] = KEY_F21;
+    keycode_map[0x85] = KEY_F22;
+    keycode_map[0x86] = KEY_F23;
+    keycode_map[0x87] = KEY_F24;
+    keycode_map[0x88] = KEY_LEFT_ALT;
+    keycode_map[VK_LCONTROL] = KEY_LEFT_CONTROL;
+    keycode_map[VK_LSHIFT] = KEY_LEFT_SHIFT;
+    keycode_map[VK_LWIN] = KEY_LEFT_SUPER;
+    keycode_map[VK_SNAPSHOT] = KEY_PRINT_SCREEN;
+    keycode_map[VK_RMENU] = KEY_RIGHT_ALT;
+    keycode_map[VK_RCONTROL] = KEY_RIGHT_CONTROL;
+    keycode_map[VK_RSHIFT] = KEY_RIGHT_SHIFT;
+    keycode_map[VK_RWIN] = KEY_RIGHT_SUPER;
+    keycode_map[VK_DOWN] = KEY_DOWN;
+    keycode_map[VK_LEFT] = KEY_LEFT;
+    keycode_map[VK_RIGHT] = KEY_RIGHT;
+    keycode_map[VK_UP] = KEY_UP;
 	
-    keycode_map[0x052] = KEY_KP_0;
-    keycode_map[0x04F] = KEY_KP_1;
-    keycode_map[0x050] = KEY_KP_2;
-    keycode_map[0x051] = KEY_KP_3;
-    keycode_map[0x04B] = KEY_KP_4;
-    keycode_map[0x04C] = KEY_KP_5;
-    keycode_map[0x04D] = KEY_KP_6;
-    keycode_map[0x047] = KEY_KP_7;
-    keycode_map[0x048] = KEY_KP_8;
-    keycode_map[0x049] = KEY_KP_9;
-    keycode_map[0x04E] = KEY_KP_ADD;
-    keycode_map[0x053] = KEY_KP_DECIMAL;
-    keycode_map[0x135] = KEY_KP_DIVIDE;
-    keycode_map[0x11C] = KEY_KP_ENTER;
-    keycode_map[0x059] = KEY_KP_EQUAL;
-    keycode_map[0x037] = KEY_KP_MULTIPLY;
-	keycode_map[0x04A] = KEY_KP_SUBTRACT;
+    keycode_map[VK_NUMPAD0] = KEY_KP_0;
+    keycode_map[VK_NUMPAD1] = KEY_KP_1;
+    keycode_map[VK_NUMPAD2] = KEY_KP_2;
+    keycode_map[VK_NUMPAD3] = KEY_KP_3;
+    keycode_map[VK_NUMPAD4] = KEY_KP_4;
+    keycode_map[VK_NUMPAD5] = KEY_KP_5;
+    keycode_map[VK_NUMPAD6] = KEY_KP_6;
+    keycode_map[VK_NUMPAD7] = KEY_KP_7;
+    keycode_map[VK_NUMPAD8] = KEY_KP_8;
+    keycode_map[VK_NUMPAD9] = KEY_KP_9;
+    keycode_map[VK_ADD] = KEY_KP_ADD;
+    keycode_map[VK_DECIMAL] = KEY_KP_DECIMAL;
+    keycode_map[VK_DIVIDE] = KEY_KP_DIVIDE;
+    keycode_map[VK_MULTIPLY] = KEY_KP_MULTIPLY;
+	keycode_map[VK_SUBTRACT] = KEY_KP_SUBTRACT;
 }
 
 void platform_show_message(char *message, char *title)
@@ -182,6 +173,41 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		glViewport(0, 0, width, height);
 	}
+	else if (message == WM_CHAR)
+	{
+		switch (wparam) 
+		{ 
+			default: 
+			if (current_keyboard_to_handle->take_input)
+			{
+				char buf[2];
+				char *ch = 0;
+				
+				char val = (char)wparam;
+				
+				if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
+				{
+					if (!(val >= 48 && val <= 57))
+					{
+						ch = 0;
+					}
+					else
+					{
+						sprintf(buf, "%c", val);
+						ch = buf;
+					}
+				}
+				else if (val >= 32 && val <= 126)
+				{
+					sprintf(buf, "%c", val);
+					ch = buf;
+				}
+				
+				keyboard_handle_input_string(current_keyboard_to_handle, ch);
+			}
+			break; 
+		}
+	}
 	else if (message == WM_KEYDOWN)
 	{
 		s32 key = wparam;
@@ -189,24 +215,15 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		current_keyboard_to_handle->keys[keycode_map[key]] = true;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = true;
 		
-		printf("%d %d\n", key, keycode_map[key]);
-		
-		// TODO(Aldrik): make convert key_to_char function that takes our own keycodes
-		// convert key to char
 		if (current_keyboard_to_handle->take_input)
-		{
-			char *ch = 0;
-			
-			if (ch && current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
-			{
-				if (!(*ch >= 48 && *ch <= 57))
-				{
-					ch = 0;
-				}
-			}
-			
-			keyboard_handle_input_string(current_keyboard_to_handle, "m");
-		}
+			keyboard_handle_input_string(current_keyboard_to_handle, 0);
+	}
+	else if (message == WM_KEYUP)
+	{
+		s32 key = wparam;
+		
+		current_keyboard_to_handle->keys[keycode_map[key]] = false;
+		current_keyboard_to_handle->input_keys[keycode_map[key]] = false;
 	}
 	else if (message == WM_LBUTTONDOWN || 
 			 message == WM_RBUTTONDOWN ||

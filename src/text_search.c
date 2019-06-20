@@ -83,6 +83,8 @@ s32 scroll_y = 0;
 // TODO(Aldrik): layout dependant keyboard press/release for shortcuts
 // TODO(Aldrik): window resize flickers
 // TODO(Aldrik): what to show in information tab?
+// TODO(Aldrik): run search on enter press
+// TODO(Aldrik): autocomplete path with tab
 
 char *text_to_find;
 
