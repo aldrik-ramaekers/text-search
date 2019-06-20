@@ -93,7 +93,7 @@ u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 l
 void platform_destroy_file_content(file_content *content);
 u8 get_active_directory(char *buffer);
 u8 set_active_directory(char *path);
-void platform_show_message(char *message, char *title);
+void platform_show_message(platform_window *window, char *message, char *title);
 void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive);
 void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);

@@ -959,7 +959,7 @@ cpu_info platform_get_cpu_info()
 	return result;
 }
 
-void platform_show_message(char *message, char *title)
+void platform_show_message(platform_window *window, char *message, char *title)
 {
 	char command[MAX_INPUT_LENGTH];
 	sprintf(command, "zenity --info --text=\"%s\" --title=\"%s\" --width=240", message, title);

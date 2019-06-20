@@ -723,7 +723,7 @@ int main_loop()
 					if (global_search_result.found_file_matches)
 						export_results(&global_search_result);
 					else
-						platform_show_message(localize("no_results_to_export"), localize("failed_to_export_results"));
+						platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_Q}))
 				{
@@ -741,7 +741,7 @@ int main_loop()
 						if (global_search_result.found_file_matches)
 							export_results(&global_search_result); 
 						else
-							platform_show_message(localize("no_results_to_export"), localize("failed_to_export_results"));
+							platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 					}
 					ui_push_menu_item_separator();
 					if (ui_push_menu_item(localize("quit"), "Ctrl + Q")) 

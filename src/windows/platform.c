@@ -124,6 +124,7 @@ static void create_key_tables()
     keycode_map[0x86] = KEY_F23;
     keycode_map[0x87] = KEY_F24;
     keycode_map[0x88] = KEY_LEFT_ALT;
+	keycode_map[VK_CONTROL] = KEY_LEFT_CONTROL;
     keycode_map[VK_LCONTROL] = KEY_LEFT_CONTROL;
     keycode_map[VK_LSHIFT] = KEY_LEFT_SHIFT;
     keycode_map[VK_LWIN] = KEY_LEFT_SUPER;
@@ -154,9 +155,9 @@ static void create_key_tables()
 	keycode_map[VK_SUBTRACT] = KEY_KP_SUBTRACT;
 }
 
-void platform_show_message(char *message, char *title)
+void platform_show_message(platform_window *window, char *message, char *title)
 {
-	
+	MessageBox(window->window_handle, message, title, MB_ICONINFORMATION | MB_OK);
 }
 
 LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
@@ -215,13 +216,12 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		current_keyboard_to_handle->keys[keycode_map[key]] = true;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = true;
 		
-		if (current_keyboard_to_handle->take_input)
-			keyboard_handle_input_string(current_keyboard_to_handle, 0);
+		//if (current_keyboard_to_handle->take_input)
+		//keyboard_handle_input_string(current_keyboard_to_handle, 0);
 	}
 	else if (message == WM_KEYUP)
 	{
 		s32 key = wparam;
-		
 		current_keyboard_to_handle->keys[keycode_map[key]] = false;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = false;
 	}
@@ -302,7 +302,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 
 void platform_window_set_title(platform_window *window, char *name)
 {
-	
+	// TODO(Aldrik): implement
 }
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
@@ -587,20 +587,41 @@ u8 set_active_directory(char *path)
 	return SetCurrentDirectory(path);
 }
 
+static void fix_string(char *string)
+{
+	while(*string)
+	{
+		if (*string == '/')
+			*string = '\\';
+		
+		++string;
+	}
+}
+
 void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
 {
 	assert(list);
 	
 	s32 len = strlen(filter);
 	
+	char *start_dir_fix = mem_alloc(PATH_MAX);
+	sprintf(start_dir_fix, "%s*", start_dir);
+	fix_string(start_dir_fix);
+	fix_string(start_dir);
+	
 	char *subdirname_buf = mem_alloc(PATH_MAX);
 	
 	WIN32_FIND_DATAA file_info;
-	HWND handle = FindFirstFileA(start_dir, &file_info);
+	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
 	
 	if (handle == INVALID_HANDLE_VALUE)
 	{
+		printf("%s invalid.\n", start_dir_fix);
 		return;
+	}
+	else
+	{
+		printf("%s valid.\n", start_dir_fix);
 	}
 	
 	do
@@ -614,7 +635,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			
 			strcpy(subdirname_buf, start_dir);
 			strcat(subdirname_buf, name);
-			strcat(subdirname_buf, "/");
+			strcat(subdirname_buf, "/*");
 			
 			// is directory
 			platform_list_files_block(list, subdirname_buf, filter, recursive);
@@ -623,7 +644,8 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_NORMAL) || 
-				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ||
+				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
 		{
 			// is file
 			char *buf = mem_alloc(PATH_MAX);
@@ -773,6 +795,7 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 static void* platform_open_file_dialog_dd(void *data)
 {
 	// TODO(Aldrik): implement
+	return 0;
 }
 
 void *platform_open_file_dialog_block(void *arg)
@@ -861,6 +884,8 @@ cpu_info platform_get_cpu_info()
 {
 	// https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/ns-sysinfoapi-_system_info same as above
 	cpu_info info;
+	info.model = 1;
+	
 	return info;
 }
 
