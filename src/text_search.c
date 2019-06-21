@@ -63,6 +63,9 @@ image *search_img;
 image *error_img;
 image *directory_img;
 image *sloth_img;
+image *drag_drop_img;
+image *notification_bg_img;
+
 font *font_medium;
 font *font_small;
 font *font_mini;
@@ -287,6 +290,25 @@ static void find_text_in_files(char *text_to_find)
 	
 	thread thr = thread_start(find_text_in_files_t, text_to_find);
 	thread_detach(&thr);
+}
+
+static void render_drag_drop_feedback(platform_window *window)
+{
+	if (window->drag_drop_info.state == DRAG_DROP_ENTER)
+	{
+		static s32 rec_width = 350;
+		static s32 rec_height = 200;
+		static s32 icon_width = 100;
+		static s32 icon_height = 100;
+		s32 rec_pos_x = (window->width / 2) - (rec_width / 2);
+		s32 rec_pos_y = (window->height / 2) - (rec_height / 2);
+		s32 icon_pos_x = rec_pos_x + (rec_width / 2) - (icon_width / 2);
+		s32 icon_pos_y = rec_pos_y + (rec_height / 2) - (icon_height / 2) - 35;
+		
+		render_rectangle(0, 0, window->width, window->height, rgba(0,0,0,180));
+		render_image(notification_bg_img, rec_pos_x, rec_pos_y, rec_width, rec_height);
+		render_image(drag_drop_img, icon_pos_x, icon_pos_y, icon_width, icon_height);
+	}
 }
 
 static void render_status_bar(platform_window *window, font *font_small)
@@ -596,6 +618,8 @@ int main_loop()
 	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
 	directory_img = assets_load_image("data/imgs/folder.png", false);
 	error_img = assets_load_image("data/imgs/error.png", false);
+	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
+	notification_bg_img = assets_load_image("data/imgs/notification_bg.png", false);
 	
 	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
 	font_small = assets_load_font("data/fonts/mono.ttf", 16);
@@ -918,6 +942,7 @@ int main_loop()
 			}
 		}
 		
+		render_drag_drop_feedback(&window);
 		
 		assets_do_post_process();
 		
@@ -986,6 +1011,8 @@ int main_loop()
 	assets_destroy_image(sloth_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
+	assets_destroy_image(drag_drop_img);
+	assets_destroy_image(notification_bg_img);
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);

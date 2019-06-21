@@ -78,6 +78,21 @@ typedef struct t_list_file_args
 	u8 *state;
 } list_file_args;
 
+typedef enum t_drag_drop_state
+{
+	DRAG_DROP_NONE,
+	DRAG_DROP_ENTER,
+	DRAG_DROP_LEAVE,
+	DRAG_DROP_FINISHED,
+	DRAG_DROP_ACTIVE,
+} drag_drop_state;
+
+struct drag_drop_info
+{
+	s32 state;
+	char *path;
+};
+
 u8 platform_cancel_search = false;
 
 u8 platform_window_is_valid(platform_window *window);

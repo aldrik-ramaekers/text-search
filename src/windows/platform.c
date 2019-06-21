@@ -15,14 +15,17 @@ struct t_platform_window
 	HGLRC gl_context;
 	WNDCLASS window_class;
 	
-	s32 width;
-	s32 height;
 	s32 min_width;
 	s32 min_height;
 	s32 max_width;
 	s32 max_height;
+	
+	// shared window properties
+	s32 width;
+	s32 height;
 	u8 is_open;
 	u8 has_focus;
+	struct drag_drop_info drag_drop_info;
 };
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
