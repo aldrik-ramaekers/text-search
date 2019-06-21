@@ -17,6 +17,10 @@ struct t_platform_window
 	
 	s32 width;
 	s32 height;
+	s32 min_width;
+	s32 min_height;
+	s32 max_width;
+	s32 max_height;
 	u8 is_open;
 	u8 has_focus;
 };
@@ -239,9 +243,9 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			s32 scroll_val = wparam>>16;
 			
 			if (scroll_val > 120)
-				current_mouse_to_handle->scroll_state = SCROLL_UP;
-			else
 				current_mouse_to_handle->scroll_state = SCROLL_DOWN;
+			else
+				current_mouse_to_handle->scroll_state = SCROLL_UP;
 		}
 		
 		if (is_left_down)
@@ -282,7 +286,15 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_GETMINMAXINFO)
 	{
+		MINMAXINFO *info = (MINMAXINFO*)lparam;
 		
+		info->ptMinTrackSize.x = current_window_to_handle->min_width;
+		info->ptMinTrackSize.y = current_window_to_handle->min_height;
+		
+		if (current_window_to_handle->max_width)
+			info->ptMaxTrackSize.x = current_window_to_handle->max_width;
+		if (current_window_to_handle->max_height)
+			info->ptMaxTrackSize.y = current_window_to_handle->max_height;
 	}
 	else if (message == WM_DESTROY)
 	{
@@ -314,6 +326,10 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.hdc = 0;
 	window.width = width;
 	window.height = height;
+	window.min_width = width;
+	window.min_height = height;
+	window.max_width = max_w;
+	window.max_height = max_h;
 	
 	current_window_to_handle = &window;
 	
@@ -479,6 +495,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	memset(keyboard->input_keys, 0, MAX_KEYCODE);
 	mouse->move_x = 0;
 	mouse->move_y = 0;
+	mouse->scroll_state = 0;
 	
 	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
@@ -786,17 +803,29 @@ static void* platform_open_file_dialog_dd(void *data)
 	info.lStructSize = sizeof(OPENFILENAME);
 	info.hwndOwner = NULL;
 	info.hInstance = NULL;
-	info.lpstrFilter = NULL;
 	
-	char filter[50];
-	strcpy(filter, args->file_filter);
-	filter[strlen(filter)+1] = 0;
-	info.lpstrCustomFilter = filter;
+	if (args->file_filter)
+	{
+		char filter[50];
+		strcpy(filter, args->file_filter);
+		filter[strlen(filter)+1] = 0;
+		info.lpstrFilter = filter;
+	}
+	else
+	{
+		info.lpstrFilter = NULL;
+	}
+	
+	char szFile[256 * MAX_PATH];
+	char szPath[MAX_PATH];
+	
+	info.lpstrCustomFilter = NULL;
 	info.nMaxCustFilter = 50;
 	info.nFilterIndex = 0;
-	info.lpstrFile = NULL;
-	//char max_file_buffer[MAX_PATH_LENGTH];
-	//info.nMaxFile = MAX_PATH_LENGTH;
+	info.lpstrFile = (char*)szFile;
+	info.lpstrFile[0] = 0;
+	info.nMaxFile = sizeof(szFile);
+	
 	info.lpstrFileTitle = NULL;
 	//info.nMaxFileTitle = NULL;
 	info.lpstrInitialDir = args->start_path;
@@ -816,6 +845,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	}
 	
 	GetOpenFileNameA(&info);
+	strcpy(args->buffer, info.lpstrFile);
 	
 	return 0;
 }
