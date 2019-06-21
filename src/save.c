@@ -114,28 +114,8 @@ bool export_results(search_result *search_result)
 	return true;
 }
 
-static void* import_results_d(void *arg)
+void import_results_from_file(search_result *search_result, char *path_buf)
 {
-	search_result *search_result = arg;
-	
-	array matches = search_result->files;
-	
-	char path_buf[MAX_INPUT_LENGTH];
-	path_buf[0] = 0;
-	
-	char start_path[MAX_INPUT_LENGTH];
-	sprintf(start_path, "%s%s", binary_path, "/data/export/");
-	
-	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
-	args->buffer = path_buf;
-	args->type = OPEN_FILE;
-	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
-	args->start_path = start_path;
-	
-	platform_open_file_dialog_block(args);
-	
-	if (path_buf[0] == 0) return 0;
-	
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
@@ -152,7 +132,6 @@ static void* import_results_d(void *arg)
 	if (!content.content || content.file_error)
 	{
 		platform_destroy_file_content(&content);
-		return 0;
 	}
 	
 	char *buffer = content.content;
@@ -305,7 +284,31 @@ static void* import_results_d(void *arg)
 #endif
 	
 	platform_destroy_file_content(&content);
+}
+
+static void* import_results_d(void *arg)
+{
+	search_result *search_result = arg;
 	
+	array matches = search_result->files;
+	
+	char path_buf[MAX_INPUT_LENGTH];
+	path_buf[0] = 0;
+	
+	char start_path[MAX_INPUT_LENGTH];
+	sprintf(start_path, "%s%s", binary_path, "/data/export/");
+	
+	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
+	args->buffer = path_buf;
+	args->type = OPEN_FILE;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
+	args->start_path = start_path;
+	
+	platform_open_file_dialog_block(args);
+	
+	if (path_buf[0] == 0) return 0;
+	
+	import_results_from_file(search_result, path_buf);
 	return 0;
 }
 

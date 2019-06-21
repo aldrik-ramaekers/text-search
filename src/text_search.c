@@ -296,18 +296,28 @@ static void render_drag_drop_feedback(platform_window *window)
 {
 	if (window->drag_drop_info.state == DRAG_DROP_ENTER)
 	{
-		static s32 rec_width = 350;
+		char *text = localize("drag_drop_import");
+		static s32 rec_width = 450;
 		static s32 rec_height = 200;
 		static s32 icon_width = 100;
 		static s32 icon_height = 100;
 		s32 rec_pos_x = (window->width / 2) - (rec_width / 2);
 		s32 rec_pos_y = (window->height / 2) - (rec_height / 2);
 		s32 icon_pos_x = rec_pos_x + (rec_width / 2) - (icon_width / 2);
-		s32 icon_pos_y = rec_pos_y + (rec_height / 2) - (icon_height / 2) - 35;
+		s32 icon_pos_y = rec_pos_y + 30;
+		s32 text_w = calculate_text_width(font_small, text);
+		s32 text_pos_y = rec_pos_y + rec_height - font_small->size - 35;
+		s32 text_pos_x = rec_pos_x + (rec_width / 2) - (text_w / 2);
 		
 		render_rectangle(0, 0, window->width, window->height, rgba(0,0,0,180));
 		render_image(notification_bg_img, rec_pos_x, rec_pos_y, rec_width, rec_height);
 		render_image(drag_drop_img, icon_pos_x, icon_pos_y, icon_width, icon_height);
+		render_text(font_small, text_pos_x, text_pos_y, text, rgb(35,31,32));
+	}
+	
+	if (window->drag_drop_info.state == DRAG_DROP_FINISHED)
+	{
+		import_results_from_file(&global_search_result, window->drag_drop_info.path);
 	}
 }
 

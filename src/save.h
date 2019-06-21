@@ -4,6 +4,7 @@
 #define SEARCH_RESULT_FILE_EXTENSION "*.tts"
 
 bool export_results(search_result *result);
+void import_results_from_file(search_result *search_result, char *path_buf);
 void import_results(search_result *result);
 
 #endif

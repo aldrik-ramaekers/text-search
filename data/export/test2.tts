@@ -1,7 +1,7 @@
 /home/aldrik/Projects/
 *.txt
 *test*
-0000000000170881
+0000000000016746
 0
 1
 00000002
@@ -9,11 +9,11 @@
 00000022
 1
 1
-/home/aldrik/Projects/text-search/bin/data/config.txt
+/home/aldrik/Projects/text-search/data/config.txt
 *.txt
 0
 1
-/home/aldrik/Projects/text-search/data/config.txt
+/home/aldrik/Projects/text-search/bin/data/config.txt
 *.txt
 0
 1

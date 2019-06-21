@@ -569,10 +569,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	XMapWindow(window.display, window.window);
 	XStoreName(window.display, window.window, name);
 	
-	// recieve window close event
-	window.quit =XInternAtom(window.display, "WM_DELETE_WINDOW", True);
-	XSetWMProtocols(window.display, window.window, &window.quit, 1);
-	
 	static GLXContext share_list = 0;
 	
 	// get opengl context
@@ -629,6 +625,9 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	create_key_tables(window);
 	
+	// recieve window close event
+	window.quit = XInternAtom(window.display, "WM_DELETE_WINDOW", False);
+	
 	// drag and drop atoms
 	GET_ATOM(XdndEnter);
     GET_ATOM(XdndPosition);
@@ -641,6 +640,20 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	GET_ATOM(XdndLeave);
 	GET_ATOM(PRIMARY);
 	
+	array atoms = array_create(sizeof(Atom));
+	array_push(&atoms, &window.quit);
+	array_push(&atoms, &window.XdndEnter);
+	array_push(&atoms, &window.XdndPosition);
+	array_push(&atoms, &window.XdndStatus);
+	array_push(&atoms, &window.XdndTypeList);
+	array_push(&atoms, &window.XdndActionCopy);
+	array_push(&atoms, &window.XdndDrop);
+	array_push(&atoms, &window.XdndFinished);
+	array_push(&atoms, &window.XdndSelection);
+	array_push(&atoms, &window.XdndLeave);
+	array_push(&atoms, &window.PRIMARY);
+	
+#if 0
 	XSetWMProtocols(window.display, window.window, &window.XdndEnter, 1);
 	XSetWMProtocols(window.display, window.window, &window.XdndPosition, 1);
 	XSetWMProtocols(window.display, window.window, &window.XdndStatus, 1);
@@ -651,11 +664,16 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	XSetWMProtocols(window.display, window.window, &window.XdndSelection, 1);
 	XSetWMProtocols(window.display, window.window, &window.XdndLeave, 1);
 	XSetWMProtocols(window.display, window.window, &window.PRIMARY, 1);
+#endif
+	
+	XSetWMProtocols(window.display, window.window, atoms.data, atoms.length);
 	
 	Atom XdndAware = XInternAtom(window.display, "XdndAware", False);
 	Atom xdnd_version = 5;
 	XChangeProperty(window.display, window.window, XdndAware, XA_ATOM, 32,
 					PropModeReplace, (unsigned char*)&xdnd_version, 1);
+	
+	array_destroy(&atoms);
 	
 	return window;
 }
@@ -872,12 +890,12 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		{
 			static int xdnd_version=0;
 			
-			if (window->event.xclient.message_type == window->quit)
+			if ((Atom)window->event.xclient.data.l[0] == window->quit) {
 				window->is_open = false;
+			}
 			
 			if (window->event.xclient.message_type == window->XdndDrop)
 			{
-				printf("drag dropped\n");
 				if (window->xdnd_req == None) {
                     /* say again - not interested! */
                     memset(&m, 0, sizeof(XClientMessageEvent));
@@ -891,7 +909,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
                     m.data.l[2] = None; /* fail! */
                     XSendEvent(window->display, window->event.xclient.data.l[0], False, NoEventMask, (XEvent*)&m);
                 } else {
-					printf("converting.\n");
                     /* convert */
                     if(xdnd_version >= 1) {
                         XConvertSelection(window->display, window->XdndSelection, window->xdnd_req, window->PRIMARY, window->window, window->event.xclient.data.l[2]);
@@ -904,11 +921,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			else if (window->event.xclient.message_type == window->XdndLeave)
 			{
 				window->drag_drop_info.state = DRAG_DROP_LEAVE;
-				printf("drag left\n");
 			}
 			else if (window->event.xclient.message_type == window->XdndActionCopy)
 			{
-				printf("action copy\n");
 				memset(&m, 0, sizeof(XClientMessageEvent));
                 m.type = ClientMessage;
                 m.display = window->event.xclient.display;
@@ -927,8 +942,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			else if (window->event.xclient.message_type == window->XdndEnter)
 			{
 				window->drag_drop_info.state = DRAG_DROP_ENTER;
-				
-				printf("drag entered\n");
 				
 				u8 use_list = window->event.xclient.data.l[1] & 1;
                 window->xdnd_source = window->event.xclient.data.l[0];
@@ -963,7 +976,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 							char *fn = XURIToLocal(token);
 							if (fn)
 							{
-								printf("%s\n", fn);
 								window->drag_drop_info.state = DRAG_DROP_FINISHED;
 								window->drag_drop_info.path = fn;
 							}
