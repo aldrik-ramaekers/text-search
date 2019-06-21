@@ -587,17 +587,6 @@ u8 set_active_directory(char *path)
 	return SetCurrentDirectory(path);
 }
 
-static void fix_string(char *string)
-{
-	while(*string)
-	{
-		if (*string == '/')
-			*string = '\\';
-		
-		++string;
-	}
-}
-
 void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
 {
 	assert(list);
@@ -606,39 +595,35 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	
 	char *start_dir_fix = mem_alloc(PATH_MAX);
 	sprintf(start_dir_fix, "%s*", start_dir);
-	fix_string(start_dir_fix);
-	fix_string(start_dir);
 	
-	char *subdirname_buf = mem_alloc(PATH_MAX);
+	char *start_dir_clean = mem_alloc(PATH_MAX);
+	strcpy(start_dir_clean, start_dir);
 	
 	WIN32_FIND_DATAA file_info;
 	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
 	
 	if (handle == INVALID_HANDLE_VALUE)
 	{
-		printf("%s invalid.\n", start_dir_fix);
 		return;
-	}
-	else
-	{
-		printf("%s valid.\n", start_dir_fix);
 	}
 	
 	do
 	{
 		char *name = file_info.cFileName;
-		
 		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && recursive)
 		{
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 				continue;
 			
-			strcpy(subdirname_buf, start_dir);
+			char *subdirname_buf = mem_alloc(PATH_MAX);
+			
+			strcpy(subdirname_buf, start_dir_clean);
 			strcat(subdirname_buf, name);
-			strcat(subdirname_buf, "/*");
+			strcat(subdirname_buf, "/");
 			
 			// is directory
 			platform_list_files_block(list, subdirname_buf, filter, recursive);
+			mem_free(subdirname_buf);
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) ||
@@ -647,22 +632,23 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
 		{
-			// is file
-			char *buf = mem_alloc(PATH_MAX);
-			sprintf(buf, "%s%s",start_dir, name);
-			
-			found_file f;
-			f.path = buf;
-			f.matched_filter = mem_alloc(len);
-			strcpy(f.matched_filter, filter);
-			array_push_size(list, &f, sizeof(found_file));
+			if (string_match(filter, name))
+			{
+				// is file
+				char *buf = mem_alloc(PATH_MAX);
+				sprintf(buf, "%s%s",start_dir, name);
+				
+				found_file f;
+				f.path = buf;
+				f.matched_filter = mem_alloc(len);
+				strcpy(f.matched_filter, filter);
+				array_push_size(list, &f, sizeof(found_file));
+			}
 		}
 	}
 	while (FindNextFile(handle, &file_info) != 0);
 	
 	FindClose(handle);
-	
-	mem_free(subdirname_buf);
 }
 
 void* platform_list_files_t_t(void *args)

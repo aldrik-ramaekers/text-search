@@ -85,6 +85,8 @@ s32 scroll_y = 0;
 // TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik): run search on enter press
 // TODO(Aldrik): autocomplete path with tab
+// TODO(Aldrik): drag and drop to load saved file.
+// TODO(Aldrik): option to make array reserve n spaces on reallocate
 
 char *text_to_find;
 
