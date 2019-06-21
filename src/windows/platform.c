@@ -302,7 +302,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 
 void platform_window_set_title(platform_window *window, char *name)
 {
-	// TODO(Aldrik): implement
+	SetWindowTextA(window->window_handle, name);
 }
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
@@ -780,14 +780,49 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 
 static void* platform_open_file_dialog_dd(void *data)
 {
-	// TODO(Aldrik): implement
+	struct open_dialog_args *args = data;
+	
+	OPENFILENAME info;
+	info.lStructSize = sizeof(OPENFILENAME);
+	info.hwndOwner = NULL;
+	info.hInstance = NULL;
+	info.lpstrFilter = NULL;
+	
+	char filter[50];
+	strcpy(filter, args->file_filter);
+	filter[strlen(filter)+1] = 0;
+	info.lpstrCustomFilter = filter;
+	info.nMaxCustFilter = 50;
+	info.nFilterIndex = 0;
+	info.lpstrFile = NULL;
+	//char max_file_buffer[MAX_PATH_LENGTH];
+	//info.nMaxFile = MAX_PATH_LENGTH;
+	info.lpstrFileTitle = NULL;
+	//info.nMaxFileTitle = NULL;
+	info.lpstrInitialDir = args->start_path;
+	info.lpstrTitle = NULL;
+	
+	if (args->type == OPEN_FILE)
+	{
+		info.Flags = OFN_FILEMUSTEXIST;
+	}
+	else if (args->type == OPEN_DIRECTORY)
+	{
+		info.Flags = OFN_HIDEREADONLY | OFN_NOVALIDATE | OFN_PATHMUSTEXIST | OFN_READONLY;
+	}
+	else if (args->type == SAVE_FILE)
+	{
+		
+	}
+	
+	GetOpenFileNameA(&info);
+	
 	return 0;
 }
 
 void *platform_open_file_dialog_block(void *arg)
 {
-	thread thr = thread_start(platform_open_file_dialog_dd, arg);
-	thread_join(&thr);
+	platform_open_file_dialog_dd(arg);
 	mem_free(arg);
 	return 0;
 }
