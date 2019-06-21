@@ -6,7 +6,7 @@
 #include <errno.h>
 
 #define BORDER_SPACE_HORIZONTAL 8
-#define BORDER_SPACE_VERTICAL 25
+#define BORDER_SPACE_VERTICAL 30
 
 struct t_platform_window
 {
@@ -434,8 +434,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			//////////////////
 			
 			window.is_open = true;
-			window.width = width;
-			window.height = height;
 			
 			glMatrixMode(GL_PROJECTION);
 			glLoadIdentity();
