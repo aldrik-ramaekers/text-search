@@ -12,6 +12,8 @@
 #include <errno.h>
 #include <dlfcn.h>
 
+#define GET_ATOM(X) window.X = XInternAtom(window.display, #X, False)
+
 struct t_platform_window
 {
 	Display *display;
@@ -22,6 +24,19 @@ struct t_platform_window
 	GLXContext gl_context;
 	XWindowAttributes window_attributes;
 	XEvent event;
+	
+	Atom xdnd_req;
+	Atom xdnd_source;
+	Atom XdndEnter;
+	Atom XdndPosition;
+	Atom XdndStatus;
+	Atom XdndTypeList;
+	Atom XdndActionCopy;
+	Atom XdndDrop;
+	Atom XdndFinished;
+	Atom XdndSelection;
+	Atom quit;
+	Atom PRIMARY;
 	
 	s32 width;
 	s32 height;
@@ -550,8 +565,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	XStoreName(window.display, window.window, name);
 	
 	// recieve window close event
-	Atom wmDelete=XInternAtom(window.display, "WM_DELETE_WINDOW", True);
-	XSetWMProtocols(window.display, window.window, &wmDelete, 1);
+	window.quit =XInternAtom(window.display, "WM_DELETE_WINDOW", True);
+	XSetWMProtocols(window.display, window.window, &window.quit, 1);
 	
 	static GLXContext share_list = 0;
 	
@@ -609,6 +624,32 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	create_key_tables(window);
 	
+	// drag and drop atoms
+	GET_ATOM(XdndEnter);
+    GET_ATOM(XdndPosition);
+    GET_ATOM(XdndStatus);
+    GET_ATOM(XdndTypeList);
+    GET_ATOM(XdndActionCopy);
+    GET_ATOM(XdndDrop);
+    GET_ATOM(XdndFinished);
+	GET_ATOM(XdndSelection);
+	GET_ATOM(PRIMARY);
+	
+	XSetWMProtocols(window.display, window.window, &window.XdndEnter, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndPosition, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndStatus, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndTypeList, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndActionCopy, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndDrop, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndFinished, 1);
+	XSetWMProtocols(window.display, window.window, &window.XdndSelection, 1);
+	XSetWMProtocols(window.display, window.window, &window.PRIMARY, 1);
+	
+	Atom XdndAware = XInternAtom(window.display, "XdndAware", False);
+	Atom xdnd_version = 5;
+	XChangeProperty(window.display, window.window, XdndAware, XA_ATOM, 32,
+					PropModeReplace, (unsigned char*)&xdnd_version, 1);
+	
 	return window;
 }
 
@@ -635,6 +676,164 @@ void platform_destroy_window(platform_window *window)
 	XCloseDisplay(window->display);
 }
 
+
+typedef struct {
+    unsigned char *data;
+    int format, count;
+    Atom type;
+} SDL_x11Prop;
+
+/* Reads property
+   Must call X11_XFree on results
+ */
+static void X11_ReadProperty(SDL_x11Prop *p, Display *disp, Window w, Atom prop)
+{
+    unsigned char *ret=NULL;
+    Atom type;
+    int fmt;
+    unsigned long count;
+    unsigned long bytes_left;
+    int bytes_fetch = 0;
+	
+    do {
+        if (ret != 0) XFree(ret);
+        XGetWindowProperty(disp, w, prop, 0, bytes_fetch, False, AnyPropertyType, &type, &fmt, &count, &bytes_left, &ret);
+        bytes_fetch += bytes_left;
+    } while (bytes_left != 0);
+	
+    p->data=ret;
+    p->format=fmt;
+    p->count=count;
+    p->type=type;
+}
+
+/* Find text-uri-list in a list of targets and return it's atom
+   if available, else return None */
+static Atom X11_PickTarget(Display *disp, Atom list[], int list_count)
+{
+    Atom request = None;
+    char *name;
+    int i;
+    for (i=0; i < list_count && request == None; i++) {
+        name = XGetAtomName(disp, list[i]);
+        if ((strcmp("text/uri-list", name) == 0) || (strcmp("text/plain", name) == 0)) {
+			request = list[i];
+        }
+        XFree(name);
+    }
+    return request;
+}
+
+/* Wrapper for X11_PickTarget for a maximum of three targets, a special
+   case in the Xdnd protocol */
+static Atom X11_PickTargetFromAtoms(Display *disp, Atom a0, Atom a1, Atom a2)
+{
+    int count=0;
+    Atom atom[3];
+    if (a0 != None) atom[count++] = a0;
+    if (a1 != None) atom[count++] = a1;
+    if (a2 != None) atom[count++] = a2;
+    return X11_PickTarget(disp, atom, count);
+}
+
+static int X11_URIDecode(char *buf, int len) {
+    int ri, wi, di;
+    char decode = '\0';
+    if (buf == NULL || len < 0) {
+        errno = EINVAL;
+        return -1;
+    }
+    if (len == 0) {
+        len = strlen(buf);
+    }
+    for (ri = 0, wi = 0, di = 0; ri < len && wi < len; ri += 1) {
+        if (di == 0) {
+            /* start decoding */
+            if (buf[ri] == '%') {
+                decode = '\0';
+                di += 1;
+                continue;
+            }
+            /* normal write */
+            buf[wi] = buf[ri];
+            wi += 1;
+            continue;
+        } else if (di == 1 || di == 2) {
+            char off = '\0';
+            char isa = buf[ri] >= 'a' && buf[ri] <= 'f';
+            char isA = buf[ri] >= 'A' && buf[ri] <= 'F';
+            char isn = buf[ri] >= '0' && buf[ri] <= '9';
+            if (!(isa || isA || isn)) {
+                /* not a hexadecimal */
+                int sri;
+                for (sri = ri - di; sri <= ri; sri += 1) {
+                    buf[wi] = buf[sri];
+                    wi += 1;
+                }
+                di = 0;
+                continue;
+            }
+            /* itsy bitsy magicsy */
+            if (isn) {
+                off = 0 - '0';
+            } else if (isa) {
+                off = 10 - 'a';
+            } else if (isA) {
+                off = 10 - 'A';
+            }
+            decode |= (buf[ri] + off) << (2 - di) * 4;
+            if (di == 2) {
+                buf[wi] = decode;
+                wi += 1;
+                di = 0;
+            } else {
+                di += 1;
+            }
+            continue;
+        }
+    }
+    buf[wi] = '\0';
+    return wi;
+}
+
+static char* X11_URIToLocal(char* uri) {
+    char *file = NULL;
+	u8 local;
+	
+    if (memcmp(uri,"file:/",6) == 0) uri += 6;      /* local file? */
+    else if (strstr(uri,":/") != NULL) return file; /* wrong scheme */
+	
+    local = uri[0] != '/' || (uri[0] != '\0' && uri[1] == '/');
+	
+    /* got a hostname? */
+    if (!local && uri[0] == '/' && uri[2] != '/') {
+		char* hostname_end = strchr(uri+1, '/');
+		if (hostname_end != NULL) {
+			char hostname[ 257 ];
+			if (gethostname(hostname, 255) == 0) {
+				hostname[ 256 ] = '\0';
+				if (memcmp(uri+1, hostname, hostname_end - (uri+1)) == 0) {
+					uri = hostname_end + 1;
+					local = 1;
+				}
+			}
+		}
+    }
+    if (local) {
+		file = uri;
+		/* Convert URI escape sequences to real characters */
+		X11_URIDecode(file, 0);
+		if (uri[1] == '/') {
+			file++;
+		} else {
+			file--;
+		}
+    }
+    return file;
+}
+
+
+
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
 {
 	mouse->left_state &= ~MOUSE_CLICK;
@@ -647,6 +846,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	
 	mouse->scroll_state = 0;
 	
+	XClientMessageEvent m;
+	
 	s32 pending_events = XPending(window->display);
 	for (s32 i = 0; i < pending_events; i++)
 	{
@@ -654,7 +855,115 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		
 		if (window->event.type == ClientMessage)
 		{
-			window->is_open = false;
+			static int xdnd_version=0;
+			
+			if (window->event.xclient.message_type == window->quit)
+				window->is_open = false;
+			
+			if (window->event.xclient.message_type == window->XdndDrop)
+			{
+				printf("drag dropped\n");
+				if (window->xdnd_req == None) {
+                    /* say again - not interested! */
+                    memset(&m, 0, sizeof(XClientMessageEvent));
+                    m.type = ClientMessage;
+                    m.display = window->event.xclient.display;
+                    m.window = window->event.xclient.data.l[0];
+                    m.message_type = window->XdndFinished;
+                    m.format=32;
+                    m.data.l[0] = window->window;
+                    m.data.l[1] = 0;
+                    m.data.l[2] = None; /* fail! */
+                    XSendEvent(window->display, window->event.xclient.data.l[0], False, NoEventMask, (XEvent*)&m);
+                } else {
+					printf("converting.\n");
+                    /* convert */
+                    if(xdnd_version >= 1) {
+                        XConvertSelection(window->display, window->XdndSelection, window->xdnd_req, window->PRIMARY, window->window, window->event.xclient.data.l[2]);
+                    } else {
+						printf("time to find the time.\n");
+                        //XConvertSelection(window->display, window->XdndSelection, window->xdnd_req, window->PRIMARY, window->xwindow, CurrentTime);
+                    }
+				}
+			}
+			if (window->event.xclient.message_type == window->XdndActionCopy)
+			{
+				printf("action copy\n");
+				memset(&m, 0, sizeof(XClientMessageEvent));
+                m.type = ClientMessage;
+                m.display = window->event.xclient.display;
+                m.window = window->event.xclient.data.l[0];
+                m.message_type = window->XdndStatus;
+                m.format=32;
+                m.data.l[0] = window->window;
+                m.data.l[1] = (window->xdnd_req != None);
+                m.data.l[2] = 0; /* specify an empty rectangle */
+                m.data.l[3] = 0;
+                m.data.l[4] = window->XdndActionCopy; /* we only accept copying anyway */
+				
+                XSendEvent(window->display, window->event.xclient.data.l[0], False, NoEventMask, (XEvent*)&m);
+				XFlush(window->display);
+			}
+			if (window->event.xclient.message_type == window->XdndEnter)
+			{
+				printf("drag entered\n");
+				
+				u8 use_list = window->event.xclient.data.l[1] & 1;
+                window->xdnd_source = window->event.xclient.data.l[0];
+				xdnd_version = (window->event.xclient.data.l[1] >> 24);
+				
+				if (use_list) {
+                    /* fetch conversion targets */
+                    SDL_x11Prop p;
+                    X11_ReadProperty(&p, window->display, window->xdnd_source, window->XdndTypeList);
+                    /* pick one */
+                    window->xdnd_req = X11_PickTarget(window->display, (Atom*)p.data, p.count);
+                    XFree(p.data);
+                } else {
+                    /* pick from list of three */
+                    window->xdnd_req = X11_PickTargetFromAtoms(window->display, window->event.xclient.data.l[2], window->event.xclient.data.l[3], window->event.xclient.data.l[4]);
+				}
+			}
+		}
+		else if (window->event.type == SelectionNotify)
+		{
+			Atom target = window->event.xselection.target;
+			
+			if (target == window->xdnd_req) {
+				SDL_x11Prop p;
+				X11_ReadProperty(&p, window->display, window->window, window->PRIMARY);
+				
+				XFree(p.data);
+				
+				if (p.format == 8) {
+                    /* !!! FIXME: don't use strtok here. It's not reentrant and not in SDL_stdinc. */
+                    char* name = XGetAtomName(window->display, target);
+                    char *token = strtok((char *) p.data, "\r\n");
+                    while (token != NULL) {
+						if (strcmp("text/uri-list", name)==0) {
+							char *fn = X11_URIToLocal(token);
+							if (fn)
+								printf("%s\n", fn);
+                        }
+                        token = strtok(NULL, "\r\n");
+                    }
+                }
+				XFree(p.data);
+				
+                /* send reply */
+                memset(&m, 0, sizeof(XClientMessageEvent));
+                m.type = ClientMessage;
+                m.display = window->display;
+                m.window = window->xdnd_source;
+                m.message_type = window->XdndFinished;
+                m.format = 32;
+                m.data.l[0] = window->window;
+                m.data.l[1] = 1;
+                m.data.l[2] = window->XdndActionCopy;
+                XSendEvent(window->display, window->xdnd_source, False, NoEventMask, (XEvent*)&m);
+				
+				XSync(window->display, False);
+			}
 		}
 		else if (window->event.type == ConfigureNotify)
 		{
