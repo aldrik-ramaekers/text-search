@@ -83,7 +83,6 @@ s32 scroll_y = 0;
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
 // TODO(Aldrik): results scrollbar works everywhere
-// TODO(Aldrik): layout dependant keyboard press/release for shortcuts
 // TODO(Aldrik): window resize flickers
 // TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik): run search on enter press
@@ -92,8 +91,9 @@ s32 scroll_y = 0;
 // TODO(Aldrik): option to make array reserve n spaces on reallocate
 // TODO(Aldrik): implement diff option
 // TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
-// TODO(Aldrik): drag drop feedback box bg shadow
-// TODO(Aldrik): drag and drop implement on windows.
+// TODO(Aldrik): drag and drop implement on windows
+// TODO(Aldrik): putting '=' in search text breaks config file
+// TODO(Aldrik): replace strcpy with strncpy for security
 
 char *text_to_find;
 
@@ -314,6 +314,7 @@ static void render_drag_drop_feedback(platform_window *window)
 		s32 text_pos_x = rec_pos_x + (rec_width / 2) - (text_w / 2);
 		
 		render_rectangle(0, 0, window->width, window->height, rgba(0,0,0,180));
+		render_image_tint(notification_bg_img, rec_pos_x+5, rec_pos_y+5, rec_width, rec_height, rgba(0,0,0, 100));
 		render_image(notification_bg_img, rec_pos_x, rec_pos_y, rec_width, rec_height);
 		render_image(drag_drop_img, icon_pos_x, icon_pos_y, icon_width, icon_height);
 		render_text(font_small, text_pos_x, text_pos_y, text, rgb(35,31,32));
@@ -581,12 +582,24 @@ static void render_info(platform_window *window, font *font_small)
 
 static s32 prepare_search_directory_path(char *path, s32 len)
 {
+#ifdef OS_LINUX
 	if (path[len-1] != '/' && len < MAX_INPUT_LENGTH)
 	{
 		path[len] = '/';
 		path[len+1] = 0;
 		return len+1;
 	}
+#endif
+	
+#ifdef OS_WINDOWS
+	if (path[len-1] != '\\' && len < MAX_INPUT_LENGTH)
+	{
+		path[len] = '/';
+		path[len+1] = 0;
+		return len+1;
+	}
+#endif
+	
 	return len;
 }
 

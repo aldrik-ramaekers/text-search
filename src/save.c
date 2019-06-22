@@ -236,7 +236,8 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char file_error[10];
-				strcpy(file_error, buffer+current_data_start);
+				strncpy(file_error, buffer+current_data_start, 9);
+				file_error[9] = 0;
 				
 				match.file_error = atoi(file_error);
 				
@@ -247,7 +248,8 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char match_count[10];
-				strcpy(match_count, buffer+current_data_start);
+				strncpy(match_count, buffer+current_data_start, 9);
+				match_count[9] = 0;
 				
 				match.match_count = atoi(match_count);
 				
@@ -261,27 +263,26 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	
 	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
 	
-#if 0
-	
-	printf("SEARCH: %s\n", search_directory);
-	printf("FILTER: %s\n", file_filter);
-	printf("FIND: %s\n", text_to_find);
-	
-	printf("\nduration: %"PRId64"\n"
-		   "show error: %d\n"
-		   "found match: %d\n"
-		   "files searched: %d\n"
-		   "files matched: %d\n"
-		   "len: %d\n"
-		   "match_found: %d\n",
-		   search_result->find_duration_us, 
-		   search_result->show_error_message,
-		   search_result->found_file_matches,
-		   search_result->files_searched,
-		   search_result->files_matched,
-		   search_result->search_result_source_dir_len,
-		   search_result->match_found);
-#endif
+	/*
+ printf("SEARCH: %s\n", search_directory);
+ printf("FILTER: %s\n", file_filter);
+ printf("FIND: %s\n", text_to_find);
+ 
+ printf("\nduration: %"PRId64"\n"
+  "show error: %d\n"
+  "found match: %d\n"
+  "files searched: %d\n"
+  "files matched: %d\n"
+  "len: %d\n"
+  "match_found: %d\n",
+  search_result->find_duration_us, 
+  search_result->show_error_message,
+  search_result->found_file_matches,
+  search_result->files_searched,
+  search_result->files_matched,
+  search_result->search_result_source_dir_len,
+  search_result->match_found);
+*/
 	
 	platform_destroy_file_content(&content);
 }

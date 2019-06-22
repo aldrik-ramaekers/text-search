@@ -137,7 +137,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		//if (kern != 0) printf("%d\n", kern);
 		//}
 		
-		if (ch != '.')
+		if (ch != '.' || ch != ',')
 			x_+=width/2;//+(kern*font->scale);
 		else
 			x_+=font->size/4;
@@ -266,7 +266,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		//if (kern != 0) printf("%d\n", kern);
 		//}
 		
-		if (ch != '.')
+		if (ch != '.' || ch != ',')
 			x_+=width / 2;//+(kern*font->scale);
 		else
 			x_+=font->size/4;
@@ -307,7 +307,7 @@ s32 calculate_text_width(font *font, char *text)
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];
 		
-		if (ch != '.')
+		if (ch != '.' || ch != ',')
 			x+=width / 2;//+(kern*font->scale);
 		else
 			x+=font->size/4;
