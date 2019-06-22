@@ -1431,7 +1431,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = mem_alloc(len);
+					f.matched_filter = mem_alloc(len+1);
 					strcpy(f.matched_filter, filter);
 					array_push_size(list, &f, sizeof(found_file));
 				}

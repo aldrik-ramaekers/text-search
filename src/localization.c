@@ -171,8 +171,8 @@ void load_available_localizations()
 	
 	set_active_directory(binary_path);
 	
-	//platform_list_files_block(&file_list, "data/translations/", 
-    //"*.mo", false);
+	platform_list_files_block(&file_list, "data/translations/", 
+							  "*.mo", false);
 	
 	for (s32 i = 0; i < file_list.length; i++)
 	{
