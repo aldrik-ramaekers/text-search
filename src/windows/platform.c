@@ -4,11 +4,15 @@
 #include <sysinfoapi.h>
 #include <wingdi.h>
 #include <errno.h>
+
+#if 0
 #include <ole2.h>
+#endif
 
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
 
+#if 0
 typedef struct {
 	IDataObject ido;
 	int ref_count;
@@ -26,6 +30,7 @@ typedef struct {
 	DWORD m_iItemSelected;
 	IDataObject *m_pDataObject;
 } WF_IDropTarget;
+#endif
 
 struct t_platform_window
 {
@@ -38,7 +43,10 @@ struct t_platform_window
 	s32 min_height;
 	s32 max_width;
 	s32 max_height;
+	
+#if 0
 	WF_IDropTarget *drop_target;
+#endif
 	
 	// shared window properties
 	s32 width;
@@ -48,6 +56,7 @@ struct t_platform_window
 	struct drag_drop_info drag_drop_info;
 };
 
+#if 0
 typedef struct WF_IDropTargetVtbl
 {
 	BEGIN_INTERFACE
@@ -71,6 +80,7 @@ typedef struct WF_IDropTargetVtbl
 	
 	END_INTERFACE
 } WF_IDropTargetVtbl;
+#endif
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
 
@@ -364,6 +374,7 @@ void platform_window_set_title(platform_window *window, char *name)
 	SetWindowTextA(window->window_handle, name);
 }
 
+#if 0
 static HRESULT STDMETHODCALLTYPE idroptarget_drop(WF_IDropTarget* This, IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
 {
 	printf("drag drop!\n");
@@ -387,6 +398,7 @@ static WF_IDropTargetVtbl idt_vtbl = {
 	idroptarget_dragleave,
 	idroptarget_drop
 };
+#endif
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
@@ -516,6 +528,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			
 			glMatrixMode(GL_MODELVIEW);
 			
+#if 0
 			OleInitialize(NULL);
 			
 			WF_IDropTarget *pDropTarget = malloc(sizeof(WF_IDropTarget));
@@ -526,6 +539,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			window.drop_target = pDropTarget;
 			window.drop_target->idt.lpVtbl = (IDropTargetVtbl*)&idt_vtbl;
 			RegisterDragDrop(window.window_handle, (LPDROPTARGET)pDropTarget);
+#endif
 		}
 	}
 	
