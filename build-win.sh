@@ -19,3 +19,9 @@ if [ "$1" == "-r" ]; then
    wine ./text-search.exe
 	cd ..
 fi
+
+if [ "$1" == "-w" ]; then
+	cd bin
+   gdb -ex run ./text-search.exe
+	cd ..
+fi

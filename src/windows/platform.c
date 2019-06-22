@@ -705,10 +705,10 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	
 	s32 len = strlen(filter);
 	
-	char *start_dir_fix = mem_alloc(PATH_MAX);
+	char *start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
 	sprintf(start_dir_fix, "%s*", start_dir);
 	
-	char *start_dir_clean = mem_alloc(PATH_MAX);
+	char *start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
 	strcpy(start_dir_clean, start_dir);
 	
 	WIN32_FIND_DATAA file_info;
@@ -727,7 +727,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 				continue;
 			
-			char *subdirname_buf = mem_alloc(PATH_MAX);
+			char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 			
 			strcpy(subdirname_buf, start_dir_clean);
 			strcat(subdirname_buf, name);
@@ -747,7 +747,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if (string_match(filter, name))
 			{
 				// is file
-				char *buf = mem_alloc(PATH_MAX);
+				char *buf = mem_alloc(MAX_INPUT_LENGTH);
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;

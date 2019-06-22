@@ -1006,6 +1006,8 @@ int main_loop()
 	about_page_destroy();
 	settings_page_destroy();
 	
+    destroy_available_localizations();
+	
 	// cleanup ui
 	ui_destroy_textbox(&textbox_path);
 	ui_destroy_textbox(&textbox_search_text);
@@ -1036,8 +1038,6 @@ int main_loop()
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
 	platform_destroy_window(&window);
-	
-	destroy_available_localizations();
 	
 #if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 	memory_print_leaks();
