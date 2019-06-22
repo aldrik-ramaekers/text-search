@@ -5,8 +5,32 @@
 #include <wingdi.h>
 #include <errno.h>
 
+#if 0
+#include <ole2.h>
+#endif
+
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
+
+#if 0
+typedef struct {
+	IDataObject ido;
+	int ref_count;
+	FORMATETC *m_pFormatEtc;
+	STGMEDIUM *m_pStgMedium;
+	LONG	   m_nNumFormats;
+	LONG m_lRefCount;
+} WF_IDataObject;
+
+typedef struct {
+	IDropTarget idt;
+	LONG	m_lRefCount;
+	HWND	m_hWnd;
+	BOOL  m_fAllowDrop;
+	DWORD m_iItemSelected;
+	IDataObject *m_pDataObject;
+} WF_IDropTarget;
+#endif
 
 struct t_platform_window
 {
@@ -15,11 +39,22 @@ struct t_platform_window
 	HGLRC gl_context;
 	WNDCLASS window_class;
 	
+<<<<<<< HEAD
     s32 min_width;
+=======
+	s32 min_width;
+>>>>>>> master
 	s32 min_height;
 	s32 max_width;
 	s32 max_height;
 	
+<<<<<<< HEAD
+=======
+#if 0
+	WF_IDropTarget *drop_target;
+#endif
+	
+>>>>>>> master
 	// shared window properties
 	s32 width;
 	s32 height;
@@ -27,6 +62,32 @@ struct t_platform_window
 	u8 has_focus;
 	struct drag_drop_info drag_drop_info;
 };
+
+#if 0
+typedef struct WF_IDropTargetVtbl
+{
+	BEGIN_INTERFACE
+	
+		HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragEnter )( 
+		WF_IDropTarget __RPC_FAR * This,
+		/* [unique][in] */ WF_IDataObject __RPC_FAR *pDataObj,
+		/* [in] */ DWORD grfKeyState,
+		/* [in] */ POINTL pt,
+		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+	
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragLeave )( 
+		WF_IDropTarget __RPC_FAR * This);
+	
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Drop )( 
+		WF_IDropTarget __RPC_FAR * This,
+		/* [unique][in] */ IDataObject __RPC_FAR *pDataObj,
+		/* [in] */ DWORD grfKeyState,
+		/* [in] */ POINTL pt,
+		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+	
+	END_INTERFACE
+} WF_IDropTargetVtbl;
+#endif
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
 
@@ -320,6 +381,32 @@ void platform_window_set_title(platform_window *window, char *name)
 	SetWindowTextA(window->window_handle, name);
 }
 
+#if 0
+static HRESULT STDMETHODCALLTYPE idroptarget_drop(WF_IDropTarget* This, IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	printf("drag drop!\n");
+	return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE idroptarget_dragenter(WF_IDropTarget* This, WF_IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	printf("drag enter!\n");
+	return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE idroptarget_dragleave(WF_IDropTarget* This)
+{
+	printf("drag leave!\n");
+	return S_OK;
+}
+
+static WF_IDropTargetVtbl idt_vtbl = {
+	idroptarget_dragenter,
+	idroptarget_dragleave,
+	idroptarget_drop
+};
+#endif
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
 	
@@ -447,6 +534,19 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
 			
 			glMatrixMode(GL_MODELVIEW);
+			
+#if 0
+			OleInitialize(NULL);
+			
+			WF_IDropTarget *pDropTarget = malloc(sizeof(WF_IDropTarget));
+			pDropTarget->m_lRefCount = 1;
+			pDropTarget->m_hWnd = window.window_handle;
+			pDropTarget->m_fAllowDrop = TRUE;
+			
+			window.drop_target = pDropTarget;
+			window.drop_target->idt.lpVtbl = (IDropTargetVtbl*)&idt_vtbl;
+			RegisterDragDrop(window.window_handle, (LPDROPTARGET)pDropTarget);
+#endif
 		}
 	}
 	
@@ -469,6 +569,7 @@ u8 platform_window_is_valid(platform_window *window)
 
 void platform_close_window(platform_window *window)
 {
+	//RevokeDragDrop(window->window_handle);
 	ReleaseDC(window->window_handle, window->hdc);
 	CloseWindow(window->window_handle);
 	DestroyWindow(window->window_handle);
@@ -611,10 +712,10 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	
 	s32 len = strlen(filter);
 	
-	char *start_dir_fix = mem_alloc(PATH_MAX);
+	char *start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
 	sprintf(start_dir_fix, "%s*", start_dir);
 	
-	char *start_dir_clean = mem_alloc(PATH_MAX);
+	char *start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
 	strcpy(start_dir_clean, start_dir);
 	
 	WIN32_FIND_DATAA file_info;
@@ -633,7 +734,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 				continue;
 			
-			char *subdirname_buf = mem_alloc(PATH_MAX);
+			char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 			
 			strcpy(subdirname_buf, start_dir_clean);
 			strcat(subdirname_buf, name);
@@ -653,7 +754,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if (string_match(filter, name))
 			{
 				// is file
-				char *buf = mem_alloc(PATH_MAX);
+				char *buf = mem_alloc(MAX_INPUT_LENGTH);
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;

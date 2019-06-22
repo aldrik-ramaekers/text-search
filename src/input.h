@@ -130,7 +130,7 @@
 
 #define KEY_LAST KEY_MENU
 
-#define MAX_KEYCODE KEY_LAST
+#define MAX_KEYCODE 512
 
 #define MOUSE_DOWN (1 << 1)
 #define MOUSE_RELEASE (1 << 2)
@@ -147,7 +147,7 @@
 #endif
 
 #ifdef OS_WINDOWS
-#define MAX_INPUT_LENGTH 32767+1
+#define MAX_INPUT_LENGTH 4096+1
 #define MAX_PATH_LENGTH 259+1
 #endif
 

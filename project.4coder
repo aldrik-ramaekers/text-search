@@ -28,6 +28,7 @@ command_list = {
 	  .out = "*compilation*", .footer_panel = true,
 	  .cmd = { 
 				{ "./build.sh -r", .os = "linux" },
+				{ "build-win.sh -w", .os = "win" },
 			 },
 	},
 	{ .name = "build-run-win",

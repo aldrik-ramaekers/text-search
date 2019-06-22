@@ -93,7 +93,7 @@ s32 scroll_y = 0;
 // TODO(Aldrik): implement diff option
 // TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
 // TODO(Aldrik): drag drop feedback box bg shadow
-// TODO(Aldrik): drag and drop implement on windows
+// TODO(Aldrik): drag and drop implement on windows.
 
 char *text_to_find;
 

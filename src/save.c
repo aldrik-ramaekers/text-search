@@ -297,6 +297,7 @@ static void* import_results_d(void *arg)
 	
 	char start_path[MAX_INPUT_LENGTH];
 	sprintf(start_path, "%s%s", binary_path, "/data/export/");
+<<<<<<< HEAD
 	
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
@@ -308,6 +309,19 @@ static void* import_results_d(void *arg)
 	
 	if (path_buf[0] == 0) return 0;
 	
+=======
+	
+	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
+	args->buffer = path_buf;
+	args->type = OPEN_FILE;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
+	args->start_path = start_path;
+	
+	platform_open_file_dialog_block(args);
+	
+	if (path_buf[0] == 0) return 0;
+	
+>>>>>>> master
 	import_results_from_file(search_result, path_buf);
 	return 0;
 }
