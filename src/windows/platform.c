@@ -4,9 +4,28 @@
 #include <sysinfoapi.h>
 #include <wingdi.h>
 #include <errno.h>
+#include <ole2.h>
 
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
+
+typedef struct {
+	IDataObject ido;
+	int ref_count;
+	FORMATETC *m_pFormatEtc;
+	STGMEDIUM *m_pStgMedium;
+	LONG	   m_nNumFormats;
+	LONG m_lRefCount;
+} WF_IDataObject;
+
+typedef struct {
+	IDropTarget idt;
+	LONG	m_lRefCount;
+	HWND	m_hWnd;
+	BOOL  m_fAllowDrop;
+	DWORD m_iItemSelected;
+	IDataObject *m_pDataObject;
+} WF_IDropTarget;
 
 struct t_platform_window
 {
@@ -19,6 +38,7 @@ struct t_platform_window
 	s32 min_height;
 	s32 max_width;
 	s32 max_height;
+	WF_IDropTarget *drop_target;
 	
 	// shared window properties
 	s32 width;
@@ -27,6 +47,30 @@ struct t_platform_window
 	u8 has_focus;
 	struct drag_drop_info drag_drop_info;
 };
+
+typedef struct WF_IDropTargetVtbl
+{
+	BEGIN_INTERFACE
+	
+		HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragEnter )( 
+		WF_IDropTarget __RPC_FAR * This,
+		/* [unique][in] */ WF_IDataObject __RPC_FAR *pDataObj,
+		/* [in] */ DWORD grfKeyState,
+		/* [in] */ POINTL pt,
+		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+	
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragLeave )( 
+		WF_IDropTarget __RPC_FAR * This);
+	
+	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Drop )( 
+		WF_IDropTarget __RPC_FAR * This,
+		/* [unique][in] */ IDataObject __RPC_FAR *pDataObj,
+		/* [in] */ DWORD grfKeyState,
+		/* [in] */ POINTL pt,
+		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
+	
+	END_INTERFACE
+} WF_IDropTargetVtbl;
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
 
@@ -320,6 +364,30 @@ void platform_window_set_title(platform_window *window, char *name)
 	SetWindowTextA(window->window_handle, name);
 }
 
+static HRESULT STDMETHODCALLTYPE idroptarget_drop(WF_IDropTarget* This, IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	printf("drag drop!\n");
+	return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE idroptarget_dragenter(WF_IDropTarget* This, WF_IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
+{
+	printf("drag enter!\n");
+	return S_OK;
+}
+
+static HRESULT STDMETHODCALLTYPE idroptarget_dragleave(WF_IDropTarget* This)
+{
+	printf("drag leave!\n");
+	return S_OK;
+}
+
+static WF_IDropTargetVtbl idt_vtbl = {
+	idroptarget_dragenter,
+	idroptarget_dragleave,
+	idroptarget_drop
+};
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
 	
@@ -447,6 +515,17 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
 			
 			glMatrixMode(GL_MODELVIEW);
+			
+			OleInitialize(NULL);
+			
+			WF_IDropTarget *pDropTarget = malloc(sizeof(WF_IDropTarget));
+			pDropTarget->m_lRefCount = 1;
+			pDropTarget->m_hWnd = window.window_handle;
+			pDropTarget->m_fAllowDrop = TRUE;
+			
+			window.drop_target = pDropTarget;
+			window.drop_target->idt.lpVtbl = (IDropTargetVtbl*)&idt_vtbl;
+			RegisterDragDrop(window.window_handle, (LPDROPTARGET)pDropTarget);
 		}
 	}
 	
@@ -469,6 +548,7 @@ u8 platform_window_is_valid(platform_window *window)
 
 void platform_close_window(platform_window *window)
 {
+	//RevokeDragDrop(window->window_handle);
 	ReleaseDC(window->window_handle, window->hdc);
 	CloseWindow(window->window_handle);
 	DestroyWindow(window->window_handle);

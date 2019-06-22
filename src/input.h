@@ -130,7 +130,7 @@
 
 #define KEY_LAST KEY_MENU
 
-#define MAX_KEYCODE KEY_LAST
+#define MAX_KEYCODE 512
 
 #define MOUSE_DOWN (1 << 1)
 #define MOUSE_RELEASE (1 << 2)

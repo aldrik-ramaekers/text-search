@@ -179,8 +179,6 @@ static s32 translate_keycode(platform_window *window, s32 scancode)
     s32 keySym;
 	
     // Valid key code range is  [8,255], according to the Xlib manual
-    if (scancode < 8 || scancode > 255)
-        return KEY_UNKNOWN;
 	
     if (1)
     {
@@ -426,7 +424,7 @@ static void create_key_tables(platform_window window)
 	}
 #endif
 	
-	for (scancode = 0;  scancode < 256;  scancode++)
+	for (scancode = 0;  scancode < MAX_KEYCODE;  scancode++)
 	{
 		// Translate the un-translated key codes using traditional X11 KeySym
 		// lookups

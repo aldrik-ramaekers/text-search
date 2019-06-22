@@ -90,6 +90,10 @@ s32 scroll_y = 0;
 // TODO(Aldrik): autocomplete path with tab
 // TODO(Aldrik): drag and drop to load saved file.
 // TODO(Aldrik): option to make array reserve n spaces on reallocate
+// TODO(Aldrik): implement diff option
+// TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
+// TODO(Aldrik): drag drop feedback box bg shadow
+// TODO(Aldrik): drag and drop implement on windows
 
 char *text_to_find;
 
