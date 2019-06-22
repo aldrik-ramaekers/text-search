@@ -15,14 +15,17 @@ struct t_platform_window
 	HGLRC gl_context;
 	WNDCLASS window_class;
 	
-	s32 width;
-	s32 height;
-	s32 min_width;
+    s32 min_width;
 	s32 min_height;
 	s32 max_width;
 	s32 max_height;
+	
+	// shared window properties
+	s32 width;
+	s32 height;
 	u8 is_open;
 	u8 has_focus;
+	struct drag_drop_info drag_drop_info;
 };
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
@@ -655,7 +658,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				
 				found_file f;
 				f.path = buf;
-				f.matched_filter = mem_alloc(len);
+				f.matched_filter = mem_alloc(len+1);
 				strcpy(f.matched_filter, filter);
 				array_push_size(list, &f, sizeof(found_file));
 			}

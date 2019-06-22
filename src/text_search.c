@@ -63,6 +63,9 @@ image *search_img;
 image *error_img;
 image *directory_img;
 image *sloth_img;
+image *drag_drop_img;
+image *notification_bg_img;
+
 font *font_medium;
 font *font_small;
 font *font_mini;
@@ -87,6 +90,10 @@ s32 scroll_y = 0;
 // TODO(Aldrik): autocomplete path with tab
 // TODO(Aldrik): drag and drop to load saved file.
 // TODO(Aldrik): option to make array reserve n spaces on reallocate
+// TODO(Aldrik): implement diff option
+// TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
+// TODO(Aldrik): drag drop feedback box bg shadow
+// TODO(Aldrik): drag and drop implement on windows
 
 char *text_to_find;
 
@@ -287,6 +294,35 @@ static void find_text_in_files(char *text_to_find)
 	
 	thread thr = thread_start(find_text_in_files_t, text_to_find);
 	thread_detach(&thr);
+}
+
+static void render_drag_drop_feedback(platform_window *window)
+{
+	if (window->drag_drop_info.state == DRAG_DROP_ENTER)
+	{
+		char *text = localize("drag_drop_import");
+		static s32 rec_width = 450;
+		static s32 rec_height = 200;
+		static s32 icon_width = 100;
+		static s32 icon_height = 100;
+		s32 rec_pos_x = (window->width / 2) - (rec_width / 2);
+		s32 rec_pos_y = (window->height / 2) - (rec_height / 2);
+		s32 icon_pos_x = rec_pos_x + (rec_width / 2) - (icon_width / 2);
+		s32 icon_pos_y = rec_pos_y + 30;
+		s32 text_w = calculate_text_width(font_small, text);
+		s32 text_pos_y = rec_pos_y + rec_height - font_small->size - 35;
+		s32 text_pos_x = rec_pos_x + (rec_width / 2) - (text_w / 2);
+		
+		render_rectangle(0, 0, window->width, window->height, rgba(0,0,0,180));
+		render_image(notification_bg_img, rec_pos_x, rec_pos_y, rec_width, rec_height);
+		render_image(drag_drop_img, icon_pos_x, icon_pos_y, icon_width, icon_height);
+		render_text(font_small, text_pos_x, text_pos_y, text, rgb(35,31,32));
+	}
+	
+	if (window->drag_drop_info.state == DRAG_DROP_FINISHED)
+	{
+		import_results_from_file(&global_search_result, window->drag_drop_info.path);
+	}
 }
 
 static void render_status_bar(platform_window *window, font *font_small)
@@ -596,6 +632,8 @@ int main_loop()
 	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
 	directory_img = assets_load_image("data/imgs/folder.png", false);
 	error_img = assets_load_image("data/imgs/error.png", false);
+	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
+	notification_bg_img = assets_load_image("data/imgs/notification_bg.png", false);
 	
 	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
 	font_small = assets_load_font("data/fonts/mono.ttf", 16);
@@ -918,6 +956,7 @@ int main_loop()
 			}
 		}
 		
+		render_drag_drop_feedback(&window);
 		
 		assets_do_post_process();
 		
@@ -967,6 +1006,8 @@ int main_loop()
 	about_page_destroy();
 	settings_page_destroy();
 	
+    destroy_available_localizations();
+	
 	// cleanup ui
 	ui_destroy_textbox(&textbox_path);
 	ui_destroy_textbox(&textbox_search_text);
@@ -986,6 +1027,8 @@ int main_loop()
 	assets_destroy_image(sloth_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
+	assets_destroy_image(drag_drop_img);
+	assets_destroy_image(notification_bg_img);
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);
@@ -995,8 +1038,6 @@ int main_loop()
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
 	platform_destroy_window(&window);
-	
-	destroy_available_localizations();
 	
 #if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 	memory_print_leaks();
