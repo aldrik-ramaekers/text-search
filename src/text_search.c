@@ -1,8 +1,8 @@
 #include "config.h"
 #include "project_base.h"
 
-#define MATCH_RESERVE_COUNT 5000
-#define ERROR_RESERVE_COUNT 20
+#define FILE_RESERVE_COUNT 5000
+#define ERROR_RESERVE_COUNT 10
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
@@ -88,12 +88,12 @@ s32 scroll_y = 0;
 // TODO(Aldrik): run search on enter press
 // TODO(Aldrik): autocomplete path with tab
 // TODO(Aldrik): drag and drop to load saved file.
-// TODO(Aldrik): option to make array reserve n spaces on reallocate
 // TODO(Aldrik): implement diff option
 // TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
 // TODO(Aldrik): drag and drop implement on windows
 // TODO(Aldrik): putting '=' in search text breaks config file
 // TODO(Aldrik): replace strcpy with strncpy for security
+// TODO(Aldrik): put mouse position offscreen when window loses focus
 
 char *text_to_find;
 
@@ -696,12 +696,14 @@ int main_loop()
 	global_search_result.done_finding_files = false;
 	
 	global_search_result.errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
-	array_reserve(&global_search_result.errors, MATCH_RESERVE_COUNT);
+	array_reserve(&global_search_result.errors, ERROR_RESERVE_COUNT);
 	
 	reset_status_text();
 	
 	global_search_result.files = array_create(sizeof(text_match));
-	array_reserve(&global_search_result.files, MATCH_RESERVE_COUNT);
+	// alocate space for 1000 extra files when limit is reached
+	global_search_result.files.reserve_jump = 1000;
+	array_reserve(&global_search_result.files, FILE_RESERVE_COUNT);
 	
 	// load config
 	settings_config config = settings_config_load_from_file("data/config.txt");

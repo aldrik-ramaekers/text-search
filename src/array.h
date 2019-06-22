@@ -6,6 +6,7 @@ typedef struct t_array
 	u32 length;
 	u32 reserved_length;
 	u16 entry_size;
+	u16 reserve_jump;
 	void *data;
 	mutex mutex;
 } array;

@@ -5,6 +5,7 @@ array array_create(u16 entry_size)
 	new_array.reserved_length = 0;
 	new_array.entry_size = entry_size;
 	new_array.data = 0;
+	new_array.reserve_jump = 1;
 	new_array.mutex = mutex_create();
 	
 	return new_array;
@@ -14,19 +15,20 @@ int array_push(array *array, void *data)
 {
 	assert(array);
 	assert(data);
+	assert(array->reserve_jump >= 1);
 	
 	mutex_lock(&array->mutex);
 	array->length++;
 	
 	if (!array->data)
 	{
-		array->data = mem_alloc(array->entry_size);
-		array->reserved_length = 1;
+		array->data = mem_alloc(array->entry_size * array->reserve_jump);
+		array->reserved_length = array->reserve_jump;
 	}
 	
 	if (array->reserved_length < array->length)
 	{
-		array->reserved_length = array->length;
+		array->reserved_length += array->reserve_jump;
 		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
 	}
 	
@@ -42,19 +44,20 @@ int array_push_size(array *array, void *data, s32 data_size)
 {
 	assert(array);
 	assert(data);
+	assert(array->reserve_jump >= 1);
 	
 	mutex_lock(&array->mutex);
 	array->length++;
 	
 	if (!array->data)
 	{
-		array->data = mem_alloc(array->entry_size);
-		array->reserved_length = 1;
+		array->data = mem_alloc(array->entry_size * array->reserve_jump);
+		array->reserved_length = array->reserve_jump;
 	}
 	
 	if (array->reserved_length < array->length)
 	{
-		array->reserved_length = array->length;
+		array->reserved_length += array->reserve_jump;
 		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
 	}
 	
