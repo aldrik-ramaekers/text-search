@@ -72,6 +72,8 @@ font *font_mini;
 image *sloth_small_img;
 s32 scroll_y = 0;
 
+platform_window *main_window;
+
 #include "save.h"
 #include "about.h"
 #include "settings.h"
@@ -93,7 +95,7 @@ s32 scroll_y = 0;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): only allow import of .tts files (drag and drop)
+// TODO(Aldrik): do .tts file format checks when importing to make sure we never crash
 
 char *text_to_find;
 
@@ -701,6 +703,7 @@ int main_loop()
 	platform_init();
 	
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
+	main_window = &window;
 	
 	assets_create();
 	about_page_create();

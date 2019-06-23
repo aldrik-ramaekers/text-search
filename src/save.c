@@ -116,6 +116,12 @@ bool export_results(search_result *search_result)
 
 void import_results_from_file(search_result *search_result, char *path_buf)
 {
+	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
+	{
+		platform_show_message(main_window, localize("invalid_search_result_file"), localize("error_importing_results"));
+		return;
+	}
+	
 	for (s32 i = 0; i < global_search_result.files.length; i++)
 	{
 		text_match *match = array_at(&global_search_result.files, i);
