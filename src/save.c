@@ -153,15 +153,15 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			
 			if (index == 0)
 			{
-				strcpy(search_directory, buffer+ offset_);
+				strncpy(search_directory, buffer+ offset_, MAX_INPUT_LENGTH);
 			}
 			else if (index == 1)
 			{
-				strcpy(file_filter, buffer+ offset_);
+				strncpy(file_filter, buffer+ offset_, MAX_INPUT_LENGTH);
 			}
 			else if (index == 2)
 			{
-				strcpy(text_to_find, buffer+ offset_);
+				strncpy(text_to_find, buffer+ offset_, MAX_INPUT_LENGTH);
 				buffer += i + 1;
 				break;
 			}
@@ -171,9 +171,9 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		}
 	}
 	
-	strcpy(search_result->search_directory_buffer, search_directory);
-	strcpy(search_result->filter_buffer, file_filter);
-	strcpy(search_result->text_to_find_buffer, text_to_find);
+	strncpy(search_result->search_directory_buffer, search_directory, MAX_INPUT_LENGTH);
+	strncpy(search_result->filter_buffer, file_filter, MAX_INPUT_LENGTH);
+	strncpy(search_result->text_to_find_buffer, text_to_find, MAX_INPUT_LENGTH);
 	
 	mem_free(search_directory);
 	mem_free(file_filter);
@@ -214,7 +214,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char *path = mem_alloc(PATH_MAX);
-				strcpy(path, buffer+current_data_start);
+				strncpy(path, buffer+current_data_start, MAX_INPUT_LENGTH);
 				
 				match.file.path = path;
 				
@@ -225,7 +225,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char *filter = mem_alloc(PATH_MAX);
-				strcpy(filter, buffer+current_data_start);
+				strncpy(filter, buffer+current_data_start, MAX_INPUT_LENGTH);
 				
 				match.file.matched_filter = filter;
 				
@@ -236,7 +236,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char file_error[10];
-				strncpy(file_error, buffer+current_data_start, 9);
+				strncpy(file_error, buffer+current_data_start, 10);
 				file_error[9] = 0;
 				
 				match.file_error = atoi(file_error);
@@ -248,7 +248,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 			{
 				buffer[i] = 0;
 				char match_count[10];
-				strncpy(match_count, buffer+current_data_start, 9);
+				strncpy(match_count, buffer+current_data_start, 10);
 				match_count[9] = 0;
 				
 				match.match_count = atoi(match_count);

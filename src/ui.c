@@ -395,7 +395,11 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	else if (is_left_clicked(global_ui_context.mouse) || is_left_down(global_ui_context.mouse))
 	{
 		state->state = false;
-		
+	}
+	
+	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
+	{
+		state->state = false;
 	}
 	
 	if (global_ui_context.layout.scroll.in_scroll)

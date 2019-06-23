@@ -69,7 +69,7 @@ u8 get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
-		strcpy(buffer, cwd);
+		strncpy(buffer, cwd, PATH_MAX);
 	} else {
 		return false;
 	}
@@ -545,7 +545,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window_attributes.colormap = window.cmap;
 	window_attributes.border_pixel = 0;
 	window_attributes.event_mask = KeyPressMask | KeyReleaseMask | PointerMotionMask |
-		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | FocusChangeMask;
+		ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | FocusChangeMask | LeaveWindowMask;
 	
 	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask | CWBorderPixel, &window_attributes);
 	
@@ -997,6 +997,11 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				XSync(window->display, False);
 			}
 		}
+		else if (window->event.type == LeaveNotify)
+		{
+			mouse->x = MOUSE_OFFSCREEN;
+			mouse->y = MOUSE_OFFSCREEN;
+		}
 		else if (window->event.type == ConfigureNotify)
 		{
 			XConfigureEvent xce = window->event.xconfigure;
@@ -1010,6 +1015,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == FocusOut)
 		{
+			mouse->x = MOUSE_OFFSCREEN;
+			mouse->y = MOUSE_OFFSCREEN;
 			window->has_focus = false;
 		}
 		else if (window->event.type == MotionNotify)
@@ -1314,7 +1321,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	FILE *f;
 	
 	char *current_val = mem_alloc(MAX_INPUT_LENGTH);
-	strcpy(current_val, args->buffer);
+	strncpy(current_val, args->buffer, MAX_INPUT_LENGTH);
 	
 	char file_filter[MAX_INPUT_LENGTH];
 	file_filter[0] = 0;
@@ -1352,7 +1359,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	{
 		if (strlen(buffer) > 2 || strcmp(buffer, "/") == 0)
 		{
-			strcpy(args->buffer, buffer);
+			strncpy(args->buffer, buffer, MAX_INPUT_LENGTH);
 			s32 len = strlen(args->buffer);
 			args->buffer[len-1] = 0;
 		}
@@ -1396,7 +1403,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	
 	s32 len = strlen(filter);
 	
-	char *subdirname_buf = mem_alloc(PATH_MAX);
+	char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 	
 	DIR *d;
 	struct dirent *dir;
@@ -1412,7 +1419,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				if ((strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0))
 					continue;
 				
-				strcpy(subdirname_buf, start_dir);
+				strncpy(subdirname_buf, start_dir, MAX_INPUT_LENGTH);
 				strcat(subdirname_buf, dir->d_name);
 				strcat(subdirname_buf, "/");
 				
@@ -1432,7 +1439,8 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 					found_file f;
 					f.path = buf;
 					f.matched_filter = mem_alloc(len+1);
-					strcpy(f.matched_filter, filter);
+					strncpy(f.matched_filter, filter, len+1);
+					
 					array_push_size(list, &f, sizeof(found_file));
 				}
 			}

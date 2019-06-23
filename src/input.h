@@ -4,6 +4,8 @@
 /* The unknown key */
 #define KEY_UNKNOWN -1
 
+#define MOUSE_OFFSCREEN 32767
+
 /* Printable keys */
 #define KEY_SPACE              32
 #define KEY_APOSTROPHE         39  /* ' */

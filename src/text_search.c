@@ -83,19 +83,27 @@ s32 scroll_y = 0;
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
 // TODO(Aldrik): results scrollbar works everywhere
-// TODO(Aldrik): window resize flickers
+// TODO(Aldrik)(windows): window resize flickers
 // TODO(Aldrik): what to show in information tab?
-// TODO(Aldrik): run search on enter press
-// TODO(Aldrik): autocomplete path with tab
-// TODO(Aldrik): drag and drop to load saved file.
+// TODO(Aldrik)(windows)(linux): autocomplete path with tab
+// TODO(Aldrik)(windows): drag and drop to load saved file.
 // TODO(Aldrik): implement diff option
-// TODO(Aldrik): handle multiple file drag and drop (diff, and error if > 2)
-// TODO(Aldrik): drag and drop implement on windows
-// TODO(Aldrik): putting '=' in search text breaks config file
-// TODO(Aldrik): replace strcpy with strncpy for security
-// TODO(Aldrik): put mouse position offscreen when window loses focus
+// TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (diff, and error if > 2)
+// TODO(Aldrik)(windows): drag and drop implement on windows
+// TODO(Aldrik)(windows): replace strcpy with strncpy for security
+// TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
+// TODO(Aldrik)(windows): directory select on windows not working
+// TODO(Aldrik): only allow import of .tts files (drag and drop)
 
 char *text_to_find;
+
+checkbox_state checkbox_recursive;
+textbox_state textbox_search_text;
+textbox_state textbox_path;
+textbox_state textbox_file_filter;
+button_state button_select_directory;
+button_state button_find_text;
+button_state button_cancel;
 
 static void *find_text_in_file_t(void *arg)
 {
@@ -154,7 +162,7 @@ static void *find_text_in_file_t(void *arg)
 			if (search_id == global_search_result.search_id)
 			{
 				mutex_lock(&global_search_result.mutex);
-				strcpy(global_status_bar.error_status_text, localize("generic_file_open_error"));
+				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
 				mutex_unlock(&global_search_result.mutex);
 			}
 		}
@@ -183,7 +191,7 @@ static void* find_text_in_files_t(void *arg)
 	s32 current_search_id = global_search_result.search_id;
 	
 	array threads = array_create(sizeof(thread));
-	strcpy(global_status_bar.error_status_text, "");
+	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
 	
 	s32 start = 0;
 	s32 len = 0;
@@ -619,7 +627,72 @@ static void set_error(char *message)
 
 static void reset_status_text()
 {
-	strcpy(global_status_bar.result_status_text, localize("no_search_completed"));
+	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
+}
+
+static void do_search()
+{
+	u8 continue_search = true;
+	
+	if (global_search_result.walking_file_system) continue_search = false;
+	if (!global_search_result.done_finding_matches) continue_search = false;
+	
+	if (continue_search)
+	{
+		global_search_result.files_searched = 0;
+		global_search_result.cancel_search = false;
+		scroll_y = 0;
+		global_search_result.found_file_matches = false;
+		global_search_result.done_finding_files = false;
+		reset_status_text();
+		clear_errors();
+		
+		if (strcmp(textbox_path.buffer, "") == 0)
+		{
+			set_error(localize("no_search_directory_specified"));
+			continue_search = false;
+		}
+		
+		if (strcmp(textbox_file_filter.buffer, "") == 0)
+		{
+			set_error(localize("no_file_filter_specified"));
+			continue_search = false;
+		}
+		
+		if (strcmp(textbox_search_text.buffer, "") == 0)
+		{
+			set_error(localize("no_search_text_specified"));
+			continue_search = false;
+		}
+		
+		if (continue_search)
+		{
+			global_search_result.search_id++;
+			
+			global_search_result.walking_file_system = true;
+			global_search_result.done_finding_matches = false;
+			
+			global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
+			global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
+																							  global_search_result.search_result_source_dir_len);
+			
+			for (s32 i = 0; i < global_search_result.files.length; i++)
+			{
+				text_match *match = array_at(&global_search_result.files, i);
+				mem_free(match->file.path);
+				mem_free(match->file.matched_filter);
+			}
+			global_search_result.files.length = 0;
+			
+			global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
+			platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
+								&global_search_result.done_finding_files);
+			
+#if PARALLELIZE_SEARCH
+			find_text_in_files(textbox_search_text.buffer);
+#endif
+		}
+	}
 }
 
 #if defined(OS_LINUX) || defined(OS_WINDOWS)
@@ -667,18 +740,18 @@ int main_loop()
 	thread_detach(&asset_queue_worker1);
 	
 	// ui widgets
-	checkbox_state checkbox_recursive = ui_create_checkbox(false);
-	textbox_state textbox_search_text = ui_create_textbox(MAX_INPUT_LENGTH);
-	textbox_state textbox_path = ui_create_textbox(MAX_INPUT_LENGTH);
-	textbox_state textbox_file_filter = ui_create_textbox(MAX_INPUT_LENGTH);
-	button_state button_select_directory = ui_create_button();
-	button_state button_find_text = ui_create_button();
-	button_state button_cancel = ui_create_button();
+	checkbox_recursive = ui_create_checkbox(false);
+	textbox_search_text = ui_create_textbox(MAX_INPUT_LENGTH);
+	textbox_path = ui_create_textbox(MAX_INPUT_LENGTH);
+	textbox_file_filter = ui_create_textbox(MAX_INPUT_LENGTH);
+	button_select_directory = ui_create_button();
+	button_find_text = ui_create_button();
+	button_cancel = ui_create_button();
 	
 	// status bar
 	global_status_bar.result_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.result_status_text[0] = 0;
-	global_status_bar.error_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
+	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
 	// starting values
@@ -716,9 +789,9 @@ int main_loop()
 	char *locale_id = settings_config_get_string(&config, "LOCALE");
 	s32 window_w = settings_config_get_number(&config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(&config, "WINDOW_HEIGHT");
-	strcpy(textbox_path.buffer, path);
-	strcpy(textbox_file_filter.buffer, search_filter);
-	strcpy(textbox_search_text.buffer, search_text);
+	strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
+	strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
+	strncpy(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
 	checkbox_recursive.state = recursive;
 	global_settings_page.max_thread_count = max_thread_count;
 	global_settings_page.max_file_size = max_file_size;
@@ -769,6 +842,7 @@ int main_loop()
 			
 			ui_begin_menu_bar();
 			{
+				// shortcuts begin
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
 				{
 					import_results(&global_search_result);
@@ -784,6 +858,12 @@ int main_loop()
 				{
 					window.is_open = false;
 				}
+				
+				if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state && !textbox_search_text.state)
+				{
+					do_search();
+				}
+				// shortcuts end
 				
 				if (ui_push_menu(localize("file")))
 				{
@@ -866,67 +946,7 @@ int main_loop()
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
 				{
-					u8 continue_search = true;
-					
-					if (global_search_result.walking_file_system) continue_search = false;
-					if (!global_search_result.done_finding_matches) continue_search = false;
-					
-					if (continue_search)
-					{
-						global_search_result.files_searched = 0;
-						global_search_result.cancel_search = false;
-						scroll_y = 0;
-						global_search_result.found_file_matches = false;
-						global_search_result.done_finding_files = false;
-						reset_status_text();
-						clear_errors();
-						
-						if (strcmp(textbox_path.buffer, "") == 0)
-						{
-							set_error(localize("no_search_directory_specified"));
-							continue_search = false;
-						}
-						
-						if (strcmp(textbox_file_filter.buffer, "") == 0)
-						{
-							set_error(localize("no_file_filter_specified"));
-							continue_search = false;
-						}
-						
-						if (strcmp(textbox_search_text.buffer, "") == 0)
-						{
-							set_error(localize("no_search_text_specified"));
-							continue_search = false;
-						}
-						
-						if (continue_search)
-						{
-							global_search_result.search_id++;
-							
-							global_search_result.walking_file_system = true;
-							global_search_result.done_finding_matches = false;
-							
-							global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
-							global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
-																											  global_search_result.search_result_source_dir_len);
-							
-							for (s32 i = 0; i < global_search_result.files.length; i++)
-							{
-								text_match *match = array_at(&global_search_result.files, i);
-								mem_free(match->file.path);
-								mem_free(match->file.matched_filter);
-							}
-							global_search_result.files.length = 0;
-							
-							global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
-							platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
-												&global_search_result.done_finding_files);
-							
-#if PARALLELIZE_SEARCH
-							find_text_in_files(textbox_search_text.buffer);
-#endif
-						}
-					}
+					do_search();
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
 				
@@ -1021,7 +1041,7 @@ int main_loop()
 	about_page_destroy();
 	settings_page_destroy();
 	
-    destroy_available_localizations();
+	destroy_available_localizations();
 	
 	// cleanup ui
 	ui_destroy_textbox(&textbox_path);

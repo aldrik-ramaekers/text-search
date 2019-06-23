@@ -43,14 +43,14 @@ settings_config settings_config_load_from_file(char *path)
 	{
 		char ch = ((char*)content.content)[i];
 		
-		if (ch == '=')
+		if (ch == '=' && !in_literal)
 		{
 			((char*)content.content)[i] = 0;
 			current_entry.name = mem_alloc((i - token_offset)+1);
 			strcpy(current_entry.name, content.content+token_offset);
 			string_trim(current_entry.name);
 		}
-		if (ch == '"')
+		else if (ch == '"')
 		{
 			in_literal = !in_literal;
 			
@@ -106,7 +106,6 @@ s64 settings_config_get_number(settings_config *config, char *name)
 	else
 		return 0;
 }
-
 
 void settings_config_set_string(settings_config *config, char *name, char *value)
 {
