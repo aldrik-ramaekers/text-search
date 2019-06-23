@@ -605,8 +605,9 @@ u8 set_active_directory(char *path)
 	return SetCurrentDirectory(path);
 }
 
-void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
+void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive, u8 include_directories)
 {
+	// TODO(Aldrik): include directories not implemented
 	assert(list);
 	
 	s32 len = strlen(filter);
@@ -640,7 +641,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			strcat(subdirname_buf, "/");
 			
 			// is directory
-			platform_list_files_block(list, subdirname_buf, filter, recursive);
+			platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
 			mem_free(subdirname_buf);
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
@@ -672,7 +673,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
-	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive);
+	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive, info->include_directories);
 	mem_free(info);
 	return 0;
 }
@@ -734,6 +735,7 @@ void *platform_list_files_t(void *args)
 			args_2->start_dir = start_dir;
 			args_2->pattern = filter;
 			args_2->recursive = recursive;
+			args_2->include_directories = 0;
 			
 			thr = thread_start(platform_list_files_t_t, args_2);
 		}
@@ -775,6 +777,7 @@ void platform_list_files(array *list, char *start_dir, char *filter, u8 recursiv
 	args->pattern = filter;
 	args->recursive = recursive;
 	args->state = state;
+	args->include_directories = 0;
 	
 	thread thr = thread_start(platform_list_files_t, args);
 	thread_detach(&thr);

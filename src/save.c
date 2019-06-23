@@ -122,15 +122,8 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		return;
 	}
 	
-	for (s32 i = 0; i < global_search_result.files.length; i++)
-	{
-		text_match *match = array_at(&global_search_result.files, i);
-		mem_free(match->file.path);
-		mem_free(match->file.matched_filter);
-	}
-	global_search_result.files.length = 0;
+	platform_destroy_list_file_result(&global_search_result.files);
 	scroll_y = 0;
-	
 	
 	// sprintf(buffer, "%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
 	file_content content = platform_read_file_content(path_buf, "r");

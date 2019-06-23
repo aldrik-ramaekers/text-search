@@ -87,7 +87,7 @@ platform_window *main_window;
 // TODO(Aldrik): results scrollbar works everywhere
 // TODO(Aldrik)(windows): window resize flickers
 // TODO(Aldrik): what to show in information tab?
-// TODO(Aldrik)(windows)(linux): autocomplete path with tab
+// TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): drag and drop to load saved file.
 // TODO(Aldrik): implement diff option
 // TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (diff, and error if > 2)
@@ -95,7 +95,8 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): do .tts file format checks when importing to make sure we never crash
+// TODO(Aldrik): localize info text
+// TODO(Aldrik): show error when search directory does not exist
 
 char *text_to_find;
 
@@ -678,13 +679,7 @@ static void do_search()
 			global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
 																							  global_search_result.search_result_source_dir_len);
 			
-			for (s32 i = 0; i < global_search_result.files.length; i++)
-			{
-				text_match *match = array_at(&global_search_result.files, i);
-				mem_free(match->file.path);
-				mem_free(match->file.matched_filter);
-			}
-			global_search_result.files.length = 0;
+			platform_destroy_list_file_result(&global_search_result.files);
 			
 			global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
 			platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
@@ -861,10 +856,14 @@ int main_loop()
 				{
 					window.is_open = false;
 				}
-				
-				if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state && !textbox_search_text.state)
+				if (keyboard_is_key_pressed(&keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state && !textbox_search_text.state)
 				{
 					do_search();
+				}
+				if (keyboard_is_key_pressed(&keyboard, KEY_TAB))
+				{
+					platform_autocomplete_path(textbox_path.buffer);
+					keyboard_set_input_text(&keyboard, textbox_path.buffer);
 				}
 				// shortcuts end
 				

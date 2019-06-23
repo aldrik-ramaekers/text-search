@@ -81,6 +81,91 @@ u8 set_active_directory(char *path)
 	return !chdir(path);
 }
 
+
+static void get_name_from_path(char *buffer, char *path)
+{
+	buffer[0] = 0;
+	
+	s32 len = strlen(path);
+	if (len == 1)
+	{
+		return;
+	}
+	
+	char *path_end = path + len;
+	while (*path_end != '/' && path_end >= path)
+	{
+		--path_end;
+	}
+	
+	strncpy(buffer, path_end+1, MAX_INPUT_LENGTH);
+}
+
+static void get_directory_from_path(char *buffer, char *path)
+{
+	buffer[0] = 0;
+	
+	s32 len = strlen(path);
+	if (len == 1)
+	{
+		return;
+	}
+	
+	char *path_end = path + len;
+	while (*path_end != '/' && path_end >= path)
+	{
+		--path_end;
+	}
+	
+	s32 offset = path_end - path;
+	char ch = path[offset+1];
+	path[offset+1] = 0;
+	strncpy(buffer, path, MAX_INPUT_LENGTH);
+	path[offset+1] = ch;
+}
+
+void platform_destroy_list_file_result(array *files)
+{
+	for (s32 i = 0; i < files->length; i++)
+	{
+		found_file *file = array_at(files, i);
+		mem_free(file->path);
+		mem_free(file->matched_filter);
+	}
+	files->length = 0;
+}
+
+void platform_autocomplete_path(char *buffer)
+{
+	char dir[MAX_INPUT_LENGTH]; 
+	char name[MAX_INPUT_LENGTH]; 
+	get_directory_from_path(dir, buffer);
+	get_name_from_path(name, buffer);
+	
+	// nothing to autocomplete
+	if (name[0] == 0)
+	{
+		return;
+	}
+	
+	// create filter
+	strncat(name, "*", MAX_INPUT_LENGTH);
+	
+	
+	array files = array_create(sizeof(found_file));
+	platform_list_files_block(&files, dir, name, false, true);
+	
+	if (files.length > 0)
+	{
+		found_file *file = array_at(&files, 0);
+		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
+	}
+	
+	platform_destroy_list_file_result(&files);
+	
+	array_destroy(&files);
+}
+
 u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
 {
 	u8 result = false;
@@ -1395,7 +1480,7 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 	thread_detach(&thr);
 }
 
-void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive)
+void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive, u8 include_directories)
 {
 	assert(list);
 	
@@ -1414,17 +1499,37 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if (platform_cancel_search) break;
 			set_active_directory(start_dir);
 			
-			if (dir->d_type == DT_DIR && recursive)
+			if (dir->d_type == DT_DIR)
 			{
 				if ((strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0))
 					continue;
 				
-				strncpy(subdirname_buf, start_dir, MAX_INPUT_LENGTH);
-				strcat(subdirname_buf, dir->d_name);
-				strcat(subdirname_buf, "/");
+				if (include_directories)
+				{
+					if (string_match(filter, dir->d_name))
+					{
+						char *buf = mem_alloc(PATH_MAX);
+						//realpath(dir->d_name, buf);
+						sprintf(buf, "%s%s",start_dir, dir->d_name);
+						
+						found_file f;
+						f.path = buf;
+						f.matched_filter = mem_alloc(len+1);
+						strncpy(f.matched_filter, filter, len+1);
+						
+						array_push_size(list, &f, sizeof(found_file));
+					}
+				}
 				
-				// do recursive search
-				platform_list_files_block(list, subdirname_buf, filter, recursive);
+				if (recursive)
+				{
+					strncpy(subdirname_buf, start_dir, MAX_INPUT_LENGTH);
+					strcat(subdirname_buf, dir->d_name);
+					strcat(subdirname_buf, "/");
+					
+					// do recursive search
+					platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
+				}
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.
 			else if (dir->d_type == DT_REG || dir->d_type == DT_UNKNOWN)
@@ -1461,7 +1566,7 @@ char *platform_get_full_path(char *file)
 void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
-	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive);
+	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive, info->include_directories);
 	mem_free(info);
 	return 0;
 }
@@ -1523,6 +1628,7 @@ void *platform_list_files_t(void *args)
 			args_2->start_dir = start_dir;
 			args_2->pattern = filter;
 			args_2->recursive = recursive;
+			args_2->include_directories = 0;
 			
 			thr = thread_start(platform_list_files_t_t, args_2);
 		}
@@ -1564,6 +1670,7 @@ void platform_list_files(array *list, char *start_dir, char *filter, u8 recursiv
 	args->pattern = filter;
 	args->recursive = recursive;
 	args->state = state;
+	args->include_directories = 0;
 	
 	thread thr = thread_start(platform_list_files_t, args);
 	thread_detach(&thr);

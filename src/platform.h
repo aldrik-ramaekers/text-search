@@ -75,6 +75,7 @@ typedef struct t_list_file_args
 	char *start_dir;
 	char *pattern;
 	u8 recursive;
+	u8 include_directories;
 	u8 *state;
 } list_file_args;
 
@@ -108,8 +109,9 @@ u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 l
 void platform_destroy_file_content(file_content *content);
 u8 get_active_directory(char *buffer);
 u8 set_active_directory(char *path);
+void platform_destroy_list_file_result(array *files);
 void platform_show_message(platform_window *window, char *message, char *title);
-void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive);
+void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive, u8 include_directories);
 void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);
 void *platform_open_file_dialog_block(void *arg);
@@ -119,6 +121,7 @@ void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);
 void platform_init();
 void platform_set_icon(platform_window *window, image *img);
+void platform_autocomplete_path(char *buffer);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();
