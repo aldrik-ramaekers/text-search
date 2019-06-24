@@ -96,7 +96,6 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): localize info text
-// TODO(Aldrik): show error when search directory does not exist
 
 char *text_to_find;
 
@@ -650,22 +649,31 @@ static void do_search()
 		reset_status_text();
 		clear_errors();
 		
-		if (strcmp(textbox_path.buffer, "") == 0)
+		// validate input
 		{
-			set_error(localize("no_search_directory_specified"));
-			continue_search = false;
-		}
-		
-		if (strcmp(textbox_file_filter.buffer, "") == 0)
-		{
-			set_error(localize("no_file_filter_specified"));
-			continue_search = false;
-		}
-		
-		if (strcmp(textbox_search_text.buffer, "") == 0)
-		{
-			set_error(localize("no_search_text_specified"));
-			continue_search = false;
+			if (strcmp(textbox_path.buffer, "") == 0)
+			{
+				set_error(localize("no_search_directory_specified"));
+				continue_search = false;
+			}
+			
+			if (strcmp(textbox_file_filter.buffer, "") == 0)
+			{
+				set_error(localize("no_file_filter_specified"));
+				continue_search = false;
+			}
+			
+			if (strcmp(textbox_search_text.buffer, "") == 0)
+			{
+				set_error(localize("no_search_text_specified"));
+				continue_search = false;
+			}
+			
+			if (!platform_directory_exists(textbox_path.buffer))
+			{
+				set_error(localize("search_directory_does_not_exist"));
+				continue_search = false;
+			}
 		}
 		
 		if (continue_search)

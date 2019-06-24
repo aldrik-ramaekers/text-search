@@ -11,6 +11,7 @@
 #include <dirent.h> 
 #include <errno.h>
 #include <dlfcn.h>
+#include <sys/stat.h>
 
 #define GET_ATOM(X) window.X = XInternAtom(window.display, #X, False)
 
@@ -190,6 +191,20 @@ u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 l
 void platform_window_set_title(platform_window *window, char *name)
 {
 	XStoreName(window->display, window->window, name);
+}
+
+u8 platform_directory_exists(char *path)
+{
+	DIR* dir = opendir(path);
+	if (dir) {
+		/* Directory exists. */
+		closedir(dir);
+		return 1;
+	} else if (ENOENT == errno) {
+		return 0; // does not exist
+	} else {
+		return 0; // error opening dir
+	}
 }
 
 file_content platform_read_file_content(char *path, const char *mode)
