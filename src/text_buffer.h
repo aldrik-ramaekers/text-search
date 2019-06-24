@@ -18,6 +18,7 @@ void buffer_write_string(text_buffer *buffer, char *string);
 s64 buffer_read_signed(text_buffer *buffer);
 u64 buffer_read_unsigned(text_buffer *buffer);
 char *buffer_read_string(text_buffer *buffer, char *string_buffer);
+u8 buffer_done_reading(text_buffer *buffer);
 
 void text_buffer_destroy(text_buffer *buffer);
 

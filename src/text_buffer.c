@@ -85,6 +85,11 @@ u64 buffer_read_unsigned(text_buffer *buffer)
 	return string_to_u64(val);
 }
 
+u8 buffer_done_reading(text_buffer *buffer)
+{
+	return buffer->data[buffer->read_cursor] == 0;
+}
+
 char *buffer_read_string(text_buffer *buffer, char *string_buffer)
 {
 	char *data = buffer->data+buffer->read_cursor;
