@@ -18,6 +18,7 @@ typedef struct t_text_match
 	found_file file;
 	u32 match_count;
 	s16 file_error;
+	s32 file_size;
 } text_match;
 
 typedef struct t_status_bar
@@ -89,12 +90,15 @@ platform_window *main_window;
 // TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): drag and drop to load saved file.
-// TODO(Aldrik): implement diff option
-// TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (diff, and error if > 2)
+// TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (error if > 1)
 // TODO(Aldrik)(windows): drag and drop implement on windows
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
+// TODO(Aldrik): make WANT_AUDIO compile option
+// TODO(Aldrik): allow search text to be empty (*)
+// TODO(Aldrik): what to do about long paths that overflow render area
+// TODO(Aldrik): rewrite import export to be more flexible (file.h)
 
 char *text_to_find;
 
@@ -120,6 +124,7 @@ static void *find_text_in_file_t(void *arg)
 		if (global_search_result.cancel_search) { goto finish_early; }
 		
 		content = platform_read_file_content(match->file.path, "r");
+		match->file_size = content.content_length;
 		
 		s32 kb_to_b = global_settings_page.max_file_size * 1000;
 		if (global_settings_page.max_file_size && content.content_length > kb_to_b)
@@ -720,6 +725,30 @@ int main_loop()
 	
 	load_available_localizations();
 	set_locale("en");
+	
+#if 0
+	text_buffer tb = text_buffer_create(5000);
+	
+	buffer_write_signed(&tb, -1234);
+	buffer_write_signed(&tb, -1234293854723984);
+	buffer_write_unsigned(&tb, 1234);
+	buffer_write_string(&tb, "hello my dude");
+	buffer_write_unsigned(&tb, 1234);
+	
+	printf("%ld\n", buffer_read_signed(&tb));
+	printf("%ld\n", buffer_read_signed(&tb));
+	printf("%lu\n", buffer_read_unsigned(&tb));
+	
+	char *tmp_buffer = mem_alloc(MAX_INPUT_LENGTH);
+	printf("%s\n", buffer_read_string(&tb, tmp_buffer));
+	mem_free(tmp_buffer);
+	
+	printf("%lu\n", buffer_read_unsigned(&tb));
+	
+	//printf("\n%s", tb.data);
+	
+	text_buffer_destroy(&tb);
+#endif
 	
 #ifdef MODE_DEVELOPER
 	info_menu_create();

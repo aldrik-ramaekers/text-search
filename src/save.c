@@ -1,4 +1,3 @@
-
 static void *export_result_d(void *arg)
 {
 	search_result *search_result = arg;

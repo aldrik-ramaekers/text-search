@@ -104,6 +104,7 @@ int main_loop();
 #include "string_utils.h"
 #include "settings_config.h"
 #include "localization.h"
+#include "text_buffer.h"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.h"
@@ -134,6 +135,7 @@ int main_loop();
 #include "string_utils.c"
 #include "settings_config.c"
 #include "localization.c"
+#include "text_buffer.c"
 
 #ifdef MODE_DEVELOPER
 #include "profiler.c"
