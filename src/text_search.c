@@ -95,7 +95,6 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): whitespace at bottom right of screen
 
 char *text_to_find;
 
@@ -344,7 +343,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	
 	// result status
 	s32 text_size = calculate_text_width(font_small, global_status_bar.result_status_text);
-	render_rectangle(-1, y, window->width-2, h, rgb(225,225,225));
+	render_rectangle(-1, y, window->width+2, h, rgb(225,225,225));
 	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->size/2) + 1, global_status_bar.result_status_text, global_ui_context.style.foreground);
 	
