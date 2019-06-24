@@ -241,6 +241,14 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
 		
+		if (ch == '\n')
+		{
+			x_ = x;
+			y_ += font->size;
+			++text;
+			continue;
+		}
+		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
 		float sx0, sy0, sx1, sy1;

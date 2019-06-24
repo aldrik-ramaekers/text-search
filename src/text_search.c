@@ -95,7 +95,7 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): localize info text
+// TODO(Aldrik): whitespace at bottom right of screen
 
 char *text_to_find;
 
@@ -563,12 +563,19 @@ static void render_info(platform_window *window, font *font_small)
 			" - Specifies whether or not folders will be recursively searched for file matches."
 		};
 		
+		char *info = localize("info_text");
+		
+		render_text_cutoff(font_small, 10, y, 
+						   info, global_ui_context.style.foreground, window->width - 20);
+		
+#if 0
 		// draw info text
 		for (s32 i = 0; i < directory_info_count; i++)
 		{
 			y += render_text_cutoff(font_small, 10, y, 
 									info_text[i], global_ui_context.style.foreground, window->width - 20);
 		}
+#endif
 	}
 	else
 	{
