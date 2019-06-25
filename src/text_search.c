@@ -93,8 +93,6 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): what to do about long paths that overflow render area
-// TODO(Aldrik): try out mmap and see if this is faster
 // TODO(Aldrik): make parallelization optional, show loading icon instead of progress bar if parallelized
 
 char *text_to_find;
