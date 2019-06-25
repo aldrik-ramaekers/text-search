@@ -48,6 +48,7 @@ static void *export_result_d(void *arg)
 		buffer_write_string(&save_file_buffer, m->file.matched_filter);
 		buffer_write_signed(&save_file_buffer, m->file_error);
 		buffer_write_signed(&save_file_buffer, m->match_count);
+		buffer_write_signed(&save_file_buffer, m->file_size);
 	}
 	
 	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
@@ -98,7 +99,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	save_file_buffer.buffer_size = content.content_length;
 	save_file_buffer.len = content.content_length;
 	
-	// write search result info
+	// read search result info
 	buffer_read_string(&save_file_buffer, search_result->search_directory_buffer);
 	buffer_read_string(&save_file_buffer, search_result->filter_buffer);
 	buffer_read_string(&save_file_buffer, search_result->text_to_find_buffer);
@@ -122,6 +123,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
+		match.file_size = buffer_read_signed(&save_file_buffer);
 		
 		array_push(&search_result->files, &match);
 	}

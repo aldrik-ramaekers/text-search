@@ -87,7 +87,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): results scrollbar works everywhere
 // TODO(Aldrik)(windows): window resize flickers
-// TODO(Aldrik): what to show in information tab?
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): drag and drop to load saved file.
 // TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (error if > 1)
@@ -95,10 +94,9 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): make WANT_AUDIO compile option
-// TODO(Aldrik): allow search text to be empty (*)
 // TODO(Aldrik): what to do about long paths that overflow render area
-// TODO(Aldrik): rewrite import export to be more flexible (file.h)
+// TODO(Aldrik): try out mmap and see if this is faster
+// TODO(Aldrik): make parallelization optional, show loading icon instead of progress bar if parallelized
 
 char *text_to_find;
 
@@ -214,6 +212,7 @@ static void* find_text_in_files_t(void *arg)
 			args->match = array_at(&global_search_result.files, i);
 			args->match->match_count = 0;
 			args->match->file_error = 0;
+			args->match->file_size = 0;
 			args->search_id = current_search_id;
 			
 			// limit thread usage
@@ -436,8 +435,8 @@ static void render_result(platform_window *window, font *font_small)
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
 					if (!match->file_error)
 					{
-						char snum[10];
-						sprintf(snum, "%d", match->match_count);
+						char snum[20];
+						sprintf(snum, "(%d Bytes)", match->file_size);
 						
 						render_text(font_small, 10 + path_width + pattern_width, text_y + (h/2)-(font_small->size/2) + 1, snum, global_ui_context.style.foreground);
 					}
@@ -676,8 +675,9 @@ static void do_search()
 			
 			if (strcmp(textbox_search_text.buffer, "") == 0)
 			{
-				set_error(localize("no_search_text_specified"));
-				continue_search = false;
+				//set_error(localize("no_search_text_specified"));
+				//continue_search = false;
+				strcpy(textbox_search_text.buffer, "*");
 			}
 			
 			if (!platform_directory_exists(textbox_path.buffer))
