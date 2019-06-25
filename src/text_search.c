@@ -85,7 +85,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik): results scrollbar works everywhere
 // TODO(Aldrik)(windows): window resize flickers
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): drag and drop to load saved file.
@@ -472,10 +471,13 @@ static void render_result(platform_window *window, font *font_small)
 		/// scrollbar //////////
 		if (overflow > 0)
 		{
-			if (global_ui_context.mouse->scroll_state == SCROLL_UP)
-				scroll_y+=(h*3);
-			if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-				scroll_y-=70;
+			if (global_ui_context.mouse->y >= start_y && global_ui_context.mouse->y <= start_y + total_space)
+			{
+				if (global_ui_context.mouse->scroll_state == SCROLL_UP)
+					scroll_y+=(h*3);
+				if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
+					scroll_y-=70;
+			}
 			
 			if (scroll_y > 0)
 				scroll_y = 0;
