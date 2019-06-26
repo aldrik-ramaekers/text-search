@@ -612,7 +612,7 @@ static s32 prepare_search_directory_path(char *path, s32 len)
 	}
 #endif
 	
-#ifdef OS_WINDOWS
+#ifdef OS_WINDOWS_SKIP
 	if (path[len-1] != '\\' && len < MAX_INPUT_LENGTH)
 	{
 		path[len] = '/';
