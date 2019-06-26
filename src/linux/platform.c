@@ -1069,8 +1069,10 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
                     /* !!! FIXME: don't use strtok here. It's not reentrant and not in stdinc. */
                     char* name = XGetAtomName(window->display, target);
                     char *token = strtok((char *) p.data, "\r\n");
+					s32 count = 0;
                     while (token != NULL) {
 						if (strcmp("text/uri-list", name)==0) {
+							count++;
 							char *fn = XURIToLocal(token);
 							if (fn)
 							{
@@ -1080,6 +1082,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 						}
                         token = strtok(NULL, "\r\n");
                     }
+					
+					if (count >= 2)
+						platform_show_message(window, localize("multiple_import_not_supported"), localize("error_importing_results"));
                 }
 				
                 /* send reply */

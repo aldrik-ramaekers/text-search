@@ -88,12 +88,13 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): window resize flickers
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): drag and drop to load saved file.
-// TODO(Aldrik)(windows)(linux): handle multiple file drag and drop (error if > 1)
+// TODO(Aldrik)(windows): handle multiple file drag and drop (error if > 1)
 // TODO(Aldrik)(windows): drag and drop implement on windows
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): make parallelization optional, show loading icon instead of progress bar if parallelized
+// TODO(Aldrik): create trial build
 
 char *text_to_find;
 
@@ -725,30 +726,6 @@ int main_loop()
 	
 	load_available_localizations();
 	set_locale("en");
-	
-#if 0
-	text_buffer tb = text_buffer_create(5000);
-	
-	buffer_write_signed(&tb, -1234);
-	buffer_write_signed(&tb, -1234293854723984);
-	buffer_write_unsigned(&tb, 1234);
-	buffer_write_string(&tb, "hello my dude");
-	buffer_write_unsigned(&tb, 1234);
-	
-	printf("%ld\n", buffer_read_signed(&tb));
-	printf("%ld\n", buffer_read_signed(&tb));
-	printf("%lu\n", buffer_read_unsigned(&tb));
-	
-	char *tmp_buffer = mem_alloc(MAX_INPUT_LENGTH);
-	printf("%s\n", buffer_read_string(&tb, tmp_buffer));
-	mem_free(tmp_buffer);
-	
-	printf("%lu\n", buffer_read_unsigned(&tb));
-	
-	//printf("\n%s", tb.data);
-	
-	text_buffer_destroy(&tb);
-#endif
 	
 #ifdef MODE_DEVELOPER
 	info_menu_create();
