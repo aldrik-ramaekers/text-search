@@ -11,8 +11,6 @@
 #define WEBSITE_CONTACT_URL "https://google.com"
 #define WEBSITE_MANUAL_URL "https://google.com"
 
-#define PARALLELIZE_SEARCH false
-
 typedef struct t_text_match
 {
 	found_file file;
@@ -89,7 +87,6 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): make parallelization optional, show loading icon instead of progress bar if parallelized
 // TODO(Aldrik): create trial build
 // TODO(Aldrik): clipboard copy paste
 
@@ -247,27 +244,28 @@ static void* find_text_in_files_t(void *arg)
 		}
 	}
 	
-#if PARALLELIZE_SEARCH
-	if (global_search_result.done_finding_files)
+	if (global_settings_page.enable_parallelization)
 	{
-		if (len != global_search_result.files.length)
+		if (global_search_result.done_finding_files)
+		{
+			if (len != global_search_result.files.length)
+			{
+				start = len;
+				len = global_search_result.files.length;
+				goto do_work;
+			}
+		}
+		else
 		{
 			start = len;
 			len = global_search_result.files.length;
+			thread_sleep(1000);
 			goto do_work;
 		}
+		
+		global_search_result.done_finding_files = false;
+		global_search_result.walking_file_system = false;
 	}
-	else
-	{
-		start = len;
-		len = global_search_result.files.length;
-		thread_sleep(1000);
-		goto do_work;
-	}
-	
-	global_search_result.done_finding_files = false;
-	global_search_result.walking_file_system = false;
-#endif
 	
 	for (s32 i = 0; i < threads.length; i++)
 	{
@@ -361,24 +359,31 @@ static void render_result(platform_window *window, font *font_small)
 	s32 h = 24;
 	
 	s32 render_y = y - WIDGET_PADDING;
+	s32 render_h;
 	
-#if PARALLELIZE_SEARCH
-	s32 render_h = window->height - render_y - 10;
-#else
-	s32 render_h = window->height - render_y - 30;
-#endif
+	if (global_settings_page.enable_parallelization)
+	{
+		render_h = window->height - render_y - 10;
+	}
+	else
+	{
+		render_h = window->height - render_y - 30;
+	}
 	
 	// TODO(Aldrik): make constants.. 30 is status bar height
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
 	if (global_search_result.match_found)
 	{
-#if !PARALLELIZE_SEARCH
-		render_rectangle(0, y-WIDGET_PADDING, (global_search_result.files_searched/(float)global_search_result.files.length)*window->width, 20, rgb(0,200,0));
-		y += 11;
-#else
-		y -= 9;
-#endif
+		if (!global_settings_page.enable_parallelization)
+		{
+			render_rectangle(0, y-WIDGET_PADDING, (global_search_result.files_searched/(float)global_search_result.files.length)*window->width, 20, rgb(0,200,0));
+			y += 11;
+		}
+		else
+		{
+			y -= 9;
+		}
 		
 		s32 path_width = window->width / 1.8;
 		s32 pattern_width = window->width / 6;
@@ -677,9 +682,10 @@ static void do_search()
 			platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
 								&global_search_result.done_finding_files);
 			
-#if PARALLELIZE_SEARCH
-			find_text_in_files(textbox_search_text.buffer);
-#endif
+			if (global_settings_page.enable_parallelization)
+			{
+				find_text_in_files(textbox_search_text.buffer);
+			}
 		}
 	}
 }
@@ -964,14 +970,15 @@ int main_loop()
 		ui_end();
 		// end ui
 		
-#if !PARALLELIZE_SEARCH
-		if (global_search_result.done_finding_files)
+		if (!global_settings_page.enable_parallelization)
 		{
-			find_text_in_files(textbox_search_text.buffer);
-			global_search_result.done_finding_files = false;
-			global_search_result.walking_file_system = false;
+			if (global_search_result.done_finding_files)
+			{
+				find_text_in_files(textbox_search_text.buffer);
+				global_search_result.done_finding_files = false;
+				global_search_result.walking_file_system = false;
+			}
 		}
-#endif
 		
 		// draw info or results
 		{
