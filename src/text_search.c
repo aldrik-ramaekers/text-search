@@ -85,7 +85,6 @@ platform_window *main_window;
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
 // TODO(Aldrik)(windows): autocomplete path with tab
-// TODO(Aldrik)(windows): replace strcpy with strncpy for security
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): create trial build
 // TODO(Aldrik): clipboard copy paste

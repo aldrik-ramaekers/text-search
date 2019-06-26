@@ -650,11 +650,11 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	
 	s32 len = strlen(filter);
 	
-	char *start_dir_fix = mem_alloc(PATH_MAX);
+	char *start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
 	sprintf(start_dir_fix, "%s*", start_dir);
 	
-	char *start_dir_clean = mem_alloc(PATH_MAX);
-	strcpy(start_dir_clean, start_dir);
+	char *start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
+	strncpy(start_dir_clean, start_dir, MAX_INPUT_LENGTH);
 	
 	WIN32_FIND_DATAA file_info;
 	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
@@ -674,7 +674,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			
 			char *subdirname_buf = mem_alloc(PATH_MAX);
 			
-			strcpy(subdirname_buf, start_dir_clean);
+			strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
 			strcat(subdirname_buf, name);
 			strcat(subdirname_buf, "/");
 			
@@ -698,7 +698,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				found_file f;
 				f.path = buf;
 				f.matched_filter = mem_alloc(len+1);
-				strcpy(f.matched_filter, filter);
+				strncpy(f.matched_filter, filter, len+1);
 				array_push_size(list, &f, sizeof(found_file));
 			}
 		}
@@ -849,7 +849,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	if (args->file_filter)
 	{
 		char filter[50];
-		strcpy(filter, args->file_filter);
+		strncpy(filter, args->file_filter, 50);
 		filter[strlen(filter)+1] = 0;
 		info.lpstrFilter = filter;
 	}
@@ -887,7 +887,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	}
 	
 	GetOpenFileNameA(&info);
-	strcpy(args->buffer, info.lpstrFile);
+	strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	
 	return 0;
 }
