@@ -8,43 +8,12 @@
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
 
-typedef struct t_drop_target
-{
-	BEGIN_INTERFACE
-	
-		HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragEnter )( 
-		IDropTarget __RPC_FAR * This,
-		/* [unique][in] */ IDataObject __RPC_FAR *pDataObj,
-		/* [in] */ DWORD grfKeyState,
-		/* [in] */ POINTL pt,
-		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
-	
-	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragOver )( 
-		IDropTarget __RPC_FAR * This,
-		/* [in] */ DWORD grfKeyState,
-		/* [in] */ POINTL pt,
-		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
-	
-	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *DragLeave )( 
-		IDropTarget __RPC_FAR * This);
-	
-	HRESULT ( STDMETHODCALLTYPE __RPC_FAR *Drop )( 
-		IDropTarget __RPC_FAR * This,
-		/* [unique][in] */ IDataObject __RPC_FAR *pDataObj,
-		/* [in] */ DWORD grfKeyState,
-		/* [in] */ POINTL pt,
-		/* [out][in] */ DWORD __RPC_FAR *pdwEffect);
-	
-	END_INTERFACE
-} drop_target;
-
 struct t_platform_window
 {
 	HWND window_handle;
 	HDC hdc;
 	HGLRC gl_context;
 	WNDCLASS window_class;
-	drop_target droptarget;
 	
     s32 min_width;
 	s32 min_height;
@@ -74,7 +43,6 @@ int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	cmd_show = nCmdShow;
 	return main_loop();
 }
-
 
 void platform_destroy_list_file_result(array *files)
 {
@@ -271,6 +239,16 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			break; 
 		}
 	}
+	else if (message == WM_MOUSELEAVE)
+	{
+		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
+		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
+	}
+	else if (message == WM_KILLFOCUS)
+	{
+		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
+		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
+	}
 	else if (message == WM_KEYDOWN)
 	{
 		s32 key = wparam;
@@ -373,26 +351,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 void platform_window_set_title(platform_window *window, char *name)
 {
 	SetWindowTextA(window->window_handle, name);
-}
-
-static HRESULT STDMETHODCALLTYPE DragEnter(IDropTarget* This, IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
-{
-	
-}
-
-static HRESULT STDMETHODCALLTYPE DragLeave(IDropTarget* This)
-{
-	
-}
-
-static HRESULT STDMETHODCALLTYPE DragOver(IDropTarget* This, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
-{
-	
-}
-
-static HRESULT STDMETHODCALLTYPE Drop(IDropTarget* This, IDataObject * pDataObject, DWORD grfKeyState, POINTL pt, DWORD * pdwEffect)
-{
-	
 }
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
@@ -523,14 +481,10 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			
 			glMatrixMode(GL_MODELVIEW);
 			
-			OleInitialize(NULL);
-			
-			window.droptarget.DragEnter = DragEnter;
-			window.droptarget.DragOver = DragOver;
-			window.droptarget.DragLeave = DragLeave;
-			window.droptarget.Drop = Drop;
-			
-			RegisterDragDrop(window.window_handle, (LPDROPTARGET)&window.droptarget);
+			TRACKMOUSEEVENT track;
+			track.cbSize = sizeof(track);
+			track.dwFlags = TME_LEAVE;
+			track.hwndTrack = window.window_handle;
 		}
 	}
 	

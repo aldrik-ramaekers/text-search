@@ -12,6 +12,7 @@ void settings_page_create()
 	global_settings_page.dropdown_language = ui_create_dropdown();
 	global_settings_page.textbox_max_file_size = ui_create_textbox(7);
 	global_settings_page.textbox_max_thread_count = ui_create_textbox(7);
+	global_settings_page.checkbox_parallelize_search = ui_create_checkbox(false);
 }
 
 static void load_current_settings_into_ui()
@@ -21,6 +22,8 @@ static void load_current_settings_into_ui()
 	
 	if (global_settings_page.max_file_size != 0)
 		sprintf(global_settings_page.textbox_max_file_size.buffer, "%d", global_settings_page.max_file_size);
+	
+	global_settings_page.checkbox_parallelize_search.state = global_settings_page.enable_parallelization;
 }
 
 void settings_page_update_render()
@@ -56,6 +59,9 @@ void settings_page_update_render()
 			
 			if (global_settings_page.selected_tab_index == 0)
 			{
+				/////////////////////////////////////
+				// max file size
+				/////////////////////////////////////
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
 					ui_push_text(localize("max_file_size"));
@@ -72,6 +78,9 @@ void settings_page_update_render()
 				}
 				ui_block_end();
 				
+				/////////////////////////////////////
+				// max threads
+				/////////////////////////////////////
 				global_ui_context.layout.offset_y += 10;
 				
 				ui_block_begin(LAYOUT_HORIZONTAL);
@@ -87,6 +96,16 @@ void settings_page_update_render()
 						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
 					}
 					ui_push_text("Threads");
+				}
+				ui_block_end();
+				
+				/////////////////////////////////////
+				// parallelize
+				/////////////////////////////////////
+				global_ui_context.layout.offset_y += 10;
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					ui_push_checkbox(&global_settings_page.checkbox_parallelize_search, "Parallelize file and text search");
 				}
 				ui_block_end();
 			}
@@ -130,6 +149,7 @@ void settings_page_update_render()
 				{
 					global_settings_page.max_thread_count = string_to_s32(global_settings_page.textbox_max_thread_count.buffer);
 					global_settings_page.max_file_size = string_to_s32(global_settings_page.textbox_max_file_size.buffer);
+					global_settings_page.enable_parallelization = global_settings_page.checkbox_parallelize_search.state;
 					
 					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
 					global_settings_page.textbox_max_file_size.buffer[0] = 0; 

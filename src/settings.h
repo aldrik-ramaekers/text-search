@@ -16,11 +16,13 @@ typedef struct t_settings_page
 	dropdown_state dropdown_language;
 	textbox_state textbox_max_file_size;
 	textbox_state textbox_max_thread_count;
+	checkbox_state checkbox_parallelize_search;
 	char *current_locale_id;
 	
 	s32 selected_tab_index;
 	s32 max_thread_count;
 	s32 max_file_size;
+	u8 enable_parallelization;
 } settings_page;
 
 settings_page global_settings_page;

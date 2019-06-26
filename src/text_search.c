@@ -49,6 +49,7 @@ typedef struct t_search_result
 	s32 search_id;
 	u64 start_time;
 	u8 done_finding_files;
+	u8 is_parallelized;
 } search_result;
 
 typedef struct t_find_text_args
@@ -85,16 +86,12 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik)(windows): window resize flickers
 // TODO(Aldrik)(windows): autocomplete path with tab
-// TODO(Aldrik)(windows): drag and drop to load saved file.
-// TODO(Aldrik)(windows): handle multiple file drag and drop (error if > 1)
-// TODO(Aldrik)(windows): drag and drop implement on windows
 // TODO(Aldrik)(windows): replace strcpy with strncpy for security
-// TODO(Aldrik)(windows): put mouse position offscreen when window loses focus/mouse leaves screen
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): make parallelization optional, show loading icon instead of progress bar if parallelized
 // TODO(Aldrik): create trial build
+// TODO(Aldrik): clipboard copy paste
 
 char *text_to_find;
 
@@ -550,36 +547,10 @@ static void render_info(platform_window *window, font *font_small)
 		
 		s32 y = global_ui_context.layout.offset_y;
 		
-		s32 directory_info_count = 11;
-		// TODO(Aldrik): rewrite this so we can use 1 string and split line on \n for translations.
-		char *info_text[]= 
-		{
-			"1. Search directory",
-			" - The absolute path to the folder that should be searched through for text matches.", 
-			"2. File filter",
-			" - Filter files that should be included in the search.",
-			" - Multiple filters can be split using ','.",
-			" - Supports wildcard '*' in filter. (e.g. \"*.jpg,*.png\")",
-			"3. Text filter",
-			" - Filter on text within the filtered files.",
-			" - Supports wildcard '*' in filter. (e.g. \"my name is *\")",
-			"4. Folders",
-			" - Specifies whether or not folders will be recursively searched for file matches."
-		};
-		
 		char *info = localize("info_text");
 		
 		render_text_cutoff(font_small, 10, y, 
 						   info, global_ui_context.style.foreground, window->width - 20);
-		
-#if 0
-		// draw info text
-		for (s32 i = 0; i < directory_info_count; i++)
-		{
-			y += render_text_cutoff(font_small, 10, y, 
-									info_text[i], global_ui_context.style.foreground, window->width - 20);
-		}
-#endif
 	}
 	else
 	{
@@ -612,10 +583,10 @@ static s32 prepare_search_directory_path(char *path, s32 len)
 	}
 #endif
 	
-#ifdef OS_WINDOWS_SKIP
-	if (path[len-1] != '\\' && len < MAX_INPUT_LENGTH)
+#ifdef OS_WINDOWS
+	if ((path[len-1] != '\\' && path[len-1] != '/') && len < MAX_INPUT_LENGTH)
 	{
-		path[len] = '/';
+		path[len] = '\\';
 		path[len+1] = 0;
 		return len+1;
 	}
@@ -657,6 +628,7 @@ static void do_search()
 		scroll_y = 0;
 		global_search_result.found_file_matches = false;
 		global_search_result.done_finding_files = false;
+		global_search_result.is_parallelized = global_settings_page.enable_parallelization;
 		reset_status_text();
 		clear_errors();
 		
@@ -800,6 +772,7 @@ int main_loop()
 	settings_config config = settings_config_load_from_file("data/config.txt");
 	char *path = settings_config_get_string(&config, "SEARCH_DIRECTORY");
 	u8 recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
+	u8 parallelize = settings_config_get_number(&config, "PARALLELIZE_SEARCH");
 	char *search_text = settings_config_get_string(&config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(&config, "FILE_FILTER");
 	s32 max_thread_count = settings_config_get_number(&config, "MAX_THEAD_COUNT");
@@ -811,6 +784,7 @@ int main_loop()
 	strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
 	strncpy(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
 	checkbox_recursive.state = recursive;
+	global_settings_page.enable_parallelization = parallelize;
 	global_settings_page.max_thread_count = max_thread_count;
 	global_settings_page.max_file_size = max_file_size;
 	set_locale(locale_id);
@@ -1044,6 +1018,7 @@ int main_loop()
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
+	settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
 	
 	if (global_localization.active_localization != 0)
 	{
