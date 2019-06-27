@@ -255,7 +255,14 @@ file_content platform_read_file_content(char *path, const char *mode)
 	result.content = mem_alloc(length_to_alloc);
 	if (!result.content) goto done;
 	
-	fread(result.content, 1, length, file);
+	s32 read_result = fread(result.content, 1, length, file);
+	if (read_result != length) 
+	{
+		mem_free(result.content);
+		result.content = 0;
+		return result;
+	}
+	
 	result.content_length = length;
 	
 	((char*)result.content)[length] = 0;
@@ -1341,15 +1348,8 @@ cpu_info platform_get_cpu_info()
 {
 	cpu_info result;
 	
-	FILE *data = fopen("/proc/cpuinfo", "r");
-	if (!data) return result;
-	
-	fseek(data, 0, SEEK_END);
-	s64 file_size = ftell(data);
-	fseek(data, 0, SEEK_SET);
-	
-	char *file_buffer = mem_alloc(50000);
-	fread(file_buffer, 1, 50000, data);
+	file_content content = platform_read_file_content("/proc/cpuinfo", "r");
+	char *file_buffer = content.content;
 	
 	// 3 = model, 4 = model name, 7 = frequency, 8 = cache size, 22  = cache alignment
 	
@@ -1406,8 +1406,7 @@ cpu_info platform_get_cpu_info()
 	}
 	
 	done:
-	fclose(data);
-	mem_free(file_buffer);
+	platform_destroy_file_content(&content);
 	
 	return result;
 }

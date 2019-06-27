@@ -695,7 +695,13 @@ int main_loop()
 {
 	platform_init();
 	
+	
+#ifdef BUILD_TRIAL
+	platform_window window = platform_open_window("Text-search [TRIAL]", 800, 600, 0, 0);
+#else
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
+#endif
+	
 	main_window = &window;
 	
 	assets_create();
@@ -710,8 +716,8 @@ int main_loop()
 #endif
 	
 	search_img = assets_load_image("data/imgs/search.png", false);
-	sloth_img = assets_load_image("data/imgs/sloth.png", false);
-	sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
+	sloth_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
+	sloth_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
 	directory_img = assets_load_image("data/imgs/folder.png", false);
 	error_img = assets_load_image("data/imgs/error.png", false);
 	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
@@ -951,6 +957,14 @@ int main_loop()
 					do_search();
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
+				
+#ifdef BUILD_TRIAL
+				if (checkbox_recursive.state)
+				{
+					checkbox_recursive.state = 0;
+					platform_show_message(&window, "Purchase the full version to enable searching in folders.", "Hello");
+				}
+#endif
 				
 				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
 				{

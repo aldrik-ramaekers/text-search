@@ -3,7 +3,7 @@ void settings_page_create()
 {
 	global_settings_page.active = false;
 	global_settings_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	global_settings_page.sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
+	global_settings_page.sloth_small_img = assets_load_image("data/imgs/sloth_text-search-logo_32px.png", true);
 	global_settings_page.keyboard = keyboard_input_create();
 	global_settings_page.mouse = mouse_input_create();
 	

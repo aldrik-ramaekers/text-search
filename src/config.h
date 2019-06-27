@@ -1,6 +1,8 @@
 #ifndef INCLUDE_CONFIG
 #define INCLUDE_CONFIG
 
+//#define BUILD_TRIAL
+
 // width if a watch window within the info menu.
 #define WATCH_WINDOW_WIDTH 355
 

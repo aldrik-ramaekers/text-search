@@ -2,8 +2,8 @@
 void about_page_create()
 {
 	global_about_page.active = false;
-	global_about_page.sloth_img = assets_load_image("data/imgs/sloth.png", false);
-	global_about_page.sloth_small_img = assets_load_image("data/imgs/sloth_small.png", true);
+	global_about_page.sloth_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
+	global_about_page.sloth_small_img = assets_load_image("data/imgs/sloth_text-search-logo_32px.png", true);
 	global_about_page.font_big = assets_load_font("data/fonts/mono.ttf", 32);
 	global_about_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
 	global_about_page.keyboard = keyboard_input_create();
