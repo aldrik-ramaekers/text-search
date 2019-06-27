@@ -88,6 +88,7 @@ platform_window *main_window;
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): create trial build
 // TODO(Aldrik): clipboard copy paste
+// TODO(Aldrik): get_time function on windows works different then on wine
 
 char *text_to_find;
 

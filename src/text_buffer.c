@@ -17,7 +17,7 @@ void buffer_write_signed(text_buffer *buffer, s64 val)
 	assert(buffer->buffer_size-buffer->len > 32);
 	
 	char nr_buf[32];
-	snprintf(nr_buf, 32, "%ld\n", val);
+	snprintf(nr_buf, 32, "%"PRId64"\n", val);
 	s32 len = strlen(nr_buf);
 	memcpy(buffer->data+buffer->len, nr_buf, len);
 	buffer->len += len;
@@ -30,7 +30,7 @@ void buffer_write_unsigned(text_buffer *buffer, u64 val)
 	assert(buffer->buffer_size-buffer->len > 32);
 	
 	char nr_buf[32];
-	snprintf(nr_buf, 32, "%lu\n", val);
+	snprintf(nr_buf, 32, "%"PRIu64"\n", val);
 	s32 len = strlen(nr_buf);
 	memcpy(buffer->data+buffer->len, nr_buf, len);
 	buffer->len += len;

@@ -4,6 +4,7 @@
 #include <sysinfoapi.h>
 #include <wingdi.h>
 #include <errno.h>
+#include <shlwapi.h>
 
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
@@ -55,16 +56,81 @@ void platform_destroy_list_file_result(array *files)
 	files->length = 0;
 }
 
+static void get_name_from_path(char *buffer, char *path)
+{
+	buffer[0] = 0;
+	
+	s32 len = strlen(path);
+	if (len == 1)
+	{
+		return;
+	}
+	
+	char *path_end = path + len;
+	while ((*path_end != '/' && *path_end != '\\') && path_end >= path)
+	{
+		--path_end;
+	}
+	
+	strncpy(buffer, path_end+1, MAX_INPUT_LENGTH);
+}
+
+static void get_directory_from_path(char *buffer, char *path)
+{
+	buffer[0] = 0;
+	
+	s32 len = strlen(path);
+	if (len == 1)
+	{
+		return;
+	}
+	
+	char *path_end = path + len;
+	while ((*path_end != '/' && *path_end != '\\') && path_end >= path)
+	{
+		--path_end;
+	}
+	
+	s32 offset = path_end - path;
+	char ch = path[offset+1];
+	path[offset+1] = 0;
+	strncpy(buffer, path, MAX_INPUT_LENGTH);
+	path[offset+1] = ch;
+}
 
 void platform_autocomplete_path(char *buffer)
 {
-	// TODO(Aldrik): implement
+	char dir[MAX_INPUT_LENGTH]; 
+	char name[MAX_INPUT_LENGTH]; 
+	get_directory_from_path(dir, buffer);
+	get_name_from_path(name, buffer);
+	
+	// nothing to autocomplete
+	if (name[0] == 0)
+	{
+		return;
+	}
+	
+	// create filter
+	strncat(name, "*", MAX_INPUT_LENGTH);
+	
+	array files = array_create(sizeof(found_file));
+	platform_list_files_block(&files, dir, name, false, true);
+	
+	if (files.length > 0)
+	{
+		found_file *file = array_at(&files, 0);
+		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
+	}
+	
+	platform_destroy_list_file_result(&files);
+	
+	array_destroy(&files);
 }
 
 u8 platform_directory_exists(char *path)
 {
-	// TODO(Aldrik): implement
-	return 1;
+	return PathFileExistsA(path) == TRUE;
 }
 
 static void create_key_tables()
@@ -667,20 +733,39 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	do
 	{
 		char *name = file_info.cFileName;
-		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && recursive)
+		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
 				continue;
 			
-			char *subdirname_buf = mem_alloc(PATH_MAX);
+			if (include_directories)
+			{
+				if (string_match(filter, name))
+				{
+					// is file
+					char *buf = mem_alloc(PATH_MAX);
+					sprintf(buf, "%s%s",start_dir, name);
+					
+					found_file f;
+					f.path = buf;
+					f.matched_filter = mem_alloc(len+1);
+					strncpy(f.matched_filter, filter, len+1);
+					array_push_size(list, &f, sizeof(found_file));
+				}
+			}
 			
-			strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
-			strcat(subdirname_buf, name);
-			strcat(subdirname_buf, "/");
-			
-			// is directory
-			platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
-			mem_free(subdirname_buf);
+			if (recursive)
+			{
+				char *subdirname_buf = mem_alloc(PATH_MAX);
+				
+				strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
+				strcat(subdirname_buf, name);
+				strcat(subdirname_buf, "/");
+				
+				// is directory
+				platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
+				mem_free(subdirname_buf);
+			}
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) ||
