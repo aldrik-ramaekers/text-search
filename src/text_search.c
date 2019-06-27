@@ -86,9 +86,9 @@ platform_window *main_window;
 
 // TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): directory select on windows not working
-// TODO(Aldrik): create trial build
 // TODO(Aldrik): clipboard copy paste
 // TODO(Aldrik): get_time function on windows works different then on wine
+// TODO(Aldrik): limit to 24 fps
 
 char *text_to_find;
 
@@ -695,13 +695,7 @@ int main_loop()
 {
 	platform_init();
 	
-	
-#ifdef BUILD_TRIAL
-	platform_window window = platform_open_window("Text-search [TRIAL]", 800, 600, 0, 0);
-#else
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
-#endif
-	
 	main_window = &window;
 	
 	assets_create();
@@ -957,14 +951,6 @@ int main_loop()
 					do_search();
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
-				
-#ifdef BUILD_TRIAL
-				if (checkbox_recursive.state)
-				{
-					checkbox_recursive.state = 0;
-					platform_show_message(&window, "Purchase the full version to enable searching in folders.", "Hello");
-				}
-#endif
 				
 				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
 				{
