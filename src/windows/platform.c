@@ -423,7 +423,7 @@ void platform_window_set_title(platform_window *window, char *name)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
-	
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	platform_window window;
 	window.has_focus = true;
 	window.window_handle = 0;

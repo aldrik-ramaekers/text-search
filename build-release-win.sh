@@ -16,12 +16,3 @@ fi
 cd ../
 
 cp -r data/ release/
-
-cd release/
-
-zip text-search_x64_win.zip text-search_x64_win.exe -r data
-zip text-search_x64_win_trial.zip text-search_x64_win_trial.exe -r data
-
-rm text-search_x64_win.exe
-rm text-search_x64_win_trial.exe
-rm -rf data/
