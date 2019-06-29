@@ -7,9 +7,9 @@
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
 #define COMPANY_NAME "Aldrik Ramaekers"
-#define WEBSITE_URL "https://google.com"
-#define WEBSITE_CONTACT_URL "https://google.com"
-#define WEBSITE_MANUAL_URL "https://google.com"
+#define WEBSITE_URL "https://slothsoftware.com/home.html"
+#define WEBSITE_CONTACT_URL "https://slothsoftware.com/contact.html"
+#define WEBSITE_MANUAL_URL "https://slothsoftware.com/text-search-manual.html"
 
 typedef struct t_text_match
 {
@@ -84,7 +84,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik)(windows): autocomplete path with tab
 // TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): clipboard copy paste
 // TODO(Aldrik): get_time function on windows works different then on wine
