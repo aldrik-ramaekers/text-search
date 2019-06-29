@@ -1,0 +1,24 @@
+1 VERSIONINFO
+FILEVERSION     1,0,0,0
+PRODUCTVERSION  1,0,0,0
+BEGIN
+  BLOCK "StringFileInfo"
+  BEGIN
+    BLOCK "080904E4"
+    BEGIN
+      VALUE "CompanyName", "sloth Software"
+      VALUE "FileDescription", "Text-search"
+      VALUE "FileVersion", "1.0"
+      VALUE "InternalName", "text_search"
+      VALUE "LegalCopyright", "Text-search"
+      VALUE "OriginalFilename", "text-search_x64_win.exe"
+      VALUE "ProductName", "Text-search"
+      VALUE "ProductVersion", "1.0"
+    END
+  END
+  BLOCK "VarFileInfo"
+  BEGIN
+    VALUE "Translation", 0x809, 1252
+  END
+END
+2 ICON "C:/Users/Aldrik R/Desktop/Projects/text-search/text-search-logo_64px.ico"
