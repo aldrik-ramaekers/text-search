@@ -695,7 +695,12 @@ int main_loop()
 {
 	platform_init();
 	
+#ifdef BUILD_TRIAL
+	platform_window window = platform_open_window("Text-search [trial]", 800, 600, 0, 0);
+#else
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
+#endif
+	
 	main_window = &window;
 	
 	assets_create();
@@ -951,6 +956,14 @@ int main_loop()
 					do_search();
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
+				
+#ifdef BUILD_TRIAL
+				if (checkbox_recursive.state)
+				{
+					checkbox_recursive.state = 0;
+					platform_show_message(&window, localize("upgrade_to_full"), localize("feature_unavailable"));
+				}
+#endif
 				
 				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
 				{
