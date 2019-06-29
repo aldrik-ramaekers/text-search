@@ -5,6 +5,8 @@
 #include <wingdi.h>
 #include <errno.h>
 #include <shlwapi.h>
+#include <objbase.h>
+#include <Shlobj.h>
 
 #define BORDER_SPACE_HORIZONTAL 8
 #define BORDER_SPACE_VERTICAL 30
@@ -552,7 +554,15 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			track.dwFlags = TME_LEAVE;
 			track.hwndTrack = window.window_handle;
 		}
+        else
+        {
+            abort();
+        }
 	}
+    else
+    {
+        abort();
+    }
 	
 	return window;
 }
@@ -711,7 +721,6 @@ u8 set_active_directory(char *path)
 
 void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive, u8 include_directories)
 {
-	// TODO(Aldrik): include directories not implemented
 	assert(list);
 	
 	s32 len = strlen(filter);
@@ -733,6 +742,11 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 	do
 	{
 		char *name = file_info.cFileName;
+        
+        // symbolic link is not allowed..
+        if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+            continue;
+        
 		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
@@ -743,7 +757,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				if (string_match(filter, name))
 				{
 					// is file
-					char *buf = mem_alloc(PATH_MAX);
+					char *buf = mem_alloc(MAX_INPUT_LENGTH);
 					sprintf(buf, "%s%s",start_dir, name);
 					
 					found_file f;
@@ -756,11 +770,11 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			
 			if (recursive)
 			{
-				char *subdirname_buf = mem_alloc(PATH_MAX);
+				char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 				
 				strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
 				strcat(subdirname_buf, name);
-				strcat(subdirname_buf, "/");
+				strcat(subdirname_buf, "\\");
 				
 				// is directory
 				platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
@@ -777,7 +791,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 			if (string_match(filter, name))
 			{
 				// is file
-				char *buf = mem_alloc(PATH_MAX);
+				char *buf = mem_alloc(MAX_INPUT_LENGTH);
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;
@@ -926,6 +940,26 @@ static void* platform_open_file_dialog_dd(void *data)
 {
 	struct open_dialog_args *args = data;
 	
+    if (args->type == OPEN_DIRECTORY)
+    {
+        BROWSEINFO info;
+        info.hwndOwner = current_window_to_handle->window_handle;
+        info.pidlRoot = NULL;
+        char name[MAX_PATH];
+        info.pszDisplayName = (char*)name;
+        info.lpszTitle = "Select search directory";
+        info.ulFlags = 0;
+        info.lpfn = NULL;
+        PIDLIST_ABSOLUTE list = SHBrowseForFolderA(&info);
+        
+        if (list != NULL)
+        {
+            SHGetPathFromIDListA(list, args->buffer);
+        }
+        
+        return 0;
+    }
+    
 	OPENFILENAME info;
 	info.lStructSize = sizeof(OPENFILENAME);
 	info.hwndOwner = NULL;
@@ -962,14 +996,6 @@ static void* platform_open_file_dialog_dd(void *data)
 	{
 		info.Flags = OFN_FILEMUSTEXIST;
 	}
-	else if (args->type == OPEN_DIRECTORY)
-	{
-		info.Flags = OFN_HIDEREADONLY | OFN_NOVALIDATE | OFN_PATHMUSTEXIST | OFN_READONLY;
-	}
-	else if (args->type == SAVE_FILE)
-	{
-		
-	}
 	
 	GetOpenFileNameA(&info);
 	strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
@@ -986,8 +1012,8 @@ void *platform_open_file_dialog_block(void *arg)
 
 char *platform_get_full_path(char *file)
 {
-	char *buf = mem_alloc(PATH_MAX);
-	GetFullPathNameA(file, PATH_MAX, buf, NULL);
+	char *buf = mem_alloc(MAX_INPUT_LENGTH);
+	GetFullPathNameA(file, MAX_INPUT_LENGTH, buf, NULL);
 	return buf;
 }
 
@@ -1009,36 +1035,35 @@ void platform_window_make_current(platform_window *window)
 
 void platform_init()
 {
+    CoInitialize(NULL);
 	create_key_tables();
 }
 
 void platform_set_icon(platform_window *window, image *img)
 {
-	// TODO(Aldrik): implement
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)
 {
-	LARGE_INTEGER val_v;
-	BOOL result = QueryPerformanceCounter(&val_v);
+	DWORD result = GetTickCount();
 	
-	u64 val = val_v.QuadPart;
+	u64 val = result;
 	
 	if (precision == TIME_NS)
 	{
-		return val*1000;
+		return val*1000000;
 	}
 	if (precision == TIME_US)
 	{
-		return val;
+		return val*1000;
 	}
 	if (precision == TIME_MILI_S)
 	{
-		return val/1000;
+		return val;
 	}
 	if (precision == TIME_S)
 	{
-		return val*1000000;
+		return val/1000;
 	}
 	return val;
 }

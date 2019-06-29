@@ -800,16 +800,20 @@ int main_loop()
 	set_locale(locale_id);
 	
 	if (window_w >= 800 && window_h >= 600)
-		platform_window_set_size(&window, window_w, window_h);
+        platform_window_set_size(&window, window_w, window_h);
 	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
 	global_search_result.search_directory_buffer = textbox_path.buffer;
 	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
 	
+#ifdef OS_WINDOWS
+    u64 stamp = platform_get_time(TIME_FULL, TIME_MILI_S);
+#endif
 	while(window.is_open) {
-		platform_handle_events(&window, &mouse, &keyboard);
-		about_page_update_render();
+        platform_handle_events(&window, &mouse, &keyboard);
+		
+        about_page_update_render();
 		settings_page_update_render();
 		platform_window_make_current(&window);
 		
@@ -1009,9 +1013,18 @@ int main_loop()
 		render_drag_drop_feedback(&window);
 		
 		assets_do_post_process();
-		
+        
+#ifdef OS_WINDOWS
+        u64 cur_stamp = platform_get_time(TIME_FULL, TIME_MILI_S); 
+        u64 diff = cur_stamp - stamp;
+        stamp = cur_stamp;
+        if (diff < 1000.0/60.0)
+            thread_sleep(((1000.0/60.0) - diff)*1000);
+#endif
+        
 		platform_window_swap_buffers(&window);
-	}
+        
+    }
 	
 	thread_stop(&asset_queue_worker1);
 	
