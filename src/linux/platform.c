@@ -66,6 +66,39 @@ int main(int argc, char **argv)
 	return main_loop();
 }
 
+u8 platform_get_clipboard(platform_window *window, char *buffer)
+{
+	char *result;
+	unsigned long ressize, restail;
+	int resbits;
+	Atom bufid = XInternAtom(window->display, "CLIPBOARD", False),
+	fmtid = XInternAtom(window->display, "STRING", False),
+	propid = XInternAtom(window->display, "XSEL_DATA", False),
+	incrid = XInternAtom(window->display, "INCR", False);
+	XEvent event;
+	
+	XConvertSelection(window->display, bufid, fmtid, propid, window->window, CurrentTime);
+	do {
+		XNextEvent(window->display, &event);
+	} while (event.type != SelectionNotify || event.xselection.selection != bufid);
+	
+	if (event.xselection.property)
+	{
+		XGetWindowProperty(window->display, window->window, propid, 0, LONG_MAX/4, False, AnyPropertyType,
+						   &fmtid, &resbits, &ressize, &restail, (unsigned char**)&result);
+		
+		if (fmtid == incrid)
+			printf("Buffer is too large and INCR reading is not implemented yet.\n");
+		else
+			snprintf(buffer, MAX_INPUT_LENGTH, "%s", result);
+		
+		XFree(result);
+		return True;
+	}
+	else // request failed, e.g. owner can't convert to the target format
+		return False;
+}
+
 u8 get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
@@ -1260,7 +1293,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 					}
 				}
 				
-				keyboard_handle_input_string(keyboard, ch);
+				keyboard_handle_input_string(window, keyboard, ch);
 			}
 		}
 		else if (window->event.type == KeyRelease)

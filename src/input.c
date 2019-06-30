@@ -85,7 +85,7 @@ inline void keyboard_input_destroy(keyboard_input *keyboard)
 	mem_free(keyboard->input_text);
 }
 
-void keyboard_handle_input_string(keyboard_input *keyboard, char *ch)
+void keyboard_handle_input_string(platform_window *window, keyboard_input *keyboard, char *ch)
 {
 	if (ch)
 	{
@@ -118,6 +118,29 @@ void keyboard_handle_input_string(keyboard_input *keyboard, char *ch)
 			keyboard->cursor++;
 			keyboard->input_text_len++;
 		}
+		else
+		{
+			// clipboard
+			if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_V))
+			{
+				char buf[MAX_INPUT_LENGTH];
+				u8 result = platform_get_clipboard(window, buf);
+				
+				if (result)
+				{
+					char string_right[MAX_INPUT_LENGTH];
+					snprintf(string_right, MAX_INPUT_LENGTH, "%s", keyboard->input_text+keyboard->cursor);
+					
+					s32 len = strlen(buf);
+					
+					snprintf(keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH, "%s%s", buf, string_right);
+					
+					keyboard->cursor += len;
+					keyboard->input_text_len += len;
+				}
+			}
+		}
+		
 	}
 	else
 	{

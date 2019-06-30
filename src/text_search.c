@@ -84,9 +84,7 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik)(windows): directory select on windows not working
 // TODO(Aldrik): clipboard copy paste
-// TODO(Aldrik): get_time function on windows works different then on wine
 // TODO(Aldrik): limit to 24 fps
 
 char *text_to_find;
@@ -807,9 +805,6 @@ int main_loop()
 	global_search_result.search_directory_buffer = textbox_path.buffer;
 	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
 	
-#ifdef OS_WINDOWS
-    u64 stamp = platform_get_time(TIME_FULL, TIME_MILI_S);
-#endif
 	while(window.is_open) {
         platform_handle_events(&window, &mouse, &keyboard);
 		
@@ -1013,14 +1008,6 @@ int main_loop()
 		render_drag_drop_feedback(&window);
 		
 		assets_do_post_process();
-        
-#ifdef OS_WINDOWS
-        u64 cur_stamp = platform_get_time(TIME_FULL, TIME_MILI_S); 
-        u64 diff = cur_stamp - stamp;
-        stamp = cur_stamp;
-        if (diff < 1000.0/60.0)
-            thread_sleep(((1000.0/60.0) - diff)*1000);
-#endif
         
 		platform_window_swap_buffers(&window);
         

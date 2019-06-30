@@ -29,12 +29,20 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.buffer[0] = 0;
 	state.state = false;
 	state.text_offset_x = 0;
+	state.history = array_create(sizeof(char*));
 	
 	return state;
 }
 
 void ui_destroy_textbox(textbox_state *state)
 {
+	for (s32 i = 0; i < state->history.length; i++)
+	{
+		char **history_entry = array_at(&state->history, i);
+		mem_free(*history_entry);
+	}
+	array_destroy(&state->history);
+	
 	mem_free(state->buffer);
 }
 
@@ -432,11 +440,36 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	if (state->state)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
-		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
-		if (global_ui_context.keyboard->cursor > state->max_len)
+		s32 old_len = strlen(state->buffer);
+		
+		// check if text changes, add to history if true
+		u8 is_lctrl_down = global_ui_context.keyboard->keys[KEY_LEFT_CONTROL];
+		
+		// go to previous state
+		if (is_lctrl_down && keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Z) && state->history.length)
 		{
-			global_ui_context.keyboard->cursor = state->max_len;
-			global_ui_context.keyboard->input_text[global_ui_context.keyboard->cursor] = 0;
+			char **old_text = array_at(&state->history, state->history.length-1);
+			strncpy(state->buffer, *old_text, MAX_INPUT_LENGTH);
+			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
+			mem_free(*old_text);
+			array_remove_at(&state->history, state->history.length-1);
+		}
+		else
+		{
+			if (old_len != len)
+			{
+				char *history_entry = mem_alloc(old_len+1);
+				strcpy(history_entry, state->buffer);
+				array_push(&state->history, &history_entry);
+			}
+			
+			
+			strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
+			if (global_ui_context.keyboard->cursor > state->max_len)
+			{
+				global_ui_context.keyboard->cursor = state->max_len;
+				global_ui_context.keyboard->input_text[global_ui_context.keyboard->cursor] = 0;
+			}
 		}
 		
 		// draw cursor
