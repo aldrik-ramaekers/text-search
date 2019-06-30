@@ -344,9 +344,9 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		if (message == WM_MOUSEWHEEL)
 		{
-			s32 scroll_val = wparam>>16;
-			
-			if (scroll_val > 120)
+			s16 scroll_val = wparam>>16;
+			printf("%d\n", scroll_val);
+			if (scroll_val < 0)
 				current_mouse_to_handle->scroll_state = SCROLL_DOWN;
 			else
 				current_mouse_to_handle->scroll_state = SCROLL_UP;
