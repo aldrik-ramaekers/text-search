@@ -1,7 +1,7 @@
 SEARCH_DIRECTORY = "/home/aldrik/Projects/text-search/"
 SEARCH_DIRECTORIES = "1"
 SEARCH_TEXT = "*test*"
-FILE_FILTER = "*.c,*.h"
+FILE_FILTER = "*.txt"
 MAX_THEAD_COUNT = "20"
 MAX_FILE_SIZE = "200"
 LOCALE = "en"
