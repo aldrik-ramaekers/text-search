@@ -44,8 +44,9 @@ printf("[lllll][*lllll*] : %d\n", string_contains("lllll", "*lllll*"));
 printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
 #endif
 
+#define string_contains(big, small) string_contains_ex(big, small, 0, 0, 0)
 u8 string_match(char *first, char *second);
-u8 string_contains(char *big, char *small);
+u8 string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset);
 void string_trim(char *string);
 
 #endif

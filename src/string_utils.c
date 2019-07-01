@@ -55,13 +55,23 @@ static s32 length_of_expr(char *word)
 }
 
 // TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
-u8 string_contains(char *big, char *small)
+u8 string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset)
 {
 	u8 match_started = false;
 	char *small_original = small;
 	
+	bool save_info = (line_nr != 0);
+	
+	if (save_info)
+	{
+		(*line_nr)+=1;
+		*word_offset = 0;
+		*line = big;
+	}
+	
 	s32 index = 0;
 	char *word_start = big;
+	
 #if !SEARCH_WITHIN_STRING
 	u8 ignore_word = false;
 #endif
@@ -74,6 +84,17 @@ u8 string_contains(char *big, char *small)
 		{
 			//printf("--1\n");
 			return false;
+		}
+		
+		if (text_ch == '\n' && save_info)
+		{
+			(*line_nr)+=1;
+			*word_offset = 0;
+			*line = big;
+		}
+		else if (save_info)
+		{
+			(*word_offset)+=1;
 		}
 		
 #if !SEARCH_WITHIN_STRING
@@ -156,6 +177,18 @@ u8 string_contains(char *big, char *small)
 					text_ch = *big;
 					//printf("[%d] %c %c\n", index, expr_ch, text_ch);
 					index++;
+					
+					if (text_ch == '\n' && save_info)
+					{
+						(*line_nr)+=1;
+						*word_offset = 0;
+						*line = big+1;
+					}
+					else if (save_info)
+					{
+						(*word_offset)+=1;
+					}
+					
 					if (text_ch == 0) 
 					{
 						// text and expression have ended, return true. if expression has not ended, return false.

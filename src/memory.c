@@ -1,4 +1,30 @@
 #if defined(MODE_DEVELOPER) && defined(OS_LINUX)
+#include <execinfo.h>
+
+static void add_stacktrace_line(char *buffer, char *trace)
+{
+	s32 offset = 0;
+	s32 len = 0;
+	char *orig = trace;
+	
+	s32 index = 0;
+	while(*trace)
+	{
+		if (*trace == '(') offset = index;
+		if (*trace == '+')
+		{
+			len = index-offset;
+			break;
+		}
+		
+		++index;
+		++trace;
+	}
+	
+	strcat(buffer, "     - ");
+	strncat(buffer, orig+offset+1, len-1);
+	strcat(buffer, "\n");
+}
 
 static u8 initializing = false;
 inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
@@ -11,8 +37,24 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 		global_memory_mutex = mutex_create();
 	}
 	
+	char *complete_stacktrace = malloc(3000);
+	complete_stacktrace[0] = 0;
+	
+	void* callstack[128];
+	int i, frames = backtrace(callstack, 128);
+	char** strs = backtrace_symbols(callstack, frames);
+	for (i = 0; i < frames; ++i) {
+		add_stacktrace_line(complete_stacktrace, strs[i]);
+		//strcat(complete_stacktrace, strs[i]);
+		//strcat(complete_stacktrace, "\n");
+	}
+	free(strs);
+	
+	strcat(complete_stacktrace, "---- ");
+	strcat(complete_stacktrace, caller_name);
+	
 	memory_usage_entry entry;
-	entry.name = caller_name;
+	entry.name = complete_stacktrace;
 	entry.line = caller_line;
 	entry.size = size;
 	
@@ -58,6 +100,7 @@ inline void mem_free_d(void *ptr, const char *caller_name, s32 caller_line)
 		memory_usage_entry *entry = array_at(&global_memory_usage, i);
 		if (entry->ptr == ptr)
 		{
+			free(entry->name);
 			array_remove_at(&global_memory_usage, i);
 		}
 	}
@@ -73,6 +116,7 @@ void memory_print_leaks()
 	{
 		memory_usage_entry *entry = array_at(&global_memory_usage, i);
 		printf("%s:%d:%d:%p\n", entry->name, entry->line, entry->size, entry->ptr);
+		free(entry->name);
 	}
 	mutex_unlock(&global_memory_mutex);
 	array_destroy(&global_memory_usage);

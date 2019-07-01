@@ -10,7 +10,7 @@ void memory_print_leaks();
 
 typedef struct t_memory_usage_entry
 {
-	const char *name;
+	char *name;
 	s32 line;
 	s32 size;
 	void *ptr;

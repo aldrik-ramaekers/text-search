@@ -17,6 +17,7 @@ typedef struct t_text_match
 	u32 match_count;
 	s16 file_error;
 	s32 file_size;
+	char *line_info;
 } text_match;
 
 typedef struct t_status_bar
@@ -84,7 +85,10 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik): clipboard copy paste
+// TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
+// TODO(Aldrik): save line where text was found and show that in result (working but not import/export)
+// TODO(Aldrik): search while you type
+// TODO(Aldrik): clipboard copy
 // TODO(Aldrik): limit to 24 fps
 
 char *text_to_find;
@@ -123,9 +127,27 @@ static void *find_text_in_file_t(void *arg)
 		
 		if (content.content && !content.file_error)
 		{
-			if (string_contains(content.content, text_to_find))
+			s32 line_nr = 0;
+			char *line;
+			s32 word_offset = 0;
+			if (string_contains_ex(content.content, text_to_find, &line_nr, &line, &word_offset))
 			{
 				global_search_result.match_found = true;
+				
+				// match info
+				match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
+				sprintf(match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
+				
+				char *tmp = match->line_info;
+				while(*tmp)
+				{
+					if (*tmp == '\n')
+					{
+						*tmp = 0;
+						break;
+					}
+					++tmp;
+				}
 				
 				if (search_id == global_search_result.search_id)
 				{
@@ -202,6 +224,7 @@ static void* find_text_in_files_t(void *arg)
 			args->match->match_count = 0;
 			args->match->file_error = 0;
 			args->match->file_size = 0;
+			args->match->line_info = 0;
 			args->search_id = current_search_id;
 			
 			// limit thread usage
@@ -382,8 +405,8 @@ static void render_result(platform_window *window, font *font_small)
 			y -= 9;
 		}
 		
-		s32 path_width = window->width / 1.8;
-		s32 pattern_width = window->width / 6;
+		s32 path_width = window->width / 2.0;
+		s32 pattern_width = window->width / 10.0;
 		
 		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
@@ -432,10 +455,10 @@ static void render_result(platform_window *window, font *font_small)
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
 					if (!match->file_error)
 					{
-						char snum[20];
-						sprintf(snum, "(%d Bytes)", match->file_size);
-						
-						render_text(font_small, 10 + path_width + pattern_width, text_y + (h/2)-(font_small->size/2) + 1, snum, global_ui_context.style.foreground);
+						//char snum[20];
+						//sprintf(snum, "(%d Bytes)", match->file_size);
+						if (match->line_info)
+							render_text(font_small, 10 + path_width + pattern_width, text_y + (h/2)-(font_small->size/2) + 1, match->line_info, global_ui_context.style.foreground);
 					}
 					else
 					{
@@ -673,6 +696,12 @@ static void do_search()
 			global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
 																							  global_search_result.search_result_source_dir_len);
 			
+			for (s32 i = 0; i < global_search_result.files.length; i++)
+			{
+				text_match *file = array_at(&global_search_result.files, i);
+				if (file->line_info)
+					mem_free(file->line_info);
+			}
 			platform_destroy_list_file_result(&global_search_result.files);
 			
 			global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
@@ -692,12 +721,19 @@ int main_loop()
 {
 	platform_init();
 	
+#ifdef MODE_DEVELOPER
+#ifdef BUILD_TRIAL
+	platform_window window = platform_open_window("Text-search [trial] [developer]", 800, 600, 0, 0);
+#else
+	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);
+#endif
+#else
 #ifdef BUILD_TRIAL
 	platform_window window = platform_open_window("Text-search [trial]", 800, 600, 0, 0);
 #else
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
 #endif
-	
+#endif
 	main_window = &window;
 	
 	assets_create();
@@ -1088,6 +1124,13 @@ int main_loop()
 	
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
+	
+	for (s32 i = 0; i < global_search_result.files.length; i++)
+	{
+		text_match *file = array_at(&global_search_result.files, i);
+		if (file->line_info)
+			mem_free(file->line_info);
+	}
 	platform_destroy_window(&window);
 	
 #if defined(MODE_DEVELOPER) && defined(OS_LINUX)

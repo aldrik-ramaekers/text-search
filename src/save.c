@@ -124,6 +124,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
 		match.file_size = buffer_read_signed(&save_file_buffer);
+		match.line_info = 0;
 		
 		array_push(&search_result->files, &match);
 	}
