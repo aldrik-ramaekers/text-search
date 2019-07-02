@@ -87,7 +87,7 @@ u64 buffer_read_unsigned(text_buffer *buffer)
 
 u8 buffer_done_reading(text_buffer *buffer)
 {
-	return buffer->data[buffer->read_cursor] == 0;
+	return buffer->data[buffer->read_cursor] == 0 || buffer->read_cursor >= buffer->buffer_size;
 }
 
 char *buffer_read_string(text_buffer *buffer, char *string_buffer)
@@ -102,7 +102,7 @@ char *buffer_read_string(text_buffer *buffer, char *string_buffer)
 	}
 	char ch = *data;
 	*data = 0;
-	strncpy(string_buffer, buffer->data+buffer->read_cursor, MAX_INPUT_LENGTH);
+	strncpy(string_buffer, buffer->data+buffer->read_cursor, MAX_INPUT_LENGTH-1);
 	*data = ch;
 	
 	buffer->read_cursor += index+1;

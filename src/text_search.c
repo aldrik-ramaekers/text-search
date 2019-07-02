@@ -86,7 +86,6 @@ platform_window *main_window;
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
-// TODO(Aldrik): save line where text was found and show that in result (working but not import/export)
 // TODO(Aldrik): search while you type
 // TODO(Aldrik): clipboard copy
 // TODO(Aldrik): limit to 24 fps

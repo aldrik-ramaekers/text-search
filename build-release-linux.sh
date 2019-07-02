@@ -1,7 +1,7 @@
 #!/bin/bash
 
-rm text-search_x64_linux.zip
-rm text-search_x64_linux_trial.zip
+rm release/text-search_x64_linux.zip
+rm release/text-search_x64_linux_trial.zip
 
 cd src
 gcc -Wall -O3 -m64 -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c -o ../release/text-search_x64_linux -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl

@@ -49,6 +49,11 @@ static void *export_result_d(void *arg)
 		buffer_write_signed(&save_file_buffer, m->file_error);
 		buffer_write_signed(&save_file_buffer, m->match_count);
 		buffer_write_signed(&save_file_buffer, m->file_size);
+		
+		if (m->line_info)
+			buffer_write_string(&save_file_buffer, m->line_info);
+		else
+			buffer_write_string(&save_file_buffer, "");
 	}
 	
 	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
@@ -82,6 +87,12 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		return;
 	}
 	
+	for (s32 i = 0; i < global_search_result.files.length; i++)
+	{
+		text_match *file = array_at(&global_search_result.files, i);
+		if (file->line_info)
+			mem_free(file->line_info);
+	}
 	platform_destroy_list_file_result(&global_search_result.files);
 	scroll_y = 0;
 	
@@ -124,7 +135,9 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
 		match.file_size = buffer_read_signed(&save_file_buffer);
-		match.line_info = 0;
+		
+		match.line_info = mem_alloc(PATH_MAX);
+		buffer_read_string(&save_file_buffer, match.line_info);
 		
 		array_push(&search_result->files, &match);
 	}
