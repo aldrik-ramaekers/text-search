@@ -42,7 +42,7 @@ int main_loop();
 
 #ifdef _WIN32
 #define OS_WINDOWS
-#define platform not supported
+#error  platform not supported
 #endif
 #ifdef __linux__
 #define OS_LINUX
