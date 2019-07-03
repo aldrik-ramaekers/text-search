@@ -1000,6 +1000,10 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 {
 	mouse->left_state &= ~MOUSE_CLICK;
 	mouse->right_state &= ~MOUSE_CLICK;
+#if 0
+	mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
+	mouse->right_state &= ~MOUSE_DOUBLE_CLICK;
+#endif
 	mouse->left_state &= ~MOUSE_RELEASE;
 	mouse->right_state &= ~MOUSE_RELEASE;
 	memset(keyboard->input_keys, 0, MAX_KEYCODE);
@@ -1177,6 +1181,14 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == ButtonPress)
 		{
+			Time ev_time = window->event.xbutton.time;
+			static Time last_ev_time = 0;
+			if (ev_time - last_ev_time < 200)
+			{
+				mouse->left_state |= MOUSE_DOUBLE_CLICK;
+			}
+			last_ev_time = ev_time;
+			
 			u8 is_left_down = window->event.xbutton.button == Button1;
 			u8 is_right_down = window->event.xbutton.button == Button3;
 			u8 is_middle_down = window->event.xbutton.button == Button2;

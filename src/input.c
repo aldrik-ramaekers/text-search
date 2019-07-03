@@ -14,6 +14,11 @@ inline u8 is_left_clicked(mouse_input *input)
 	return input->left_state & MOUSE_CLICK;
 }
 
+inline u8 is_left_double_clicked(mouse_input *input)
+{
+	return input->left_state & MOUSE_DOUBLE_CLICK;
+}
+
 inline u8 is_right_down(mouse_input *input)
 {
 	return input->right_state & MOUSE_DOWN;

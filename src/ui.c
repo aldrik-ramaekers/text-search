@@ -30,6 +30,7 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.state = false;
 	state.text_offset_x = 0;
 	state.history = array_create(sizeof(char*));
+	state.has_selection = false;
 	
 	return state;
 }
@@ -388,12 +389,19 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
+		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
+		{
+			state->has_selection = true;
+			global_ui_context.mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
+			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
+		}
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
 			
-			state->state = !state->state;
+			state->has_selection = false;
+			state->state = true;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
 			result = true;
 			
@@ -403,10 +411,12 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	else if (is_left_clicked(global_ui_context.mouse) || is_left_down(global_ui_context.mouse))
 	{
 		state->state = false;
+		state->has_selection = false;
 	}
 	
 	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
 	{
+		state->has_selection = false;
 		state->state = false;
 	}
 	
@@ -432,11 +442,23 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 						   scissor_x, scissor_y, scissor_w, scissor_h);
 	}
 	
-	
 	s32 cursor_text_w;
 	s32 cursor_x;
 	s32 diff = 0;
 	
+	if (state->has_selection)
+	{
+		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
+		
+		s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
+		render_rectangle(x-5, y+4, text_w+10, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
+		
+		if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_BACKSPACE))
+		{
+			keyboard_set_input_text(global_ui_context.keyboard, "");
+			state->has_selection = false;
+		}
+	}
 	if (state->state)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
@@ -472,19 +494,18 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 			}
 		}
 		
-		// draw cursor
-		char *calculate_text = mem_alloc(MAX_INPUT_LENGTH);
-		strcpy(calculate_text, state->buffer);
-		calculate_text[global_ui_context.keyboard->cursor] = 0;
-		
-		
+		// cursor ticking after text change
 		if (last_cursor_pos != global_ui_context.keyboard->cursor)
 			cursor_tick = 0;
 		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
+		// draw cursor
+		char calculate_text[MAX_INPUT_LENGTH];
+		strcpy(calculate_text, state->buffer);
+		calculate_text[global_ui_context.keyboard->cursor] = 0;
+		
 		cursor_text_w = calculate_text_width(global_ui_context.font_small, 
 											 calculate_text);
-		mem_free(calculate_text);
 		
 		cursor_x = text_x + cursor_text_w;
 		
@@ -502,7 +523,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		s32 cursor_h = global_ui_context.font_small->size + 1;
 		s32 cursor_w = 2;
 		
-		if (cursor_tick % 50 < 25)
+		if (cursor_tick % 50 < 25 && !state->has_selection)
 			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
 	

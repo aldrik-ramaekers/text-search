@@ -90,6 +90,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	while(*text)
 	{
 		char ch = *text;
+		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
 		
@@ -150,6 +151,7 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	while(*text)
 	{
 		char ch = *text;
+		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
 		
@@ -202,6 +204,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	while(*text)
 	{
 		char ch = *text;
+		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
 		
@@ -296,6 +299,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	while(*text)
 	{
 		char ch = *text;
+		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];
 		

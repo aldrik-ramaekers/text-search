@@ -207,7 +207,7 @@ void *assets_queue_worker()
 		}
 		
 		// 1 us
-		thread_sleep(1);
+		thread_sleep(1000);
 	}
 	
 	return 0;

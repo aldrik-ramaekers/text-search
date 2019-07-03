@@ -136,6 +136,7 @@
 
 #define MOUSE_DOWN (1 << 1)
 #define MOUSE_RELEASE (1 << 2)
+#define MOUSE_DOUBLE_CLICK (1 << 3)
 #define MOUSE_CLICK (1 << 4)
 
 #define SCROLL_UP 1
@@ -187,6 +188,7 @@ int keycode_map[MAX_KEYCODE];
 u8 is_left_down(mouse_input *input);
 u8 is_left_released(mouse_input *input);
 u8 is_left_clicked(mouse_input *input);
+u8 is_left_double_clicked(mouse_input *input);
 u8 is_right_down(mouse_input *input);
 u8 is_right_released(mouse_input *input);
 u8 is_right_clicked(mouse_input *input);
