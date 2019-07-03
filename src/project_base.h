@@ -42,7 +42,7 @@ int main_loop();
 
 #ifdef _WIN32
 #define OS_WINDOWS
-#include <windows.h>
+#define platform not supported
 #endif
 #ifdef __linux__
 #define OS_LINUX
@@ -51,6 +51,7 @@ int main_loop();
 #endif
 #ifdef __APPLE__
 #define OS_OSX
+#error platform not supported
 #endif
 
 #include "stdint.h"
@@ -106,11 +107,6 @@ int main_loop();
 #ifdef OS_LINUX
 #include "linux/thread.c"
 #include "linux/platform.c"
-#endif
-
-#ifdef OS_WINDOWS
-#include "windows/thread.c"
-#include "windows/platform.c"
 #endif
 
 #include "input.c"
