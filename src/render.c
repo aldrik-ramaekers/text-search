@@ -11,10 +11,6 @@ inline void set_render_depth(s32 depth)
 
 void render_image(image *image, s32 x, s32 y, s32 width, s32 height)
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	assert(image);
 	if (image->loaded)
 	{
@@ -33,18 +29,10 @@ void render_image(image *image, s32 x, s32 y, s32 width, s32 height)
 		glDisable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_image_tint(image *image, s32 x, s32 y, s32 width, s32 height, color tint)
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	assert(image);
 	if (image->loaded)
 	{
@@ -63,10 +51,6 @@ void render_image_tint(image *image, s32 x, s32 y, s32 width, s32 height, color 
 		glDisable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint)
@@ -96,10 +80,6 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 {
 	if (!font->loaded)
 		return 0;
-	
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
 	
 	glBindTexture(GL_TEXTURE_2D, font->textureID);
 	glEnable(GL_TEXTURE_2D);
@@ -152,10 +132,6 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
-	
 	return x_ - x;
 }
 
@@ -163,10 +139,6 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 {
 	if (!font->loaded)
 		return 0;
-	
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
 	
 	glBindTexture(GL_TEXTURE_2D, font->textureID);
 	glEnable(GL_TEXTURE_2D);
@@ -208,10 +180,6 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
-	
 	return y_ -y;
 }
 
@@ -219,10 +187,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 {
 	if (!font->loaded)
 		return 0;
-	
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
 	
 	glBindTexture(GL_TEXTURE_2D, font->textureID);
 	glEnable(GL_TEXTURE_2D);
@@ -295,10 +259,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
-	
 	return y_ - y;
 	
 }
@@ -355,28 +315,16 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 
 void render_triangle(s32 x, s32 y, s32 w, s32 h, color tint)
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	glBegin(GL_TRIANGLES);
 	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
 	glVertex3i(x+(w/2), y+h, render_depth);
 	glVertex3i(x, y, render_depth);
 	glVertex3i(x+w, y, render_depth);
 	glEnd();
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_rectangle(s32 x, s32 y, s32 width, s32 height, color tint)
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	glBegin(GL_QUADS);
 	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
 	glVertex3i(x, y, render_depth);
@@ -384,18 +332,10 @@ void render_rectangle(s32 x, s32 y, s32 width, s32 height, color tint)
 	glVertex3i(x+width, y+height, render_depth);
 	glVertex3i(x+width, y, render_depth);
 	glEnd();
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_rectangle_tint(s32 x, s32 y, s32 width, s32 height, color tint[4])
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	glBegin(GL_QUADS);
 	glColor4f(tint[0].r/255.0f, tint[0].g/255.0f, tint[0].b/255.0f, tint[0].a/255.0f);
 	glVertex3i(x, y, render_depth);
@@ -406,18 +346,10 @@ void render_rectangle_tint(s32 x, s32 y, s32 width, s32 height, color tint[4])
 	glColor4f(tint[3].r/255.0f, tint[3].g/255.0f, tint[3].b/255.0f, tint[3].a/255.0f);
 	glVertex3i(x+width, y, render_depth);
 	glEnd();
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_rectangle_outline(s32 x, s32 y, s32 width, s32 height, u16 outline_w, color tint)
 {
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
-	
 	// left
 	render_rectangle(x, y, outline_w, height, tint);
 	// right
@@ -426,10 +358,6 @@ void render_rectangle_outline(s32 x, s32 y, s32 width, s32 height, u16 outline_w
 	render_rectangle(x+outline_w, y, width-(outline_w*2), outline_w, tint);
 	// bottom
 	render_rectangle(x+outline_w, y+height-outline_w, width-(outline_w*2), outline_w, tint);
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 }
 
 void render_set_scissor(platform_window *window, s32 x, s32 y, s32 w, s32 h)

@@ -4,9 +4,9 @@ rm release/text-search_x64_linux.zip
 rm release/text-search_x64_linux_trial.zip
 
 cd src
-gcc -Wall -O3 -m64 -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c -o ../release/text-search_x64_linux -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c -o ../release/text-search_x64_linux -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
 
-gcc -Wall -O3 -m64 -Wno-unused-label -DBUILD_TRIAL -rdynamic -Wno-unused-variable text_search.c -o ../release/text-search_x64_linux_trial -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+gcc -Wall -O3 -m64 -Wno-unused-label -DBUILD_TRIAL -Wno-unused-variable text_search.c -o ../release/text-search_x64_linux_trial -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
 
 if [ $? -ne 0 ]; then
 	cd ../

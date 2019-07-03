@@ -9,26 +9,9 @@
 #define ASSET_FONT_COUNT 20
 #endif
 
-#ifndef ASSET_SAMPLE_COUNT
-#define ASSET_SAMPLE_COUNT 40
-#endif
-
 #ifndef ASSET_QUEUE_COUNT
 #define ASSET_QUEUE_COUNT 100
 #endif
-
-typedef struct t_sample
-{
-	char *path;
-	u8 loaded;
-	
-	s32 channels;
-	s32 sample_rate;
-	s32 sample_count;
-	s16 *data;
-	s16 references;
-	float32 duration_seconds;
-} sample;
 
 typedef struct t_image {
 	char *path;
@@ -80,7 +63,6 @@ typedef struct t_asset_queue {
 typedef struct t_assets {
 	array images;
 	array fonts;
-	array samples;
 	asset_queue queue;
 	array post_process_queue;
 	u8 valid;
@@ -110,8 +92,5 @@ void assets_destroy_image(image *image);
 
 font *assets_load_font(char *file, s16 size);
 void assets_destroy_font(font *font);
-
-sample *assets_load_sample(char *file);
-void assets_destroy_sample(sample *sample);
 
 #endif

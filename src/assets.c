@@ -8,11 +8,9 @@ void assets_create()
 	assets asset_collection;
 	asset_collection.images = array_create(sizeof(image));
 	asset_collection.fonts = array_create(sizeof(font));
-	asset_collection.samples = array_create(sizeof(sample));
 	
 	array_reserve(&asset_collection.images, ASSET_IMAGE_COUNT);
 	array_reserve(&asset_collection.fonts, ASSET_FONT_COUNT);
-	array_reserve(&asset_collection.samples, ASSET_SAMPLE_COUNT);
 	
 	asset_collection.queue.queue = array_create(sizeof(asset_task));
 	asset_collection.post_process_queue = array_create(sizeof(asset_task));
@@ -36,10 +34,6 @@ inline static u8 is_big_endian()
 void assets_do_post_process()
 {
 	mutex_lock(&asset_mutex);
-	
-#ifdef MODE_DEVELOPER
-	profiler_begin(profiler_start);
-#endif
 	
 	for (int i = 0; i < global_asset_collection.post_process_queue.length; i++)
 	{
@@ -85,11 +79,6 @@ void assets_do_post_process()
 		
 		array_remove_at(&global_asset_collection.post_process_queue, i);
 	}
-	
-	
-#ifdef MODE_DEVELOPER
-	profiler_end(profiler_start);
-#endif
 	
 	mutex_unlock(&asset_mutex);
 }
@@ -340,92 +329,12 @@ void assets_destroy_font(font *font_to_destroy)
 	}
 }
 
-sample *assets_load_sample(char *file)
-{
-	for (int i = 0; i < global_asset_collection.samples.length; i++)
-	{
-		sample *sample_at = array_at(&global_asset_collection.fonts, i);
-		
-		if (strcmp(sample_at->path, file) == 0)
-		{
-			// sample is already loaded/loading
-			sample_at->references++;
-			return sample_at;
-		}
-	}
-	
-	sample new_sample;
-	new_sample.path = mem_alloc(strlen(file)+1);
-	strcpy(new_sample.path, file);
-	new_sample.loaded = true;
-	new_sample.references = 1;
-	
-	set_active_directory(binary_path);
-	
-	unsigned int channels;
-    unsigned int sampleRate;
-    drwav_uint64 totalPCMFrameCount;
-    s16* pSampleData = drwav_open_file_and_read_pcm_frames_s16(file, 
-															   &channels, &sampleRate, 
-															   &totalPCMFrameCount);
-    if (pSampleData == NULL) {
-		new_sample.loaded = false;
-		goto failure;
-	}
-	
-	new_sample.sample_count = totalPCMFrameCount;
-	new_sample.sample_rate = sampleRate;
-	new_sample.channels = channels;
-	new_sample.duration_seconds = totalPCMFrameCount / (float)sampleRate;
-	new_sample.data = pSampleData;
-	
-	assert(new_sample.channels == 2);
-	// TODO(Aldrik): should we assert sample rate?
-	
-	// NOTE(Aldrik): we should never realloc the sample array because pointers will be 
-	// invalidated.
-	assert(global_asset_collection.samples.reserved_length > global_asset_collection.samples.length);
-	
-	failure:
-	{
-		int index = array_push(&global_asset_collection.samples, &new_sample);
-		
-		return array_at(&global_asset_collection.samples, index);
-	}
-}
-
-void assets_destroy_sample(sample *sample_to_destroy)
-{
-	sample *sample_at = 0;
-	for (int i = 0; i < global_asset_collection.samples.length; i++)
-	{
-		sample_at = array_at(&global_asset_collection.samples, i);
-		
-		if (strcmp(sample_at->path, sample_to_destroy->path) == 0)
-		{
-			sample_at->references--;
-			goto sample_found;
-		}
-	}
-	return;
-	
-	sample_found:
-	if (sample_at->references <= 0)
-	{
-		drwav_free(sample_at->data);
-		mem_free(sample_at->path);
-		//array_remove(&global_asset_collection.samples, sample_at);
-	}
-}
-
-
 void assets_destroy()
 {
 	global_asset_collection.valid = false;
 	
 	array_destroy(&global_asset_collection.images);
 	array_destroy(&global_asset_collection.fonts);
-	array_destroy(&global_asset_collection.samples);
 	
 	array_destroy(&global_asset_collection.queue.queue);
 	array_destroy(&global_asset_collection.post_process_queue);

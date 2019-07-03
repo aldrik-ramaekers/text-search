@@ -91,39 +91,26 @@ int main_loop();
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "external/stb_truetype.h"
 
-#define DR_WAV_IMPLEMENTATION
-#include "external/dr_wav.h"
-
 #include "input.h"
 #include "assets.h"
 #include "platform.h"
 #include "render.h"
 #include "camera.h"
-//#include "audio.h"
+
 #include "ui.h"
 #include "string_utils.h"
 #include "settings_config.h"
 #include "localization.h"
 #include "text_buffer.h"
 
-#ifdef MODE_DEVELOPER
-#include "profiler.h"
-#include "system_watch.h"
-#include "asset_pipeline_watch.h"
-#include "console.h"
-#include "info_menu.h"
-#endif
-
 #ifdef OS_LINUX
 #include "linux/thread.c"
 #include "linux/platform.c"
-//#include "linux/audio.c"
 #endif
 
 #ifdef OS_WINDOWS
 #include "windows/thread.c"
 #include "windows/platform.c"
-//#include "windows/audio.c"
 #endif
 
 #include "input.c"
@@ -138,11 +125,6 @@ int main_loop();
 #include "text_buffer.c"
 
 #ifdef MODE_DEVELOPER
-#include "profiler.c"
-#include "system_watch.c"
-#include "asset_pipeline_watch.c"
-#include "console.c"
-#include "info_menu.c"
 #include "memory.c"
 #endif
 

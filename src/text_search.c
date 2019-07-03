@@ -742,10 +742,6 @@ int main_loop()
 	load_available_localizations();
 	set_locale("en");
 	
-#ifdef MODE_DEVELOPER
-	info_menu_create();
-#endif
-	
 	search_img = assets_load_image("data/imgs/search.png", false);
 	sloth_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
 	sloth_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
@@ -1049,10 +1045,6 @@ int main_loop()
     }
 	
 	thread_stop(&asset_queue_worker1);
-	
-#ifdef MODE_DEVELOPER
-	info_menu_destroy();
-#endif
 	
 	settings_page_hide_without_save();
 	
