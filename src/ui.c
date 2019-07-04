@@ -30,7 +30,6 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.state = false;
 	state.text_offset_x = 0;
 	state.history = array_create(sizeof(char*));
-	state.has_selection = false;
 	
 	return state;
 }
@@ -391,7 +390,8 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
 		{
-			state->has_selection = true;
+			global_ui_context.keyboard->has_selection = true;
+			
 			global_ui_context.mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
 		}
@@ -400,7 +400,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
 			
-			state->has_selection = false;
+			global_ui_context.keyboard->has_selection = false;
 			state->state = true;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
 			result = true;
@@ -411,12 +411,14 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	else if (is_left_clicked(global_ui_context.mouse) || is_left_down(global_ui_context.mouse))
 	{
 		state->state = false;
-		state->has_selection = false;
+		
+		if (state->state)
+			global_ui_context.keyboard->has_selection = false;
 	}
 	
 	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
 	{
-		state->has_selection = false;
+		global_ui_context.keyboard->has_selection = false;
 		state->state = false;
 	}
 	
@@ -446,18 +448,12 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	s32 cursor_x;
 	s32 diff = 0;
 	
-	if (state->has_selection)
+	if (global_ui_context.keyboard->has_selection && state->state)
 	{
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 		
 		s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
 		render_rectangle(x-5, y+4, text_w+10, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
-		
-		if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_BACKSPACE))
-		{
-			keyboard_set_input_text(global_ui_context.keyboard, "");
-			state->has_selection = false;
-		}
 	}
 	if (state->state)
 	{
@@ -523,7 +519,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		s32 cursor_h = global_ui_context.font_small->size + 1;
 		s32 cursor_w = 2;
 		
-		if (cursor_tick % 50 < 25 && !state->has_selection)
+		if (cursor_tick % 50 < 25 && !global_ui_context.keyboard->has_selection)
 			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
 	

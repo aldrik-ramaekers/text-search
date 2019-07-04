@@ -177,7 +177,14 @@ typedef struct t_keyboard_input
 	int modifier_state;
 	bool take_input;
 	u32 cursor;
+	
+	// input
+	bool has_selection;
+	s32 selection_begin_offset;
+	s32 selection_length;
 	char *input_text;
+	// input
+	
 	s32 input_text_len;
 	bool keys[MAX_KEYCODE];
 	bool input_keys[MAX_KEYCODE];

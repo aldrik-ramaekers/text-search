@@ -60,8 +60,6 @@ typedef struct t_ui_layout
 
 typedef struct t_textbox_state
 {
-	bool has_selection;
-	
 	char *buffer;
 	u8 state;
 	s32 selection_start_cursor;

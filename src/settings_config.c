@@ -42,6 +42,7 @@ settings_config settings_config_load_from_file(char *path)
 	for (s32 i = 0; i < content.content_length; i++)
 	{
 		char ch = ((char*)content.content)[i];
+		char next_ch = i+1 < content.content_length ? ((char*)content.content)[i+1] : 0;
 		
 		if (ch == '=' && !in_literal)
 		{
@@ -50,7 +51,7 @@ settings_config settings_config_load_from_file(char *path)
 			strcpy(current_entry.name, content.content+token_offset);
 			string_trim(current_entry.name);
 		}
-		else if (ch == '"')
+		else if (ch == '"' && (next_ch == '\n' || !in_literal))
 		{
 			in_literal = !in_literal;
 			

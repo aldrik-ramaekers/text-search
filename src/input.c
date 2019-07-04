@@ -75,6 +75,9 @@ keyboard_input keyboard_input_create()
 	keyboard.cursor = 0;
 	keyboard.input_text_len = 0;
 	keyboard.input_mode = INPUT_FULL;
+	keyboard.has_selection = false;
+	keyboard.selection_begin_offset = 0;
+	keyboard.selection_length = 0;
 	memset(keyboard.keys, 0, MAX_KEYCODE);
 	
 	return keyboard;

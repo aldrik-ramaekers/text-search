@@ -85,10 +85,13 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
 // TODO(Aldrik): search while you type
+// TODO(Aldrik): text selection in textbox
 // TODO(Aldrik): clipboard copy
 // TODO(Aldrik): limit to 24 fps
+// TODO(Aldrik): stop allocating strings everywhere in search functions, use 1 big buffer
 
 char *text_to_find;
 
