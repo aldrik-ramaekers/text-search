@@ -12,6 +12,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <sys/stat.h>
+#include <X11/cursorfont.h>
 
 #define GET_ATOM(X) window.X = XInternAtom(window.display, #X, False)
 
@@ -45,6 +46,8 @@ struct t_platform_window
 	s32 height;
 	u8 is_open;
 	u8 has_focus;
+	cursor_type curr_cursor_type;
+	cursor_type next_cursor_type;
 	struct drag_drop_info drag_drop_info;
 };
 
@@ -115,6 +118,13 @@ u8 set_active_directory(char *path)
 	return !chdir(path);
 }
 
+inline void platform_set_cursor(platform_window *window, cursor_type type)
+{
+	if (window->next_cursor_type != type)
+	{
+		window->next_cursor_type = type;
+	}
+}
 
 static void get_name_from_path(char *buffer, char *path)
 {
@@ -610,6 +620,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.has_focus = true;
 	window.drag_drop_info.path = 0;
 	window.drag_drop_info.state = DRAG_DROP_NONE;
+	window.curr_cursor_type = CURSOR_DEFAULT;
 	
 	static int att[] =
 	{
@@ -1320,6 +1331,20 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 
 inline void platform_window_swap_buffers(platform_window *window)
 {
+	// set cursor if changed
+	if (window->curr_cursor_type != window->next_cursor_type)
+	{
+		int cursor_shape = 0;
+		switch(window->next_cursor_type)
+		{
+			case CURSOR_DEFAULT: cursor_shape = XC_arrow; break;
+			case CURSOR_POINTER: cursor_shape = XC_hand1; break;
+		}
+		Cursor cursor = XCreateFontCursor(window->display, cursor_shape);
+		XDefineCursor(window->display, window->window, cursor);
+		window->curr_cursor_type = window->next_cursor_type;
+	}
+	
 	glXSwapBuffers(window->display, window->window);
 }
 

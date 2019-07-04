@@ -375,7 +375,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	}
 }
 
-static void render_result(platform_window *window, font *font_small)
+static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse)
 {
 	s32 y = global_ui_context.layout.offset_y;
 	s32 h = 24;
@@ -408,7 +408,7 @@ static void render_result(platform_window *window, font *font_small)
 		}
 		
 		s32 path_width = window->width / 2.0;
-		s32 pattern_width = window->width / 10.0;
+		s32 pattern_width = window->width / 8.0;
 		
 		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
@@ -430,28 +430,36 @@ static void render_result(platform_window *window, font *font_small)
 		render_set_scissor(window, 0, y, window->width, render_h - 43);
 		
 		/// draw entries ////////
+		s32 drawn_entity_count = 0;
 		for (s32 i = 0; i < global_search_result.files.length; i++)
 		{
 			text_match *match = array_at(&global_search_result.files, i);
 			
-			
 			if (match->match_count || match->file_error)
 			{
-				s32 text_y = y+scroll_y;
+				drawn_entity_count++;
+				s32 rec_y = y+scroll_y;
 				
-				if (text_y > start_y - h && text_y < start_y + total_space)
+				if (rec_y > start_y - h && rec_y < start_y + total_space)
 				{
+					// hover item and click item
+					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
+					{
+						render_rectangle(-1, rec_y, window->width+2, h, rgb(240,220,220));
+						platform_set_cursor(window, CURSOR_POINTER);
+					}
+					
 					// outline
-					render_rectangle_outline(-1, text_y, window->width+2, h, 1, global_ui_context.style.border);
+					render_rectangle_outline(-1, rec_y, window->width+2, h, 1, global_ui_context.style.border);
 					
 					// path
 					render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
-					render_text(font_small, 10, text_y + (h/2)-(font_small->size/2) + 1, match->file.path + global_search_result.search_result_source_dir_len, global_ui_context.style.foreground);
+					render_text(font_small, 10, rec_y + (h/2)-(font_small->size/2) + 1, match->file.path + global_search_result.search_result_source_dir_len, global_ui_context.style.foreground);
 					
 					// pattern
 					render_set_scissor(window, 0, start_y, 
 									   path_width+pattern_width-10, render_h - 43);
-					render_text(font_small, 10 + path_width, text_y + (h/2)-(font_small->size/2) + 1, match->file.matched_filter, global_ui_context.style.foreground);
+					render_text(font_small, 10 + path_width, rec_y + (h/2)-(font_small->size/2) + 1, match->file.matched_filter, global_ui_context.style.foreground);
 					
 					// state
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
@@ -460,12 +468,12 @@ static void render_result(platform_window *window, font *font_small)
 						//char snum[20];
 						//sprintf(snum, "(%d Bytes)", match->file_size);
 						if (match->line_info)
-							render_text(font_small, 10 + path_width + pattern_width, text_y + (h/2)-(font_small->size/2) + 1, match->line_info, global_ui_context.style.foreground);
+							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, match->line_info, global_ui_context.style.foreground);
 					}
 					else
 					{
 						s32 img_size = 14;
-						render_image(error_img, 6 + path_width + pattern_width, text_y + (h/2) - (img_size/2), img_size, img_size);
+						render_image(error_img, 6 + path_width + pattern_width, rec_y + (h/2) - (img_size/2), img_size, img_size);
 						
 						char *open_file_error = 0;
 						switch(match->file_error)
@@ -477,10 +485,11 @@ static void render_result(platform_window *window, font *font_small)
 							case FILE_ERROR_NETWORK_DOWN: open_file_error = localize("network_down"); break;
 							case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = localize("remote_error"); break;
 							case FILE_ERROR_STALE: open_file_error = localize("remotely_removed"); break;
+							default:
 							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
 						}
 						
-						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, text_y + (h/2)-(font_small->size/2) + 1, open_file_error, ERROR_TEXT_COLOR);
+						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->size/2) + 1, open_file_error, ERROR_TEXT_COLOR);
 					}
 				}
 				y += h-1;
@@ -841,6 +850,7 @@ int main_loop()
 	
 	while(window.is_open) {
         platform_handle_events(&window, &mouse, &keyboard);
+		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
         about_page_update_render();
 		settings_page_update_render();
@@ -1035,7 +1045,7 @@ int main_loop()
 			}
 			else
 			{
-				render_result(&window, font_mini);
+				render_update_result(&window, font_mini, &mouse);
 			}
 		}
 		

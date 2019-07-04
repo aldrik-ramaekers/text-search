@@ -19,6 +19,7 @@ void about_page_update_render()
 	{
 		platform_window_make_current(&global_about_page.window);
 		platform_handle_events(&global_about_page.window, &global_about_page.mouse, &global_about_page.keyboard);
+		platform_set_cursor(&global_about_page.window, CURSOR_DEFAULT);
 		
 		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

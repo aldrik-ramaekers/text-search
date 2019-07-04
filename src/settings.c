@@ -32,6 +32,7 @@ void settings_page_update_render()
 	{
 		platform_window_make_current(&global_settings_page.window);
 		platform_handle_events(&global_settings_page.window, &global_settings_page.mouse, &global_settings_page.keyboard);
+		platform_set_cursor(&global_settings_page.window, CURSOR_DEFAULT);
 		
 		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

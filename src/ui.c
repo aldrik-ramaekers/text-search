@@ -211,6 +211,7 @@ u8 ui_push_dropdown_item(image *icon, char *title)
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y > y && mouse_y < y + h)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			result = true;
@@ -255,6 +256,7 @@ u8 ui_push_dropdown(dropdown_state *state, char *title)
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			state->state = !state->state;
@@ -310,6 +312,7 @@ u8 ui_push_menu(char *title)
 	
 	if (mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			if (is_open)
@@ -598,6 +601,7 @@ u8 ui_push_checkbox(checkbox_state *state, char *title)
 	
 	if (mouse_x >= x && mouse_x < x + CHECKBOX_SIZE && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
 			state->state = !state->state;
@@ -656,6 +660,7 @@ u8 ui_push_menu_item(char *title, char *shortcut)
 	
 	if ((mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h))
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		bg_color = global_ui_context.style.background_hover;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 
@@ -714,6 +719,7 @@ u8 ui_push_button(button_state *state, char *title)
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		bg_color = global_ui_context.style.background_hover;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 
@@ -804,6 +810,7 @@ u8 ui_push_button_image(button_state *state, char *title, image *img)
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		bg_color = global_ui_context.style.background_hover;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 

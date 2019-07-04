@@ -88,6 +88,12 @@ typedef enum t_drag_drop_state
 	DRAG_DROP_ACTIVE,
 } drag_drop_state;
 
+typedef enum t_cursor_type
+{
+	CURSOR_DEFAULT,
+	CURSOR_POINTER,
+} cursor_type;
+
 struct drag_drop_info
 {
 	s32 state;
@@ -104,6 +110,7 @@ void platform_close_window(platform_window *window);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);
+void platform_set_cursor(platform_window *window, cursor_type type);
 void platform_window_set_title(platform_window *window, char *name);
 file_content platform_read_file_content(char *path, const char *mode);
 u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
