@@ -29,7 +29,7 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.buffer[0] = 0;
 	state.state = false;
 	state.text_offset_x = 0;
-	state.history = array_create(sizeof(char*));
+	state.history = array_create(sizeof(textbox_history_entry));
 	
 	return state;
 }
@@ -393,6 +393,8 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
 		{
+			global_ui_context.keyboard->selection_begin_offset = 0;
+			global_ui_context.keyboard->selection_length = strlen(global_ui_context.keyboard->input_text);
 			global_ui_context.keyboard->has_selection = true;
 			
 			global_ui_context.mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
@@ -469,21 +471,23 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		// go to previous state
 		if (is_lctrl_down && keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Z) && state->history.length)
 		{
-			char **old_text = array_at(&state->history, state->history.length-1);
-			strncpy(state->buffer, *old_text, MAX_INPUT_LENGTH);
+			textbox_history_entry *old_text = array_at(&state->history, state->history.length-1);
+			strncpy(state->buffer, old_text->text, MAX_INPUT_LENGTH);
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
-			mem_free(*old_text);
+			mem_free(old_text->text);
 			array_remove_at(&state->history, state->history.length-1);
+			global_ui_context.keyboard->cursor = old_text->cursor_offset;
 		}
 		else
 		{
 			if (old_len != len)
 			{
-				char *history_entry = mem_alloc(old_len+1);
-				strcpy(history_entry, state->buffer);
+				textbox_history_entry history_entry;
+				history_entry.text = mem_alloc(old_len+1);
+				history_entry.cursor_offset = last_cursor_pos;
+				strcpy(history_entry.text, state->buffer);
 				array_push(&state->history, &history_entry);
 			}
-			
 			
 			strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 			if (global_ui_context.keyboard->cursor > state->max_len)

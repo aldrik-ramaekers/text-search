@@ -85,13 +85,15 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): add cursor move as textbox history entry
+// TODO(Aldrik): alert message when search has completed and window is minimized
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
 // TODO(Aldrik): search while you type
 // TODO(Aldrik): text selection in textbox
 // TODO(Aldrik): clipboard copy
 // TODO(Aldrik): limit to 24 fps
-// TODO(Aldrik): stop allocating strings everywhere in search functions, use 1 big buffer
+// TODO(Aldrik): stop allocating strings everywhere in search functions, use 1 big buffer or have an array of big buffers of maybe 1mb each so we dont reserve too much memory
 
 char *text_to_find;
 
@@ -442,12 +444,14 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				
 				if (rec_y > start_y - h && rec_y < start_y + total_space)
 				{
+#if 0
 					// hover item and click item
 					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
 					{
 						render_rectangle(-1, rec_y, window->width+2, h, rgb(240,220,220));
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
+#endif
 					
 					// outline
 					render_rectangle_outline(-1, rec_y, window->width+2, h, 1, global_ui_context.style.border);

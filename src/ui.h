@@ -58,6 +58,12 @@ typedef struct t_ui_layout
 	s32 padding;
 } ui_layout;
 
+typedef struct t_textbox_history_entry
+{
+	char *text;
+	s32 cursor_offset;
+} textbox_history_entry;
+
 typedef struct t_textbox_state
 {
 	char *buffer;

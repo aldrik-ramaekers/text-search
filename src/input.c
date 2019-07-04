@@ -101,6 +101,15 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		
 		if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
 		{
+			if (keyboard->has_selection)
+			{
+				strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+				keyboard->has_selection = false;
+				keyboard->cursor = keyboard->selection_begin_offset;
+				keyboard->selection_length = 0;
+				keyboard->selection_begin_offset = 0;
+			}
+			
 			if (keyboard->input_text_len)
 			{
 				char buffer[MAX_INPUT_LENGTH];
@@ -133,6 +142,15 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			{
 				char buf[MAX_INPUT_LENGTH];
 				u8 result = platform_get_clipboard(window, buf);
+				
+				if (keyboard->has_selection)
+				{
+					strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+					keyboard->has_selection = false;
+					keyboard->cursor = keyboard->selection_begin_offset;
+					keyboard->selection_length = 0;
+					keyboard->selection_begin_offset = 0;
+				}
 				
 				if (result)
 				{
@@ -175,16 +193,23 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 	{
 		u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 		
+		if (keyboard->has_selection)
+		{
+			strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+			keyboard->has_selection = false;
+			keyboard->cursor = keyboard->selection_begin_offset;
+			keyboard->selection_length = 0;
+			keyboard->selection_begin_offset = 0;
+		}
 		if (is_lctrl_down)
 		{
-			keyboard->input_text[0] = '\0';
-			strcpy(keyboard->input_text, keyboard->input_text+keyboard->cursor);
+			strncpy(keyboard->input_text, keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH);
 			keyboard->input_text_len -= keyboard->cursor;
 			keyboard->cursor = 0;
 		}
 		else if (keyboard->cursor > 0)
 		{
-			s32 len = strlen(keyboard->input_text);
+			s32 len = keyboard->input_text_len;
 			//keyboard->input_text[len-1] = '\0';
 			strcpy(keyboard->input_text+keyboard->cursor-1, keyboard->input_text+keyboard->cursor);
 			
