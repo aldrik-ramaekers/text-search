@@ -25,7 +25,6 @@
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
-#define COMPANY_NAME "Aldrik Ramaekers"
 #define WEBSITE_URL "https://slothsoftware.com/home.html"
 #define WEBSITE_CONTACT_URL "https://slothsoftware.com/contact.html"
 
@@ -111,7 +110,6 @@ platform_window *main_window;
 // TODO(Aldrik): text selection in textbox
 // TODO(Aldrik): clipboard copy
 // TODO(Aldrik): limit to 24 fps
-// TODO(Aldrik): stop allocating strings everywhere in search functions, use 1 big buffer or have an array of big buffers of maybe 1mb each so we dont reserve too much memory
 
 char *text_to_find;
 
@@ -157,7 +155,7 @@ static void *find_text_in_file_t(void *arg)
 				global_search_result.match_found = true;
 				
 				// match info
-				match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
+				match->line_info = memory_bucket_reserve(&global_platform_memory_bucket, word_offset+80); // show 20 chars behind text match. + 10 extra space
 				sprintf(match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
 				
 				char *tmp = match->line_info;
@@ -185,7 +183,6 @@ static void *find_text_in_file_t(void *arg)
 			if (content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS ||
 				content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
 			{
-				// TODO(Aldrik): is this really necessary? were already hogging the entire system anyway...
 				thread_sleep(1000);
 				
 				goto try_again;
@@ -218,8 +215,6 @@ static void *find_text_in_file_t(void *arg)
 		}
 	}
 	
-	mem_free(arg);
-	
 	return 0;
 }
 
@@ -241,7 +236,7 @@ static void* find_text_in_files_t(void *arg)
 		text_to_find = arg;
 		for (s32 i = start; i < len; i++)
 		{
-			find_text_args *args = mem_alloc(sizeof(find_text_args));
+			find_text_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(find_text_args));
 			args->match = array_at(&global_search_result.files, i);
 			args->match->match_count = 0;
 			args->match->file_error = 0;
@@ -412,7 +407,6 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		render_h = window->height - render_y - 30;
 	}
 	
-	// TODO(Aldrik): make constants.. 30 is status bar height
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
 	if (global_search_result.match_found)
@@ -729,12 +723,6 @@ static void do_search()
 			global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
 																							  global_search_result.search_result_source_dir_len);
 			
-			for (s32 i = 0; i < global_search_result.files.length; i++)
-			{
-				text_match *file = array_at(&global_search_result.files, i);
-				if (file->line_info)
-					mem_free(file->line_info);
-			}
 			platform_destroy_list_file_result(&global_search_result.files);
 			
 			global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
@@ -1063,13 +1051,6 @@ int main_loop()
 	
 	settings_page_hide_without_save();
 	
-	for (s32 i = 0; i < global_search_result.files.length; i++)
-	{
-		text_match *match = array_at(&global_search_result.files, i);
-		mem_free(match->file.path);
-		mem_free(match->file.matched_filter);
-	}
-	
 	// write config file
 	settings_config_set_string(&config, "SEARCH_DIRECTORY", textbox_path.buffer);
 	settings_config_set_number(&config, "SEARCH_DIRECTORIES", checkbox_recursive.state);
@@ -1130,14 +1111,8 @@ int main_loop()
 	
 	keyboard_input_destroy(&keyboard);
 	platform_close_window(&window);
-	
-	for (s32 i = 0; i < global_search_result.files.length; i++)
-	{
-		text_match *file = array_at(&global_search_result.files, i);
-		if (file->line_info)
-			mem_free(file->line_info);
-	}
 	platform_destroy_window(&window);
+	platform_destroy();
 	
 #if defined(MODE_DEVELOPER) && defined(OS_LINUX)
 	memory_print_leaks();

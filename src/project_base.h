@@ -113,10 +113,10 @@ int main_loop();
 
 #include "input.h"
 #include "assets.h"
+#include "memory_bucket.h"
 #include "platform.h"
 #include "render.h"
 #include "camera.h"
-
 #include "ui.h"
 #include "string_utils.h"
 #include "settings_config.h"
@@ -138,6 +138,7 @@ int main_loop();
 #include "settings_config.c"
 #include "localization.c"
 #include "text_buffer.c"
+#include "memory_bucket.c"
 
 #ifdef MODE_DEVELOPER
 #include "memory.c"

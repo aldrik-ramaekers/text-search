@@ -198,8 +198,6 @@ void load_available_localizations()
 		found_file *file = array_at(&file_list, i);
 		mo_file mo = load_localization_file(file->path);
 		s32 index = array_push(&global_localization.mo_files, &mo);
-		mem_free(file->path);
-		mem_free(file->matched_filter);
 	}
 	
 	array_destroy(&file_list);

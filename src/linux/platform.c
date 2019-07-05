@@ -189,12 +189,7 @@ static void get_directory_from_path(char *buffer, char *path)
 
 void platform_destroy_list_file_result(array *files)
 {
-	for (s32 i = 0; i < files->length; i++)
-	{
-		found_file *file = array_at(files, i);
-		mem_free(file->path);
-		mem_free(file->matched_filter);
-	}
+	memory_bucket_reset(&global_platform_memory_bucket);
 	files->length = 0;
 }
 
@@ -618,7 +613,13 @@ inline void platform_init()
 	}
 #endif
 	
+	global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
+}
+
+inline void platform_destroy()
+{
+	memory_bucket_destroy(&global_platform_memory_bucket);
 }
 
 inline void platform_window_make_current(platform_window *window)
@@ -1513,7 +1514,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	
 	FILE *f;
 	
-	char *current_val = mem_alloc(MAX_INPUT_LENGTH);
+	char current_val[MAX_INPUT_LENGTH];
 	strncpy(current_val, args->buffer, MAX_INPUT_LENGTH);
 	
 	char file_filter[MAX_INPUT_LENGTH];
@@ -1544,7 +1545,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	
 	f = popen(command, "r");
 	
-	char *buffer = mem_alloc(MAX_INPUT_LENGTH);
+	char buffer[MAX_INPUT_LENGTH];
 	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
 	// NOTE(Aldrik): buffer should be longer then 2 because zenity returns a single garbage character when closed without selecting a path. (lol?)
@@ -1557,9 +1558,6 @@ static void* platform_open_file_dialog_dd(void *data)
 			args->buffer[len-1] = 0;
 		}
 	}
-	
-	mem_free(current_val);
-	mem_free(buffer);
 	
 	return 0;
 }
@@ -1616,13 +1614,13 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				{
 					if (string_match(filter, dir->d_name))
 					{
-						char *buf = mem_alloc(PATH_MAX);
+						char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 						//realpath(dir->d_name, buf);
 						sprintf(buf, "%s%s",start_dir, dir->d_name);
 						
 						found_file f;
 						f.path = buf;
-						f.matched_filter = mem_alloc(len+1);
+						f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
 						strncpy(f.matched_filter, filter, len+1);
 						
 						array_push_size(list, &f, sizeof(found_file));
@@ -1645,13 +1643,13 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				// check if name matches pattern
 				if (string_match(filter, dir->d_name))
 				{
-					char *buf = mem_alloc(PATH_MAX);
+					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 					//realpath(dir->d_name, buf);
 					sprintf(buf, "%s%s",start_dir, dir->d_name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = mem_alloc(len+1);
+					f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
 					strncpy(f.matched_filter, filter, len+1);
 					
 					array_push_size(list, &f, sizeof(found_file));

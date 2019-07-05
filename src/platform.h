@@ -119,6 +119,7 @@ struct drag_drop_info
 	char *path;
 };
 
+memory_bucket_collection global_platform_memory_bucket;
 u8 platform_cancel_search = false;
 
 u8 platform_window_is_valid(platform_window *window);
@@ -147,6 +148,7 @@ void platform_open_url(char *command);
 void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);
 void platform_init();
+void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);
 void platform_autocomplete_path(char *buffer);
 u8 platform_directory_exists(char *path);

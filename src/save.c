@@ -106,12 +106,6 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 		return;
 	}
 	
-	for (s32 i = 0; i < global_search_result.files.length; i++)
-	{
-		text_match *file = array_at(&global_search_result.files, i);
-		if (file->line_info)
-			mem_free(file->line_info);
-	}
 	platform_destroy_list_file_result(&global_search_result.files);
 	scroll_y = 0;
 	
@@ -145,17 +139,17 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	text_match match;
 	while (!buffer_done_reading(&save_file_buffer))
 	{
-		match.file.path = mem_alloc(PATH_MAX);
+		match.file.path = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 		buffer_read_string(&save_file_buffer, match.file.path);
 		
-		match.file.matched_filter = mem_alloc(PATH_MAX);
+		match.file.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 		buffer_read_string(&save_file_buffer, match.file.matched_filter);
 		
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
 		match.file_size = buffer_read_signed(&save_file_buffer);
 		
-		match.line_info = mem_alloc(PATH_MAX);
+		match.line_info = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 		buffer_read_string(&save_file_buffer, match.line_info);
 		
 		array_push(&search_result->files, &match);
