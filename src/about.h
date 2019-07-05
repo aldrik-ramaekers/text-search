@@ -21,16 +21,14 @@
 #ifndef INCLUDE_ABOUT
 #define INCLUDE_ABOUT
 
-#include <time.h>
-
 typedef struct t_about_page
 {
 	platform_window window;
 	keyboard_input keyboard;
 	mouse_input mouse;
 	bool active;
-	image *sloth_img;
-	image *sloth_small_img;
+	image *license_img;
+	image *logo_img;
 	font *font_big;
 	font *font_small;
 	button_state btn_close;

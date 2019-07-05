@@ -81,14 +81,14 @@ search_result global_search_result;
 image *search_img;
 image *error_img;
 image *directory_img;
-image *sloth_img;
+image *logo_img;
 image *drag_drop_img;
 image *notification_bg_img;
+image *logo_small_img;
 
 font *font_medium;
 font *font_small;
 font *font_mini;
-image *sloth_small_img;
 s32 scroll_y = 0;
 
 platform_window *main_window;
@@ -624,7 +624,7 @@ static void render_info(platform_window *window, font *font_small)
 		
 		sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
 		
-		render_image(sloth_img, img_x, img_y, img_w, img_h);
+		render_image(logo_img, img_x, img_y, img_w, img_h);
 		s32 text_w = calculate_text_width(font_medium, text);
 		render_text(font_medium, img_c - (text_w/2), img_y + img_h + 50, text, global_ui_context.style.foreground);
 	}
@@ -770,8 +770,8 @@ int main_loop()
 	set_locale("en");
 	
 	search_img = assets_load_image("data/imgs/search.png", false);
-	sloth_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
-	sloth_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
+	logo_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
+	logo_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
 	directory_img = assets_load_image("data/imgs/folder.png", false);
 	error_img = assets_load_image("data/imgs/error.png", false);
 	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
@@ -872,10 +872,10 @@ int main_loop()
 		platform_window_make_current(&window);
 		
 		static u8 loaded = false;
-		if (!loaded && sloth_small_img->loaded)
+		if (!loaded && logo_small_img->loaded)
 		{
 			loaded = true;
-			platform_set_icon(&window, sloth_small_img);
+			platform_set_icon(&window, logo_small_img);
 		}
 		
 		global_ui_context.layout.active_window = &window;
@@ -1116,8 +1116,8 @@ int main_loop()
 	
 	// delete assets
 	assets_destroy_image(search_img);
-	assets_destroy_image(sloth_img);
-	assets_destroy_image(sloth_small_img);
+	assets_destroy_image(logo_img);
+	assets_destroy_image(logo_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
 	assets_destroy_image(drag_drop_img);

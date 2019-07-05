@@ -28,7 +28,7 @@ typedef struct t_settings_page
 	bool active;
 	
 	font *font_small;
-	image *sloth_small_img;
+	image *logo_img;
 	
 	button_state btn_close;
 	button_state btn_save;

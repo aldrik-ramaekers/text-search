@@ -21,7 +21,7 @@ void settings_page_create()
 {
 	global_settings_page.active = false;
 	global_settings_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	global_settings_page.sloth_small_img = assets_load_image("data/imgs/sloth_text-search-logo_32px.png", true);
+	global_settings_page.logo_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
 	global_settings_page.keyboard = keyboard_input_create();
 	global_settings_page.mouse = mouse_input_create();
 	
@@ -204,7 +204,7 @@ void settings_page_show()
 	global_settings_page.active = true;
 	global_settings_page.selected_tab_index = 0;
 	global_settings_page.current_locale_id = localize_get_id();
-	platform_set_icon(&global_settings_page.window, global_settings_page.sloth_small_img);
+	platform_set_icon(&global_settings_page.window, global_settings_page.logo_img);
 }
 
 void settings_page_hide()
@@ -241,5 +241,5 @@ void settings_page_destroy()
 	ui_destroy_textbox(&global_settings_page.textbox_max_file_size);
 	ui_destroy_textbox(&global_settings_page.textbox_max_thread_count);
 	assets_destroy_font(global_settings_page.font_small);
-	assets_destroy_image(global_settings_page.sloth_small_img);
+	assets_destroy_image(global_settings_page.logo_img);
 }
