@@ -1,3 +1,22 @@
+/* 
+*  Copyright 2019 Aldrik Ramaekers
+*
+*  This file is part of Text-search.
+*
+    *  Text-search is free software: you can redistribute it and/or modify
+    *  it under the terms of the GNU General Public License as published by
+    *  the Free Software Foundation, either version 3 of the License, or
+    *  (at your option) any later version.
+	
+    *  Text-search is distributed in the hope that it will be useful,
+    *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+    *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    *  GNU General Public License for more details.
+	
+    *  You should have received a copy of the GNU General Public License
+    *  along with Text-search.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include "config.h"
 #include "project_base.h"
 
@@ -9,7 +28,6 @@
 #define COMPANY_NAME "Aldrik Ramaekers"
 #define WEBSITE_URL "https://slothsoftware.com/home.html"
 #define WEBSITE_CONTACT_URL "https://slothsoftware.com/contact.html"
-#define WEBSITE_MANUAL_URL "https://slothsoftware.com/text-search-manual.html"
 
 typedef struct t_text_match
 {
@@ -737,18 +755,11 @@ int main_loop()
 	platform_init();
 	
 #ifdef MODE_DEVELOPER
-#ifdef BUILD_TRIAL
-	platform_window window = platform_open_window("Text-search [trial] [developer]", 800, 600, 0, 0);
-#else
 	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);
-#endif
-#else
-#ifdef BUILD_TRIAL
-	platform_window window = platform_open_window("Text-search [trial]", 800, 600, 0, 0);
 #else
 	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
 #endif
-#endif
+	
 	main_window = &window;
 	
 	assets_create();
@@ -946,15 +957,10 @@ int main_loop()
 				}
 				if (ui_push_menu(localize("help")))
 				{
-					if (ui_push_menu_item(localize("user_manual"), ""))
-					{
-						platform_open_url(WEBSITE_MANUAL_URL);
-					}
 					if (ui_push_menu_item(localize("about"), "")) 
 					{
 						about_page_show();
 					}
-					ui_push_menu_item_separator();
 					if (ui_push_menu_item(localize("contact"), "")) 
 					{
 						platform_open_url(WEBSITE_CONTACT_URL);
@@ -1002,14 +1008,6 @@ int main_loop()
 					do_search();
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
-				
-#ifdef BUILD_TRIAL
-				if (checkbox_recursive.state)
-				{
-					checkbox_recursive.state = 0;
-					platform_show_message(&window, localize("upgrade_to_full"), localize("feature_unavailable"));
-				}
-#endif
 				
 				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
 				{

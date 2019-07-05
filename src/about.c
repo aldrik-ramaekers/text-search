@@ -1,3 +1,21 @@
+/* 
+*  Copyright 2019 Aldrik Ramaekers
+*
+*  This file is part of Text-search.
+*
+    *  Text-search is free software: you can redistribute it and/or modify
+    *  it under the terms of the GNU General Public License as published by
+    *  the Free Software Foundation, either version 3 of the License, or
+    *  (at your option) any later version.
+	
+    *  Text-search is distributed in the hope that it will be useful,
+    *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+    *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    *  GNU General Public License for more details.
+	
+    *  You should have received a copy of the GNU General Public License
+    *  along with Text-search.  If not, see <https://www.gnu.org/licenses/>.
+*/
 
 void about_page_create()
 {
@@ -32,16 +50,9 @@ void about_page_update_render()
 		
 		char *title_text = "Text-search";
 		
-		time_t timeval;
-		struct tm *tp;
-		time (&timeval);
-		tp = gmtime(&timeval);
-		
-		char copyright_text[30];
-		sprintf(copyright_text, "Copyright 2019-%d", tp->tm_year+1900);
+		char *copyright_text = "Copyright 2019 Aldrik Ramaekers";
 		
 		char *info_text = localize("short_info_text");
-		char *names_text = "Aldrik Ramaekers";
 		
 		s32 text_w = calculate_text_width(global_about_page.font_big, title_text);
 		text_x = -(text_w/2)+(global_about_page.window.width/2);
@@ -63,13 +74,6 @@ void about_page_update_render()
 			+ (global_about_page.window.width/2);
 		render_text(global_about_page.font_small, text_x, text_y,
 					copyright_text, rgb(20,20,20));
-		
-		// names
-		text_y += global_about_page.font_small->size;
-		text_x = -(calculate_text_width(global_about_page.font_small, names_text)/2)
-			+ (global_about_page.window.width/2);
-		render_text(global_about_page.font_small, text_x, text_y, 
-					names_text, rgb(20,20,20));
 		
 		global_ui_context.layout.active_window = &global_about_page.window;
 		global_ui_context.keyboard = &global_about_page.keyboard;
