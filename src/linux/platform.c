@@ -63,8 +63,8 @@ struct t_platform_window
 	// shared window properties
 	s32 width;
 	s32 height;
-	u8 is_open;
-	u8 has_focus;
+	bool is_open;
+	bool has_focus;
 	cursor_type curr_cursor_type;
 	cursor_type next_cursor_type;
 	struct drag_drop_info drag_drop_info;
@@ -1058,7 +1058,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	for (s32 i = 0; i < pending_events; i++)
 	{
 		XNextEvent(window->display, &window->event);
-		
 		if (window->event.type == ClientMessage)
 		{
 			static int xdnd_version=0;
@@ -1347,6 +1346,13 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			KeySym ksym = XLookupKeysym(&window->event.xkey, 0);
 		}
 	}
+}
+
+inline void platform_show_alert(char *title, char *message)
+{
+	char command[MAX_INPUT_LENGTH];
+	sprintf(command, "notify-send \"%s\" \"%s\"", title, message);
+	platform_run_command(command);
 }
 
 inline void platform_window_swap_buffers(platform_window *window)

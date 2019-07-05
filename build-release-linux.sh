@@ -20,6 +20,8 @@ cp COPYING release/
 cp build-release-linux.sh release/
 
 cp -r data/ release/
+rm -rf release/data/export/
+mkdir release/data/export/
 printf "SEARCH_DIRECTORY = \"/home/user/Projects/\"\nSEARCH_DIRECTORIES = \"1\"\nSEARCH_TEXT = \"*hello world*\"\nFILE_FILTER = \"*.txt,*.c\"\nMAX_THEAD_COUNT = \"20\"\nMAX_FILE_SIZE = \"200\"\nLOCALE = \"en\"\nWINDOW_WIDTH = \"800\"\nWINDOW_HEIGHT = \"600\"\nPARALLELIZE_SEARCH = \"1\"\n" > release/data/config.txt
 
 cd release/

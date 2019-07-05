@@ -102,8 +102,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
-// TODO(Aldrik): add cursor move as textbox history entry
-// TODO(Aldrik): alert message when search has completed and window is minimized
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
 // TODO(Aldrik): search while you type
@@ -321,6 +319,9 @@ static void* find_text_in_files_t(void *arg)
 			
 			global_search_result.done_finding_matches = true;
 			global_search_result.files_searched = global_search_result.files.length;
+			
+			if (!main_window->has_focus)
+				platform_show_alert("Text-search", localize("search_result_completed"));
 		}
 		array_destroy(&threads);
 	}

@@ -122,7 +122,6 @@ typedef struct t_ui_context
 	s32 menu_item_count;
 } ui_context;
 
-
 ui_context global_ui_context;
 
 u32 ui_get_id();

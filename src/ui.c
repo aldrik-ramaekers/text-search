@@ -365,7 +365,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 {
 	u8 result = false;
 	static u64 cursor_tick = 0;
-	static u64 last_cursor_pos = 0;
+	static u64 last_cursor_pos = -1;
 	
 	if (!global_ui_context.layout.active_window->has_focus)
 	{
@@ -499,7 +499,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		else
 		{
-			if (old_len != len)
+			if (old_len != len || (last_cursor_pos != global_ui_context.keyboard->cursor && last_cursor_pos != -1))
 			{
 				textbox_history_entry history_entry;
 				history_entry.text = mem_alloc(old_len+1);
