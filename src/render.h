@@ -52,6 +52,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint);
 s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cutoff_width);
 s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint);
 
+s32 calculate_cursor_position(font *font, char *text, s32 click_x);
 s32 calculate_text_width(font *font, char *text);
 s32 calculate_text_height(font *font, s32 cutoff_width, char *text);
 

@@ -121,11 +121,19 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		{
 			if (keyboard->has_selection)
 			{
-				strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+				char buf_left[MAX_INPUT_LENGTH];
+				char buf_right[MAX_INPUT_LENGTH];
+				
+				sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
+				strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
+				
+				sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
+				
 				keyboard->has_selection = false;
 				keyboard->cursor = keyboard->selection_begin_offset;
 				keyboard->selection_length = 0;
 				keyboard->selection_begin_offset = 0;
+				keyboard->input_text_len = strlen(keyboard->input_text);
 			}
 			
 			if (keyboard->input_text_len)
@@ -133,10 +141,14 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				char buffer[MAX_INPUT_LENGTH];
 				if (keyboard->cursor)
 				{
-					char ch2 = keyboard->input_text[keyboard->cursor-1];
-					keyboard->input_text[keyboard->cursor-1] = 0;
+					char buf_left[MAX_INPUT_LENGTH];
+					char buf_right[MAX_INPUT_LENGTH];
 					
-					sprintf(buffer, "%s%c%c%s", keyboard->input_text, ch2, *ch, keyboard->input_text+keyboard->cursor);
+					sprintf(buf_left, "%.*s", keyboard->cursor, keyboard->input_text);
+					strcpy(buf_right, keyboard->input_text+keyboard->cursor);
+					
+					
+					sprintf(buffer, "%s%c%s", buf_left, *ch, buf_right);
 				}
 				else
 				{
@@ -163,11 +175,19 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				
 				if (keyboard->has_selection)
 				{
-					strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+					char buf_left[MAX_INPUT_LENGTH];
+					char buf_right[MAX_INPUT_LENGTH];
+					
+					sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
+					strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
+					
+					sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
+					
 					keyboard->has_selection = false;
 					keyboard->cursor = keyboard->selection_begin_offset;
 					keyboard->selection_length = 0;
 					keyboard->selection_begin_offset = 0;
+					keyboard->input_text_len = strlen(keyboard->input_text);
 				}
 				
 				if (result)
@@ -213,13 +233,21 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		
 		if (keyboard->has_selection)
 		{
-			strncpy(keyboard->input_text+keyboard->selection_begin_offset, keyboard->input_text+keyboard->selection_length, MAX_INPUT_LENGTH);
+			char buf_left[MAX_INPUT_LENGTH];
+			char buf_right[MAX_INPUT_LENGTH];
+			
+			sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
+			strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
+			
+			sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
+			
 			keyboard->has_selection = false;
 			keyboard->cursor = keyboard->selection_begin_offset;
 			keyboard->selection_length = 0;
 			keyboard->selection_begin_offset = 0;
+			keyboard->input_text_len = strlen(keyboard->input_text);
 		}
-		if (is_lctrl_down)
+		else if (is_lctrl_down)
 		{
 			strncpy(keyboard->input_text, keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH);
 			keyboard->input_text_len -= keyboard->cursor;

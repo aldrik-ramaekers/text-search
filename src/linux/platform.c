@@ -1203,11 +1203,14 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			s32 x = mouse->x;
 			s32 y = mouse->y;
 			
+			mouse->total_move_x += window->event.xmotion.x - mouse->x;
+			mouse->total_move_y += window->event.xmotion.y - mouse->y;
+			
 			mouse->x = window->event.xmotion.x;
 			mouse->y = window->event.xmotion.y;
 			
-			mouse->move_x = x - mouse->x;
-			mouse->move_y = y - mouse->y;
+			mouse->move_x = mouse->x - x;
+			mouse->move_y = mouse->y - y;
 		}
 		else if (window->event.type == ButtonPress)
 		{
@@ -1234,6 +1237,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			{
 				mouse->left_state |= MOUSE_DOWN;
 				mouse->left_state |= MOUSE_CLICK;
+				
+				mouse->total_move_x = 0;
+				mouse->total_move_y = 0;
 			}
 			if (is_right_down)
 			{

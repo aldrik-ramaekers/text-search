@@ -284,6 +284,36 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	
 }
 
+s32 calculate_cursor_position(font *font, char *text, s32 click_x)
+{
+	if (!font->loaded)
+		return 0;
+	
+	s32 x = 0;
+	s32 index = 0;
+	while(*text)
+	{
+		char ch = *text;
+		char ch_next = *(text+1);
+		s32 width = font->glyph_widths[ch-32];
+		
+		if (ch != '.' && ch != ',')
+			x+=width / 2;//+(kern*font->scale);
+		else
+			x+=font->size/4;
+		
+		if (x > click_x)
+		{
+			return index;
+		}
+		
+		++index;
+		++text;
+	}
+	
+	return x;
+}
+
 s32 calculate_text_width(font *font, char *text)
 {
 	if (!font->loaded)

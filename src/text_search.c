@@ -109,7 +109,6 @@ platform_window *main_window;
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
 // TODO(Aldrik): search while you type
-// TODO(Aldrik): text selection in textbox
 // TODO(Aldrik): clipboard copy
 
 char *text_to_find;

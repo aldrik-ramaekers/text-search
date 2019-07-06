@@ -86,9 +86,8 @@ typedef struct t_textbox_history_entry
 typedef struct t_textbox_state
 {
 	char *buffer;
+	s32 selection_start_index;
 	u8 state;
-	s32 selection_start_cursor;
-	s32 selection_length;
 	s32 max_len;
 	s32 text_offset_x;
 	array history;

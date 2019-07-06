@@ -179,6 +179,8 @@ typedef struct t_mouse_input
 	s16 y;
 	s16 move_x;
 	s16 move_y;
+	s16 total_move_x;
+	s16 total_move_y;
 	s8 left_state;
 	s8 right_state;
 	s8 scroll_state;

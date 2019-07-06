@@ -408,6 +408,8 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 			virt_top = top;
 	}
 	
+	bool is_selecting = false;
+	bool clicked_to_select = false;
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
@@ -415,6 +417,7 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 			global_ui_context.keyboard->selection_begin_offset = 0;
 			global_ui_context.keyboard->selection_length = strlen(global_ui_context.keyboard->input_text);
 			global_ui_context.keyboard->has_selection = true;
+			state->selection_start_index = 0;
 			
 			global_ui_context.mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
@@ -424,20 +427,34 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
 			
-			global_ui_context.keyboard->has_selection = false;
+			if (global_ui_context.keyboard->has_selection)
+			{
+				global_ui_context.keyboard->has_selection = false;
+			}
+			else if (state->state)
+			{
+				clicked_to_select = true;
+			}
+			
 			state->state = true;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
 			result = true;
 			
 			global_ui_context.keyboard->take_input = state->state;
 		}
+		if (is_left_down(global_ui_context.mouse))
+		{
+			is_selecting = true;
+		}
 	}
 	else if (is_left_clicked(global_ui_context.mouse) || is_left_down(global_ui_context.mouse))
 	{
-		state->state = false;
-		
 		if (state->state)
+		{
 			global_ui_context.keyboard->has_selection = false;
+		}
+		
+		state->state = false;
 	}
 	
 	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
@@ -472,13 +489,6 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 	s32 cursor_x;
 	s32 diff = 0;
 	
-	if (global_ui_context.keyboard->has_selection && state->state)
-	{
-		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
-		
-		s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
-		render_rectangle(x-5, y+4, text_w+10, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
-	}
 	if (state->state)
 	{
 		s32 len = strlen(global_ui_context.keyboard->input_text);
@@ -548,7 +558,51 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		if (cursor_tick % 50 < 25 && !global_ui_context.keyboard->has_selection)
 			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
-	
+	if (clicked_to_select)
+	{
+		global_ui_context.keyboard->has_selection = true;
+		global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
+																					   state->buffer, mouse_x + diff - text_x);
+		global_ui_context.keyboard->selection_length = 1;
+		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
+	}
+	if (is_selecting)
+	{
+		s32 index = calculate_cursor_position(global_ui_context.font_small, 
+											  state->buffer, mouse_x + diff - text_x)+1;
+		
+		s32 right = global_ui_context.keyboard->selection_begin_offset + global_ui_context.keyboard->selection_length;
+		s32 left = global_ui_context.keyboard->selection_begin_offset;
+		
+		if (index < state->selection_start_index)
+		{
+			global_ui_context.keyboard->selection_begin_offset = index;
+			global_ui_context.keyboard->selection_length = state->selection_start_index - index + 1;
+		}
+		else if (index > state->selection_start_index)
+		{
+			global_ui_context.keyboard->selection_begin_offset = state->selection_start_index;
+			global_ui_context.keyboard->selection_length = index - state->selection_start_index;
+		}
+	}
+	if (global_ui_context.keyboard->has_selection && state->state)
+	{
+		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
+		
+		// calculate selection start x
+		char ch = state->buffer[global_ui_context.keyboard->selection_begin_offset];
+		state->buffer[global_ui_context.keyboard->selection_begin_offset] = 0;
+		s32 selection_start_x =  calculate_text_width(global_ui_context.font_small, state->buffer);
+		state->buffer[global_ui_context.keyboard->selection_begin_offset] = ch;
+		
+		// calculate selection width
+		ch = state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length];
+		state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length] = 0;
+		s32 selection_width =  calculate_text_width(global_ui_context.font_small, state->buffer+global_ui_context.keyboard->selection_begin_offset);
+		state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length] = ch;
+		
+		render_rectangle(text_x - diff + selection_start_x, y+4, selection_width, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
+	}
 	if (!has_text)
 	{
 		render_text(global_ui_context.font_small, text_x - diff, text_y, 
