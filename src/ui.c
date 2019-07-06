@@ -576,8 +576,8 @@ u8 ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		if (index < state->selection_start_index)
 		{
-			global_ui_context.keyboard->selection_begin_offset = index;
-			global_ui_context.keyboard->selection_length = state->selection_start_index - index + 1;
+			global_ui_context.keyboard->selection_begin_offset = index - 1;
+			global_ui_context.keyboard->selection_length = state->selection_start_index - index + 2;
 		}
 		else if (index > state->selection_start_index)
 		{
