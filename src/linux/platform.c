@@ -655,8 +655,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		GLX_DEPTH_SIZE      , 24,
 		GLX_STENCIL_SIZE    , 8,
 		GLX_DOUBLEBUFFER    , True,
-		//GLX_SAMPLE_BUFFERS  , 1,
-		//GLX_SAMPLES         , 4,
+		GLX_SAMPLE_BUFFERS  , 1,
+		GLX_SAMPLES         , 4,
 		None
 	};
 	
@@ -1679,7 +1679,6 @@ void* platform_list_files_t_t(void *args)
 {
 	list_file_args *info = args;
 	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive, info->include_directories);
-	mem_free(info);
 	return 0;
 }
 
@@ -1733,7 +1732,7 @@ void *platform_list_files_t(void *args)
 		thread thr;
 		thr.valid = false;
 		
-		list_file_args *args_2 = mem_alloc(sizeof(list_file_args));
+		list_file_args *args_2 = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(list_file_args));
 		if (args_2)
 		{
 			args_2->list = list;
@@ -1768,7 +1767,6 @@ void *platform_list_files_t(void *args)
 	
 	array_destroy(&threads);
 	array_destroy(&filters);
-	mem_free(args);
 	
 	return 0;
 }
@@ -1776,7 +1774,7 @@ void *platform_list_files_t(void *args)
 void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state)
 {
 	platform_cancel_search = false;
-	list_file_args *args = mem_alloc(sizeof(list_file_args));
+	list_file_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(list_file_args));
 	args->list = list;
 	args->start_dir = start_dir;
 	args->pattern = filter;

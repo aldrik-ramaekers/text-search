@@ -20,6 +20,7 @@
 #include "config.h"
 #include "project_base.h"
 
+#define TARGET_FRAMERATE 1000/30.0
 #define FILE_RESERVE_COUNT 5000
 #define ERROR_RESERVE_COUNT 10
 #define MAX_ERROR_MESSAGE_LENGTH 70
@@ -102,12 +103,14 @@ platform_window *main_window;
 
 // TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
 
+// TODO(Aldrik): try to mmap file
+// TODO(Aldrik): find files on 1 thread instead if one thread for each filter
+// TODO(Aldrik): right now the entire width of the text is outlined when a textbox has a selection even when only a part of it is selected.
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
 // TODO(Aldrik): search while you type
 // TODO(Aldrik): text selection in textbox
 // TODO(Aldrik): clipboard copy
-// TODO(Aldrik): limit to 24 fps
 
 char *text_to_find;
 
@@ -782,7 +785,9 @@ int main_loop()
 	
 	// asset worker
 	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
+	thread asset_queue_worker2 = thread_start(assets_queue_worker, NULL);
 	thread_detach(&asset_queue_worker1);
+	thread_detach(&asset_queue_worker2);
 	
 	// ui widgets
 	checkbox_recursive = ui_create_checkbox(false);
@@ -853,7 +858,8 @@ int main_loop()
 	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
 	
 	while(window.is_open) {
-        platform_handle_events(&window, &mouse, &keyboard);
+        u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
+		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
         about_page_update_render();
@@ -1041,14 +1047,24 @@ int main_loop()
 		}
 		
 		render_drag_drop_feedback(&window);
-		
 		assets_do_post_process();
+		
+		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
+		u64 diff = current_stamp - last_stamp;
+		float diff_ms = diff / 1000.0f;
+		last_stamp = current_stamp;
+		
+		if (diff_ms < TARGET_FRAMERATE)
+		{
+			double time_to_wait = (TARGET_FRAMERATE) - diff_ms;
+			thread_sleep(time_to_wait*1000);
+		}
         
 		platform_window_swap_buffers(&window);
-        
     }
 	
 	thread_stop(&asset_queue_worker1);
+	thread_stop(&asset_queue_worker2);
 	
 	settings_page_hide_without_save();
 	

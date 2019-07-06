@@ -224,8 +224,8 @@ void *assets_queue_worker()
 			mutex_unlock(&asset_mutex);
 		}
 		
-		// 1 us
-		thread_sleep(1000);
+		// 3 ms
+		thread_sleep(3000);
 	}
 	
 	return 0;
