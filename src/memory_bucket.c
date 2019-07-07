@@ -36,7 +36,7 @@ inline memory_bucket_collection memory_bucket_init(s32 bucket_size)
 void* memory_bucket_reserve(memory_bucket_collection *collection, s32 reserve_length)
 {
 	mutex_lock(&collection->bucket_mutex);
-	memory_bucket *bucket;
+	memory_bucket *bucket = 0;
 	for (s32 i = 0; i < collection->buckets.length; i++)
 	{
 		bucket = array_at(&collection->buckets, i);

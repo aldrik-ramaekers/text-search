@@ -209,17 +209,16 @@ void platform_autocomplete_path(char *buffer)
 	// create filter
 	strncat(name, "*", MAX_INPUT_LENGTH);
 	
-	
 	array files = array_create(sizeof(found_file));
-	platform_list_files_block(&files, dir, name, false, true);
+	array filters = get_filters(name);
+	platform_list_files_block(&files, dir, filters, false, true);
+	array_destroy(&filters);
 	
 	if (files.length > 0)
 	{
 		found_file *file = array_at(&files, 0);
 		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
 	}
-	
-	platform_destroy_list_file_result(&files);
 	
 	array_destroy(&files);
 }
@@ -1598,13 +1597,26 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 	thread_detach(&thr);
 }
 
-void platform_list_files_block(array *list, char *start_dir, char *filter, u8 recursive, u8 include_directories)
+s32 filter_matches(array *filters, char *string, char **matched_filter)
+{
+	for (s32 i = 0; i < filters->length; i++)
+	{
+		char *filter = array_at(filters, i);
+		if (string_match(filter, string))
+		{
+			*matched_filter = filter;
+			return strlen(filter);
+		}
+	}
+	return -1;
+}
+
+void platform_list_files_block(array *list, char *start_dir, array filters, u8 recursive, u8 include_directories)
 {
 	assert(list);
 	
-	// TODO(Aldrik): should we include symbolic links?
-	
-	s32 len = strlen(filter);
+	s32 len = 0;
+	char *matched_filter = 0;
 	
 	char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 	
@@ -1624,7 +1636,8 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 				
 				if (include_directories)
 				{
-					if (string_match(filter, dir->d_name))
+					if ((len = filter_matches(&filters, dir->d_name, 
+											  &matched_filter)) && len != -1)
 					{
 						char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 						//realpath(dir->d_name, buf);
@@ -1633,7 +1646,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 						found_file f;
 						f.path = buf;
 						f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
-						strncpy(f.matched_filter, filter, len+1);
+						strncpy(f.matched_filter, matched_filter, len+1);
 						
 						array_push_size(list, &f, sizeof(found_file));
 					}
@@ -1646,14 +1659,15 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 					strcat(subdirname_buf, "/");
 					
 					// do recursive search
-					platform_list_files_block(list, subdirname_buf, filter, recursive, include_directories);
+					platform_list_files_block(list, subdirname_buf, filters, recursive, include_directories);
 				}
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.
 			else if (dir->d_type == DT_REG || dir->d_type == DT_UNKNOWN)
 			{
 				// check if name matches pattern
-				if (string_match(filter, dir->d_name))
+				if ((len = filter_matches(&filters, dir->d_name, 
+										  &matched_filter)) && len != -1)
 				{
 					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
 					//realpath(dir->d_name, buf);
@@ -1662,7 +1676,7 @@ void platform_list_files_block(array *list, char *start_dir, char *filter, u8 re
 					found_file f;
 					f.path = buf;
 					f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
-					strncpy(f.matched_filter, filter, len+1);
+					strncpy(f.matched_filter, matched_filter, len+1);
 					
 					array_push_size(list, &f, sizeof(found_file));
 				}
@@ -1681,30 +1695,12 @@ char *platform_get_full_path(char *file)
 	return buf;
 }
 
-void* platform_list_files_t_t(void *args)
+array get_filters(char *pattern)
 {
-	list_file_args *info = args;
-	platform_list_files_block(info->list, info->start_dir, info->pattern, info->recursive, info->include_directories);
-	return 0;
-}
-
-void *platform_list_files_t(void *args)
-{
-	list_file_args *info = args;
+	array result = array_create(MAX_INPUT_LENGTH);
 	
-	// TODO(Aldrik): hardcoded max filter length
-	s32 max_filter_len = MAX_PATH_LENGTH;
-	
-	array filters = array_create(max_filter_len);
-	
-	char current_filter[max_filter_len];
+	char current_filter[MAX_INPUT_LENGTH];
 	s32 filter_len = 0;
-	
-	array *list = info->list;
-	char *start_dir = info->start_dir;
-	char *pattern = info->pattern;
-	u8 recursive = info->recursive;
-	
 	while(*pattern)
 	{
 		char ch = *pattern;
@@ -1712,13 +1708,13 @@ void *platform_list_files_t(void *args)
 		if (ch == ',')
 		{
 			current_filter[filter_len] = 0;
-			array_push(&filters, current_filter);
+			array_push(&result, current_filter);
 			filter_len = 0;
 		}
 		else
 		{
 			// TODO(Aldrik): show error and dont continue search
-			assert(filter_len < MAX_PATH_LENGTH);
+			assert(filter_len < MAX_INPUT_LENGTH);
 			
 			current_filter[filter_len++] = ch;
 		}
@@ -1726,52 +1722,26 @@ void *platform_list_files_t(void *args)
 		pattern++;
 	}
 	current_filter[filter_len] = 0;
-	array_push(&filters, current_filter);
+	array_push(&result, current_filter);
 	
-	array threads = array_create(sizeof(thread));
-	array_reserve(&threads, filters.length);
+	return result;
+}
+
+void *platform_list_files_t(void *args)
+{
+	list_file_args *info = args;
 	
-	for (s32 i = 0; i < filters.length; i++)
-	{
-		char *filter = array_at(&filters, i);
-		
-		thread thr;
-		thr.valid = false;
-		
-		list_file_args *args_2 = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(list_file_args));
-		if (args_2)
-		{
-			args_2->list = list;
-			args_2->start_dir = start_dir;
-			args_2->pattern = filter;
-			args_2->recursive = recursive;
-			args_2->include_directories = 0;
-			
-			thr = thread_start(platform_list_files_t_t, args_2);
-		}
-		
-		if (platform_cancel_search) break;
-		
-		if (thr.valid)
-		{
-			array_push(&threads, &thr);
-		}
-		else
-		{
-			i--;
-		}
-	}
+	array filters = get_filters(info->pattern);
 	
-	for (s32 i = 0; i < threads.length; i++)
-	{
-		thread* thr = array_at(&threads, i);
-		thread_join(thr);
-	}
+	array *list = info->list;
+	char *start_dir = info->start_dir;
+	u8 recursive = info->recursive;
+	
+	platform_list_files_block(info->list, info->start_dir, filters, info->recursive, info->include_directories);
 	
 	if (!platform_cancel_search)
 		*(info->state) = !(*info->state);
 	
-	array_destroy(&threads);
 	array_destroy(&filters);
 	
 	return 0;
@@ -1834,7 +1804,6 @@ inline s8 string_to_s8(char *str)
 
 inline void platform_open_url(char *url)
 {
-	//https://stackoverflow.com/questions/3037088/how-to-open-the-default-web-browser-in-windows-in-c
 	char buffer[MAX_INPUT_LENGTH];
 	sprintf(buffer, "xdg-open %s", url);
 	platform_run_command(buffer);
@@ -1842,7 +1811,6 @@ inline void platform_open_url(char *url)
 
 inline void platform_run_command(char *command)
 {
-	// ShellExecute for windows
 	system(command);
 }
 

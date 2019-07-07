@@ -190,8 +190,10 @@ void load_available_localizations()
 	
 	set_active_directory(binary_path);
 	
+	array filters = get_filters("*.mo");
 	platform_list_files_block(&file_list, "data/translations/",
-							  "*.mo", false, false);
+							  filters, false, false);
+	array_destroy(&filters);
 	
 	for (s32 i = 0; i < file_list.length; i++)
 	{
@@ -200,6 +202,7 @@ void load_available_localizations()
 		s32 index = array_push(&global_localization.mo_files, &mo);
 	}
 	
+	platform_destroy_list_file_result(&file_list);
 	array_destroy(&file_list);
 }
 

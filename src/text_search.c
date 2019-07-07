@@ -101,13 +101,10 @@ platform_window *main_window;
 #include "about.c"
 #include "settings.c"
 
-// TODO(Aldrik): UI freezes while search is active after cancelling previous search, this happens when freeing the results when starting a new search. only happens in developer mode because the memory profiler is holding the mutex.
-
 // TODO(Aldrik): try to mmap file
-// TODO(Aldrik): find files on 1 thread instead if one thread for each filter
-// TODO(Aldrik): right now the entire width of the text is outlined when a textbox has a selection even when only a part of it is selected.
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): done store ptr's for assets but get them from map (eg. get_image("hello.png"))
+// TODO(Aldrik): dont store ptr's for assets but get them from map (eg. get_image("hello.png"))
+// TODO(Aldrik): stop asset threads when queue is empty
 // TODO(Aldrik): search while you type
 // TODO(Aldrik): clipboard copy
 
