@@ -15,6 +15,7 @@ cd ../
 
 cp -r src/ release/
 rm -rf release/src/.git
+rm release/src/.gitignore
 cp build.sh release/
 cp COPYING release/
 cp build-release-linux.sh release/

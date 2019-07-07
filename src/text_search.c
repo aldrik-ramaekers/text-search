@@ -85,7 +85,9 @@ image *logo_img;
 image *drag_drop_img;
 image *notification_bg_img;
 image *logo_small_img;
+image *gpl_img;
 
+font *font_big;
 font *font_medium;
 font *font_small;
 font *font_mini;
@@ -101,12 +103,7 @@ platform_window *main_window;
 #include "about.c"
 #include "settings.c"
 
-// TODO(Aldrik): try to mmap file
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): dont store ptr's for assets but get them from map (eg. get_image("hello.png"))
-// TODO(Aldrik): stop asset threads when queue is empty
-// TODO(Aldrik): search while you type
-// TODO(Aldrik): clipboard copy
 
 char *text_to_find;
 
@@ -737,6 +734,27 @@ static void do_search()
 	}
 }
 
+static void load_assets()
+{
+	
+	search_img = assets_load_image("data/imgs/search.png", false);
+	logo_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
+	logo_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
+	directory_img = assets_load_image("data/imgs/folder.png", false);
+	error_img = assets_load_image("data/imgs/error.png", false);
+	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
+	notification_bg_img = assets_load_image("data/imgs/notification_bg.png", false);
+	
+	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
+	font_small = assets_load_font("data/fonts/mono.ttf", 16);
+	font_mini = assets_load_font("data/fonts/mono.ttf", 12);
+	
+	// assets used in other windo
+	gpl_img = assets_load_image("data/imgs/gplv3-or-later.png", false);
+	font_big = assets_load_font("data/fonts/mono.ttf", 32);
+	
+}
+
 #if defined(OS_LINUX) || defined(OS_WINDOWS)
 int main_loop()
 {
@@ -757,17 +775,7 @@ int main_loop()
 	load_available_localizations();
 	set_locale("en");
 	
-	search_img = assets_load_image("data/imgs/search.png", false);
-	logo_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
-	logo_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
-	directory_img = assets_load_image("data/imgs/folder.png", false);
-	error_img = assets_load_image("data/imgs/error.png", false);
-	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
-	notification_bg_img = assets_load_image("data/imgs/notification_bg.png", false);
-	
-	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
-	font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	font_mini = assets_load_font("data/fonts/mono.ttf", 12);
+	load_assets();
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
@@ -862,11 +870,20 @@ int main_loop()
 		settings_page_update_render();
 		platform_window_make_current(&window);
 		
-		static u8 loaded = false;
-		if (!loaded && logo_small_img->loaded)
+		static bool icon_loaded = false;
+		if (!icon_loaded && logo_small_img->loaded)
 		{
-			loaded = true;
+			icon_loaded = true;
 			platform_set_icon(&window, logo_small_img);
+		}
+		
+		static bool assets_loaded = false;
+		if (global_asset_collection.queue.queue.length == 0 && !assets_loaded)
+		{
+			thread_stop(&asset_queue_worker1);
+			thread_stop(&asset_queue_worker2);
+			
+			assets_loaded = true;
 		}
 		
 		global_ui_context.layout.active_window = &window;
@@ -1059,9 +1076,6 @@ int main_loop()
 		platform_window_swap_buffers(&window);
     }
 	
-	thread_stop(&asset_queue_worker1);
-	thread_stop(&asset_queue_worker2);
-	
 	settings_page_hide_without_save();
 	
 	// write config file
@@ -1116,10 +1130,12 @@ int main_loop()
 	assets_destroy_image(error_img);
 	assets_destroy_image(drag_drop_img);
 	assets_destroy_image(notification_bg_img);
+	assets_destroy_image(gpl_img);
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);
 	assets_destroy_font(font_medium);
+	assets_destroy_font(font_big);
 	assets_destroy();
 	
 	keyboard_input_destroy(&keyboard);

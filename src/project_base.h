@@ -18,39 +18,8 @@
 */
 
 /* 
-*  Include this file in your project and add follow below instructions
-*  
-*  Optional definitions:
-*  MODE_DEVELOPER                            - show info menu, including: profiling, system 
-*                                              info
-*
-*  ASSET_IMAGE_COUNT                         - define the maximum amount of images that will be 
-*                                              used at a given time
-*  ASSET_FONT_COUNT                          - define the maximum amount of fonts that will be 
-*                                              used at a given time
-*  ASSET_SAMPLE_COUNT                        - define the maximum amount of samples that will 
-*                                              be used at a given time
-*  ASSET_QUEUE_COUNT                         - define the maximum queue size at a given time
-*
-*  WATCH_WINDOW_WIDTH                        - width if a watch window within the info menu.
-*  TOOLTIP_BACKGROUND_COLOR                  - background color of the tooltip shown 
- *                                              when hovering over an item within the info menu.
-*  TOOLTIP_FOREGROUND_COLOR                  - foreground color of the tooltip shown
- *                                              when hovering over an item within the info menu.
-*  WATCH_WINDOW_ENTRY_HOVER_BACKGROUMD_COLOR - background color of the item when
- *                                              hovering over an item within the info menu.
-*  WATCH_WINDOW_BACKGROUND_COLOR             - background color of watch window and info menu *                              
-*                                              buttons.
-*  WATCH_WINDOW_HOVER_BACKGROUND_COLOR       - background color of info menu button on hover.
-*  WATCH_WINDOW_BORDER_COLOR                 - border color of info menu buttons.
-*  WATCH_WINDOW_SCROLL_SPEED                 - scroll speed of watch window
-*  CONSOLE_MESSAGE_COLOR                     - console message color for normal messages
-*  CONSOLE_ERROR_COLOR                       - console message color for error messages
-*
-*
  *  Compile flags:
 *  Linux: -lX11 -lGL -lGLU -lXrandr -lm -ldl
-*  Windows:
 *
 */
 
