@@ -115,6 +115,7 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	if (!content.content || content.file_error)
 	{
 		platform_destroy_file_content(&content);
+		return;
 	}
 	
 	text_buffer save_file_buffer;
@@ -139,17 +140,17 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	text_match match;
 	while (!buffer_done_reading(&save_file_buffer))
 	{
-		match.file.path = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
+		match.file.path = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.file.path);
 		
-		match.file.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
+		match.file.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.file.matched_filter);
 		
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
 		match.file_size = buffer_read_signed(&save_file_buffer);
 		
-		match.line_info = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
+		match.line_info = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.line_info);
 		
 		array_push(&search_result->files, &match);
