@@ -26,8 +26,8 @@
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
-#define WEBSITE_URL "https://slothsoftware.com/home.html"
-#define WEBSITE_CONTACT_URL "https://slothsoftware.com/contact.html"
+#define WEBSITE_URL "https://aldrik.org/"
+#define WEBSITE_CONTACT_URL "https://aldrik.org/"
 
 typedef struct t_text_match
 {

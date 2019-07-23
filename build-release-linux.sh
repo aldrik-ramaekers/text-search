@@ -27,8 +27,8 @@ printf "SEARCH_DIRECTORY = \"/home/user/Projects/\"\nSEARCH_DIRECTORIES = \"1\"\
 
 cd release/
 
-zip text-search_x64_linux.zip text-search_x64_linux -r data
-zip text-search_x64_linux_source.zip build.sh build-release-linux.sh -r data src
+tar -cvzf text-search_x64_linux.tar.gz text-search_x64_linux data
+tar -cvzf text-search_x64_linux_source.tar.gz build.sh build-release-linux.sh data src
 
 rm text-search_x64_linux
 rm -rf data/
