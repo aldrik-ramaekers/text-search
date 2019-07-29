@@ -94,6 +94,14 @@ void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint)
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+static s32 add_char_width(char ch, s32 width, font *font)
+{
+	if (ch != '.' && ch != ',' && ch != ':')
+		return width/2;
+	else
+		return font->size/4;
+}
+
 s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 {
 	if (!font->loaded)
@@ -136,10 +144,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		//if (kern != 0) printf("%d\n", kern);
 		//}
 		
-		if (ch != '.' && ch != ',')
-			x_+=width/2;//+(kern*font->scale);
-		else
-			x_+=font->size/4;
+		x_ += add_char_width(ch,width,font);
 		
 		++text;
 	}
@@ -218,7 +223,8 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	//glTexCoord2i(1, 0); glVertex2i(x+font->palette_width, y);
 	
 	s32 x_ = x;
-	s32 y_ = y + font->size;
+	s32 y_ = y;
+	bool is_new_line = false;
 	while(*text)
 	{
 		char ch = *text;
@@ -231,7 +237,19 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 			x_ = x;
 			y_ += font->size;
 			++text;
+			is_new_line = true;
 			continue;
+		}
+		
+		if (is_new_line && ch == ' ')
+		{
+			is_new_line = false;
+			++text;
+			continue;
+		}
+		else if (is_new_line && ch != ' ')
+		{
+			is_new_line = false;
 		}
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
@@ -259,15 +277,13 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		//if (kern != 0) printf("%d\n", kern);
 		//}
 		
-		if (ch != '.' && ch != ',')
-			x_+=width / 2;//+(kern*font->scale);
-		else
-			x_+=font->size/4;
+		x_ += add_char_width(ch,width,font);
 		
 		if (x_ > x+cutoff_width)
 		{
 			x_ = x;
 			y_ += font->size;
+			is_new_line = true;
 		}
 		
 		++text;
@@ -280,7 +296,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	glDisable(GL_TEXTURE_2D);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-	return y_ - y;
+	return (y_ - y) + font->size;
 	
 }
 
@@ -326,10 +342,7 @@ s32 calculate_text_width(font *font, char *text)
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];
 		
-		if (ch != '.' && ch != ',')
-			x+=width / 2;//+(kern*font->scale);
-		else
-			x+=font->size/4;
+		x += add_char_width(ch,width,font);
 		
 		++text;
 	}
@@ -343,7 +356,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 		return 0;
 	
 	s32 x_ = 0;
-	s32 y = font->size;
+	s32 y = 0;
 	while(*text)
 	{
 		char ch = *text;
@@ -362,7 +375,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 		++text;
 	}
 	
-	return y;
+	return y + font->size;
 }
 
 void render_triangle(s32 x, s32 y, s32 w, s32 h, color tint)
