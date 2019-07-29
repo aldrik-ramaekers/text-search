@@ -121,7 +121,7 @@ static s32 get_days_in_month(struct tm *t)
 	{
 		bool leapyear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
 		
-		if (!leapyear)
+		if (leapyear)
 			return 28;
 		else 
 			return 29;
