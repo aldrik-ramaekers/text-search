@@ -1,0 +1,275 @@
+/home/aldrik/Projects/
+*.txt,*.c,*.h
+*ss*
+72083
+0
+1
+44
+26
+22
+1
+1
+/home/aldrik/Projects/business-website/src/robots.txt
+*.txt
+0
+0
+66
+
+/home/aldrik/Projects/text-search/src/memory_bucket.c
+*.c
+0
+1
+2695
+line 22: 	assert(bucket_size >= MAX_INPUT_LENGTH)
+/home/aldrik/Projects/text-search/src/text_buffer.c
+*.c
+0
+1
+3082
+line 34: 	assert(buffer);
+/home/aldrik/Projects/text-search/src/save.c
+*.c
+0
+1
+6754
+line 54: lt->show_error_message);
+/home/aldrik/Projects/text-search/src/ui.c
+*.c
+0
+1
+31702
+line 42: 	assert(max_len > 0);
+/home/aldrik/Projects/text-search/src/camera.c
+*.c
+0
+0
+1208
+
+/home/aldrik/Projects/text-search/src/string_utils.c
+*.c
+0
+1
+6351
+line 27: . This function assumes that the first 
+/home/aldrik/Projects/text-search/src/settings_config.c
+*.c
+0
+0
+4993
+
+/home/aldrik/Projects/text-search/src/assets.c
+*.c
+0
+1
+9884
+line 20: void assets_create()
+/home/aldrik/Projects/text-search/src/render.c
+*.c
+0
+1
+9741
+line 32: 	assert(image);
+/home/aldrik/Projects/text-search/src/array.c
+*.c
+0
+1
+5262
+line 35: 	assert(array);
+/home/aldrik/Projects/text-search/src/settings.c
+*.c
+0
+1
+8011
+line 23: ge.font_small = assets_load_font("data/f
+/home/aldrik/Projects/text-search/src/input.c
+*.c
+0
+1
+6234
+line 60: yboard_is_key_pressed(keyboard_input *ke
+/home/aldrik/Projects/text-search/src/about.c
+*.c
+0
+1
+4646
+line 23: e.license_img = assets_load_image("data/
+/home/aldrik/Projects/text-search/src/memory.c
+*.c
+0
+0
+3699
+
+/home/aldrik/Projects/text-search/src/localization.c
+*.c
+0
+1
+5742
+line 90: 		mo.icon = assets_load_image(icon_path_
+/home/aldrik/Projects/text-search/src/external/stb_truetype.h
+*.h
+0
+1
+191325
+line 4: his library processes TrueType files:
+/home/aldrik/Projects/text-search/src/external/stb_image.h
+*.h
+0
+0
+263262
+
+/home/aldrik/Projects/text-search/src/render.h
+*.h
+0
+1
+2258
+line 65: id render_set_scissor(platform_window *w
+/home/aldrik/Projects/text-search/src/about.h
+*.h
+0
+0
+1241
+
+/home/aldrik/Projects/text-search/src/string_utils.h
+*.h
+0
+0
+3825
+
+/home/aldrik/Projects/text-search/src/save.h
+*.h
+0
+0
+1027
+
+/home/aldrik/Projects/text-search/src/array.h
+*.h
+0
+0
+1437
+
+/home/aldrik/Projects/text-search/src/settings.h
+*.h
+0
+0
+1559
+
+/home/aldrik/Projects/text-search/src/ui.h
+*.h
+0
+0
+3991
+
+/home/aldrik/Projects/text-search/src/camera.h
+*.h
+0
+0
+976
+
+/home/aldrik/Projects/text-search/src/settings_config.h
+*.h
+0
+0
+1652
+
+/home/aldrik/Projects/text-search/src/input.h
+*.h
+0
+1
+7077
+line 223: yboard_is_key_pressed(keyboard_input *ke
+/home/aldrik/Projects/text-search/src/localization.h
+*.h
+0
+0
+1736
+
+/home/aldrik/Projects/text-search/src/project_base.h
+*.h
+0
+1
+4499
+line 47:      - console message color for normal 
+/home/aldrik/Projects/text-search/src/thread.h
+*.h
+0
+1
+1771
+line 43: #include <process.h>    /* _beginthread,
+/home/aldrik/Projects/text-search/src/config.h
+*.h
+0
+1
+1894
+line 47: // console message color for normal mess
+/home/aldrik/Projects/text-search/src/memory.h
+*.h
+0
+0
+1742
+
+/home/aldrik/Projects/text-search/src/assets.h
+*.h
+0
+1
+2516
+line 62: typedef enum t_asset_task_type
+/home/aldrik/Projects/text-search/src/text_buffer.h
+*.h
+0
+0
+1401
+
+/home/aldrik/Projects/text-search/src/memory_bucket.h
+*.h
+0
+0
+1320
+
+/home/aldrik/Projects/text-search/src/platform.h
+*.h
+0
+1
+4931
+line 37: 
+/home/aldrik/Projects/text-search/src/text_search.c
+*.c
+0
+1
+34898
+line 51: 	u8 show_error_message; // error occured
+/home/aldrik/Projects/text-search/src/linux/thread.c
+*.c
+0
+0
+2798
+
+/home/aldrik/Projects/text-search/src/linux/platform.c
+*.c
+0
+1
+54135
+line 94: 	unsigned long ressize, restail;
+/home/aldrik/Projects/text-search/data/fonts/SIL Open Font License.txt
+*.txt
+0
+1
+4469
+line 30: Permission is hereby granted, free of ch
+/home/aldrik/Projects/text-search/data/config.txt
+*.txt
+0
+1
+247
+line 3: SEARCH_TEXT = "*ss*"
+/home/aldrik/Projects/text-search/bin/data/fonts/SIL Open Font License.txt
+*.txt
+0
+1
+4469
+line 30: Permission is hereby granted, free of ch
+/home/aldrik/Projects/text-search/bin/data/config.txt
+*.txt
+0
+1
+247
+line 3: SEARCH_TEXT = "*ss*"
