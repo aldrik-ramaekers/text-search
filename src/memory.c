@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -54,31 +54,38 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 		global_memory_mutex = mutex_create();
 	}
 	
-	char *complete_stacktrace = malloc(3000);
-	complete_stacktrace[0] = 0;
-	
-	void* callstack[128];
-	int i, frames = backtrace(callstack, 128);
-	char** strs = backtrace_symbols(callstack, frames);
-	for (i = 0; i < frames; ++i) {
-		add_stacktrace_line(complete_stacktrace, strs[i]);
-		//strcat(complete_stacktrace, strs[i]);
-		//strcat(complete_stacktrace, "\n");
-	}
-	free(strs);
-	
-	strcat(complete_stacktrace, "---- ");
-	strcat(complete_stacktrace, caller_name);
-	
 	memory_usage_entry entry;
-	entry.name = complete_stacktrace;
-	entry.line = caller_line;
-	entry.size = size;
+	if (global_memory_usage.data)
+	{
+		char *complete_stacktrace = malloc(3000);
+		complete_stacktrace[0] = 0;
+		
+		void* callstack[128];
+		int i, frames = backtrace(callstack, 128);
+		char** strs = backtrace_symbols(callstack, frames);
+		for (i = 0; i < frames; ++i) {
+			add_stacktrace_line(complete_stacktrace, strs[i]);
+			//strcat(complete_stacktrace, strs[i]);
+			//strcat(complete_stacktrace, "\n");
+		}
+		free(strs);
+		
+		strcat(complete_stacktrace, "---- ");
+		strcat(complete_stacktrace, caller_name);
+		
+		entry.name = complete_stacktrace;
+		entry.line = caller_line;
+		entry.size = size;
+	}
 	
 	void *result = malloc(size);
-	entry.ptr = result;
 	
-	array_push(&global_memory_usage, &entry);
+	if (global_memory_usage.data)
+	{
+		entry.ptr = result;
+		
+		array_push(&global_memory_usage, &entry);
+	}
 	
 	return result;
 }

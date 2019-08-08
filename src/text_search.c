@@ -216,6 +216,7 @@ static void* find_text_in_files_t(void *arg)
 	
 	array threads = array_create(sizeof(thread));
 	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
+	text_to_find = arg;
 	
 	s32 start = 0;
 	s32 len = 0;
@@ -225,7 +226,6 @@ static void* find_text_in_files_t(void *arg)
 		len = global_search_result.files.length;
 		mutex_unlock(&global_search_result.files.mutex);
 		
-		text_to_find = arg;
 		for (s32 i = start; i < len; i++)
 		{
 			find_text_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(find_text_args));
@@ -319,6 +319,8 @@ static void* find_text_in_files_t(void *arg)
 		}
 		array_destroy(&threads);
 	}
+	
+	mem_free(text_to_find);
 	
 	return 0;
 }
@@ -726,7 +728,9 @@ static void do_search()
 			
 			if (global_settings_page.enable_parallelization)
 			{
-				find_text_in_files(textbox_search_text.buffer);
+				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
+				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH);
+				find_text_in_files(text_to_find_buf);
 			}
 		}
 	}

@@ -29,6 +29,7 @@
 #include <errno.h>
 #include <dlfcn.h>
 #include <sys/stat.h>
+#include <sys/mman.h>
 #include <X11/cursorfont.h>
 
 #define GET_ATOM(X) window.X = XInternAtom(window.display, #X, False)
@@ -269,6 +270,7 @@ u8 platform_directory_exists(char *path)
 	}
 }
 
+#define USE_MMAP 0
 file_content platform_read_file_content(char *path, const char *mode)
 {
 	file_content result;
@@ -277,6 +279,8 @@ file_content platform_read_file_content(char *path, const char *mode)
 	result.file_error = 0;
 	
 	FILE *file = fopen(path, mode);
+	int fd = fileno(file);
+	
 	if (!file) 
 	{
 		// TODO(Aldrik): maybe handle more of these so we can give users more info about what happened.
@@ -302,7 +306,10 @@ file_content platform_read_file_content(char *path, const char *mode)
 		else if (errno == ESTALE)
 			result.file_error = FILE_ERROR_STALE;
 		else
+		{
+			result.file_error = FILE_ERROR_GENERIC;
 			printf("ERROR: %d\n", errno);
+		}
 		
 		goto done_failure;
 	}
@@ -311,7 +318,8 @@ file_content platform_read_file_content(char *path, const char *mode)
 	int length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	
-	// if file i empty alloc 1 byte
+#if !USE_MMAP
+	// if file is empty alloc 1 byte
 	s32 length_to_alloc = length+1;
 	
 	result.content = mem_alloc(length_to_alloc);
@@ -324,10 +332,21 @@ file_content platform_read_file_content(char *path, const char *mode)
 		result.content = 0;
 		return result;
 	}
+#else
+	result.content = mmap(NULL, length, PROT_READ|PROT_WRITE, MAP_PRIVATE, fd, 0);
+	
+	if (result.content == MAP_FAILED)
+	{
+		result.file_error = FILE_ERROR_GENERIC;
+		goto done_failure;
+	}
+#endif
 	
 	result.content_length = length;
 	
+#if !USE_MMAP
 	((char*)result.content)[length] = 0;
+#endif
 	
 	done:
 	fclose(file);
@@ -338,7 +357,12 @@ file_content platform_read_file_content(char *path, const char *mode)
 inline void platform_destroy_file_content(file_content *content)
 {
 	assert(content);
+	
+#if !USE_MMAP
 	mem_free(content->content);
+#else 
+	munmap(content->content, content->content_length);
+#endif
 }
 
 // Translate an X11 key code to a GLFW key code.
