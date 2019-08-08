@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -80,11 +80,6 @@ struct t_platform_window
 //typedef int t_XResizeWindow(Display *display, Window window, unsigned int w, unsigned int h);
 //static t_XResizeWindow *XResizeWindow_;
 //#define XResizeWindow XResizeWindow_
-
-int main(int argc, char **argv)
-{
-	return main_loop();
-}
 
 u8 platform_get_clipboard(platform_window *window, char *buffer)
 {
@@ -183,6 +178,19 @@ static void get_directory_from_path(char *buffer, char *path)
 	path[offset+1] = 0;
 	strncpy(buffer, path, MAX_INPUT_LENGTH);
 	path[offset+1] = ch;
+}
+
+
+int main(int argc, char **argv)
+{
+	// get fullpath of the directory the exe is residing in
+	binary_path = platform_get_full_path(argv[0]);
+	
+	char buf[MAX_INPUT_LENGTH];
+	get_directory_from_path(buf, binary_path);
+	strncpy(binary_path, buf, MAX_INPUT_LENGTH);
+	
+	return main_loop();
 }
 
 void platform_destroy_list_file_result(array *files)

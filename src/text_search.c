@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -734,7 +734,6 @@ static void do_search()
 
 static void load_assets()
 {
-	
 	search_img = assets_load_image("data/imgs/search.png", false);
 	logo_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
 	logo_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
@@ -750,7 +749,6 @@ static void load_assets()
 	// assets used in other windo
 	gpl_img = assets_load_image("data/imgs/gplv3-or-later.png", false);
 	font_big = assets_load_font("data/fonts/mono.ttf", 32);
-	
 }
 
 #if defined(OS_LINUX) || defined(OS_WINDOWS)

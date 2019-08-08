@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -105,7 +105,11 @@ void array_reserve(array *array, u32 reserve_count)
 	if (reserve_count > 0)
 	{
 		array->reserved_length += reserve_count;
-		array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
+		
+		if (array->data)
+			array->data = mem_realloc(array->data, (array->reserved_length*array->entry_size));
+		else
+			array->data = mem_alloc(array->reserved_length*array->entry_size);
 	}
 	mutex_unlock(&array->mutex);
 }
