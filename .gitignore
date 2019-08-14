@@ -1,2 +1,4 @@
 bin/
 src/.gitignore
+generate-graph.sh
+download-translations.sh

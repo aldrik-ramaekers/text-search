@@ -27,34 +27,6 @@ rm -rf release/data/export/
 mkdir release/data/export/
 printf "SEARCH_DIRECTORY = \"/home/user/Projects/\"\nSEARCH_DIRECTORIES = \"1\"\nSEARCH_TEXT = \"*hello world*\"\nFILE_FILTER = \"*.txt,*.c\"\nMAX_THEAD_COUNT = \"20\"\nMAX_FILE_SIZE = \"200\"\nLOCALE = \"en\"\nWINDOW_WIDTH = \"800\"\nWINDOW_HEIGHT = \"600\"\nPARALLELIZE_SEARCH = \"1\"\n" > release/data/config.txt
 
-# create .deb package
-mkdir release/textsearchpackage
-mkdir release/textsearchpackage/DEBIAN
-printf "Package: textsearch
-Version: 1.0
-Section: custom
-Source: textsearch
-Priority: optional
-Architecture: all
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Essential: no
-License: GPL3
-Files: DEBIAN/*
-Homepage: https://www.aldrik.org/text-search.html
-Package-Type: deb
-Installed-Size: 1024
-Maintainer: Aldrik Ramaekers <aldrik.ramaekers@protonmail.com>
-Description: Grep with a GUI\n" > release/textsearchpackage/DEBIAN/control
-
-mkdir -p release/textsearchpackage/opt/text-search/data
-cp COPYING release/textsearchpackage/opt/text-search/
-mv release/textsearchpackage/opt/text-search/COPYING release/textsearchpackage/DEBIAN/copyright
-cp release/text-search_x64_linux release/textsearchpackage/opt/text-search/
-cp -r release/data release/textsearchpackage/opt/text-search/
-cp -r release/src/ release/textsearchpackage/opt/text-search/
-dpkg-deb --build release/textsearchpackage
-rm -rf release/textsearchpackage
-
 cd release/
 
 tar -cvzf text-search_x64_linux.tar.gz text-search_x64_linux data
