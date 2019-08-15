@@ -200,7 +200,7 @@ void platform_destroy_list_file_result(array *files)
 	files->length = 0;
 }
 
-void platform_autocomplete_path(char *buffer)
+void platform_autocomplete_path(char *buffer, bool want_dir)
 {
 	char dir[MAX_INPUT_LENGTH]; 
 	char name[MAX_INPUT_LENGTH]; 
@@ -218,12 +218,32 @@ void platform_autocomplete_path(char *buffer)
 	
 	array files = array_create(sizeof(found_file));
 	array filters = get_filters(name);
-	platform_list_files_block(&files, dir, filters, false, true);
+	platform_list_files_block(&files, dir, filters, false, want_dir);
+	
+	s32 index_to_take = -1;
+	if (want_dir)
+	{
+		for (s32 i = 0; i < files.length; i++)
+		{
+			found_file *file = array_at(&files, i);
+			
+			if (platform_directory_exists(file->path))
+			{
+				index_to_take = i;
+				break;
+			}
+		}
+	}
+	else
+	{
+		index_to_take = 0;
+	}
+	
 	array_destroy(&filters);
 	
-	if (files.length > 0)
+	if (files.length > 0 && index_to_take != -1)
 	{
-		found_file *file = array_at(&files, 0);
+		found_file *file = array_at(&files, index_to_take);
 		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
 	}
 	

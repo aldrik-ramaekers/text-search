@@ -149,7 +149,7 @@ void platform_window_make_current(platform_window *window);
 void platform_init();
 void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);
-void platform_autocomplete_path(char *buffer);
+void platform_autocomplete_path(char *buffer, bool want_dir);
 u8 platform_directory_exists(char *path);
 u8 platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);

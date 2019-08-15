@@ -1,4 +1,4 @@
-SEARCH_DIRECTORY = "/home/aldrik/Projects/"
+SEARCH_DIRECTORY = "/home/aldrik/Projects/text-search/"
 SEARCH_DIRECTORIES = "1"
 SEARCH_TEXT = "*test*"
 FILE_FILTER = "*.c,*.h"

@@ -930,7 +930,7 @@ int main_loop()
 				}
 				if (keyboard_is_key_pressed(&keyboard, KEY_TAB))
 				{
-					platform_autocomplete_path(textbox_path.buffer);
+					platform_autocomplete_path(textbox_path.buffer, true);
 					keyboard_set_input_text(&keyboard, textbox_path.buffer);
 				}
 				// shortcuts end
