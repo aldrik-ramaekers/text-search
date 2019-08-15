@@ -24,8 +24,6 @@
 #define MAX_ERROR_MESSAGE_LENGTH 70
 #define MAX_STATUS_TEXT_LENGTH 100
 #define ERROR_TEXT_COLOR rgb(224, 79, 95)
-#define WEBSITE_URL "https://aldrik.org/"
-#define WEBSITE_CONTACT_URL "https://aldrik.org/"
 
 typedef struct t_text_match
 {
@@ -961,17 +959,6 @@ int main_loop()
 					if (ui_push_menu_item(localize("settings"), "")) 
 					{
 						settings_page_show();
-					}
-				}
-				if (ui_push_menu(localize("help")))
-				{
-					if (ui_push_menu_item(localize("about"), "")) 
-					{
-						about_page_show();
-					}
-					if (ui_push_menu_item(localize("contact"), "")) 
-					{
-						platform_open_url(WEBSITE_CONTACT_URL);
 					}
 				}
 			}
