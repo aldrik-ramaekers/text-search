@@ -151,6 +151,7 @@ void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);
 void platform_autocomplete_path(char *buffer);
 u8 platform_directory_exists(char *path);
+u8 platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);
 
 u64 platform_get_time(time_type time_type, time_precision precision);

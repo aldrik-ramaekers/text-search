@@ -256,6 +256,15 @@ void platform_window_set_title(platform_window *window, char *name)
 	XStoreName(window->display, window->window, name);
 }
 
+u8 platform_file_exists(char *path)
+{
+	if(access(path, F_OK) != -1) {
+		return 1;
+	}
+	
+	return 0;
+}
+
 u8 platform_directory_exists(char *path)
 {
 	DIR* dir = opendir(path);
@@ -1589,14 +1598,20 @@ static void* platform_open_file_dialog_dd(void *data)
 	char buffer[MAX_INPUT_LENGTH];
 	fgets(buffer, MAX_INPUT_LENGTH, f);
 	
-	// NOTE(Aldrik): buffer should be longer then 2 because zenity returns a single garbage character when closed without selecting a path. (lol?)
+	// replace newlines with 0, we only want one file path
+	s32 len = strlen(buffer);
+	for (s32 x = 0; x < len; x++)
+	{
+		if (buffer[x] == '\n') buffer[x] = 0;
+	}
+	
 	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
-		if (strlen(buffer) > 2 || strcmp(buffer, "/") == 0)
+		if (platform_file_exists(buffer) || platform_directory_exists(buffer))
 		{
 			strncpy(args->buffer, buffer, MAX_INPUT_LENGTH);
 			s32 len = strlen(args->buffer);
-			args->buffer[len-1] = 0;
+			args->buffer[len] = 0;
 		}
 	}
 	
