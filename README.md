@@ -9,4 +9,4 @@ gcc 7.4.0 is the only compiled used and tested.
 
 # Build
 run build.sh -r for building and running a debug build<br />
-run build-release-linux.sh for building tarballs including binary and source files<br />
+run install.sh as root to install to /opt/textsearch<br />
