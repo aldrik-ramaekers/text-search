@@ -2,7 +2,6 @@
 Text-search is a GUI Program to find files and text within files for Linux.
 
 # Requirements
-mesa-common-dev,
 libglu1-mesa-dev,
 libgl1-mesa-dev,
 gcc 7.4.0 is the only compiled used and tested.

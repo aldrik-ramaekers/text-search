@@ -5,6 +5,17 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
+if [ $(dpkg-query -W -f='${Status}' libglu1-mesa-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+  apt-get install libglu1-mesa-dev;
+fi
+
+
+if [ $(dpkg-query -W -f='${Status}' libgl1-mesa-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+  apt-get install libgl1-mesa-dev;
+fi
+
 rm -rf /opt/textsearch/
 mkdir /opt/textsearch/
 
