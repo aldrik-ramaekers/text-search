@@ -68,6 +68,7 @@ typedef struct t_search_result
 typedef struct t_find_text_args
 {
 	text_match *match;
+	char *text_to_find;
 	s32 search_id;
 } find_text_args;
 
@@ -92,16 +93,12 @@ s32 scroll_y = 0;
 platform_window *main_window;
 
 #include "save.h"
-#include "about.h"
 #include "settings.h"
 
 #include "save.c"
-#include "about.c"
 #include "settings.c"
 
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-
-char *text_to_find;
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -140,7 +137,7 @@ static void *find_text_in_file_t(void *arg)
 			s32 line_nr = 0;
 			char *line;
 			s32 word_offset = 0;
-			if (string_contains_ex(content.content, text_to_find, &line_nr, &line, &word_offset))
+			if (string_contains_ex(content.content, args->text_to_find, &line_nr, &line, &word_offset))
 			{
 				global_search_result.match_found = true;
 				
@@ -214,7 +211,7 @@ static void* find_text_in_files_t(void *arg)
 	
 	array threads = array_create(sizeof(thread));
 	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
-	text_to_find = arg;
+	char *text_to_find = arg;
 	
 	s32 start = 0;
 	s32 len = 0;
@@ -232,6 +229,7 @@ static void* find_text_in_files_t(void *arg)
 			args->match->file_error = 0;
 			args->match->file_size = 0;
 			args->match->line_info = 0;
+			args->text_to_find = text_to_find;
 			args->search_id = current_search_id;
 			
 			// limit thread usage
@@ -318,7 +316,7 @@ static void* find_text_in_files_t(void *arg)
 		array_destroy(&threads);
 	}
 	
-	mem_free(text_to_find);
+	//mem_free(text_to_find);
 	
 	return 0;
 }
@@ -727,7 +725,7 @@ static void do_search()
 			if (global_settings_page.enable_parallelization)
 			{
 				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
-				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH);
+				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
 				find_text_in_files(text_to_find_buf);
 			}
 		}
@@ -753,6 +751,48 @@ static void load_assets()
 	font_big = assets_load_font("data/fonts/mono.ttf", 32);
 }
 
+void load_config(settings_config *config)
+{
+	char *path = settings_config_get_string(config, "SEARCH_DIRECTORY");
+	u8 recursive = settings_config_get_number(config, "SEARCH_DIRECTORIES");
+	u8 parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
+	char *search_text = settings_config_get_string(config, "SEARCH_TEXT");
+	char *search_filter = settings_config_get_string(config, "FILE_FILTER");
+	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");
+	s32 max_file_size = settings_config_get_number(config, "MAX_FILE_SIZE");
+	char *locale_id = settings_config_get_string(config, "LOCALE");
+	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
+	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
+	
+	if (path)
+		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
+	else
+		strncpy(textbox_path.buffer, "/home/", MAX_INPUT_LENGTH);
+	
+	if (search_filter)
+		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
+	else
+		strncpy(textbox_file_filter.buffer, "*.txt,*.c", MAX_INPUT_LENGTH);
+	
+	if (search_text)
+		strncpy(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
+	else
+		strncpy(textbox_search_text.buffer, "*hello world*", MAX_INPUT_LENGTH);
+	
+	checkbox_recursive.state = recursive;
+	global_settings_page.enable_parallelization = parallelize;
+	global_settings_page.max_thread_count = max_thread_count;
+	global_settings_page.max_file_size = max_file_size;
+	
+	if (locale_id)
+		set_locale(locale_id);
+	else
+		set_locale("en");
+	
+	if (window_w >= 800 && window_h >= 600)
+        platform_window_set_size(main_window, window_w, window_h);
+}
+
 #if defined(OS_LINUX) || defined(OS_WINDOWS)
 int main_loop()
 {
@@ -767,7 +807,6 @@ int main_loop()
 	main_window = &window;
 	
 	assets_create();
-	about_page_create();
 	settings_page_create();
 	
 	load_available_localizations();
@@ -832,27 +871,7 @@ int main_loop()
 	
 	// load config
 	settings_config config = settings_config_load_from_file("data/config.txt");
-	char *path = settings_config_get_string(&config, "SEARCH_DIRECTORY");
-	u8 recursive = settings_config_get_number(&config, "SEARCH_DIRECTORIES");
-	u8 parallelize = settings_config_get_number(&config, "PARALLELIZE_SEARCH");
-	char *search_text = settings_config_get_string(&config, "SEARCH_TEXT");
-	char *search_filter = settings_config_get_string(&config, "FILE_FILTER");
-	s32 max_thread_count = settings_config_get_number(&config, "MAX_THEAD_COUNT");
-	s32 max_file_size = settings_config_get_number(&config, "MAX_FILE_SIZE");
-	char *locale_id = settings_config_get_string(&config, "LOCALE");
-	s32 window_w = settings_config_get_number(&config, "WINDOW_WIDTH");
-	s32 window_h = settings_config_get_number(&config, "WINDOW_HEIGHT");
-	strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
-	strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
-	strncpy(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
-	checkbox_recursive.state = recursive;
-	global_settings_page.enable_parallelization = parallelize;
-	global_settings_page.max_thread_count = max_thread_count;
-	global_settings_page.max_file_size = max_file_size;
-	set_locale(locale_id);
-	
-	if (window_w >= 800 && window_h >= 600)
-        platform_window_set_size(&window, window_w, window_h);
+	load_config(&config);
 	
 	global_search_result.filter_buffer = textbox_file_filter.buffer;
 	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
@@ -864,7 +883,6 @@ int main_loop()
 		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
-        about_page_update_render();
 		settings_page_update_render();
 		platform_window_make_current(&window);
 		
@@ -1091,7 +1109,6 @@ int main_loop()
 #endif
 	settings_config_destroy(&config);
 	
-	about_page_destroy();
 	settings_page_destroy();
 	
 	destroy_available_localizations();

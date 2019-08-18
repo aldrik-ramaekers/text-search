@@ -189,7 +189,7 @@ int main(int argc, char **argv)
 	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
-	strncpy(binary_path, buf, MAX_INPUT_LENGTH);
+	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
 	return main_loop();
 }
@@ -308,7 +308,14 @@ file_content platform_read_file_content(char *path, const char *mode)
 	result.file_error = 0;
 	
 	FILE *file = fopen(path, mode);
-	int fd = fileno(file);
+	
+#if USE_MMAP
+	s32 fd = -1;
+	if (file)
+	{
+		fd = fileno(file);
+	}
+#endif
 	
 	if (!file) 
 	{
@@ -699,6 +706,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.drag_drop_info.path = 0;
 	window.drag_drop_info.state = DRAG_DROP_NONE;
 	window.curr_cursor_type = CURSOR_DEFAULT;
+	window.next_cursor_type = CURSOR_DEFAULT;
 	
 	static int att[] =
 	{
@@ -1616,7 +1624,10 @@ static void* platform_open_file_dialog_dd(void *data)
 	f = popen(command, "r");
 	
 	char buffer[MAX_INPUT_LENGTH];
-	fgets(buffer, MAX_INPUT_LENGTH, f);
+	char *result = fgets(buffer, MAX_INPUT_LENGTH, f);
+	
+	if (!result)
+		return 0;
 	
 	// replace newlines with 0, we only want one file path
 	s32 len = strlen(buffer);
@@ -1756,7 +1767,10 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 char *platform_get_full_path(char *file)
 {
 	char *buf = mem_alloc(PATH_MAX);
-	realpath(file, buf);
+	char *result = realpath(file, buf);
+	
+	if (!result) return file;
+	
 	return buf;
 }
 
@@ -1876,7 +1890,7 @@ inline void platform_open_url(char *url)
 
 inline void platform_run_command(char *command)
 {
-	system(command);
+	s32 result = system(command);
 }
 
 void platform_set_icon(platform_window *window, image *img)
