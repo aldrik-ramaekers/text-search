@@ -316,7 +316,7 @@ static void* find_text_in_files_t(void *arg)
 		array_destroy(&threads);
 	}
 	
-	//mem_free(text_to_find);
+	mem_free(text_to_find);
 	
 	return 0;
 }
@@ -1143,7 +1143,6 @@ int main_loop()
 	assets_destroy();
 	
 	keyboard_input_destroy(&keyboard);
-	platform_close_window(&window);
 	platform_destroy_window(&window);
 	platform_destroy();
 	

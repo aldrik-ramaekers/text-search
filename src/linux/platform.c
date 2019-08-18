@@ -753,11 +753,11 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			if ( worst_fbc < 0 || !samp_buf || samples < worst_num_samp )
 				worst_fbc = i, worst_num_samp = samples;
 		}
-		XFree( vi );
+		XFree(vi);
 	}
 	
-	GLXFBConfig bestFbc = fbc[ best_fbc ];
-	XFree( fbc );
+	GLXFBConfig bestFbc = fbc[best_fbc];
+	XFree(fbc);
 	
 	XVisualInfo *vi = glXGetVisualFromFBConfig(window.display, bestFbc );
 	window.visual_info = vi;
@@ -915,25 +915,19 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 
 inline u8 platform_window_is_valid(platform_window *window)
 {
-	return window->display && window->window;
-}
-
-void platform_close_window(platform_window *window)
-{
-	XDestroyWindow(window->display, window->window);
-	window->display = 0;
-	window->window = 0;
-	//glXMakeCurrent(window->display, None, NULL);
-	//glXDestroyContext(window->display, window->gl_context);
-	//XCloseDisplay(window->display);
+	return window->window || window->display;
 }
 
 void platform_destroy_window(platform_window *window)
 {
-	if (!window->display || !window->display) return;
 	glXMakeCurrent(window->display, None, NULL);
 	glXDestroyContext(window->display, window->gl_context);
+	XDestroyWindow(window->display, window->window);
 	XCloseDisplay(window->display);
+	XFree(window->visual_info);
+	
+	window->window = 0;
+	window->display = 0;
 }
 
 typedef struct {

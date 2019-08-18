@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -19,7 +19,7 @@ void settings_config_write_to_file(settings_config *config, char *path)
 {
 	// @hardcoded
 	s32 len = config->settings.length*200;
-	char *buffer = malloc(len);
+	char *buffer = mem_alloc(len);
 	buffer[0] = 0;
 	
 	for (s32 i = 0; i < config->settings.length; i++)
@@ -33,6 +33,7 @@ void settings_config_write_to_file(settings_config *config, char *path)
 	
 	set_active_directory(binary_path);
 	platform_write_file_content(path, "w", buffer, len);
+	mem_free(buffer);
 }
 
 settings_config settings_config_load_from_file(char *path)

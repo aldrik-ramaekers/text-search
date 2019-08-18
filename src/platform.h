@@ -124,7 +124,6 @@ u8 platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
 u8 platform_get_clipboard(platform_window *window, char *buffer);
 void platform_window_set_size(platform_window *window, u16 width, u16 height);
-void platform_close_window(platform_window *window);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);

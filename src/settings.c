@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -209,7 +209,7 @@ void settings_page_hide()
 {
 	if (platform_window_is_valid(&global_settings_page.window))
 	{
-		platform_close_window(&global_settings_page.window);
+		platform_destroy_window(&global_settings_page.window);
 		
 		global_settings_page.btn_close.state = false;
 		global_settings_page.btn_save.state = false;
@@ -240,4 +240,7 @@ void settings_page_destroy()
 	ui_destroy_textbox(&global_settings_page.textbox_max_thread_count);
 	assets_destroy_font(global_settings_page.font_small);
 	assets_destroy_image(global_settings_page.logo_img);
+	
+	if (platform_window_is_valid(&global_settings_page.window))
+		platform_destroy_window(&global_settings_page.window);
 }
