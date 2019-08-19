@@ -587,6 +587,8 @@ static void render_info(platform_window *window, font *font_small)
 				yy += font_small->size + 4;
 			}
 			
+			yy += font_small->size + 4;
+			
 			global_ui_context.layout.offset_y = yy;
 		}
 		
