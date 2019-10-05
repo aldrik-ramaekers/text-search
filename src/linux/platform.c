@@ -1416,6 +1416,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 
 inline void platform_show_alert(char *title, char *message)
 {
+	// TODO(Aldrik): what if notify-send is not on system?
 	char command[MAX_INPUT_LENGTH];
 	sprintf(command, "notify-send \"%s\" \"%s\"", title, message);
 	platform_run_command(command);

@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -28,7 +28,8 @@ int main_loop();
 
 #ifdef _WIN32
 #define OS_WINDOWS
-#error  platform not supported
+#include <windows.h>
+#include <time.h>
 #endif
 #ifdef __linux__
 #define OS_LINUX
@@ -64,7 +65,13 @@ int main_loop();
 #define float32 float
 #define float64 double
 
+#ifdef OS_LINUX
 #define bool uint8_t
+#endif
+#ifdef OS_WINDOWS
+#define bool _Bool
+#endif
+
 #define true 1
 #define false 0
 
@@ -93,6 +100,11 @@ int main_loop();
 #ifdef OS_LINUX
 #include "linux/thread.c"
 #include "linux/platform.c"
+#endif
+
+#ifdef OS_WINDOWS
+#include "windows/thread.c"
+#include "windows/platform.c"
 #endif
 
 #include "input.c"
