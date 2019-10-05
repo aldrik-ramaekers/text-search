@@ -69,7 +69,7 @@ settings_config settings_config_load_from_file(char *path)
 			strcpy(current_entry.name, content.content+token_offset);
 			string_trim(current_entry.name);
 		}
-		else if (ch == '"' && (next_ch == '\n' || !in_literal))
+		else if (ch == '"' && ((next_ch == '\n' || next_ch == 0x0D) || !in_literal))
 		{
 			in_literal = !in_literal;
 			
@@ -83,7 +83,7 @@ settings_config settings_config_load_from_file(char *path)
 			token_offset = i+1;
 		}
 		
-		if (ch == '\n')
+		if (ch == '\n' || ch == 0x0D)
 		{
 			token_offset = i+1;
 			array_push(&config.settings, &current_entry);
