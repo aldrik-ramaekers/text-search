@@ -1,6 +1,6 @@
 SEARCH_DIRECTORY = "D:\Projects\text-search\"
 SEARCH_DIRECTORIES = "1"
-SEARCH_TEXT = "!&"
+SEARCH_TEXT = "*Hello world*"
 FILE_FILTER = "*.txt,*.c"
 MAX_THEAD_COUNT = "20"
 MAX_FILE_SIZE = "200"

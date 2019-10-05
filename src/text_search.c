@@ -98,7 +98,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): 
+// TODO(Aldrik): autocomplete on windows
+// TODO(Aldrik): icon on windows
+// TODO(Aldrik): keep selection going as long as mouse is down when mouse leaves ui element
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary
 // TODO(Aldrik): get windows port working
@@ -1052,7 +1054,10 @@ int main_loop()
 		{
 			if (global_search_result.done_finding_files)
 			{
-				find_text_in_files(textbox_search_text.buffer);
+				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
+				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+				
+				find_text_in_files(text_to_find_buf);
 				global_search_result.done_finding_files = false;
 				global_search_result.walking_file_system = false;
 			}
