@@ -569,7 +569,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
 #endif
 			
-			// TODO: is this correct?
 			// https://stackoverflow.com/questions/5627229/sub-pixel-drawing-with-opengl
 			//glHint(GL_POINT_SMOOTH, GL_NICEST);
 			//glHint(GL_LINE_SMOOTH, GL_NICEST);
@@ -678,7 +677,6 @@ file_content platform_read_file_content(char *path, const char *mode)
 	FILE *file = fopen(path, mode);
 	if (!file) 
 	{
-		// TODO(Aldrik): maybe handle more of these so we can give users more info about what happened.
 		// http://man7.org/linux/man-pages/man3/errno.3.html
 		if (errno == EMFILE)
 			result.file_error = FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS;

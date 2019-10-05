@@ -98,6 +98,11 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): store config file in home directory?
+// TODO(Aldrik): include asset folder stuff in binary
+// TODO(Aldrik): get windows port working
+// TODO(Aldrik): linux show alert implementation for distros other than ubuntu
+// TODO(Aldrik): implement directX render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
 checkbox_state checkbox_recursive;
