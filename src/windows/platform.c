@@ -1051,7 +1051,9 @@ void platform_window_make_current(platform_window *window)
 
 void platform_init()
 {
-    CoInitialize(NULL);
+    global_platform_memory_bucket = memory_bucket_init(megabytes(1));
+    
+    //CoInitialize(NULL);
 	create_key_tables();
 }
 
