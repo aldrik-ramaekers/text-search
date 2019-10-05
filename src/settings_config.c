@@ -36,6 +36,53 @@ void settings_config_write_to_file(settings_config *config, char *path)
 	mem_free(buffer);
 }
 
+static void get_config_from_string(settings_config *config, char *string)
+{
+	config_setting current_entry;
+	current_entry.name = 0;
+	current_entry.value = 0;
+	
+	s32 len = 0;
+	bool in_literal = false;
+	char *original_string = string;
+	
+	while(*string)
+	{
+		
+		// property name
+		if (*string == ' ' && !current_entry.name)
+		{
+			current_entry.name = mem_alloc(len+1);
+			strncpy(current_entry.name, string-len, len);
+			current_entry.name[len] = 0;
+			string_trim(current_entry.name);
+		}
+		
+		// property value
+		if (*string == '"' && (*(string+1) == 0 || !in_literal))
+		{
+			in_literal = !in_literal;
+			
+			if (in_literal)
+			{
+				len = -1;
+			}
+			else
+			{
+				current_entry.value = mem_alloc(len+1);
+				strncpy(current_entry.value, string-len, len);
+				current_entry.value[len] = 0;
+				string_trim(current_entry.value);
+			}
+		}
+		
+		++len;
+		++string;
+	}
+	
+	array_push(&config->settings, &current_entry);
+}
+
 settings_config settings_config_load_from_file(char *path)
 {
 	settings_config config;
@@ -51,42 +98,35 @@ settings_config settings_config_load_from_file(char *path)
 		return config;
 	}
 	
-	config_setting current_entry;
-	current_entry.name = 0;
-	current_entry.value = 0;
-	
 	s32 token_offset = 0;
-	bool in_literal = false;
 	for (s32 i = 0; i < content.content_length; i++)
 	{
 		char ch = ((char*)content.content)[i];
-		char next_ch = i+1 < content.content_length ? ((char*)content.content)[i+1] : 0;
+		char prev_ch = i-1 < content.content_length ? ((char*)content.content)[i-1] : 0;
 		
-		if (ch == '=' && !in_literal)
-		{
-			((char*)content.content)[i] = 0;
-			current_entry.name = mem_alloc((i - token_offset)+1);
-			strcpy(current_entry.name, content.content+token_offset);
-			string_trim(current_entry.name);
-		}
-		else if (ch == '"' && ((next_ch == '\n' || next_ch == 0x0D) || !in_literal))
-		{
-			in_literal = !in_literal;
-			
-			if (!in_literal)
-			{
-				((char*)content.content)[i] = 0;
-				current_entry.value = mem_alloc((i - token_offset)+1);
-				strcpy(current_entry.value, content.content+token_offset);
-			}
-			
-			token_offset = i+1;
-		}
+		// TODO(Aldrik)L implement CR only linebreak for old macOS
 		
-		if (ch == '\n' || ch == 0x0D)
+		// end of line [crlf]
+		if (ch == 0x0D)
 		{
-			token_offset = i+1;
-			array_push(&config.settings, &current_entry);
+			char line[MAX_INPUT_LENGTH];
+			
+			s32 line_len = i - token_offset;
+			sprintf(line, "%.*s", line_len, (char*)content.content+token_offset);
+			token_offset = i + 2;
+			
+			get_config_from_string(&config, line);
+		}
+		// end of line [lf]
+		else if (ch == '\n' && prev_ch != 0x0D)
+		{
+			char line[MAX_INPUT_LENGTH];
+			
+			s32 line_len = i - token_offset;
+			sprintf(line, "%.*s", line_len, (char*)content.content+token_offset);
+			token_offset = i + 1;
+			
+			get_config_from_string(&config, line);
 		}
 	}
 	
