@@ -146,11 +146,11 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 					strcpy(buf_right, keyboard->input_text+keyboard->cursor);
 					
 					
-					sprintf(buffer, "%s%c%s", buf_left, *ch, buf_right);
+					snprintf(buffer, MAX_INPUT_LENGTH, "%s%c%s", buf_left, *ch, buf_right);
 				}
 				else
 				{
-					sprintf(buffer, "%c%s", *ch, keyboard->input_text);
+					snprintf(buffer, MAX_INPUT_LENGTH, "%c%s", *ch, keyboard->input_text);
 				}
 				
 				strcpy(keyboard->input_text, buffer);

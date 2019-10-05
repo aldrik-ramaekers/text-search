@@ -22,7 +22,14 @@ void settings_page_create()
 	global_settings_page.logo_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
 	global_settings_page.keyboard = keyboard_input_create();
 	global_settings_page.mouse = mouse_input_create();
+    
+	camera cam;
+	cam.x = 0;
+	cam.y = 0;
+	cam.rotation = 0;
 	
+	global_settings_page.camera = cam;
+    
 	global_settings_page.btn_close = ui_create_button();
 	global_settings_page.btn_save = ui_create_button();
 	global_settings_page.dropdown_language = ui_create_dropdown();
@@ -53,6 +60,8 @@ void settings_page_update_render()
 		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
+        camera_apply_transformations(&global_settings_page.window, &global_settings_page.camera);
+        
 		global_ui_context.layout.active_window = &global_settings_page.window;
 		global_ui_context.keyboard = &global_settings_page.keyboard;
 		global_ui_context.mouse = &global_settings_page.mouse;
@@ -198,7 +207,7 @@ void settings_page_show()
 	load_current_settings_into_ui();
 	
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
-													   450, 250, 450, 450);
+													   450, 300, 450, 300);
 	global_settings_page.active = true;
 	global_settings_page.selected_tab_index = 0;
 	global_settings_page.current_locale_id = localize_get_id();

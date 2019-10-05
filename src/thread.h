@@ -36,7 +36,7 @@ struct t_mutex
 };
 #endif
 
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
 #include <windows.h>
 #include <process.h>    /* _beginthread, _endthread */
 #include <stddef.h>

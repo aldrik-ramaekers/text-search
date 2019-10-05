@@ -6,9 +6,7 @@
 #include <errno.h>
 #include <shlwapi.h>
 #include <objbase.h>
-
-#define BORDER_SPACE_HORIZONTAL 8
-#define BORDER_SPACE_VERTICAL 30
+#include <shellapi.h>
 
 struct t_platform_window
 {
@@ -39,12 +37,42 @@ platform_window *current_window_to_handle;
 keyboard_input *current_keyboard_to_handle;
 mouse_input *current_mouse_to_handle;
 
-int cmd_show;
-int CALLBACK WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-					 LPSTR lpCmdLine, int nCmdShow)
+static void get_directory_from_path(char *buffer, char *path)
 {
-	instance = hInstance;
-	cmd_show = nCmdShow;
+	buffer[0] = 0;
+	
+	s32 len = strlen(path);
+	if (len == 1)
+	{
+		return;
+	}
+	
+	char *path_end = path + len;
+	while (*path_end != '/' && path_end >= path)
+	{
+		--path_end;
+	}
+	
+	s32 offset = path_end - path;
+	char ch = path[offset+1];
+	path[offset+1] = 0;
+	strncpy(buffer, path, MAX_INPUT_LENGTH);
+	path[offset+1] = ch;
+}
+
+int cmd_show;
+int main(int argc, char **argv)
+{
+	instance = GetModuleHandle(NULL);;
+	cmd_show = argc;
+	
+	// get fullpath of the directory the exe is residing in
+	binary_path = platform_get_full_path(argv[0]);
+	
+	char buf[MAX_INPUT_LENGTH];
+	get_directory_from_path(buf, binary_path);
+	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
+	
 	return main_loop();
 }
 
@@ -101,29 +129,6 @@ static void get_name_from_path(char *buffer, char *path)
 	strncpy(buffer, path_end+1, MAX_INPUT_LENGTH);
 }
 
-static void get_directory_from_path(char *buffer, char *path)
-{
-	buffer[0] = 0;
-	
-	s32 len = strlen(path);
-	if (len == 1)
-	{
-		return;
-	}
-	
-	char *path_end = path + len;
-	while ((*path_end != '/' && *path_end != '\\') && path_end >= path)
-	{
-		--path_end;
-	}
-	
-	s32 offset = path_end - path;
-	char ch = path[offset+1];
-	path[offset+1] = 0;
-	strncpy(buffer, path, MAX_INPUT_LENGTH);
-	path[offset+1] = ch;
-}
-
 void platform_autocomplete_path(char *buffer, bool want_dir)
 {
 	char dir[MAX_INPUT_LENGTH]; 
@@ -138,7 +143,7 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 	}
 	
 	// create filter
-	strncat(name, "*", MAX_INPUT_LENGTH);
+	strncat(name, "*", MAX_INPUT_LENGTH-1);
 	
 	array files = array_create(sizeof(found_file));
 	array filters = get_filters(name);
@@ -439,10 +444,10 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		info->ptMinTrackSize.x = current_window_to_handle->min_width;
 		info->ptMinTrackSize.y = current_window_to_handle->min_height;
 		
-		if (current_window_to_handle->max_width)
-			info->ptMaxTrackSize.x = current_window_to_handle->max_width;
-		if (current_window_to_handle->max_height)
-			info->ptMaxTrackSize.y = current_window_to_handle->max_height;
+		//if (current_window_to_handle->max_width)
+        //info->ptMaxTrackSize.x = current_window_to_handle->max_width;
+		//if (current_window_to_handle->max_height)
+        //info->ptMaxTrackSize.y = current_window_to_handle->max_height;
 	}
 	else if (message == WM_DESTROY)
 	{
@@ -496,12 +501,12 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		
 		if (max_w == 0 && max_h == 0)
 		{
-			ex_style = 0;
-			style = WS_OVERLAPPEDWINDOW;
+			//ex_style = 0;
+			style = WS_SIZEBOX;
 		}
 		else
 		{
-			
+			style = WS_THICKFRAME;
 		}
 		
 		window.window_handle = CreateWindowEx(ex_style,
@@ -510,8 +515,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|style,
 											  CW_USEDEFAULT,
 											  CW_USEDEFAULT,
-											  width+BORDER_SPACE_HORIZONTAL,
-											  height+BORDER_SPACE_VERTICAL,
+											  width,
+											  height,
 											  0,
 											  0,
 											  instance,
@@ -614,7 +619,7 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 {
 	RECT rec;
 	GetWindowRect(window->window_handle, &rec);
-	MoveWindow(window->window_handle, rec.left, rec.top, width+BORDER_SPACE_HORIZONTAL, height+BORDER_SPACE_VERTICAL, FALSE);
+	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
 	window->width = width;
 	window->height = height;
 }

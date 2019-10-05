@@ -166,7 +166,7 @@
 #define MAX_PATH_LENGTH 255+1
 #endif
 
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
 #define MAX_INPUT_LENGTH 4096+1
 #define MAX_PATH_LENGTH 259+1
 #endif

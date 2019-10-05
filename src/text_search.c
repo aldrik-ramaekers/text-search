@@ -98,7 +98,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): store config file in home directory?
+// TODO(Aldrik): 
+// TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary
 // TODO(Aldrik): get windows port working
 // TODO(Aldrik): linux show alert implementation for distros other than ubuntu
@@ -635,7 +636,7 @@ static s32 prepare_search_directory_path(char *path, s32 len)
 	}
 #endif
 	
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
 	if ((path[len-1] != '\\' && path[len-1] != '/') && len < MAX_INPUT_LENGTH)
 	{
 		path[len] = '\\';
@@ -800,7 +801,7 @@ void load_config(settings_config *config)
         platform_window_set_size(main_window, window_w, window_h);
 }
 
-#if defined(OS_LINUX) || defined(OS_WINDOWS)
+#if defined(OS_LINUX) || defined(OS_WIN)
 int main_loop()
 {
 	platform_init();

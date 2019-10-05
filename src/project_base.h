@@ -27,7 +27,7 @@
 int main_loop();
 
 #ifdef _WIN32
-#define OS_WINDOWS
+#define OS_WIN
 #include <windows.h>
 #include <time.h>
 #endif
@@ -68,7 +68,7 @@ int main_loop();
 #ifdef OS_LINUX
 #define bool uint8_t
 #endif
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
 #define bool _Bool
 #endif
 
@@ -102,7 +102,7 @@ int main_loop();
 #include "linux/platform.c"
 #endif
 
-#ifdef OS_WINDOWS
+#ifdef OS_WIN
 #include "windows/thread.c"
 #include "windows/platform.c"
 #endif
