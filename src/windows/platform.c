@@ -318,8 +318,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		current_window_to_handle->width = width;
 		current_window_to_handle->height = height;
-		
-		glViewport(0, 0, width, height);
 	}
 	else if (message == WM_CHAR)
 	{
@@ -620,8 +618,6 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 	RECT rec;
 	GetWindowRect(window->window_handle, &rec);
 	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
-	window->width = width;
-	window->height = height;
 }
 
 u8 platform_window_is_valid(platform_window *window)
@@ -1067,6 +1063,12 @@ void platform_init()
 
 void platform_set_icon(platform_window *window, image *img)
 {
+	HICON hIcon = LoadImageA(window->window_class.hInstance, "ICON", IMAGE_ICON, img->width, img->height, 0);
+	
+	printf("%p\n", hIcon);
+	
+	SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+	SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)

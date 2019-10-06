@@ -1,6 +1,10 @@
 #!/bin/bash
 
-windres misc/icon.rc -O coff -o misc/icon.res
+if ! type "$windres" > /dev/null 2>/dev/null; then
+	x86_64-w64-mingw32-windres misc/icon.rc -O coff -o misc/icon.res
+else
+	windres misc/icon.rc -O coff -o misc/icon.res
+fi
 
 rm -rf bin
 mkdir bin

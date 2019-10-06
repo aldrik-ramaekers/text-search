@@ -98,12 +98,14 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): textbox controls on windows
+// TODO(Aldrik): open file dialog on windows
+// TODO(Aldrik): set icon on windows
 // TODO(Aldrik): autocomplete on windows
 // TODO(Aldrik): icon on windows
 // TODO(Aldrik): keep selection going as long as mouse is down when mouse leaves ui element
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary
-// TODO(Aldrik): get windows port working
 // TODO(Aldrik): linux show alert implementation for distros other than ubuntu
 // TODO(Aldrik): implement directX render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
