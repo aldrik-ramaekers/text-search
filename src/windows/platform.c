@@ -682,7 +682,6 @@ file_content platform_read_file_content(char *path, const char *mode)
 	FILE *file = fopen(path, mode);
 	if (!file) 
 	{
-		// http://man7.org/linux/man-pages/man3/errno.3.html
 		if (errno == EMFILE)
 			result.file_error = FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS;
 		else if (errno == ENFILE)
@@ -700,7 +699,10 @@ file_content platform_read_file_content(char *path, const char *mode)
 		else if (errno == ENETDOWN)
 			result.file_error = FILE_ERROR_NETWORK_DOWN;
 		else
+		{
+			result.file_error = FILE_ERROR_GENERIC;
 			printf("ERROR: %d\n", errno);
+		}
 		
 		goto done_failure;
 	}
@@ -709,14 +711,20 @@ file_content platform_read_file_content(char *path, const char *mode)
 	int length = ftell(file);
 	fseek(file, 0, SEEK_SET);
 	
-	// if file i empty alloc 1 byte
 	s32 length_to_alloc = length+1;
 	
 	result.content = mem_alloc(length_to_alloc);
 	if (!result.content) goto done;
 	
-	fread(result.content, 1, length, file);
-	result.content_length = length;
+	s32 read_result = fread(result.content, 1, length, file);
+	if (read_result == 0)
+	{
+		mem_free(result.content);
+		result.content = 0;
+		return result;
+	}
+	
+	result.content_length = read_result;
 	
 	((char*)result.content)[length] = 0;
 	

@@ -18,7 +18,7 @@
 void settings_config_write_to_file(settings_config *config, char *path)
 {
 	// @hardcoded
-	s32 len = config->settings.length*200;
+	s32 len = config->settings.length*500;
 	char *buffer = mem_alloc(len);
 	buffer[0] = 0;
 	
@@ -27,7 +27,7 @@ void settings_config_write_to_file(settings_config *config, char *path)
 		config_setting *setting = array_at(&config->settings, i);
 		
 		char entry_buf[200];
-		sprintf(entry_buf, "%s = \"%s\"\n", setting->name, setting->value);
+		sprintf(entry_buf, "%s = \"%s\"%c%c", setting->name, setting->value, 0x0D, 0x0A);
 		strcat(buffer, entry_buf);
 	}
 	
@@ -88,9 +88,10 @@ settings_config settings_config_load_from_file(char *path)
 	settings_config config;
 	config.settings = array_create(sizeof(config_setting));
 	
+	
 	set_active_directory(binary_path);
 	
-	file_content content = platform_read_file_content(path, "r");
+	file_content content = platform_read_file_content(path, "rb");
 	
 	if (!content.content || content.file_error)
 	{
@@ -102,9 +103,9 @@ settings_config settings_config_load_from_file(char *path)
 	for (s32 i = 0; i < content.content_length; i++)
 	{
 		char ch = ((char*)content.content)[i];
-		char prev_ch = i-1 < content.content_length ? ((char*)content.content)[i-1] : 0;
+		char prev_ch = i-1 > 0 ? ((char*)content.content)[i-1] : 255;
 		
-		// TODO(Aldrik)L implement CR only linebreak for old macOS
+		// TODO(Aldrik): implement CR only linebreak for old macOS
 		
 		// end of line [crlf]
 		if (ch == 0x0D)
@@ -118,7 +119,7 @@ settings_config settings_config_load_from_file(char *path)
 			get_config_from_string(&config, line);
 		}
 		// end of line [lf]
-		else if (ch == '\n' && prev_ch != 0x0D)
+		else if (ch == 0x0A && prev_ch != 0x0D)
 		{
 			char line[MAX_INPUT_LENGTH];
 			
