@@ -83,7 +83,7 @@ u8 platform_get_clipboard(platform_window *window, char *buffer)
 
 inline void platform_show_alert(char *title, char *message)
 {
-	
+	// not implemented
 }
 
 inline void platform_destroy()
@@ -444,10 +444,10 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		info->ptMinTrackSize.x = current_window_to_handle->min_width;
 		info->ptMinTrackSize.y = current_window_to_handle->min_height;
 		
-		//if (current_window_to_handle->max_width)
-        //info->ptMaxTrackSize.x = current_window_to_handle->max_width;
-		//if (current_window_to_handle->max_height)
-        //info->ptMaxTrackSize.y = current_window_to_handle->max_height;
+		if (current_window_to_handle->max_width)
+			info->ptMaxTrackSize.x = current_window_to_handle->max_width;
+		if (current_window_to_handle->max_height)
+			info->ptMaxTrackSize.y = current_window_to_handle->max_height;
 	}
 	else if (message == WM_DESTROY)
 	{
