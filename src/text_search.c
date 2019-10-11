@@ -98,6 +98,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): move gl functions in this file into render layer
 // TODO(Aldrik): textbox controls on windows
 // TODO(Aldrik): open file dialog on windows
 // TODO(Aldrik): set icon on windows
@@ -107,7 +108,7 @@ platform_window *main_window;
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary
 // TODO(Aldrik): linux show alert implementation for distros other than ubuntu
-// TODO(Aldrik): implement directX render layer for windows
+// TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
 checkbox_state checkbox_recursive;
@@ -808,8 +809,6 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main_loop()
 {
-	platform_init();
-	
 #ifdef MODE_DEVELOPER
 	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);
 #else
@@ -1159,11 +1158,6 @@ int main_loop()
 	
 	keyboard_input_destroy(&keyboard);
 	platform_destroy_window(&window);
-	platform_destroy();
-	
-#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
-	memory_print_leaks();
-#endif
 	
 	return 0;
 }

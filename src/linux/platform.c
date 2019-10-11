@@ -184,6 +184,8 @@ static void get_directory_from_path(char *buffer, char *path)
 
 int main(int argc, char **argv)
 {
+	platform_init();
+	
 	// get fullpath of the directory the exe is residing in
 	binary_path = platform_get_full_path(argv[0]);
 	
@@ -191,7 +193,17 @@ int main(int argc, char **argv)
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
-	return main_loop();
+	debug_init();
+	
+	s32 result = main_loop();
+	
+#if defined(MODE_DEVELOPER)
+	memory_print_leaks();
+#endif
+	
+	platform_destroy();
+	
+	return result;
 }
 
 void platform_destroy_list_file_result(array *files)

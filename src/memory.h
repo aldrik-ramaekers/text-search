@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -18,7 +18,7 @@
 #ifndef INCLUDE_MEMORY
 #define INCLUDE_MEMORY
 
-#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
+#ifdef MODE_DEVELOPER
 
 void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line);
 void mem_free_d(void *ptr, const char *caller_name, s32 caller_line);

@@ -1,3 +1,20 @@
+/* 
+*  Copyright 2019 Aldrik Ramaekers
+*
+*  This program is free software: you can redistribute it and/or modify
+*  it under the terms of the GNU General Public License as published by
+*  the Free Software Foundation, either version 3 of the License, or
+*  (at your option) any later version.
+
+*  This program is distributed in the hope that it will be useful,
+*  but WITHOUT ANY WARRANTY; without even the implied warranty of
+*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+*  GNU General Public License for more details.
+
+*  You should have received a copy of the GNU General Public License
+*  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*/
+
 #include <windows.h>
 #include <GL/gl.h>
 #include <stdbool.h>
@@ -63,6 +80,8 @@ static void get_directory_from_path(char *buffer, char *path)
 int cmd_show;
 int main(int argc, char **argv)
 {
+	platform_init();
+	
 	instance = GetModuleHandle(NULL);;
 	cmd_show = argc;
 	
@@ -73,7 +92,17 @@ int main(int argc, char **argv)
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
-	return main_loop();
+	debug_init();
+	
+	s32 result = main_loop();
+	
+#if defined(MODE_DEVELOPER)
+	memory_print_leaks();
+#endif
+	
+	platform_destroy();
+	
+	return result;
 }
 
 u8 platform_get_clipboard(platform_window *window, char *buffer)
@@ -1067,8 +1096,8 @@ void platform_set_icon(platform_window *window, image *img)
 	
 	printf("%p\n", hIcon);
 	
-	SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-	SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+	//SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+	//SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)

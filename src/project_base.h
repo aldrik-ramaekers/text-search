@@ -89,6 +89,7 @@ int main_loop();
 #include "assets.h"
 #include "memory_bucket.h"
 #include "platform.h"
+#include "debug.h"
 #include "render.h"
 #include "camera.h"
 #include "ui.h"
@@ -118,6 +119,7 @@ int main_loop();
 #include "localization.c"
 #include "text_buffer.c"
 #include "memory_bucket.c"
+#include "debug.c"
 
 #ifdef MODE_DEVELOPER
 #include "memory.c"
