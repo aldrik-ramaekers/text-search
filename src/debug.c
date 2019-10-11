@@ -17,13 +17,16 @@
 
 #define TARGET_FRAMERATE 1000/30.0
 
+/*
 typedef struct t_debug_view 
 {
-	platform_window window;
+ platform_window window;
 };
+*/
 
 void *debug_thread(void *args)
 {
+	return 0;
 	platform_window window = platform_open_window("Debug view", 800, 600, 800, 600);
 	
 	keyboard_input keyboard = keyboard_input_create();

@@ -24,6 +24,7 @@
 #include <shlwapi.h>
 #include <objbase.h>
 #include <shellapi.h>
+#include <gdiplus.h>
 
 struct t_platform_window
 {
@@ -1090,14 +1091,45 @@ void platform_init()
 	create_key_tables();
 }
 
+static ARGB MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
+{
+	return (ARGB) ((((DWORD) a) << 24) | (((DWORD) r) << 16)
+				   | (((DWORD) g) << 8) | ((DWORD) b));
+}
+
 void platform_set_icon(platform_window *window, image *img)
 {
-	HICON hIcon = LoadImageA(window->window_class.hInstance, "ICON", IMAGE_ICON, img->width, img->height, 0);
+#if 0
+	GpBitmap *gdipBitmap;
 	
-	printf("%p\n", hIcon);
+	HBITMAP tmp_bmp = CreateBitmap(img->width, img->height, 1, 32, 0);
+	GdipCreateBitmapFromHBITMAP(tmp_bmp, 0, &gdipBitmap);
 	
-	//SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
-	//SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+	// not implemented in wine.. try this out on windows
+	//ColorPalette palette;
+	//GdipInitializePalette(&palette, PaletteTypeOptimal, 4, true, gdipBitmap);
+	
+	GdipBitmapConvertFormat(gdipBitmap, PixelFormat32bppARGB, DitherTypeNone, PaletteTypeOptimal, palette, 100);
+	
+	for (s32 i = 0; i < img->height; i++)
+	{
+		for (s32 u = 0; u < img->width; u++)
+		{
+			s32 c = *((s32*)(img->data+(i*4*img->width)+(u*4)));
+			ARGB color = MakeARGB(c >> 0, c >> 8, c >> 16, c >> 24);
+			
+			GdipBitmapSetPixel(gdipBitmap, u, i, color);
+		}
+	}
+	HICON icon;
+	GdipCreateHICONFromBitmap(gdipBitmap, &icon);
+	printf("%p\n", icon);
+#else
+	HICON icon = LoadImageA(window->window_class.hInstance, "RC_LOGO", IMAGE_ICON, 0, 0,LR_DEFAULTCOLOR | LR_SHARED | LR_DEFAULTSIZE);
+#endif
+	
+	SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)icon);
+	SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)icon);
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)
