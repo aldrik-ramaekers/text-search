@@ -379,7 +379,8 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 					ch = buf;
 				}
 				
-				keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
+				if (ch != 0)
+					keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
 			}
 			break; 
 		}
@@ -401,8 +402,9 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		current_keyboard_to_handle->keys[keycode_map[key]] = true;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = true;
 		
-		//if (current_keyboard_to_handle->take_input)
-		//keyboard_handle_input_string(current_keyboard_to_handle, 0);
+		if (current_keyboard_to_handle->take_input)
+			keyboard_handle_input_string(current_window_to_handle, 
+										 current_keyboard_to_handle, 0);
 	}
 	else if (message == WM_KEYUP)
 	{
@@ -422,7 +424,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		if (message == WM_MOUSEWHEEL)
 		{
 			s16 scroll_val = wparam>>16;
-			printf("%d\n", scroll_val);
+			
 			if (scroll_val < 0)
 				current_mouse_to_handle->scroll_state = SCROLL_DOWN;
 			else
@@ -511,6 +513,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.min_height = height;
 	window.max_width = max_w;
 	window.max_height = max_h;
+	window.curr_cursor_type = -1;
 	
 	current_window_to_handle = &window;
 	
@@ -520,7 +523,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.window_class.hInstance = instance;
 	window.window_class.lpszClassName = name;
     window.window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-    window.window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+    //window.window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	
 	if (RegisterClass(&window.window_class))
 	{
@@ -695,6 +698,22 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 
 void platform_window_swap_buffers(platform_window *window)
 {
+	// set cursor if changed
+	if (window->curr_cursor_type != window->next_cursor_type)
+	{
+		char *cursor_shape = 0;
+		switch(window->next_cursor_type)
+		{
+			case CURSOR_DEFAULT: cursor_shape = IDC_ARROW; break;
+			case CURSOR_POINTER: cursor_shape = IDC_HAND; break;
+		}
+		
+		HCURSOR cursor = LoadCursorA(NULL, cursor_shape);
+		
+		window->curr_cursor_type = window->next_cursor_type;
+		SetCursor(cursor);
+	}
+	
 	SwapBuffers(window->hdc);
 }
 
@@ -1091,11 +1110,14 @@ void platform_init()
 	create_key_tables();
 }
 
+#if 0
+// copied from gdipluscolor.h
 static ARGB MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
 {
 	return (ARGB) ((((DWORD) a) << 24) | (((DWORD) r) << 16)
 				   | (((DWORD) g) << 8) | ((DWORD) b));
 }
+#endif
 
 void platform_set_icon(platform_window *window, image *img)
 {

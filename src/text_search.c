@@ -98,15 +98,15 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): move gl functions in this file into render layer
-// TODO(Aldrik): textbox controls on windows
+// TODO(Aldrik): bug where first character to the left of the selection is not selected on hover
+// TODO(Aldrik): debug view
+// TODO(Aldrik): move duplicate platform functions into separate files
 // TODO(Aldrik): open file dialog on windows
-// TODO(Aldrik): set icon on windows
 // TODO(Aldrik): autocomplete on windows
 // TODO(Aldrik): icon on windows
 // TODO(Aldrik): keep selection going as long as mouse is down when mouse leaves ui element
 // TODO(Aldrik): store config file in home/appdata directory?
-// TODO(Aldrik): include asset folder stuff in binary
+// TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): linux show alert implementation for distros other than ubuntu
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
@@ -917,9 +917,7 @@ int main_loop()
 		global_ui_context.keyboard = &keyboard;
 		global_ui_context.mouse = &mouse;
 		
-		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+		render_clear();
 		camera_apply_transformations(&window, &camera);
 		
 		global_ui_context.layout.width = global_ui_context.layout.active_window->width;
