@@ -98,6 +98,8 @@ int main_loop();
 #include "localization.h"
 #include "text_buffer.h"
 
+#include "platform_shared.c"
+
 #ifdef OS_LINUX
 #include "linux/thread.c"
 #include "linux/platform.c"
@@ -119,9 +121,9 @@ int main_loop();
 #include "localization.c"
 #include "text_buffer.c"
 #include "memory_bucket.c"
-#include "debug.c"
 
 #ifdef MODE_DEVELOPER
+#include "debug.c"
 #include "memory.c"
 #endif
 

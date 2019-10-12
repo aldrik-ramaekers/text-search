@@ -100,14 +100,11 @@ platform_window *main_window;
 
 // TODO(Aldrik): bug where first character to the left of the selection is not selected on hover
 // TODO(Aldrik): debug view
-// TODO(Aldrik): move duplicate platform functions into separate files
 // TODO(Aldrik): open file dialog on windows
-// TODO(Aldrik): autocomplete on windows
-// TODO(Aldrik): icon on windows
 // TODO(Aldrik): keep selection going as long as mouse is down when mouse leaves ui element
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary?
-// TODO(Aldrik): linux show alert implementation for distros other than ubuntu
+// TODO(Aldrik): alert implementation for Yad
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
