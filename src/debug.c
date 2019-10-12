@@ -17,13 +17,6 @@
 
 #define TARGET_FRAMERATE 1000/30.0
 
-/*
-typedef struct t_debug_view 
-{
- platform_window window;
-};
-*/
-
 void *debug_thread(void *args)
 {
 	return 0;
@@ -31,6 +24,8 @@ void *debug_thread(void *args)
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
+	
+	font* font_small = assets_load_font("data/fonts/mono.ttf", 16);
 	
 	camera camera;
 	camera.x = 0;
@@ -61,6 +56,11 @@ void *debug_thread(void *args)
         
 		platform_window_swap_buffers(&window);
 	}
+	
+	assets_destroy_font(font_small);
+	
+	keyboard_input_destroy(&keyboard);
+	platform_destroy_window(&window);
 	
 	return 0;
 }

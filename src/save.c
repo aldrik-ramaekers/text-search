@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -35,7 +35,15 @@ static void *export_result_d(void *arg)
 	
 	platform_open_file_dialog_block(args);
 	
-	if (path_buf[0] == 0) return 0;
+	char tmp_dir_buffer[MAX_INPUT_LENGTH];
+	get_directory_from_path(tmp_dir_buffer, path_buf);
+	
+	char tmp_name_buffer[MAX_INPUT_LENGTH];
+	get_name_from_path(tmp_name_buffer, path_buf);
+	
+	if (string_equals(path_buf, "")) return 0;
+	if (string_equals(tmp_name_buffer, "")) return 0;
+	if (!platform_directory_exists(tmp_dir_buffer)) return 0;
 	
 	s32 size = ((MAX_INPUT_LENGTH*3) + 53)
 		+ matches.length * (matches.entry_size + MAX_INPUT_LENGTH);
@@ -179,7 +187,8 @@ static void* import_results_d(void *arg)
 	
 	platform_open_file_dialog_block(args);
 	
-	if (path_buf[0] == 0) return 0;
+	if (string_equals(path_buf, "")) return 0;
+	if (!platform_file_exists(path_buf)) return 0;
 	
 	import_results_from_file(search_result, path_buf);
 	return 0;

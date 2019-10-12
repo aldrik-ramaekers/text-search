@@ -93,15 +93,18 @@ int main(int argc, char **argv)
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
+#if defined(MODE_DEVELOPER)
 	debug_init();
+#endif
 	
 	s32 result = main_loop();
 	
+	platform_destroy();
+	
 #if defined(MODE_DEVELOPER)
 	memory_print_leaks();
+	debug_destroy();
 #endif
-	
-	platform_destroy();
 	
 	return result;
 }

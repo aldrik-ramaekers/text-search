@@ -18,7 +18,7 @@
 #ifndef INCLUDE_CONFIG
 #define INCLUDE_CONFIG
 
-#undef MODE_DEVELOPER
+//#undef MODE_DEVELOPER
 
 // width if a watch window within the info menu.
 #define WATCH_WINDOW_WIDTH 355

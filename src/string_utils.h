@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -65,5 +65,6 @@ printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
 u8 string_match(char *first, char *second);
 u8 string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset);
 void string_trim(char *string);
+bool string_equals(char *first, char *second);
 
 #endif

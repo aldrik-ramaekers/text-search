@@ -193,15 +193,18 @@ int main(int argc, char **argv)
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
+#if defined(MODE_DEVELOPER)
 	debug_init();
+#endif
 	
 	s32 result = main_loop();
 	
+	platform_destroy();
+	
 #if defined(MODE_DEVELOPER)
 	memory_print_leaks();
+	debug_destroy();
 #endif
-	
-	platform_destroy();
 	
 	return result;
 }
@@ -1624,12 +1627,9 @@ static void* platform_open_file_dialog_dd(void *data)
 	
 	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
-		if (platform_file_exists(buffer) || platform_directory_exists(buffer))
-		{
-			strncpy(args->buffer, buffer, MAX_INPUT_LENGTH);
-			s32 len = strlen(args->buffer);
-			args->buffer[len] = 0;
-		}
+		strncpy(args->buffer, buffer, MAX_INPUT_LENGTH);
+		s32 len = strlen(args->buffer);
+		args->buffer[len] = 0;
 	}
 	
 	return 0;
