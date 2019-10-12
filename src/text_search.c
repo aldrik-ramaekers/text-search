@@ -106,6 +106,7 @@ platform_window *main_window;
 // TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): alert implementation for Yad
 // TODO(Aldrik): implement directX11 render layer for windows
+// TODO(Aldrik): implement clipboard copy on windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
 checkbox_state checkbox_recursive;

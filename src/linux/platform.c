@@ -44,6 +44,8 @@ struct t_platform_window
 	GLXContext gl_context;
 	XWindowAttributes window_attributes;
 	XEvent event;
+	char *clipboard_str;
+	s32 clipboard_strlen;
 	
 	Atom xdnd_req;
 	Atom xdnd_source;
@@ -58,6 +60,11 @@ struct t_platform_window
 	Atom XdndLeave;
 	Atom quit;
 	Atom PRIMARY;
+	Atom CLIPBOARD;
+	Atom UTF8_STRING;
+	Atom COMPOUND_STRING;
+	Atom TARGETS;
+	Atom MULTIPLE;
 	
 	// shared window properties
 	s32 width;
@@ -93,6 +100,11 @@ u8 platform_get_clipboard(platform_window *window, char *buffer)
 	incrid = XInternAtom(window->display, "INCR", False);
 	XEvent event;
 	
+	if(window->CLIPBOARD != None && XGetSelectionOwner(window->display, window->CLIPBOARD) == window->window) {
+		snprintf(buffer, MAX_INPUT_LENGTH, "%s", window->clipboard_str);
+		return true;
+	}
+	
 	XConvertSelection(window->display, bufid, fmtid, propid, window->window, CurrentTime);
 	do {
 		XNextEvent(window->display, &event);
@@ -113,6 +125,28 @@ u8 platform_get_clipboard(platform_window *window, char *buffer)
 	}
 	else // request failed, e.g. owner can't convert to the target format
 		return False;
+}
+
+bool platform_set_clipboard(platform_window *window, char *buffer)
+{
+	if (buffer)
+	{
+		if(window->CLIPBOARD != None && XGetSelectionOwner(window->display, window->CLIPBOARD) != window->window) {
+			XSetSelectionOwner(window->display, window->CLIPBOARD, window->window, CurrentTime);
+		}
+		
+		window->clipboard_strlen = strlen(buffer);
+		if(!window->clipboard_str) {
+			window->clipboard_str = mem_alloc(window->clipboard_strlen);
+		} else {
+			window->clipboard_str = mem_realloc(window->clipboard_str, window->clipboard_strlen);
+		}
+		strcpy(window->clipboard_str, buffer);
+		
+		return true;
+	}
+	
+	return false;
 }
 
 inline void platform_set_cursor(platform_window *window, cursor_type type)
@@ -600,6 +634,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.drag_drop_info.state = DRAG_DROP_NONE;
 	window.curr_cursor_type = CURSOR_DEFAULT;
 	window.next_cursor_type = CURSOR_DEFAULT;
+	window.clipboard_str = 0;
+	window.clipboard_strlen = 0;
 	
 	static int att[] =
 	{
@@ -697,8 +733,29 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	XMapWindow(window.display, window.window);
 	
 	// window name
-	XStoreName(window.display, window.window, name);
-	XSetIconName(window.display, window.window, name);
+	{
+		//XStoreName(window.display, window.window, name);
+		Atom atom_utf8 = XInternAtom(window.display, "UTF8_STRING", False);
+		Atom atom_icon_name = XInternAtom(window.display, "_NET_WM_ICON_NAME", False);
+		Atom atom_name = XInternAtom(window.display, "_NET_WM_NAME", False);
+		
+		XChangeProperty(window.display, window.window, atom_icon_name, atom_utf8, 8,
+						PropModeReplace, (unsigned char*)name, strlen(name));
+		XChangeProperty(window.display, window.window, atom_name, atom_utf8, 8,
+						PropModeReplace, (unsigned char*)name, strlen(name));
+		
+#if 0
+		char *name_copy = strdup(name);
+		
+		XTextProperty title_prop;
+		if(XStringListToTextProperty(&name_copy, 1, &title_prop)) {
+			XSetTextProperty(window.display, window.window, &title_prop, atom_name);
+			XSetTextProperty(window.display, window.window, &title_prop, atom_icon_name);
+			XSetWMName(window.display, window.window, &title_prop);
+			XSetWMIconName(window.display, window.window, &title_prop);
+		}
+#endif
+	}
 	
 	static GLXContext share_list = 0;
 	
@@ -770,6 +827,11 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	GET_ATOM(XdndSelection);
 	GET_ATOM(XdndLeave);
 	GET_ATOM(PRIMARY);
+	GET_ATOM(CLIPBOARD);
+	GET_ATOM(UTF8_STRING);
+	GET_ATOM(COMPOUND_STRING);
+	GET_ATOM(TARGETS);
+	GET_ATOM(MULTIPLE);
 	
 	array atoms = array_create(sizeof(Atom));
 	array_push(&atoms, &window.quit);
@@ -783,6 +845,11 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	array_push(&atoms, &window.XdndSelection);
 	array_push(&atoms, &window.XdndLeave);
 	array_push(&atoms, &window.PRIMARY);
+	array_push(&atoms, &window.CLIPBOARD);
+	array_push(&atoms, &window.UTF8_STRING);
+	array_push(&atoms, &window.COMPOUND_STRING);
+	array_push(&atoms, &window.TARGETS);
+	array_push(&atoms, &window.MULTIPLE);
 	
 #if 0
 	XSetWMProtocols(window.display, window.window, &window.XdndEnter, 1);
@@ -821,6 +888,7 @@ void platform_destroy_window(platform_window *window)
 	XDestroyWindow(window->display, window->window);
 	XCloseDisplay(window->display);
 	XFree(window->visual_info);
+	mem_free(window->clipboard_str);
 	
 	window->window = 0;
 	window->display = 0;
@@ -1306,6 +1374,38 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			keyboard->keys[keycode_map[key]] = false;
 			
 			KeySym ksym = XLookupKeysym(&window->event.xkey, 0);
+		}
+		else if (window->event.type == SelectionClear)
+		{
+			window->clipboard_str = 0;
+			window->clipboard_strlen = 0;
+		}
+		else if (window->event.type == SelectionRequest)
+		{
+			Atom formats[] = {window->UTF8_STRING, window->COMPOUND_STRING, XA_STRING};
+			Atom targets[] = {window->TARGETS, window->MULTIPLE, window->UTF8_STRING, window->COMPOUND_STRING, XA_STRING};
+			int formatCount = sizeof(formats) / sizeof(formats[0]);
+			
+			XSelectionEvent event = {.type = SelectionNotify, .selection = window->event.xselectionrequest.selection, .target = window->event.xselectionrequest.target, .display = window->event.xselectionrequest.display, .requestor = window->event.xselectionrequest.requestor, .time = window->event.xselectionrequest.time};
+			
+			if(window->event.xselectionrequest.target == window->TARGETS) {
+				XChangeProperty(window->display, window->event.xselectionrequest.requestor, window->event.xselectionrequest.property, XA_ATOM, 32, PropModeReplace, (unsigned char*)targets, sizeof(targets) / sizeof(targets[0]));
+				
+				event.property = window->event.xselectionrequest.property;
+			} else {
+				event.property = None;
+				int i;
+				for(i = 0; i < formatCount; i++) {
+					if(window->event.xselectionrequest.target == formats[i]) {
+						XChangeProperty(window->display, window->event.xselectionrequest.requestor, window->event.xselectionrequest.property, window->event.xselectionrequest.target, 8, PropModeReplace, (unsigned char*)window->clipboard_str, window->clipboard_strlen);
+						
+						event.property = window->event.xselectionrequest.property;
+						break;
+					}
+				}
+			}
+			
+			XSendEvent(window->display, window->event.xselectionrequest.requestor, False, 0, (XEvent*)&event);
 		}
 	}
 }
