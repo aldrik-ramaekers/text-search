@@ -118,12 +118,7 @@ inline void platform_set_cursor(platform_window *window, cursor_type type)
 
 void platform_destroy_list_file_result(array *files)
 {
-	for (s32 i = 0; i < files->length; i++)
-	{
-		found_file *file = array_at(files, i);
-		mem_free(file->path);
-		mem_free(file->matched_filter);
-	}
+	memory_bucket_reset(&global_platform_memory_bucket);
 	files->length = 0;
 }
 
@@ -772,6 +767,8 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 	WIN32_FIND_DATAA file_info;
 	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
 	
+	mem_free(start_dir_fix);
+	
 	if (handle == INVALID_HANDLE_VALUE)
 	{
 		return;
@@ -796,12 +793,12 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 										  &matched_filter)) && len != -1)
 				{
 					// is file
-					char *buf = mem_alloc(MAX_INPUT_LENGTH);
+					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 					sprintf(buf, "%s%s",start_dir, name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = mem_alloc(len+1);
+					f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
 					strncpy(f.matched_filter, matched_filter, len+1);
 					array_push_size(list, &f, sizeof(found_file));
 				}
@@ -831,18 +828,20 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 									  &matched_filter)) && len != -1)
 			{
 				// is file
-				char *buf = mem_alloc(MAX_INPUT_LENGTH);
+				char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;
 				f.path = buf;
-				f.matched_filter = mem_alloc(len+1);
+				f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
 				strncpy(f.matched_filter, matched_filter, len+1);
 				array_push_size(list, &f, sizeof(found_file));
 			}
 		}
 	}
 	while (FindNextFile(handle, &file_info) != 0);
+	
+	mem_free(start_dir_clean);
 	
 	FindClose(handle);
 }

@@ -1687,7 +1687,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 					if ((len = filter_matches(&filters, dir->d_name, 
 											  &matched_filter)) && len != -1)
 					{
-						char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
+						char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 						//realpath(dir->d_name, buf);
 						sprintf(buf, "%s%s",start_dir, dir->d_name);
 						
@@ -1717,7 +1717,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, u8 r
 				if ((len = filter_matches(&filters, dir->d_name, 
 										  &matched_filter)) && len != -1)
 				{
-					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, PATH_MAX);
+					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
 					//realpath(dir->d_name, buf);
 					sprintf(buf, "%s%s",start_dir, dir->d_name);
 					
