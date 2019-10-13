@@ -50,6 +50,7 @@ struct t_platform_window
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
 
+LARGE_INTEGER perf_frequency;
 static HINSTANCE instance;
 platform_window *current_window_to_handle;
 keyboard_input *current_keyboard_to_handle;
@@ -88,8 +89,20 @@ int main(int argc, char **argv)
 
 u8 platform_get_clipboard(platform_window *window, char *buffer)
 {
-	// TODO(Aldrik): implement
-	return 0;
+	OpenClipboard(NULL);
+	
+	UINT format = 0;
+	while((format = EnumClipboardFormats(format))) {
+		if(format == CF_TEXT) {
+			char *clip_str = GetClipboardData(CF_TEXT);
+			strncpy(buffer, clip_str, MAX_INPUT_LENGTH);
+			CloseClipboard();
+			return true;
+		}
+	}
+	
+	CloseClipboard();
+	return false;
 }
 
 bool platform_set_clipboard(platform_window *window, char *buffer)
@@ -272,38 +285,33 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_CHAR)
 	{
-		switch (wparam) 
-		{ 
-			default: 
-			if (current_keyboard_to_handle->take_input)
+		if (current_keyboard_to_handle->take_input)
+		{
+			char buf[2];
+			char *ch = 0;
+			
+			char val = (char)wparam;
+			printf("%c %x\n", val, val);
+			if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
 			{
-				char buf[2];
-				char *ch = 0;
-				
-				char val = (char)wparam;
-				
-				if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
+				if (!(val >= 48 && val <= 57))
 				{
-					if (!(val >= 48 && val <= 57))
-					{
-						ch = 0;
-					}
-					else
-					{
-						sprintf(buf, "%c", val);
-						ch = buf;
-					}
+					ch = 0;
 				}
-				else if (val >= 32 && val <= 126)
+				else
 				{
 					sprintf(buf, "%c", val);
 					ch = buf;
 				}
-				
-				if (ch != 0)
-					keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
 			}
-			break; 
+			else if (val >= 32 && val <= 126)
+			{
+				sprintf(buf, "%c", val);
+				ch = buf;
+			}
+			
+			if (ch != 0)
+				keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
 		}
 	}
 	else if (message == WM_MOUSELEAVE)
@@ -948,6 +956,7 @@ void platform_init()
 {
     global_platform_memory_bucket = memory_bucket_init(megabytes(1));
     
+	QueryPerformanceFrequency(&perf_frequency);
     //CoInitialize(NULL);
 	create_key_tables();
 }
@@ -996,25 +1005,30 @@ void platform_set_icon(platform_window *window, image *img)
 
 u64 platform_get_time(time_type time_type, time_precision precision)
 {
-	DWORD result = GetTickCount();
+	LARGE_INTEGER counter;
+	QueryPerformanceCounter(&counter);
 	
-	u64 val = result;
+	double sec = counter.QuadPart / (double)(perf_frequency.QuadPart);
+	
+	//printf("%I64d %I64d %f\n", counter.QuadPart, perf_frequency.QuadPart, sec);
+	
+	double val = sec;
 	
 	if (precision == TIME_NS)
 	{
-		return val*1000000;
+		return val*1000000000;
 	}
 	if (precision == TIME_US)
 	{
-		return val*1000;
+		return val*1000000;
 	}
 	if (precision == TIME_MILI_S)
 	{
-		return val;
+		return val*1000;
 	}
 	if (precision == TIME_S)
 	{
-		return val/1000;
+		return val;
 	}
 	return val;
 }
