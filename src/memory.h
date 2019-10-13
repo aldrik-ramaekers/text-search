@@ -18,7 +18,7 @@
 #ifndef INCLUDE_MEMORY
 #define INCLUDE_MEMORY
 
-#ifdef MODE_DEVELOPER
+#if defined(MODE_DEVELOPER)
 
 void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line);
 void mem_free_d(void *ptr, const char *caller_name, s32 caller_line);
@@ -48,6 +48,7 @@ mutex global_memory_mutex;
 #define mem_alloc(size) malloc(size)
 #define mem_free(p) free(p)
 #define mem_realloc(p, size) realloc(p, size)
+#define memory_print_leaks() {}
 #endif
 
 #endif

@@ -108,6 +108,7 @@ platform_window *main_window;
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): implement clipboard copy on windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
+// TODO(Aldrik): replace u8 with bool
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;

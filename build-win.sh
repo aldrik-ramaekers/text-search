@@ -9,7 +9,7 @@ fi
 rm -rf bin
 mkdir bin
 cd src
-x86_64-w64-mingw32-gcc -Wall -g -Wno-unused-label -Wno-unused-variable text_search.c -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
+x86_64-w64-mingw32-gcc -Wall -g -DMODE_DEVELOPER -Wno-unused-label -Wno-unused-variable text_search.c -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
 
 if [ $? -ne 0 ]; then
 	cd ../

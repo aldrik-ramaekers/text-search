@@ -88,7 +88,14 @@ int main(int argc, char **argv)
 
 u8 platform_get_clipboard(platform_window *window, char *buffer)
 {
+	// TODO(Aldrik): implement
 	return 0;
+}
+
+bool platform_set_clipboard(platform_window *window, char *buffer)
+{
+	// TODO(Aldrik): implement
+	return false;
 }
 
 inline void platform_show_alert(char *title, char *message)
@@ -946,48 +953,46 @@ void platform_init()
 	create_key_tables();
 }
 
-#if 0
-// copied from gdipluscolor.h
-static ARGB MakeARGB(BYTE a, BYTE r, BYTE g, BYTE b)
-{
-	return (ARGB) ((((DWORD) a) << 24) | (((DWORD) r) << 16)
-				   | (((DWORD) g) << 8) | ((DWORD) b));
-}
-#endif
-
 void platform_set_icon(platform_window *window, image *img)
 {
-#if 0
-	GpBitmap *gdipBitmap;
+	BYTE *bmp;
+	s32 data_len = img->width * img->height * 4;
+	s32 total_len = data_len + 40 * 4;
 	
-	HBITMAP tmp_bmp = CreateBitmap(img->width, img->height, 1, 32, 0);
-	GdipCreateBitmapFromHBITMAP(tmp_bmp, 0, &gdipBitmap);
+	bmp = mem_alloc(total_len);
 	
-	// not implemented in wine.. try this out on windows
-	//ColorPalette palette;
-	//GdipInitializePalette(&palette, PaletteTypeOptimal, 4, true, gdipBitmap);
+	struct {
+		int32_t header_size, width, geight;
+		int16_t color_plane, bits_per_pixel;
+		int32_t compression_mode, img_length, obsolete[4];
+	} bmp_header = {40, img->width, img->height * 2, 1, 32, BI_RGB, data_len, {0,0,0,0} };
 	
-	GdipBitmapConvertFormat(gdipBitmap, PixelFormat32bppARGB, DitherTypeNone, PaletteTypeOptimal, palette, 100);
+	memcpy(bmp, &bmp_header, 40);
 	
-	for (s32 i = 0; i < img->height; i++)
+	s32 index = 0;
+	for (s32 y = img->height-1; y >= 0; y--)
 	{
-		for (s32 u = 0; u < img->width; u++)
+		for (s32 x = 0; x < img->width; x++)
 		{
-			s32 c = *((s32*)(img->data+(i*4*img->width)+(u*4)));
-			ARGB color = MakeARGB(c >> 0, c >> 8, c >> 16, c >> 24);
+			s32 img_pixel = *(((s32*)img->data+(x+(y*img->width))));
 			
-			GdipBitmapSetPixel(gdipBitmap, u, i, color);
+			s32 r =  ((img_pixel & 0xFF000000) >> 24) | //______AA
+				((img_pixel & 0x00FF0000) >> 8) | //____RR__
+				((img_pixel & 0x0000FF00) << 16) | //__GG____
+				((img_pixel & 0x000000FF) << 24);  //BB______
+			
+			memcpy(bmp+40+(index*4), &r, 4);
+			
+			++index;
 		}
 	}
-	HICON icon;
-	GdipCreateHICONFromBitmap(gdipBitmap, &icon);
-	printf("%p\n", icon);
-#else
-	HICON icon = LoadImageA(window->window_class.hInstance, "RC_LOGO", IMAGE_ICON, 0, 0,LR_DEFAULTCOLOR | LR_SHARED | LR_DEFAULTSIZE);
-#endif
+	
+	HICON icon = CreateIconFromResource(bmp, total_len, TRUE, 0x00030000);
 	
 	SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)icon);
+	
+	mem_free(bmp);
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)

@@ -15,33 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#if defined(MODE_DEVELOPER) && defined(OS_LINUX)
-#include <execinfo.h>
-
-static void add_stacktrace_line(char *buffer, char *trace)
-{
-	s32 offset = 0;
-	s32 len = 0;
-	char *orig = trace;
-	
-	s32 index = 0;
-	while(*trace)
-	{
-		if (*trace == '(') offset = index;
-		if (*trace == '+')
-		{
-			len = index-offset;
-			break;
-		}
-		
-		++index;
-		++trace;
-	}
-	
-	strcat(buffer, "     - ");
-	strncat(buffer, orig+offset+1, len-1);
-	strcat(buffer, "\n");
-}
+#if defined(MODE_DEVELOPER)
 
 static u8 initializing = false;
 inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
@@ -57,21 +31,9 @@ inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 	memory_usage_entry entry;
 	if (global_memory_usage.data)
 	{
-		char *complete_stacktrace = malloc(3000);
+		char *complete_stacktrace = malloc(100);
 		complete_stacktrace[0] = 0;
-		
-		void* callstack[128];
-		int i, frames = backtrace(callstack, 128);
-		char** strs = backtrace_symbols(callstack, frames);
-		for (i = 0; i < frames; ++i) {
-			add_stacktrace_line(complete_stacktrace, strs[i]);
-			//strcat(complete_stacktrace, strs[i]);
-			//strcat(complete_stacktrace, "\n");
-		}
-		free(strs);
-		
-		strcat(complete_stacktrace, "---- ");
-		strcat(complete_stacktrace, caller_name);
+		strcpy(complete_stacktrace, caller_name);
 		
 		entry.name = complete_stacktrace;
 		entry.line = caller_line;

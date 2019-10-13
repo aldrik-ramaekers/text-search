@@ -83,6 +83,26 @@ static void get_config_from_string(settings_config *config, char *string)
 	array_push(&config->settings, &current_entry);
 }
 
+static void convert_crlf_to_lf(char *buffer)
+{
+	char *buffer_original = buffer;
+	
+	int write_offset = 0;
+	int read_offset = 0;
+	
+	while(buffer[read_offset])
+	{
+		if (buffer[read_offset] != 0x0D)
+		{
+			buffer_original[write_offset] = buffer[read_offset];
+			
+			++write_offset;
+		}
+		
+		++read_offset;
+	}
+}
+
 settings_config settings_config_load_from_file(char *path)
 {
 	settings_config config;
@@ -99,27 +119,16 @@ settings_config settings_config_load_from_file(char *path)
 		return config;
 	}
 	
+	convert_crlf_to_lf(content.content);
+	
 	s32 token_offset = 0;
 	for (s32 i = 0; i < content.content_length; i++)
 	{
 		char ch = ((char*)content.content)[i];
 		char prev_ch = i-1 > 0 ? ((char*)content.content)[i-1] : 255;
 		
-		// TODO(Aldrik): implement CR only linebreak for old macOS
-		
-		// end of line [crlf]
-		if (ch == 0x0D)
-		{
-			char line[MAX_INPUT_LENGTH];
-			
-			s32 line_len = i - token_offset;
-			sprintf(line, "%.*s", line_len, (char*)content.content+token_offset);
-			token_offset = i + 2;
-			
-			get_config_from_string(&config, line);
-		}
 		// end of line [lf]
-		else if (ch == 0x0A && prev_ch != 0x0D)
+		if (ch == 0x0A && prev_ch != 0x0D)
 		{
 			char line[MAX_INPUT_LENGTH];
 			
@@ -141,7 +150,7 @@ config_setting* settings_config_get_setting(settings_config *config, char *name)
 	for (s32 i = 0; i < config->settings.length; i++)
 	{
 		config_setting *setting = array_at(&config->settings, i);
-		if (strcmp(setting->name, name) == 0)
+		if (setting && setting->name && name && strcmp(setting->name, name) == 0)
 		{
 			return setting;
 		}
@@ -161,7 +170,7 @@ char* settings_config_get_string(settings_config *config, char *name)
 s64 settings_config_get_number(settings_config *config, char *name)
 {
 	config_setting* setting = settings_config_get_setting(config, name);
-	if (setting)
+	if (setting && setting->value)
 		return string_to_u64(setting->value);
 	else
 		return 0;
