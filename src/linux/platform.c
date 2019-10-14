@@ -184,17 +184,19 @@ int main(int argc, char **argv)
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
+	assets_create();
+	
 #if defined(MODE_DEVELOPER)
 	debug_init();
 #endif
 	
 	s32 result = main_loop();
 	
+	assets_destroy();
 	platform_destroy();
 	
 #if defined(MODE_DEVELOPER)
 	memory_print_leaks();
-	debug_destroy();
 #endif
 	
 	return result;

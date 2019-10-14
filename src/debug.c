@@ -17,31 +17,42 @@
 
 #define TARGET_FRAMERATE 1000/30.0
 
+static bool is_window_active = false;
+static platform_window global_debug_window;
+
+void debug_hide_window()
+{
+	if (platform_window_is_valid(&global_debug_window))
+	{
+		platform_destroy_window(&global_debug_window);
+	}
+}
+
 void *debug_thread(void *args)
 {
 	return 0;
-	platform_window window = platform_open_window("Debug view", 800, 600, 800, 600);
+	global_debug_window = platform_open_window("Debug view", 800, 600, 800, 600);
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
-	
-	font* font_small = assets_load_font("data/fonts/mono.ttf", 16);
 	
 	camera camera;
 	camera.x = 0;
 	camera.y = 0;
 	camera.rotation = 0;
 	
-	while(window.is_open) {
-        u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
-		platform_window_make_current(&window);
-		platform_handle_events(&window, &mouse, &keyboard);
-		platform_set_cursor(&window, CURSOR_DEFAULT);
+	font* font_small = assets_load_font("data/fonts/mono.ttf", 16);
+	
+	while(global_debug_window.is_open) {
+		u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
+		platform_window_make_current(&global_debug_window);
+		platform_handle_events(&global_debug_window, &mouse, &keyboard);
+		platform_set_cursor(&global_debug_window, CURSOR_DEFAULT);
 		
 		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		
-		camera_apply_transformations(&window, &camera);
+		camera_apply_transformations(&global_debug_window, &camera);
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
 		u64 diff = current_stamp - last_stamp;
@@ -54,13 +65,13 @@ void *debug_thread(void *args)
 			thread_sleep(time_to_wait*1000);
 		}
         
-		platform_window_swap_buffers(&window);
+		platform_window_swap_buffers(&global_debug_window);
 	}
 	
 	assets_destroy_font(font_small);
 	
 	keyboard_input_destroy(&keyboard);
-	platform_destroy_window(&window);
+	platform_destroy_window(&global_debug_window);
 	
 	return 0;
 }
@@ -69,9 +80,4 @@ void debug_init()
 {
 	thread t = thread_start(debug_thread, 0);
 	thread_detach(&t);
-}
-
-void debug_destroy()
-{
-	
 }

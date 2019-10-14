@@ -85,36 +85,25 @@ typedef struct t_textbox_state
 {
 	char *buffer;
 	s32 selection_start_index;
-	u8 state;
+	bool state;
 	s32 max_len;
 	s32 text_offset_x;
 	array history;
 } textbox_state;
 
-typedef struct t_datepicker_state
-{
-	time_t month_first_day;
-	struct tm month_first_day_info;
-	
-	time_t selected_day;
-	struct tm selected_day_info;
-	
-	s32 days_in_current_month;
-} datepicker_state;
-
 typedef struct t_checkbox_state
 {
-	u8 state;
+	bool state;
 } checkbox_state;
 
 typedef struct t_button_state
 {
-	u8 state;
+	bool state;
 } button_state;
 
 typedef struct t_dropdown_state
 {
-	u8 state;
+	bool state;
 } dropdown_state;
 
 typedef struct t_ui_context
@@ -149,7 +138,6 @@ textbox_state ui_create_textbox(u16 max_len);
 button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
 dropdown_state ui_create_dropdown();
-datepicker_state ui_create_datepicker(time_t selected_date);
 
 void ui_destroy_textbox(textbox_state *state);
 
@@ -166,7 +154,6 @@ void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
 void ui_push_text(char *text);
-bool ui_push_datepicker(datepicker_state *state, s32 tile_w);
 bool ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint);
 bool ui_push_checkbox(checkbox_state *state, char *title);
 bool ui_push_textbox(textbox_state *state, char *title);

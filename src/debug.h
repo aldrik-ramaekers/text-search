@@ -19,6 +19,5 @@
 #define INCLUDE_DEBUG
 
 void debug_init();
-void debug_destroy();
 
 #endif

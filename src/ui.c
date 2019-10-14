@@ -73,43 +73,6 @@ inline button_state ui_create_button()
 	return state;
 }
 
-static s32 get_days_in_month(struct tm *t)
-{
-	// starting from 1
-	s32 month = t->tm_mon + 1;
-	s32 year = t->tm_year + 1900;
-	
-	if (month == 4 || month == 6 || month == 9 || month == 11)
-		return 30;
-	
-	if (month == 2)
-	{
-		bool leapyear = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-		
-		if (leapyear)
-			return 28;
-		else 
-			return 29;
-	}
-	
-	return 31;
-}
-
-inline datepicker_state ui_create_datepicker(time_t selected_date)
-{
-	datepicker_state state;
-	state.selected_day = selected_date;
-	state.selected_day_info = *localtime(&selected_date);
-	
-	state.month_first_day = selected_date - ((state.selected_day_info.tm_mday-1)*(60*60*24));
-	state.month_first_day_info = *localtime(&state.month_first_day);
-	
-	state.days_in_current_month = get_days_in_month(&state.month_first_day_info);
-	//state.days_in_current_month = 31;
-	
-	return state;
-}
-
 inline scroll_state ui_create_scroll(s32 scroll)
 {
 	scroll_state state;

@@ -815,7 +815,6 @@ int main_loop()
 	
 	main_window = &window;
 	
-	assets_create();
 	settings_page_create();
 	
 	load_available_localizations();
@@ -1150,7 +1149,6 @@ int main_loop()
 	assets_destroy_font(font_mini);
 	assets_destroy_font(font_medium);
 	assets_destroy_font(font_big);
-	assets_destroy();
 	
 	keyboard_input_destroy(&keyboard);
 	platform_destroy_window(&window);
