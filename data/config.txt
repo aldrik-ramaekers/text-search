@@ -1,7 +1,7 @@
 SEARCH_DIRECTORY = "/home/aldrik/Projects/text-search/src/"
 SEARCH_DIRECTORIES = "1"
 SEARCH_TEXT = "*ss*"
-FILE_FILTER = "*.txt,*.c,*.h"
+FILE_FILTER = "*.txt,*.c"
 MAX_THEAD_COUNT = "10"
 MAX_FILE_SIZE = "200"
 WINDOW_WIDTH = "792"

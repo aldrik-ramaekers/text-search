@@ -45,24 +45,24 @@ typedef struct t_search_result
 	array files;
 	u64 find_duration_us;
 	array errors;
-	u8 show_error_message; // error occured
-	u8 found_file_matches; // found/finding matches
+	bool show_error_message; // error occured
+	bool found_file_matches; // found/finding matches
 	s32 files_searched;
 	s32 files_matched;
 	s32 search_result_source_dir_len;
-	u8 match_found;
+	bool match_found;
 	mutex mutex;
-	u8 walking_file_system;
-	u8 cancel_search;
-	u8 done_finding_matches;
+	bool walking_file_system;
+	bool cancel_search;
+	bool done_finding_matches;
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
-	u8 *recursive_state_buffer;
+	bool *recursive_state_buffer;
 	s32 search_id;
 	u64 start_time;
-	u8 done_finding_files;
-	u8 is_parallelized;
+	bool done_finding_files;
+	bool is_parallelized;
 } search_result;
 
 typedef struct t_find_text_args
@@ -106,9 +106,8 @@ platform_window *main_window;
 // TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): alert implementation for Yad
 // TODO(Aldrik): implement directX11 render layer for windows
-// TODO(Aldrik): implement clipboard copy on windows
+// TODO(Aldrik): implement clipboard copy on windows (ctrl+v/c not working)
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): replace u8 with bool
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -250,7 +249,7 @@ static void* find_text_in_files_t(void *arg)
 					for (s32 i = 0; i < threads.length; i++)
 					{
 						thread *thr = array_at(&threads, i);
-						u8 joined = thread_tryjoin(thr);
+						bool joined = thread_tryjoin(thr);
 						if (joined)
 						{
 							array_remove(&threads, thr);
@@ -673,7 +672,7 @@ static void reset_status_text()
 
 static void do_search()
 {
-	u8 continue_search = true;
+	bool continue_search = true;
 	
 	if (global_search_result.walking_file_system) continue_search = false;
 	if (!global_search_result.done_finding_matches) continue_search = false;
@@ -766,8 +765,8 @@ static void load_assets()
 void load_config(settings_config *config)
 {
 	char *path = settings_config_get_string(config, "SEARCH_DIRECTORY");
-	u8 recursive = settings_config_get_number(config, "SEARCH_DIRECTORIES");
-	u8 parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
+	bool recursive = settings_config_get_number(config, "SEARCH_DIRECTORIES");
+	bool parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
 	char *search_text = settings_config_get_string(config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(config, "FILE_FILTER");
 	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");

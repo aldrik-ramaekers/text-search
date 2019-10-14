@@ -41,8 +41,8 @@ struct t_platform_window
 	// shared window properties
 	s32 width;
 	s32 height;
-	u8 is_open;
-	u8 has_focus;
+	bool is_open;
+	bool has_focus;
 	cursor_type curr_cursor_type;
 	cursor_type next_cursor_type;
 	struct drag_drop_info drag_drop_info;
@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	return result;
 }
 
-u8 platform_get_clipboard(platform_window *window, char *buffer)
+bool platform_get_clipboard(platform_window *window, char *buffer)
 {
 	OpenClipboard(NULL);
 	
@@ -135,7 +135,7 @@ void platform_destroy_list_file_result(array *files)
 	files->length = 0;
 }
 
-u8 platform_directory_exists(char *path)
+bool platform_directory_exists(char *path)
 {
 	return PathFileExistsA(path) == TRUE;
 }
@@ -258,7 +258,7 @@ static void create_key_tables()
 	keycode_map[VK_SUBTRACT] = KEY_KP_SUBTRACT;
 }
 
-u8 platform_file_exists(char *path)
+bool platform_file_exists(char *path)
 {
 	DWORD dwAttrib = GetFileAttributes(path);
 	
@@ -346,9 +346,9 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			 message == WM_MBUTTONDOWN ||
 			 message == WM_MOUSEWHEEL)
 	{
-		u8 is_left_down = wparam & MK_LBUTTON;
-		u8 is_right_down = wparam & MK_RBUTTON;
-		u8 is_middle_down = wparam & MK_MBUTTON;
+		bool is_left_down = wparam & MK_LBUTTON;
+		bool is_right_down = wparam & MK_RBUTTON;
+		bool is_middle_down = wparam & MK_MBUTTON;
 		
 		if (message == WM_MOUSEWHEEL)
 		{
@@ -375,9 +375,9 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			 message == WM_RBUTTONUP ||
 			 message == WM_MBUTTONUP)
 	{
-		u8 is_left_up = message == WM_LBUTTONUP;
-		u8 is_right_up = message == WM_RBUTTONUP;
-		u8 is_middle_up = message == WM_MBUTTONUP;
+		bool is_left_up = message == WM_LBUTTONUP;
+		bool is_right_up = message == WM_RBUTTONUP;
+		bool is_middle_up = message == WM_MBUTTONUP;
 		
 		if (is_left_up)
 		{
@@ -582,7 +582,7 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
 }
 
-u8 platform_window_is_valid(platform_window *window)
+bool platform_window_is_valid(platform_window *window)
 {
 	return window->hdc && window->window_handle;
 }
@@ -708,9 +708,9 @@ file_content platform_read_file_content(char *path, const char *mode)
 	return result;
 }
 
-u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
+bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
 {
-	u8 result = false;
+	bool result = false;
 	
 	FILE *file = fopen(path, mode);
 	
@@ -735,12 +735,12 @@ void platform_destroy_file_content(file_content *content)
 	mem_free(content->content);
 }
 
-u8 get_active_directory(char *buffer)
+bool get_active_directory(char *buffer)
 {
 	return GetCurrentDirectory(MAX_INPUT_LENGTH, buffer);
 }
 
-u8 set_active_directory(char *path)
+bool set_active_directory(char *path)
 {
 	return SetCurrentDirectory(path);
 }
@@ -759,7 +759,7 @@ static s32 filter_matches(array *filters, char *string, char **matched_filter)
 	return -1;
 }
 
-void platform_list_files_block(array *list, char *start_dir, array filters, u8 recursive, u8 include_directories)
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories)
 {
 	assert(list);
 	

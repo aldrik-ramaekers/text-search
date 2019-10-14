@@ -147,7 +147,7 @@ void *platform_list_files_t(void *args)
 	
 	array *list = info->list;
 	char *start_dir = info->start_dir;
-	u8 recursive = info->recursive;
+	bool recursive = info->recursive;
 	
 	platform_list_files_block(info->list, info->start_dir, filters, info->recursive, info->include_directories);
 	
@@ -159,7 +159,7 @@ void *platform_list_files_t(void *args)
 	return 0;
 }
 
-void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state)
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
 {
 	platform_cancel_search = false;
 	list_file_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(list_file_args));

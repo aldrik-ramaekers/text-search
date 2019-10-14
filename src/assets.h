@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -32,8 +32,8 @@
 
 typedef struct t_image {
 	char *path;
-	u8 loaded;
-	u8 keep_in_memory;
+	bool loaded;
+	bool keep_in_memory;
 	s32 width;
 	s32 height;
 	s32 channels;
@@ -45,7 +45,7 @@ typedef struct t_image {
 typedef struct t_font
 {
 	char *path;
-	u8 loaded;
+	bool loaded;
 	s16 references;
 	s16 size;
 	GLuint textureID;
@@ -66,7 +66,7 @@ typedef enum t_asset_task_type
 typedef struct t_asset_task
 {
 	s8 type;
-	u8 valid;
+	bool valid;
 	union {
 		image *image;
 		font *font;
@@ -82,7 +82,7 @@ typedef struct t_assets {
 	array fonts;
 	asset_queue queue;
 	array post_process_queue;
-	u8 valid;
+	bool valid;
 } assets;
 
 char *binary_path;
@@ -104,7 +104,7 @@ void assets_destroy();
 void assets_do_post_process();
 void *assets_queue_worker();
 
-image *assets_load_image(char *file, u8 keep_in_memory);
+image *assets_load_image(char *file, bool keep_in_memory);
 void assets_destroy_image(image *image);
 
 font *assets_load_font(char *file, s16 size);

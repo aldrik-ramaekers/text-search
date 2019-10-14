@@ -91,9 +91,9 @@ typedef struct t_list_file_args
 	array *list;
 	char *start_dir;
 	char *pattern;
-	u8 recursive;
-	u8 include_directories;
-	u8 *state;
+	bool recursive;
+	bool include_directories;
+	bool *state;
 } list_file_args;
 
 typedef enum t_drag_drop_state
@@ -118,12 +118,12 @@ struct drag_drop_info
 };
 
 memory_bucket_collection global_platform_memory_bucket;
-u8 platform_cancel_search = false;
+bool platform_cancel_search = false;
 
-u8 platform_window_is_valid(platform_window *window);
+bool platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
 bool platform_set_clipboard(platform_window *window, char *buffer);
-u8 platform_get_clipboard(platform_window *window, char *buffer);
+bool platform_get_clipboard(platform_window *window, char *buffer);
 void platform_window_set_size(platform_window *window, u16 width, u16 height);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
@@ -131,15 +131,15 @@ void platform_window_swap_buffers(platform_window *window);
 void platform_set_cursor(platform_window *window, cursor_type type);
 void platform_window_set_title(platform_window *window, char *name);
 file_content platform_read_file_content(char *path, const char *mode);
-u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
+bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len);
 void platform_destroy_file_content(file_content *content);
-u8 get_active_directory(char *buffer);
-u8 set_active_directory(char *path);
+bool get_active_directory(char *buffer);
+bool set_active_directory(char *path);
 void platform_destroy_list_file_result(array *files);
 void platform_show_message(platform_window *window, char *message, char *title);
 array get_filters(char *filter);
-void platform_list_files_block(array *list, char *start_dir, array filters, u8 recursive, u8 include_directories);
-void platform_list_files(array *list, char *start_dir, char *filter, u8 recursive, u8 *state);
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories);
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);
 void *platform_open_file_dialog_block(void *arg);
 char *platform_get_full_path(char *file);
@@ -150,8 +150,8 @@ void platform_init();
 void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);
 void platform_autocomplete_path(char *buffer, bool want_dir);
-u8 platform_directory_exists(char *path);
-u8 platform_file_exists(char *path);
+bool platform_directory_exists(char *path);
+bool platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);
 
 u64 platform_get_time(time_type time_type, time_precision precision);

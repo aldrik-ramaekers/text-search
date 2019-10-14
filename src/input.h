@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -211,16 +211,16 @@ typedef struct t_keyboard_input
 
 int keycode_map[MAX_KEYCODE];
 
-u8 is_left_down(mouse_input *input);
-u8 is_left_released(mouse_input *input);
-u8 is_left_clicked(mouse_input *input);
-u8 is_left_double_clicked(mouse_input *input);
-u8 is_right_down(mouse_input *input);
-u8 is_right_released(mouse_input *input);
-u8 is_right_clicked(mouse_input *input);
+bool is_left_down(mouse_input *input);
+bool is_left_released(mouse_input *input);
+bool is_left_clicked(mouse_input *input);
+bool is_left_double_clicked(mouse_input *input);
+bool is_right_down(mouse_input *input);
+bool is_right_released(mouse_input *input);
+bool is_right_clicked(mouse_input *input);
 
-u8 keyboard_is_key_down(keyboard_input *keyboard, s16 key);
-u8 keyboard_is_key_pressed(keyboard_input *keyboard, s16 key);
+bool keyboard_is_key_down(keyboard_input *keyboard, s16 key);
+bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key);
 void keyboard_set_input_text(keyboard_input *keyboard, char *text);
 void keyboard_set_input_mode(keyboard_input *keyboard, keyboard_input_mode mode);
 

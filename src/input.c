@@ -15,47 +15,47 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-inline u8 is_left_down(mouse_input *input)
+inline bool is_left_down(mouse_input *input)
 {
 	return input->left_state & MOUSE_DOWN;
 }
 
-inline u8 is_left_released(mouse_input *input)
+inline bool is_left_released(mouse_input *input)
 {
 	return input->left_state & MOUSE_RELEASE;
 }
 
-inline u8 is_left_clicked(mouse_input *input)
+inline bool is_left_clicked(mouse_input *input)
 {
 	return input->left_state & MOUSE_CLICK;
 }
 
-inline u8 is_left_double_clicked(mouse_input *input)
+inline bool is_left_double_clicked(mouse_input *input)
 {
 	return input->left_state & MOUSE_DOUBLE_CLICK;
 }
 
-inline u8 is_right_down(mouse_input *input)
+inline bool is_right_down(mouse_input *input)
 {
 	return input->right_state & MOUSE_DOWN;
 }
 
-inline u8 is_right_released(mouse_input *input)
+inline bool is_right_released(mouse_input *input)
 {
 	return input->right_state & MOUSE_RELEASE;
 }
 
-inline u8 is_right_clicked(mouse_input *input)
+inline bool is_right_clicked(mouse_input *input)
 {
 	return input->right_state & MOUSE_CLICK;
 }
 
-inline u8 keyboard_is_key_down(keyboard_input *keyboard, s16 key)
+inline bool keyboard_is_key_down(keyboard_input *keyboard, s16 key)
 {
 	return keyboard->keys[key];
 }
 
-inline u8 keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
+inline bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
 {
 	return keyboard->input_keys[key];
 }
@@ -113,7 +113,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 {
 	if (ch)
 	{
-		u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+		bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 		
 		if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
 		{
@@ -169,7 +169,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_V))
 			{
 				char buf[MAX_INPUT_LENGTH];
-				u8 result = platform_get_clipboard(window, buf);
+				bool result = platform_get_clipboard(window, buf);
 				
 				if (keyboard->has_selection)
 				{
@@ -211,7 +211,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 	}
 	else
 	{
-		u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+		bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 		
 		// cursor movement
 		if (keyboard_is_key_down(keyboard, KEY_LEFT) && keyboard->cursor > 0)
@@ -232,7 +232,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 	
 	if (keyboard_is_key_down(keyboard, KEY_BACKSPACE))
 	{
-		u8 is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+		bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 		
 		if (keyboard->has_selection)
 		{

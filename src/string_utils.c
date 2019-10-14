@@ -15,7 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-u8 string_match(char *first, char *second)
+bool string_match(char *first, char *second)
 {
 	// If we reach at the end of both strings, we are done 
     if (*first == '\0' && *second == '\0') 
@@ -72,9 +72,9 @@ static s32 length_of_expr(char *word)
 }
 
 // TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
-u8 string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset)
+bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset)
 {
-	u8 match_started = false;
+	bool match_started = false;
 	char *small_original = small;
 	
 	bool save_info = (line_nr != 0);
@@ -90,7 +90,7 @@ u8 string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *wo
 	char *word_start = big;
 	
 #if !SEARCH_WITHIN_STRING
-	u8 ignore_word = false;
+	bool ignore_word = false;
 #endif
 	while(*big)
 	{

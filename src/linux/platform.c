@@ -89,7 +89,7 @@ struct t_platform_window
 //static t_XResizeWindow *XResizeWindow_;
 //#define XResizeWindow XResizeWindow_
 
-u8 platform_get_clipboard(platform_window *window, char *buffer)
+bool platform_get_clipboard(platform_window *window, char *buffer)
 {
 	char *result;
 	unsigned long ressize, restail;
@@ -157,7 +157,7 @@ inline void platform_set_cursor(platform_window *window, cursor_type type)
 	}
 }
 
-u8 get_active_directory(char *buffer)
+bool get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
@@ -168,7 +168,7 @@ u8 get_active_directory(char *buffer)
 	return true;
 }
 
-u8 set_active_directory(char *path)
+bool set_active_directory(char *path)
 {
 	return !chdir(path);
 }
@@ -206,9 +206,9 @@ void platform_destroy_list_file_result(array *files)
 	files->length = 0;
 }
 
-u8 platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
+bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
 {
-	u8 result = false;
+	bool result = false;
 	
 	FILE *file = fopen(path, mode);
 	
@@ -232,7 +232,7 @@ void platform_window_set_title(platform_window *window, char *name)
 	XStoreName(window->display, window->window, name);
 }
 
-u8 platform_file_exists(char *path)
+bool platform_file_exists(char *path)
 {
 	if(access(path, F_OK) != -1) {
 		return 1;
@@ -241,7 +241,7 @@ u8 platform_file_exists(char *path)
 	return 0;
 }
 
-u8 platform_directory_exists(char *path)
+bool platform_directory_exists(char *path)
 {
 	DIR* dir = opendir(path);
 	if (dir) {
@@ -626,7 +626,7 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
-	u8 has_max_size = max_w || max_h;
+	bool has_max_size = max_w || max_h;
 	
 	platform_window window;
 	window.has_focus = true;
@@ -876,7 +876,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	return window;
 }
 
-inline u8 platform_window_is_valid(platform_window *window)
+inline bool platform_window_is_valid(platform_window *window)
 {
 	return window->window || window->display;
 }
@@ -1015,7 +1015,7 @@ static int XURIDecode(char *buf, int len) {
 
 static char* XURIToLocal(char* uri) {
 	char *file = NULL;
-	u8 local;
+	bool local;
 	
 	if (memcmp(uri,"file:/",6) == 0) uri += 6;      /* local file? */
 	else if (strstr(uri,":/") != NULL) return file; /* wrong scheme */
@@ -1139,7 +1139,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			{
 				window->drag_drop_info.state = DRAG_DROP_ENTER;
 				
-				u8 use_list = window->event.xclient.data.l[1] & 1;
+				bool use_list = window->event.xclient.data.l[1] & 1;
 				window->xdnd_source = window->event.xclient.data.l[0];
 				xdnd_version = (window->event.xclient.data.l[1] >> 24);
 				
@@ -1246,11 +1246,11 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			}
 			last_ev_time = ev_time;
 			
-			u8 is_left_down = window->event.xbutton.button == Button1;
-			u8 is_right_down = window->event.xbutton.button == Button3;
-			u8 is_middle_down = window->event.xbutton.button == Button2;
-			u8 scroll_up = window->event.xbutton.button == Button4;
-			u8 scroll_down = window->event.xbutton.button == Button5;
+			bool is_left_down = window->event.xbutton.button == Button1;
+			bool is_right_down = window->event.xbutton.button == Button3;
+			bool is_middle_down = window->event.xbutton.button == Button2;
+			bool scroll_up = window->event.xbutton.button == Button4;
+			bool scroll_down = window->event.xbutton.button == Button5;
 			
 			if (scroll_up)
 				mouse->scroll_state = SCROLL_UP;
@@ -1273,9 +1273,9 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		}
 		else if (window->event.type == ButtonRelease)
 		{
-			u8 is_left_up = window->event.xbutton.button == Button1;
-			u8 is_right_up = window->event.xbutton.button == Button3;
-			u8 is_middle_up = window->event.xbutton.button == Button2;
+			bool is_left_up = window->event.xbutton.button == Button1;
+			bool is_right_up = window->event.xbutton.button == Button3;
+			bool is_middle_up = window->event.xbutton.button == Button2;
 			
 			if (is_left_up)
 			{
@@ -1514,7 +1514,7 @@ cpu_info platform_get_cpu_info()
 	
 	char tmp_buffer[1000];
 	int tmp_buffer_len = 0;
-	u8 collect_string = false;
+	bool collect_string = false;
 	int line_nr = 0;
 	for (int i = 0; i < 5000; i++)
 	{
@@ -1659,7 +1659,7 @@ s32 filter_matches(array *filters, char *string, char **matched_filter)
 	return -1;
 }
 
-void platform_list_files_block(array *list, char *start_dir, array filters, u8 recursive, u8 include_directories)
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories)
 {
 	assert(list);
 	

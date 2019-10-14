@@ -36,7 +36,7 @@ void assets_create()
 	global_asset_collection = asset_collection;
 }
 
-inline static u8 is_big_endian()
+inline static bool is_big_endian()
 {
 	volatile uint32_t i=0x01234567;
     // return 1 for big endian, 0 for little endian.
@@ -95,7 +95,7 @@ void assets_do_post_process()
 	mutex_unlock(&asset_mutex);
 }
 
-u8 assets_queue_worker_load_image(image *image)
+bool assets_queue_worker_load_image(image *image)
 {
 	set_active_directory(binary_path);
 	
@@ -108,7 +108,7 @@ u8 assets_queue_worker_load_image(image *image)
 	return !(image->data == 0);
 }
 
-u8 assets_queue_worker_load_font(font *font)
+bool assets_queue_worker_load_font(font *font)
 {
 	set_active_directory(binary_path);
 	
@@ -200,12 +200,12 @@ void *assets_queue_worker()
 			// load here
 			if (buf.type == ASSET_IMAGE)
 			{
-				u8 result = assets_queue_worker_load_image(buf.image);
+				bool result = assets_queue_worker_load_image(buf.image);
 				buf.valid = result;
 			}
 			else if (buf.type == ASSET_FONT)
 			{
-				u8 result = assets_queue_worker_load_font(buf.font);
+				bool result = assets_queue_worker_load_font(buf.font);
 				buf.valid = result;
 			}
 			
@@ -225,7 +225,7 @@ void *assets_queue_worker()
 	return 0;
 }
 
-image *assets_load_image(char *file, u8 keep_in_memory)
+image *assets_load_image(char *file, bool keep_in_memory)
 {
 	// check if image is already loaded or loading
 	for (int i = 0; i < global_asset_collection.images.length; i++)

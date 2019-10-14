@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -54,7 +54,7 @@ typedef struct t_scroll_state
 	s32 height;
 	s32 scroll;
 	s32 scroll_start_offset_y;
-	u8 in_scroll;
+	bool in_scroll;
 } scroll_state;
 
 typedef struct t_ui_layout
@@ -139,12 +139,12 @@ void ui_set_active_window(platform_window *window);
 void ui_destroy();
 void ui_begin();
 void ui_end();
-u8 ui_is_menu_active(u32 id);
+bool ui_is_menu_active(u32 id);
 char* name_of_day(s32 day);
 char* name_of_month(s32 month);
 
 // widget initialization
-checkbox_state ui_create_checkbox(u8 selected);
+checkbox_state ui_create_checkbox(bool selected);
 textbox_state ui_create_textbox(u16 max_len);
 button_state ui_create_button();
 scroll_state ui_create_scroll(s32 scroll);
@@ -154,24 +154,24 @@ datepicker_state ui_create_datepicker(time_t selected_date);
 void ui_destroy_textbox(textbox_state *state);
 
 // widgets
-u8 is_shortcut_down(s32 shortcut_keys[2]);
+bool is_shortcut_down(s32 shortcut_keys[2]);
 void ui_begin_menu_bar();
-u8 ui_push_menu(char *title);
-u8 ui_push_menu_item(char *title, char *shortcut);
+bool ui_push_menu(char *title);
+bool ui_push_menu_item(char *title, char *shortcut);
 void ui_push_menu_item_separator();
-u8 ui_push_dropdown(dropdown_state *state, char *title);
-u8 ui_push_dropdown_item(image *icon, char *title);
+bool ui_push_dropdown(dropdown_state *state, char *title);
+bool ui_push_dropdown_item(image *icon, char *title);
 void ui_push_separator();
 void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
 void ui_push_text(char *text);
-u8 ui_push_datepicker(datepicker_state *state, s32 tile_w);
-u8 ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint);
-u8 ui_push_checkbox(checkbox_state *state, char *title);
-u8 ui_push_textbox(textbox_state *state, char *title);
-u8 ui_push_button(button_state *button, char *title);
-u8 ui_push_button_image(button_state *button, char *title, image *img);
+bool ui_push_datepicker(datepicker_state *state, s32 tile_w);
+bool ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint);
+bool ui_push_checkbox(checkbox_state *state, char *title);
+bool ui_push_textbox(textbox_state *state, char *title);
+bool ui_push_button(button_state *button, char *title);
+bool ui_push_button_image(button_state *button, char *title, image *img);
 void ui_scroll_begin(s32 height);
 void ui_scroll_end();
 

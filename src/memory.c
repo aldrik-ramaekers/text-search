@@ -17,7 +17,7 @@
 
 #if defined(MODE_DEVELOPER)
 
-static u8 initializing = false;
+static bool initializing = false;
 inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 {
 	if (global_memory_usage.data == 0 && !initializing)
