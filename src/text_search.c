@@ -98,10 +98,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): bug where first character to the left of the selection is not selected on hover
 // TODO(Aldrik): debug view
 // TODO(Aldrik): open file dialog on windows
-// TODO(Aldrik): keep selection going as long as mouse is down when mouse leaves ui element
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): alert implementation for Yad

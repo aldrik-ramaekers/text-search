@@ -86,6 +86,8 @@ typedef struct t_textbox_state
 	char *buffer;
 	s32 selection_start_index;
 	bool state;
+	bool double_clicked_to_select;
+	s32 double_clicked_to_select_cursor_index;
 	s32 max_len;
 	s32 text_offset_x;
 	array history;
@@ -117,6 +119,7 @@ typedef struct t_ui_context
 	array active_menus;
 	u32 next_id;
 	s32 menu_item_count;
+	textbox_state *current_active_textbox;
 	bool item_hovered;
 } ui_context;
 

@@ -65,6 +65,7 @@ struct t_platform_window
 	Atom COMPOUND_STRING;
 	Atom TARGETS;
 	Atom MULTIPLE;
+	Atom _NET_WM_STATE;
 	
 	// shared window properties
 	s32 width;
@@ -717,6 +718,11 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	window.window = XCreateWindow(window.display, window.parent, center_x, center_y, width, height, 0, window.visual_info->depth, InputOutput, window.visual_info->visual, CWColormap | CWEventMask | CWBorderPixel, &window_attributes);
 	
+	XMapWindow(window.display, window.window);
+	XFlush(window.display);
+	
+	XSync(window.display, False);
+	
 	XSizeHints hints;
 	
 	if (has_max_size)
@@ -732,31 +738,30 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	XSetWMNormalHints(window.display, window.window, &hints);
 	
-	XMapWindow(window.display, window.window);
-	
 	// window name
 	{
-		//XStoreName(window.display, window.window, name);
-		Atom atom_utf8 = XInternAtom(window.display, "UTF8_STRING", False);
-		Atom atom_icon_name = XInternAtom(window.display, "_NET_WM_ICON_NAME", False);
-		Atom atom_name = XInternAtom(window.display, "_NET_WM_NAME", False);
+		XTextProperty window_title_property;
+		XTextProperty window_icon_property;
+		char* window_title = name;
+		XStringListToTextProperty(&window_title,
+								  1,
+								  &window_title_property);
+		XStringListToTextProperty(&window_title,
+								  1,
+								  &window_icon_property);
+		XSetWMName(window.display, window.window, &window_title_property);
+		XSetWMIconName(window.display, window.window, &window_icon_property);
+	}
+	
+	{
+		XWMHints* win_hints = XAllocWMHints();
+		win_hints->flags = StateHint | IconPositionHint;
+		win_hints->initial_state = IconicState;
+		win_hints->icon_x = 0;
+		win_hints->icon_y = 0;
 		
-		XChangeProperty(window.display, window.window, atom_icon_name, atom_utf8, 8,
-						PropModeReplace, (unsigned char*)name, strlen(name));
-		XChangeProperty(window.display, window.window, atom_name, atom_utf8, 8,
-						PropModeReplace, (unsigned char*)name, strlen(name));
-		
-#if 0
-		char *name_copy = strdup(name);
-		
-		XTextProperty title_prop;
-		if(XStringListToTextProperty(&name_copy, 1, &title_prop)) {
-			XSetTextProperty(window.display, window.window, &title_prop, atom_name);
-			XSetTextProperty(window.display, window.window, &title_prop, atom_icon_name);
-			XSetWMName(window.display, window.window, &title_prop);
-			XSetWMIconName(window.display, window.window, &title_prop);
-		}
-#endif
+		/* pass the hints to the window manager. */
+		XSetWMHints(window.display, window.window, win_hints);
 	}
 	
 	static GLXContext share_list = 0;
@@ -787,18 +792,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	glHint(GL_MULTISAMPLE_FILTER_HINT_NV, GL_NICEST);
 #endif
 	
-	// TODO: is this correct?
-	// https://stackoverflow.com/questions/5627229/sub-pixel-drawing-with-opengl
-	//glHint(GL_POINT_SMOOTH, GL_NICEST);
-	//glHint(GL_LINE_SMOOTH, GL_NICEST);
-	//glHint(GL_POLYGON_SMOOTH, GL_NICEST);
-	
-	//glEnable(GL_SMOOTH);
-	//glEnable(GL_POINT_SMOOTH);
-	//glEnable(GL_LINE_SMOOTH);
-	//glEnable(GL_POLYGON_SMOOTH);
-	//////////////////
-	
 	window.is_open = true;
 	window.width = width;
 	window.height = height;
@@ -806,10 +799,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
 	glOrtho(0, width, height, 0, -1, 1);
-	
-	//GLint m_viewport[4];
-	//glGetIntegerv( GL_VIEWPORT, m_viewport );
-	//printf("%d %d %d %d\n", m_viewport[0], m_viewport[1], m_viewport[2], m_viewport[3]);
 	
 	glMatrixMode(GL_MODELVIEW);
 	
@@ -834,6 +823,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	GET_ATOM(COMPOUND_STRING);
 	GET_ATOM(TARGETS);
 	GET_ATOM(MULTIPLE);
+	GET_ATOM(_NET_WM_STATE);
 	
 	array atoms = array_create(sizeof(Atom));
 	array_push(&atoms, &window.quit);
@@ -852,28 +842,19 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	array_push(&atoms, &window.COMPOUND_STRING);
 	array_push(&atoms, &window.TARGETS);
 	array_push(&atoms, &window.MULTIPLE);
-	
-#if 0
-	XSetWMProtocols(window.display, window.window, &window.XdndEnter, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndPosition, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndStatus, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndTypeList, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndActionCopy, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndDrop, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndFinished, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndSelection, 1);
-	XSetWMProtocols(window.display, window.window, &window.XdndLeave, 1);
-	XSetWMProtocols(window.display, window.window, &window.PRIMARY, 1);
-#endif
+	array_push(&atoms, &window._NET_WM_STATE);
 	
 	XSetWMProtocols(window.display, window.window, atoms.data, atoms.length);
+	array_destroy(&atoms);
 	
 	Atom XdndAware = XInternAtom(window.display, "XdndAware", False);
 	Atom xdnd_version = 5;
 	XChangeProperty(window.display, window.window, XdndAware, XA_ATOM, 32,
 					PropModeReplace, (unsigned char*)&xdnd_version, 1);
 	
-	array_destroy(&atoms);
+	
+	XFlush(window.display);
+	XSync(window.display, True);
 	
 	return window;
 }
@@ -1051,7 +1032,24 @@ static char* XURIToLocal(char* uri) {
 	return file;
 }
 
-
+void platform_hide_window_taskbar_icon(platform_window *window)
+{
+	XClientMessageEvent m;
+	memset(&m, 0, sizeof(XClientMessageEvent));
+	m.type = ClientMessage;
+	m.display = window->display;
+	m.window = window->window;
+	m.message_type = window->_NET_WM_STATE;
+	m.format=32;
+	m.data.l[0] = 1;
+	m.data.l[1] = XInternAtom(window->display, "_NET_WM_STATE_SKIP_TASKBAR", False);
+	m.data.l[2] = None;
+	m.data.l[3] = 1;
+	m.data.l[4] = 0;
+	XSendEvent(window->display, window->window, False, SubstructureRedirectMask | SubstructureNotifyMask, (XEvent*)&m);
+	
+	XFlush(window->display);
+}
 
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard)
 {

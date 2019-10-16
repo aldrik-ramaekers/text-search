@@ -361,6 +361,16 @@ bool ui_push_menu(char *title)
 	return result;
 }
 
+static void ui_set_active_textbox(textbox_state *state)
+{
+	if (global_ui_context.current_active_textbox && global_ui_context.current_active_textbox != state)
+	{
+		global_ui_context.current_active_textbox->state = false;
+	}
+	global_ui_context.current_active_textbox = state;
+	
+}
+
 bool ui_push_textbox(textbox_state *state, char *placeholder)
 {
 	bool result = false;
@@ -410,10 +420,13 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	
 	bool is_selecting = false;
 	bool clicked_to_select = false;
+	bool double_clicked_to_select_first = false;
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
 		{
+			ui_set_active_textbox(state);
+			
 			global_ui_context.keyboard->selection_begin_offset = 0;
 			global_ui_context.keyboard->selection_length = strlen(global_ui_context.keyboard->input_text);
 			global_ui_context.keyboard->has_selection = true;
@@ -421,9 +434,14 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			
 			global_ui_context.mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
+			
+			state->double_clicked_to_select = true;
+			double_clicked_to_select_first = true;
 		}
 		if (is_left_clicked(global_ui_context.mouse))
 		{
+			ui_set_active_textbox(state);
+			
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
 			
@@ -447,7 +465,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			is_selecting = true;
 		}
 	}
-	else if (is_left_clicked(global_ui_context.mouse) || is_left_down(global_ui_context.mouse))
+	else if (is_left_clicked(global_ui_context.mouse))
 	{
 		if (state->state)
 		{
@@ -463,6 +481,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		state->state = false;
 	}
 	
+	// calculate scissor rectangle
 	if (global_ui_context.layout.scroll.in_scroll)
 	{
 		vec4 v = render_get_scissor();
@@ -558,6 +577,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		if (cursor_tick % 50 < 25 && !global_ui_context.keyboard->has_selection)
 			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
+	
+	// select first character on click
 	if (clicked_to_select)
 	{
 		global_ui_context.keyboard->has_selection = true;
@@ -566,25 +587,36 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		global_ui_context.keyboard->selection_length = 1;
 		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
 	}
+	
+	// change selection area based on cursor position.
+	// if double clicked to select the entire textbox we should only 
+	// do this when the mouse has moved enough to select a new character
 	if (is_selecting)
 	{
 		s32 index = calculate_cursor_position(global_ui_context.font_small, 
 											  state->buffer, mouse_x + diff - text_x)+1;
 		
-		s32 right = global_ui_context.keyboard->selection_begin_offset + global_ui_context.keyboard->selection_length;
-		s32 left = global_ui_context.keyboard->selection_begin_offset;
+		if (double_clicked_to_select_first) 
+			state->double_clicked_to_select_cursor_index = index;
 		
-		if (index < state->selection_start_index)
+		if (!state->double_clicked_to_select || (state->double_clicked_to_select && index != state->double_clicked_to_select_cursor_index))
 		{
-			global_ui_context.keyboard->selection_begin_offset = index - 1;
-			global_ui_context.keyboard->selection_length = state->selection_start_index - index + 2;
-		}
-		else if (index > state->selection_start_index)
-		{
-			global_ui_context.keyboard->selection_begin_offset = state->selection_start_index;
-			global_ui_context.keyboard->selection_length = index - state->selection_start_index;
+			if (index <= state->selection_start_index)
+			{
+				global_ui_context.keyboard->selection_begin_offset = index - 1;
+				global_ui_context.keyboard->selection_length = state->selection_start_index - index + 2;
+			}
+			else if (index > state->selection_start_index)
+			{
+				global_ui_context.keyboard->selection_begin_offset = state->selection_start_index;
+				global_ui_context.keyboard->selection_length = index - state->selection_start_index;
+			}
+			
+			state->double_clicked_to_select = false;
 		}
 	}
+	
+	// render selection area
 	if (global_ui_context.keyboard->has_selection && state->state)
 	{
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
