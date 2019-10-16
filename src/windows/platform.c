@@ -61,7 +61,7 @@ int main(int argc, char **argv)
 {
 	platform_init();
 	
-	instance = GetModuleHandle(NULL);;
+	instance = GetModuleHandle(NULL);
 	cmd_show = argc;
 	
 	// get fullpath of the directory the exe is residing in
@@ -72,13 +72,11 @@ int main(int argc, char **argv)
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
 	assets_create();
-	
-#if defined(MODE_DEVELOPER)
 	debug_init();
-#endif
 	
 	s32 result = main_loop();
 	
+	debug_destroy();
 	assets_destroy();
 	platform_destroy();
 	
@@ -296,7 +294,8 @@ bool platform_file_exists(char *path)
 
 void platform_show_message(platform_window *window, char *message, char *title)
 {
-	MessageBox(window->window_handle, message, title, MB_ICONINFORMATION | MB_OK);
+	HWND handle = window ? window->window_handle : NULL;
+	MessageBox(handle, message, title, MB_ICONINFORMATION | MB_OK);
 }
 
 LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, LPARAM lparam)
@@ -351,6 +350,12 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
 		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
+		
+		current_window_to_handle->has_focus = false;
+	}
+	else if (message == WM_SETFOCUS)
+	{
+		current_window_to_handle->has_focus = true;
 	}
 	else if (message == WM_KEYDOWN)
 	{
@@ -358,8 +363,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		current_keyboard_to_handle->keys[keycode_map[key]] = true;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = true;
-		
-		//printf("CTRL: %d, V: %d\n", keyboard_is_key_down(current_keyboard_to_handle, KEY_LEFT_CONTROL), keyboard_is_key_pressed(current_keyboard_to_handle, KEY_V));
 		
 		if (current_keyboard_to_handle->take_input)
 			keyboard_handle_input_string(current_window_to_handle, 
@@ -473,6 +476,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	window.max_width = max_w;
 	window.max_height = max_h;
 	window.curr_cursor_type = -1;
+	window.next_cursor_type = CURSOR_DEFAULT;
 	
 	current_window_to_handle = &window;
 	
@@ -491,7 +495,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		
 		if (max_w == 0 && max_h == 0)
 		{
-			//ex_style = 0;
 			style = WS_SIZEBOX;
 		}
 		else
@@ -594,11 +597,13 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		}
         else
         {
+			platform_show_message(0, "An error occured within Windows, please restart the program.", "Error");
             abort();
         }
 	}
     else
     {
+		platform_show_message(0, "An error occured within Windows, please restart the program.", "Error");
         abort();
     }
 	
@@ -610,6 +615,13 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 	RECT rec;
 	GetWindowRect(window->window_handle, &rec);
 	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
+}
+
+void platform_window_set_position(platform_window *window, u16 x, u16 y)
+{
+	RECT rec;
+	GetWindowRect(window->window_handle, &rec);
+	MoveWindow(window->window_handle, x, y, rec.right-rec.left, rec.bottom-rec.top, FALSE);
 }
 
 bool platform_window_is_valid(platform_window *window)
@@ -886,69 +898,57 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 
 static void* platform_open_file_dialog_dd(void *data)
 {
-	/*
- struct open_dialog_args *args = data;
- 
-    if (args->type == OPEN_DIRECTORY)
+	struct open_dialog_args *args = data;
+	
+	OPENFILENAME info;
+	info.lStructSize = sizeof(OPENFILENAME);
+	info.hwndOwner = NULL;
+	info.hInstance = NULL;
+	
+	if (args->file_filter)
+	{
+		char filter[50];
+		strncpy(filter, args->file_filter, 50);
+		filter[strlen(filter)+1] = 0;
+		info.lpstrFilter = filter;
+	}
+	else
+	{
+		info.lpstrFilter = NULL;
+	}
+	
+	char szFile[256 * MAX_PATH];
+	char szPath[MAX_PATH];
+	
+	info.lpstrCustomFilter = NULL;
+	info.nMaxCustFilter = 50;
+	info.nFilterIndex = 0;
+	info.lpstrFile = (char*)szFile;
+	info.lpstrFile[0] = 0;
+	info.nMaxFile = sizeof(szFile);
+	
+	info.lpstrFileTitle = NULL;
+	//info.nMaxFileTitle = NULL;
+	info.lpstrInitialDir = args->start_path;
+	info.lpstrTitle = NULL;
+	
+	if (args->type == SAVE_FILE)
+	{
+		info.Flags = OFN_PATHMUSTEXIST;
+		GetSaveFileNameA(&info);
+	}
+	else if (args->type == OPEN_DIRECTORY)
     {
-        BROWSEINFO info;
-        info.hwndOwner = current_window_to_handle->window_handle;
-        info.pidlRoot = NULL;
-        char name[MAX_PATH];
-        info.pszDisplayName = (char*)name;
-        info.lpszTitle = "Select search directory";
-        info.ulFlags = 0;
-        info.lpfn = NULL;
-        PIDLIST_ABSOLUTE list = SHBrowseForFolderA(&info);
-        
-        if (list != NULL)
-        {
-            SHGetPathFromIDListA(list, args->buffer);
-        }
-        
-        return 0;
-    }
-    
- OPENFILENAME info;
- info.lStructSize = sizeof(OPENFILENAME);
- info.hwndOwner = NULL;
- info.hInstance = NULL;
- 
- if (args->file_filter)
- {
-  char filter[50];
-  strncpy(filter, args->file_filter, 50);
-  filter[strlen(filter)+1] = 0;
-  info.lpstrFilter = filter;
- }
- else
- {
-  info.lpstrFilter = NULL;
- }
- 
- char szFile[256 * MAX_PATH];
- char szPath[MAX_PATH];
- 
- info.lpstrCustomFilter = NULL;
- info.nMaxCustFilter = 50;
- info.nFilterIndex = 0;
- info.lpstrFile = (char*)szFile;
- info.lpstrFile[0] = 0;
- info.nMaxFile = sizeof(szFile);
- 
- info.lpstrFileTitle = NULL;
- //info.nMaxFileTitle = NULL;
- info.lpstrInitialDir = args->start_path;
- info.lpstrTitle = NULL;
- 
- if (args->type == OPEN_FILE)
- {
-  info.Flags = OFN_FILEMUSTEXIST;
- }
- 
- GetOpenFileNameA(&info);
- strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
- */
+		GetOpenFileNameA(&info);
+	}
+	else if (args->type == OPEN_FILE)
+	{
+		info.Flags = OFN_FILEMUSTEXIST;
+		GetOpenFileNameA(&info);
+	}
+	
+	strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
+	
 	return 0;
 }
 

@@ -15,69 +15,79 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#define TARGET_FRAMERATE 1000/30.0
-
-static bool is_window_active = false;
-static platform_window global_debug_window;
-
-void debug_hide_window()
+typedef struct t_debug_view
 {
-	if (platform_window_is_valid(&global_debug_window))
-	{
-		platform_destroy_window(&global_debug_window);
-	}
-}
-
-void *debug_thread(void *args)
-{
-	return 0;
-	global_debug_window = platform_open_window("Debug view", 800, 600, 800, 600);
-	
-	keyboard_input keyboard = keyboard_input_create();
-	mouse_input mouse = mouse_input_create();
-	
+	bool active;
+	platform_window window;
+	keyboard_input keyboard;
+	mouse_input mouse;
 	camera camera;
-	camera.x = 0;
-	camera.y = 0;
-	camera.rotation = 0;
-	
-	font* font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	
-	while(global_debug_window.is_open) {
-		u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
-		platform_window_make_current(&global_debug_window);
-		platform_handle_events(&global_debug_window, &mouse, &keyboard);
-		platform_set_cursor(&global_debug_window, CURSOR_DEFAULT);
-		
-		glClearColor(255/255.0, 255/255.0, 255/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
-		camera_apply_transformations(&global_debug_window, &camera);
-		
-		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
-		u64 diff = current_stamp - last_stamp;
-		float diff_ms = diff / 1000.0f;
-		last_stamp = current_stamp;
-		
-		if (diff_ms < TARGET_FRAMERATE)
-		{
-			double time_to_wait = (TARGET_FRAMERATE) - diff_ms;
-			thread_sleep(time_to_wait*1000);
-		}
-        
-		platform_window_swap_buffers(&global_debug_window);
+	font *font_small;
+} debug_view;
+
+debug_view global_debug_view;
+
+void debug_window_toggle()
+{
+	if (platform_window_is_valid(&global_debug_view.window))
+	{
+		global_debug_view.active = false;
+		platform_destroy_window(&global_debug_view.window);
 	}
-	
-	assets_destroy_font(font_small);
-	
-	keyboard_input_destroy(&keyboard);
-	platform_destroy_window(&global_debug_window);
-	
-	return 0;
+	else
+	{
+		global_debug_view.active = true;
+		global_debug_view.window = platform_open_window("Debug view", 800, 600, 800, 600);
+		platform_window_set_position(&global_debug_view.window, 100, 100);
+	}
 }
 
 void debug_init()
 {
-	thread t = thread_start(debug_thread, 0);
-	thread_detach(&t);
+	global_debug_view.keyboard = keyboard_input_create();
+	global_debug_view.mouse = mouse_input_create();
+	
+	global_debug_view.camera.x = 0;
+	global_debug_view.camera.y = 0;
+	global_debug_view.camera.rotation = 0;
+	
+	global_debug_view.font_small = assets_load_font("data/fonts/mono.ttf", 16);
+}
+
+void debug_update_render()
+{
+	if (global_debug_view.active) {
+		platform_window_make_current(&global_debug_view.window);
+		platform_handle_events(&global_debug_view.window, &global_debug_view.mouse, &global_debug_view.keyboard);
+		platform_set_cursor(&global_debug_view.window, CURSOR_DEFAULT);
+		
+		render_clear();
+		
+		camera_apply_transformations(&global_debug_view.window, &global_debug_view.camera);
+		
+		///
+		
+		render_rectangle(10, 10, 50, 50, rgb(200,0,0));
+		
+		///
+		
+		platform_window_swap_buffers(&global_debug_view.window);
+		
+		if (!global_debug_view.window.is_open)
+		{
+			debug_window_toggle();
+		}
+	}
+}
+
+void debug_destroy()
+{
+	assets_destroy_font(global_debug_view.font_small);
+	
+	keyboard_input_destroy(&global_debug_view.keyboard);
+	
+	if (global_debug_view.active)
+	{
+		platform_destroy_window(&global_debug_view.window);
+	}
 }

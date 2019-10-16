@@ -98,10 +98,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): unselect ui widgets when window loses focus
-// TODO(Aldrik): error handling for window creation
 // TODO(Aldrik): debug view
-// TODO(Aldrik): open file dialog on windows
+// TODO(Aldrik): open file dialog for folder selection
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): alert implementation for Yad
@@ -891,6 +889,11 @@ int main_loop()
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
 		settings_page_update_render();
+		
+		if (keyboard_is_key_pressed(&keyboard, KEY_F1))
+			debug_window_toggle();
+		debug_update_render();
+		
 		platform_window_make_current(&window);
 		
 		static bool icon_loaded = false;

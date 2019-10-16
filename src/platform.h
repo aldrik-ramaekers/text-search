@@ -125,6 +125,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 bool platform_set_clipboard(platform_window *window, char *buffer);
 bool platform_get_clipboard(platform_window *window, char *buffer);
 void platform_window_set_size(platform_window *window, u16 width, u16 height);
+void platform_window_set_position(platform_window *window, u16 x, u16 y);
 void platform_destroy_window(platform_window *window);
 void platform_handle_events(platform_window *window, mouse_input *mouse, keyboard_input *keyboard);
 void platform_window_swap_buffers(platform_window *window);
@@ -146,7 +147,7 @@ char *platform_get_full_path(char *file);
 void platform_open_url(char *command);
 void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);
-void platform_hide_window_taskbar_icon(platform_window *window);
+//void platform_hide_window_taskbar_icon(platform_window *window);
 void platform_init();
 void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);

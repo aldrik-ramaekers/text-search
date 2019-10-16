@@ -18,6 +18,16 @@
 #ifndef INCLUDE_DEBUG
 #define INCLUDE_DEBUG
 
+#ifdef MODE_DEVELOPER
 void debug_init();
+void debug_window_toggle();
+void debug_update_render();
+void debug_destroy();
+#else
+#define debug_init() {}
+#define debug_window_toggle() {}
+#define debug_update_render() {}
+#define debug_destroy() {}
+#endif
 
 #endif

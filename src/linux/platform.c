@@ -186,13 +186,11 @@ int main(int argc, char **argv)
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
 	assets_create();
-	
-#if defined(MODE_DEVELOPER)
 	debug_init();
-#endif
 	
 	s32 result = main_loop();
 	
+	debug_destroy();
 	assets_destroy();
 	platform_destroy();
 	
@@ -625,6 +623,11 @@ inline void platform_window_make_current(platform_window *window)
 void platform_window_set_size(platform_window *window, u16 width, u16 height)
 {
 	XResizeWindow(window->display, window->window, width, height);
+}
+
+void platform_window_set_position(platform_window *window, u16 x, u16 y)
+{
+	XMoveWindow(window->display, window->window, x, y);
 }
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
