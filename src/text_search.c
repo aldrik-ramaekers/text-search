@@ -98,13 +98,14 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): unselect ui widgets when window loses focus
+// TODO(Aldrik): error handling for window creation
 // TODO(Aldrik): debug view
 // TODO(Aldrik): open file dialog on windows
 // TODO(Aldrik): store config file in home/appdata directory?
 // TODO(Aldrik): include asset folder stuff in binary?
 // TODO(Aldrik): alert implementation for Yad
 // TODO(Aldrik): implement directX11 render layer for windows
-// TODO(Aldrik): implement clipboard copy on windows (ctrl+v/c not working)
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
 checkbox_state checkbox_recursive;

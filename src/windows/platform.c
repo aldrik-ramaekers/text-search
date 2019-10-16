@@ -109,7 +109,33 @@ bool platform_get_clipboard(platform_window *window, char *buffer)
 
 bool platform_set_clipboard(platform_window *window, char *buffer)
 {
-	// TODO(Aldrik): implement
+	HGLOBAL clipboard_data;
+	s32 buffer_len = strlen(buffer)+1;
+	
+	if (OpenClipboard(NULL))
+	{
+		EmptyClipboard();
+		clipboard_data = GlobalAlloc(GMEM_MOVEABLE, buffer_len);
+		if (clipboard_data)
+		{
+			GlobalLock(clipboard_data);
+			memcpy(clipboard_data, buffer, buffer_len);
+			GlobalUnlock(clipboard_data);
+			
+			SetClipboardData(CF_TEXT, clipboard_data);
+			SetClipboardData(CF_OEMTEXT, clipboard_data);
+		}
+		else
+		{
+			CloseClipboard();
+			return false;
+		}
+		
+		CloseClipboard();
+		GlobalFree(clipboard_data);
+		return true;
+	}
+	
 	return false;
 }
 
@@ -293,7 +319,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			char *ch = 0;
 			
 			char val = (char)wparam;
-			printf("%c %x\n", val, val);
+			
 			if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
 			{
 				if (!(val >= 48 && val <= 57))
@@ -332,6 +358,8 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		current_keyboard_to_handle->keys[keycode_map[key]] = true;
 		current_keyboard_to_handle->input_keys[keycode_map[key]] = true;
+		
+		//printf("CTRL: %d, V: %d\n", keyboard_is_key_down(current_keyboard_to_handle, KEY_LEFT_CONTROL), keyboard_is_key_pressed(current_keyboard_to_handle, KEY_V));
 		
 		if (current_keyboard_to_handle->take_input)
 			keyboard_handle_input_string(current_window_to_handle, 

@@ -109,12 +109,61 @@ inline void keyboard_input_destroy(keyboard_input *keyboard)
 	mem_free(keyboard->input_text);
 }
 
+inline static void keyboard_handle_input_copy_and_paste(platform_window *window, keyboard_input *keyboard)
+{
+	bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+	
+	if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_V))
+	{
+		char buf[MAX_INPUT_LENGTH];
+		bool result = platform_get_clipboard(window, buf);
+		
+		if (keyboard->has_selection)
+		{
+			char buf_left[MAX_INPUT_LENGTH];
+			char buf_right[MAX_INPUT_LENGTH];
+			
+			sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
+			strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
+			
+			sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
+			
+			keyboard->has_selection = false;
+			keyboard->cursor = keyboard->selection_begin_offset;
+			keyboard->selection_length = 0;
+			keyboard->selection_begin_offset = 0;
+			keyboard->input_text_len = strlen(keyboard->input_text);
+		}
+		
+		if (result)
+		{
+			char string_right[MAX_INPUT_LENGTH];
+			snprintf(string_right, MAX_INPUT_LENGTH, "%s", keyboard->input_text+keyboard->cursor);
+			
+			s32 len = strlen(buf);
+			
+			snprintf(keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH, "%s%s", buf, string_right);
+			
+			keyboard->cursor += len;
+			keyboard->input_text_len += len;
+		}
+	}
+	else if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_C))
+	{
+		char buffer[MAX_INPUT_LENGTH];
+		sprintf(buffer, "%.*s", keyboard->selection_length, keyboard->input_text+keyboard->selection_begin_offset);
+		platform_set_clipboard(window, buffer);
+	}
+}
+
 void keyboard_handle_input_string(platform_window *window, keyboard_input *keyboard, char *ch)
 {
+	keyboard_handle_input_copy_and_paste(window, keyboard);
+	
+	bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
+	
 	if (ch)
 	{
-		bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
-		
 		if (keyboard->input_text_len < MAX_INPUT_LENGTH && !is_lctrl_down)
 		{
 			if (keyboard->has_selection)
@@ -162,51 +211,6 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			
 			keyboard->cursor++;
 			keyboard->input_text_len++;
-		}
-		else
-		{
-			// clipboard
-			if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_V))
-			{
-				char buf[MAX_INPUT_LENGTH];
-				bool result = platform_get_clipboard(window, buf);
-				
-				if (keyboard->has_selection)
-				{
-					char buf_left[MAX_INPUT_LENGTH];
-					char buf_right[MAX_INPUT_LENGTH];
-					
-					sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
-					strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
-					
-					sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
-					
-					keyboard->has_selection = false;
-					keyboard->cursor = keyboard->selection_begin_offset;
-					keyboard->selection_length = 0;
-					keyboard->selection_begin_offset = 0;
-					keyboard->input_text_len = strlen(keyboard->input_text);
-				}
-				
-				if (result)
-				{
-					char string_right[MAX_INPUT_LENGTH];
-					snprintf(string_right, MAX_INPUT_LENGTH, "%s", keyboard->input_text+keyboard->cursor);
-					
-					s32 len = strlen(buf);
-					
-					snprintf(keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH, "%s%s", buf, string_right);
-					
-					keyboard->cursor += len;
-					keyboard->input_text_len += len;
-				}
-			}
-			else if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_C))
-			{
-				char buffer[MAX_INPUT_LENGTH];
-				sprintf(buffer, "%.*s", keyboard->selection_length, keyboard->input_text+keyboard->selection_begin_offset);
-				platform_set_clipboard(window, buffer);
-			}
 		}
 	}
 	else
