@@ -4,9 +4,9 @@ if [ $(dpkg-query -W -f='${Status}' libglu1-mesa-dev 2>/dev/null | grep -c "ok i
 then
 	if [ "$EUID" -ne 0 ]
 	then
-	  apt-get install libglu1-mesa-dev;
-	else
 	  echo "Missing dependency: libglu1-mesa-dev, install this package or run this script as root"
+	else
+	  apt-get install libglu1-mesa-dev;
 	fi
 fi
 
@@ -14,9 +14,9 @@ if [ $(dpkg-query -W -f='${Status}' libgl1-mesa-dev 2>/dev/null | grep -c "ok in
 then
 	if [ "$EUID" -ne 0 ]
 	then
-	  apt-get install libgl1-mesa-dev;
-	else
 	  echo "Missing dependency: libgl1-mesa-dev, install this package or run this script as root"
+	else
+	  apt-get install libgl1-mesa-dev;
 	fi
 fi
 
