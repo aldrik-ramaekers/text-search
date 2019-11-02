@@ -152,7 +152,9 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 	{
 		char buffer[MAX_INPUT_LENGTH];
 		sprintf(buffer, "%.*s", keyboard->selection_length, keyboard->input_text+keyboard->selection_begin_offset);
-		platform_set_clipboard(window, buffer);
+		
+		if (!string_equals(buffer, ""))
+			platform_set_clipboard(window, buffer);
 	}
 }
 

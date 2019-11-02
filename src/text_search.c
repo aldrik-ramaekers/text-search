@@ -950,7 +950,7 @@ int main(int argc, char **argv)
 				{
 					do_search();
 				}
-				if (keyboard_is_key_pressed(&keyboard, KEY_TAB))
+				if (keyboard_is_key_pressed(&keyboard, KEY_TAB) && textbox_path.state)
 				{
 					platform_autocomplete_path(textbox_path.buffer, true);
 					keyboard_set_input_text(&keyboard, textbox_path.buffer);

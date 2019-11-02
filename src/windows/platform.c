@@ -61,20 +61,20 @@ int cmd_show;
 
 bool platform_get_clipboard(platform_window *window, char *buffer)
 {
-	OpenClipboard(NULL);
+	if (!IsClipboardFormatAvailable(CF_TEXT)) 
+		return false; 
 	
-	UINT format = 0;
-	while((format = EnumClipboardFormats(format))) {
-		if(format == CF_TEXT) {
-			char *clip_str = GetClipboardData(CF_TEXT);
-			strncpy(buffer, clip_str, MAX_INPUT_LENGTH);
-			CloseClipboard();
-			return true;
-		}
-	}
+	if (!OpenClipboard(NULL))
+		return false;
+	
+	char *clip_str = GetClipboardData(CF_TEXT);
+	if (!clip_str)
+		return false;
+	
+	strncpy(buffer, clip_str, MAX_INPUT_LENGTH);
 	
 	CloseClipboard();
-	return false;
+	return true;
 }
 
 bool platform_set_clipboard(platform_window *window, char *buffer)
@@ -82,31 +82,33 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 	HGLOBAL clipboard_data;
 	s32 buffer_len = strlen(buffer)+1;
 	
-	if (OpenClipboard(NULL))
+	if (!OpenClipboard(NULL))
+		return false;
+	
+	clipboard_data = GlobalAlloc(GMEM_MOVEABLE, buffer_len);
+	if (clipboard_data)
 	{
-		EmptyClipboard();
-		clipboard_data = GlobalAlloc(GMEM_MOVEABLE, buffer_len);
-		if (clipboard_data)
-		{
-			GlobalLock(clipboard_data);
-			memcpy(clipboard_data, buffer, buffer_len);
-			GlobalUnlock(clipboard_data);
-			
-			SetClipboardData(CF_TEXT, clipboard_data);
-			SetClipboardData(CF_OEMTEXT, clipboard_data);
-		}
-		else
+		void *addr = GlobalLock(clipboard_data);
+		memcpy(addr, buffer, buffer_len);
+		GlobalUnlock(clipboard_data);
+		
+		if (!EmptyClipboard())
 		{
 			CloseClipboard();
 			return false;
 		}
 		
-		CloseClipboard();
+		SetClipboardData(CF_TEXT, addr);
 		GlobalFree(clipboard_data);
-		return true;
+	}
+	else
+	{
+		CloseClipboard();
+		return false;
 	}
 	
-	return false;
+	CloseClipboard();
+	return true;
 }
 
 inline void platform_show_alert(char *title, char *message)
