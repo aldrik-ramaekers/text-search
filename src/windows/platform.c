@@ -944,7 +944,11 @@ void *platform_open_file_dialog_block(void *arg)
 char *platform_get_full_path(char *file)
 {
 	char *buf = mem_alloc(MAX_INPUT_LENGTH);
-	GetFullPathNameA(file, MAX_INPUT_LENGTH, buf, NULL);
+	if (!GetFullPathNameA(file, MAX_INPUT_LENGTH, buf, NULL))
+	{
+		buf[0] = 0;
+	}
+	
 	return buf;
 }
 
@@ -977,6 +981,12 @@ void platform_init(int argc, char **argv)
 	
 	// get fullpath of the directory the exe is residing in
 	binary_path = platform_get_full_path(argv[0]);
+	
+	// if program is run from a folder included in PATH
+	if (string_equals(binary_path, ""))
+	{
+		sprintf(binary_path, "%s", "C:/Program Files (x86)/textsearch/");
+	}
 	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);

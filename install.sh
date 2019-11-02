@@ -1,5 +1,7 @@
 #!/bin/bash
 
+if [ "$(expr substr $(uname -s) 1 5)" == "Linux" ]; then
+
 if [ "$EUID" -ne 0 ]
   then echo "Please run this script as root."
   exit
@@ -49,3 +51,24 @@ sudo chmod 775 -R /opt/textsearch/
 sudo chmod 777 /opt/textsearch/data/config.txt
 echo "Done creating default config"
 echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed as \"/usr/local/bin/text-search\""
+
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
+
+windres misc/icon.rc -O coff -o misc/icon.res
+
+rm -rf "C:/Program Files (x86)/textsearch/"
+mkdir "C:/Program Files (x86)/textsearch/"
+cd src
+
+x86_64-w64-mingw32-gcc -Wall -m64 -O3 -Wno-unused-label -Wno-unused-variable text_search.c -o "C:/Program Files (x86)/textsearch/text-search.exe" ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
+
+cd ../
+cp -r data/ "C:/Program Files (x86)/textsearch/"
+
+
+
+elif [ "$(uname)" == "Darwin" ]; then
+    echo "OSX Platform not supported"
+elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW32_NT" ]; then
+	echo "32bit Windows versions not supported"
+fi

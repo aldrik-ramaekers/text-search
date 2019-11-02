@@ -577,7 +577,7 @@ inline void platform_init(int argc, char **argv)
 	global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
 	
-	// get fullpath of the directory the exe is residing in
+	// get fullpath of the directory the binary is residing in
 	binary_path = platform_get_full_path(argv[0]);
 	
 	// if program is run from a folder included in PATH
