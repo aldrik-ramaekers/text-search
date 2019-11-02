@@ -206,7 +206,7 @@ void settings_page_show()
 	load_current_settings_into_ui();
 	
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
-													   450, 300, 450, 300);
+													   450, 280, 450, 280);
 	global_settings_page.active = true;
 	global_settings_page.selected_tab_index = 0;
 	global_settings_page.current_locale_id = localize_get_id();

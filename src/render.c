@@ -317,10 +317,7 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];
 		
-		if (ch != '.' && ch != ',')
-			x+=width / 2;//+(kern*font->scale);
-		else
-			x+=font->size/4;
+		x += add_char_width(ch,width,font);
 		
 		if (x > click_x)
 		{

@@ -148,7 +148,7 @@ void platform_open_url(char *command);
 void platform_run_command(char *command);
 void platform_window_make_current(platform_window *window);
 //void platform_hide_window_taskbar_icon(platform_window *window);
-void platform_init();
+void platform_init(int argc, char **argv);
 void platform_destroy();
 void platform_set_icon(platform_window *window, image *img);
 void platform_autocomplete_path(char *buffer, bool want_dir);

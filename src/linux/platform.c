@@ -174,33 +174,6 @@ bool set_active_directory(char *path)
 	return !chdir(path);
 }
 
-int main(int argc, char **argv)
-{
-	platform_init();
-	
-	// get fullpath of the directory the exe is residing in
-	binary_path = platform_get_full_path(argv[0]);
-	
-	char buf[MAX_INPUT_LENGTH];
-	get_directory_from_path(buf, binary_path);
-	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
-	
-	assets_create();
-	debug_init();
-	
-	s32 result = main_loop();
-	
-	debug_destroy();
-	assets_destroy();
-	platform_destroy();
-	
-#if defined(MODE_DEVELOPER)
-	memory_print_leaks();
-#endif
-	
-	return result;
-}
-
 void platform_destroy_list_file_result(array *files)
 {
 	memory_bucket_reset(&global_platform_memory_bucket);
@@ -593,26 +566,35 @@ static void create_key_tables(platform_window window)
 	XkbFreeKeyboard(desc, 0, True);
 }
 
-inline void platform_init()
+inline void platform_init(int argc, char **argv)
 {
 #if 0
 	dlerror(); // clear error
 	void *x11 = dlopen("libX11.so.6", RTLD_NOW | RTLD_GLOBAL);
 	void *randr = dlopen("libXrandr.so", RTLD_NOW | RTLD_GLOBAL);
-	
-	if (!x11 || !randr)
-	{
-		platform_show_message("Missing window manager library.", "Fatal error.");
-	}
 #endif
 	
 	global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
+	
+	// get fullpath of the directory the exe is residing in
+	binary_path = platform_get_full_path(argv[0]);
+	
+	char buf[MAX_INPUT_LENGTH];
+	get_directory_from_path(buf, binary_path);
+	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
+	
+	assets_create();
 }
 
 inline void platform_destroy()
 {
+	assets_destroy();
 	memory_bucket_destroy(&global_platform_memory_bucket);
+	
+#if defined(MODE_DEVELOPER)
+	memory_print_leaks();
+#endif
 }
 
 inline void platform_window_make_current(platform_window *window)
@@ -886,9 +868,6 @@ typedef struct {
 	Atom type;
 } x11Prop;
 
-/* Reads property
-Must call XFree on results
-*/
 static void XReadProperty(x11Prop *p, Display *disp, Window w, Atom prop)
 {
 	unsigned char *ret=NULL;
@@ -910,8 +889,6 @@ static void XReadProperty(x11Prop *p, Display *disp, Window w, Atom prop)
 	p->type=type;
 }
 
-/* Find text-uri-list in a list of targets and return it's atom
-if available, else return None */
 static Atom XPickTarget(Display *disp, Atom list[], int list_count)
 {
 	Atom request = None;
@@ -927,8 +904,6 @@ static Atom XPickTarget(Display *disp, Atom list[], int list_count)
 	return request;
 }
 
-/* Wrapper for XPickTarget for a maximum of three targets, a special
-case in the Xdnd protocol */
 static Atom XPickTargetFromAtoms(Display *disp, Atom a0, Atom a1, Atom a2)
 {
 	int count=0;
@@ -1415,7 +1390,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 
 inline void platform_show_alert(char *title, char *message)
 {
-	// TODO(Aldrik): what if notify-send is not on system?
 	char command[MAX_INPUT_LENGTH];
 	sprintf(command, "notify-send \"%s\" \"%s\"", title, message);
 	platform_run_command(command);

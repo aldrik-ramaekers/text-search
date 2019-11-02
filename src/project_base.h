@@ -24,8 +24,6 @@
 #ifndef INCLUDE_PROJECT_BASE
 #define INCLUDE_PROJECT_BASE
 
-int main_loop();
-
 #ifdef _WIN32
 #define OS_WIN
 #include <windows.h>
@@ -89,7 +87,6 @@ int main_loop();
 #include "assets.h"
 #include "memory_bucket.h"
 #include "platform.h"
-#include "debug.h"
 #include "render.h"
 #include "camera.h"
 #include "ui.h"
@@ -123,7 +120,6 @@ int main_loop();
 #include "memory_bucket.c"
 
 #ifdef MODE_DEVELOPER
-#include "debug.c"
 #include "memory.c"
 #endif
 

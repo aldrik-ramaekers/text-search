@@ -57,35 +57,6 @@ keyboard_input *current_keyboard_to_handle;
 mouse_input *current_mouse_to_handle;
 
 int cmd_show;
-int main(int argc, char **argv)
-{
-	platform_init();
-	
-	instance = GetModuleHandle(NULL);
-	cmd_show = argc;
-	
-	// get fullpath of the directory the exe is residing in
-	binary_path = platform_get_full_path(argv[0]);
-	
-	char buf[MAX_INPUT_LENGTH];
-	get_directory_from_path(buf, binary_path);
-	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
-	
-	assets_create();
-	debug_init();
-	
-	s32 result = main_loop();
-	
-	debug_destroy();
-	assets_destroy();
-	platform_destroy();
-	
-#if defined(MODE_DEVELOPER)
-	memory_print_leaks();
-#endif
-	
-	return result;
-}
 
 bool platform_get_clipboard(platform_window *window, char *buffer)
 {
@@ -145,6 +116,11 @@ inline void platform_show_alert(char *title, char *message)
 inline void platform_destroy()
 {
 	memory_bucket_destroy(&global_platform_memory_bucket);
+	assets_destroy();
+	
+#if defined(MODE_DEVELOPER)
+	memory_print_leaks();
+#endif
 }
 
 inline void platform_set_cursor(platform_window *window, cursor_type type)
@@ -939,6 +915,7 @@ static void* platform_open_file_dialog_dd(void *data)
 	}
 	else if (args->type == OPEN_DIRECTORY)
     {
+		// TODO(Aldrik): directory selection not working yet 
 		GetOpenFileNameA(&info);
 	}
 	else if (args->type == OPEN_FILE)
@@ -982,13 +959,25 @@ void platform_window_make_current(platform_window *window)
 	wglMakeCurrent(window->hdc, window->gl_context);
 }
 
-void platform_init()
+void platform_init(int argc, char **argv)
 {
     global_platform_memory_bucket = memory_bucket_init(megabytes(1));
     
 	QueryPerformanceFrequency(&perf_frequency);
     //CoInitialize(NULL);
 	create_key_tables();
+	
+	instance = GetModuleHandle(NULL);
+	cmd_show = argc;
+	
+	// get fullpath of the directory the exe is residing in
+	binary_path = platform_get_full_path(argv[0]);
+	
+	char buf[MAX_INPUT_LENGTH];
+	get_directory_from_path(buf, binary_path);
+	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
+	
+	assets_create();
 }
 
 void platform_set_icon(platform_window *window, image *img)

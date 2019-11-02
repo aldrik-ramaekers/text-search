@@ -22,6 +22,8 @@ mkdir /opt/textsearch/
 cd src
 gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c -o /opt/textsearch/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
 
+ln -sf /opt/textsearch/text-search /usr/local/bin/text-search
+
 if [ $? -ne 0 ]; then
 	cd ../
 	exit 1

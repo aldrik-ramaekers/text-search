@@ -98,11 +98,10 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): debug view
-// TODO(Aldrik): open file dialog for folder selection
+// TODO(Aldrik): rewrite ui code
+// TODO(Aldrik): open file dialog for folder selection (windows)
 // TODO(Aldrik): store config file in home/appdata directory?
-// TODO(Aldrik): include asset folder stuff in binary?
-// TODO(Aldrik): alert implementation for Yad
+// TODO(Aldrik): search for assets in /opt/textsearch if not found
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -802,8 +801,10 @@ void load_config(settings_config *config)
 }
 
 #if defined(OS_LINUX) || defined(OS_WIN)
-int main_loop()
+int main(int argc, char **argv)
 {
+	platform_init(argc, argv);
+	
 #ifdef MODE_DEVELOPER
 	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);
 #else
@@ -889,10 +890,6 @@ int main_loop()
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
 		settings_page_update_render();
-		
-		if (keyboard_is_key_pressed(&keyboard, KEY_F1))
-			debug_window_toggle();
-		debug_update_render();
 		
 		platform_window_make_current(&window);
 		
@@ -1154,6 +1151,8 @@ int main_loop()
 	
 	keyboard_input_destroy(&keyboard);
 	platform_destroy_window(&window);
+	
+	platform_destroy();
 	
 	return 0;
 }
