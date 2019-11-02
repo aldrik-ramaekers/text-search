@@ -333,6 +333,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	else if (message == WM_SETFOCUS)
 	{
 		current_window_to_handle->has_focus = true;
+		current_window_to_handle->curr_cursor_type = -999;
 	}
 	else if (message == WM_KEYDOWN)
 	{
@@ -920,7 +921,8 @@ static void* platform_open_file_dialog_dd(void *data)
 		
 		PIDLIST_ABSOLUTE result = SHBrowseForFolderA(&inf);
 		
-		char buffer[MAX_INPUT_LENGTH];
+		if (!result) return 0;
+		
 		SHGetPathFromIDListA(result, args->buffer);
 	}
 	else if (args->type == OPEN_FILE)
