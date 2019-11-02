@@ -1049,9 +1049,9 @@ void ui_scroll_end()
 	{
 		s32 scroll_y = 0;
 		if (global_ui_context.mouse->scroll_state == SCROLL_UP)
-			scroll_y+=WATCH_WINDOW_SCROLL_SPEED;
+			scroll_y+=SCROLL_SPEED;
 		if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-			scroll_y-=WATCH_WINDOW_SCROLL_SPEED;
+			scroll_y-=SCROLL_SPEED;
 		global_ui_context.layout.scroll.scroll += scroll_y;
 		if (global_ui_context.layout.scroll.scroll > 0)
 			global_ui_context.layout.scroll.scroll = 0;

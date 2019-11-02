@@ -25,6 +25,7 @@
 #include <objbase.h>
 #include <shellapi.h>
 #include <gdiplus.h>
+#include <shlobj.h>
 
 struct t_platform_window
 {
@@ -904,7 +905,6 @@ static void* platform_open_file_dialog_dd(void *data)
 	info.nMaxFile = sizeof(szFile);
 	
 	info.lpstrFileTitle = NULL;
-	//info.nMaxFileTitle = NULL;
 	info.lpstrInitialDir = args->start_path;
 	info.lpstrTitle = NULL;
 	
@@ -912,19 +912,24 @@ static void* platform_open_file_dialog_dd(void *data)
 	{
 		info.Flags = OFN_PATHMUSTEXIST;
 		GetSaveFileNameA(&info);
+		strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
 	else if (args->type == OPEN_DIRECTORY)
     {
-		// TODO(Aldrik): directory selection not working yet 
-		GetOpenFileNameA(&info);
+		BROWSEINFOA inf;
+		
+		PIDLIST_ABSOLUTE result = SHBrowseForFolderA(&inf);
+		
+		char buffer[MAX_INPUT_LENGTH];
+		SHGetPathFromIDListA(result, args->buffer);
 	}
 	else if (args->type == OPEN_FILE)
 	{
 		info.Flags = OFN_FILEMUSTEXIST;
 		GetOpenFileNameA(&info);
+		strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
 	
-	strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	
 	return 0;
 }
@@ -964,7 +969,7 @@ void platform_init(int argc, char **argv)
     global_platform_memory_bucket = memory_bucket_init(megabytes(1));
     
 	QueryPerformanceFrequency(&perf_frequency);
-    //CoInitialize(NULL);
+    CoInitialize(NULL);
 	create_key_tables();
 	
 	instance = GetModuleHandle(NULL);

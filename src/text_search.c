@@ -18,13 +18,6 @@
 #include "config.h"
 #include "project_base.h"
 
-#define TARGET_FRAMERATE 1000/30.0
-#define FILE_RESERVE_COUNT 5000
-#define ERROR_RESERVE_COUNT 10
-#define MAX_ERROR_MESSAGE_LENGTH 70
-#define MAX_STATUS_TEXT_LENGTH 100
-#define ERROR_TEXT_COLOR rgb(224, 79, 95)
-
 typedef struct t_text_match
 {
 	found_file file;
@@ -98,8 +91,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): rewrite ui code
-// TODO(Aldrik): open file dialog for folder selection (windows)
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -520,7 +511,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				if (global_ui_context.mouse->scroll_state == SCROLL_UP)
 					scroll_y+=(h*3);
 				if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-					scroll_y-=70;
+					scroll_y-=(h*3);
 			}
 			
 			if (scroll_y > 0)
