@@ -760,11 +760,6 @@ void load_config(settings_config *config)
 	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
 	
-	if (path)
-		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
-	else
-		strncpy(textbox_path.buffer, INSTALL_DIRECTORY, MAX_INPUT_LENGTH);
-	
 	if (search_filter)
 		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
 	else
@@ -775,15 +770,30 @@ void load_config(settings_config *config)
 	else
 		strncpy(textbox_search_text.buffer, "*hello world*", MAX_INPUT_LENGTH);
 	
-	checkbox_recursive.state = recursive;
-	global_settings_page.enable_parallelization = parallelize;
-	global_settings_page.max_thread_count = max_thread_count;
-	global_settings_page.max_file_size = max_file_size;
-	
 	if (locale_id)
 		set_locale(locale_id);
 	else
 		set_locale("en");
+	
+	if (path)
+	{
+		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
+		
+		checkbox_recursive.state = recursive;
+		global_settings_page.enable_parallelization = parallelize;
+		global_settings_page.max_thread_count = max_thread_count;
+		global_settings_page.max_file_size = max_file_size;
+	}
+	else
+	{
+		checkbox_recursive.state = 1;
+		global_settings_page.enable_parallelization = 1;
+		global_settings_page.max_thread_count = 20;
+		global_settings_page.max_file_size = 200;
+		
+		strncpy(textbox_path.buffer, INSTALL_DIRECTORY, MAX_INPUT_LENGTH);
+	}
+	
 	
 	if (window_w >= 800 && window_h >= 600)
         platform_window_set_size(main_window, window_w, window_h);

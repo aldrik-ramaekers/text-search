@@ -48,18 +48,16 @@ rm -rf /opt/textsearch/data/export/
 mkdir /opt/textsearch/data/export/
 
 sudo chmod 775 -R /opt/textsearch/
+rm /opt/textsearch/data/config.txt
+printf " " > /opt/textsearch/data/config.txt
 sudo chmod 777 /opt/textsearch/data/config.txt
+
 echo "Done copying data"
 echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed as \"/usr/local/bin/text-search\""
 
 ########################################################################
 ########################################################################
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
-
-if [ "$EUID" -ne 0 ]; then 
-	echo "Please run this script as root."
-	exit
-fi
 
 windres misc/icon.rc -O coff -o misc/icon.res
 
@@ -75,6 +73,8 @@ echo "Done compiling program"
 echo "Copying data.."
 cd ../
 cp -r data/ "C:/Program Files (x86)/textsearch/"
+
+rm "C:/Program Files (x86)/textsearch/data/config.txt"
 
 echo "Done copying data"
 echo "Done. Program is installed at \"C:\\Program Files (x86)\\\""
