@@ -100,8 +100,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): rewrite ui code
 // TODO(Aldrik): open file dialog for folder selection (windows)
-// TODO(Aldrik): store config file in home/appdata directory?
-// TODO(Aldrik): search for assets in /opt/textsearch if not found
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -1115,6 +1113,7 @@ int main(int argc, char **argv)
 #ifdef MODE_DEVELOPER
 	settings_config_write_to_file(&config, "../data/config.txt");
 #endif
+	
 	settings_config_destroy(&config);
 	
 	settings_page_destroy();

@@ -580,6 +580,12 @@ inline void platform_init(int argc, char **argv)
 	// get fullpath of the directory the exe is residing in
 	binary_path = platform_get_full_path(argv[0]);
 	
+	// if program is run from a folder included in PATH
+	if (string_equals(binary_path, ""))
+	{
+		sprintf(binary_path, "%s", "/opt/textsearch/");
+	}
+	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
 	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
@@ -1716,9 +1722,15 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 char *platform_get_full_path(char *file)
 {
 	char *buf = mem_alloc(PATH_MAX);
+	buf[0] = 0;
+	
 	char *result = realpath(file, buf);
 	
-	if (!result) return file;
+	if (!result)
+	{
+		buf[0] = 0;
+		return buf;
+	}
 	
 	return buf;
 }
