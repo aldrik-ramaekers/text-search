@@ -333,7 +333,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	else if (message == WM_SETFOCUS)
 	{
 		current_window_to_handle->has_focus = true;
-		current_window_to_handle->curr_cursor_type = -999;
 	}
 	else if (message == WM_KEYDOWN)
 	{
@@ -401,6 +400,8 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_MOUSEMOVE)
 	{
+		current_window_to_handle->curr_cursor_type = -999;
+		
 		s32 x = lparam&0xFFFF;
 		s32 y = lparam>>16;
 		
@@ -987,7 +988,7 @@ void platform_init(int argc, char **argv)
 	// if program is run from a folder included in PATH
 	if (string_equals(binary_path, ""))
 	{
-		sprintf(binary_path, "%s", "C:/Program Files (x86)/textsearch/");
+		sprintf(binary_path, "%s", INSTALL_DIRECTORY);
 	}
 	
 	char buf[MAX_INPUT_LENGTH];

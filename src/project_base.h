@@ -98,11 +98,13 @@
 #include "platform_shared.c"
 
 #ifdef OS_LINUX
+#define INSTALL_DIRECTORY "/opt/textsearch/"
 #include "linux/thread.c"
 #include "linux/platform.c"
 #endif
 
 #ifdef OS_WIN
+#define INSTALL_DIRECTORY "C:/Program Files (x86)/textsearch/"
 #include "windows/thread.c"
 #include "windows/platform.c"
 #endif

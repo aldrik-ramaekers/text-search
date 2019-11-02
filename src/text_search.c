@@ -763,7 +763,7 @@ void load_config(settings_config *config)
 	if (path)
 		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
 	else
-		strncpy(textbox_path.buffer, "/home/", MAX_INPUT_LENGTH);
+		strncpy(textbox_path.buffer, INSTALL_DIRECTORY, MAX_INPUT_LENGTH);
 	
 	if (search_filter)
 		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);

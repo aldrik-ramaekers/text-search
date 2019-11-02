@@ -43,11 +43,9 @@ cd ../
 echo "Copying data.."
 cp COPYING /opt/textsearch/
 
-# create default config
 cp -r data/ /opt/textsearch/
 rm -rf /opt/textsearch/data/export/
 mkdir /opt/textsearch/data/export/
-printf "SEARCH_DIRECTORY = \"/home/user/Projects/\"\nSEARCH_DIRECTORIES = \"1\"\nSEARCH_TEXT = \"*hello world*\"\nFILE_FILTER = \"*.txt,*.c\"\nMAX_THEAD_COUNT = \"20\"\nMAX_FILE_SIZE = \"200\"\nLOCALE = \"en\"\nWINDOW_WIDTH = \"800\"\nWINDOW_HEIGHT = \"600\"\nPARALLELIZE_SEARCH = \"1\"\n" > /opt/textsearch/data/config.txt
 
 sudo chmod 775 -R /opt/textsearch/
 sudo chmod 777 /opt/textsearch/data/config.txt
@@ -57,6 +55,11 @@ echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed a
 ########################################################################
 ########################################################################
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
+
+if [ "$EUID" -ne 0 ]; then 
+	echo "Please run this script as root."
+	exit
+fi
 
 windres misc/icon.rc -O coff -o misc/icon.res
 
@@ -72,8 +75,6 @@ echo "Done compiling program"
 echo "Copying data.."
 cd ../
 cp -r data/ "C:/Program Files (x86)/textsearch/"
-
-printf "SEARCH_DIRECTORY = \"/home/user/Projects/\"\nSEARCH_DIRECTORIES = \"1\"\nSEARCH_TEXT = \"*hello world*\"\nFILE_FILTER = \"*.txt,*.c\"\nMAX_THEAD_COUNT = \"20\"\nMAX_FILE_SIZE = \"200\"\nLOCALE = \"en\"\nWINDOW_WIDTH = \"800\"\nWINDOW_HEIGHT = \"600\"\nPARALLELIZE_SEARCH = \"1\"\n" > C:/Program Files (x86)/textsearch/data/config.txt
 
 echo "Done copying data"
 echo "Done. Program is installed at \"C:\\Program Files (x86)\\\""

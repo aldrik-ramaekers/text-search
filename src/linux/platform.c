@@ -583,7 +583,7 @@ inline void platform_init(int argc, char **argv)
 	// if program is run from a folder included in PATH
 	if (string_equals(binary_path, ""))
 	{
-		sprintf(binary_path, "%s", "/opt/textsearch/");
+		sprintf(binary_path, "%s", INSTALL_DIRECTORY);
 	}
 	
 	char buf[MAX_INPUT_LENGTH];
