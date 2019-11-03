@@ -1026,16 +1026,18 @@ int main(int argc, char **argv)
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
 				
-				if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
-				{
-					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
-					{
-						platform_cancel_search = true;
-						global_search_result.cancel_search = true;
-						global_search_result.done_finding_matches = true;
-						global_search_result.walking_file_system = false;
-					}
-				}
+				/*
+	if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
+	{
+	 if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
+	 {
+	  platform_cancel_search = true;
+	  global_search_result.cancel_search = true;
+	  global_search_result.done_finding_matches = true;
+	  global_search_result.walking_file_system = false;
+	 }
+	}
+ \*/
 			}
 			ui_block_end();
 			
