@@ -13,4 +13,4 @@ Text-search is a GUI Program to find files and text within files for Linux and W
 
 # Build/Install
 run __build-linux.sh -r__ or __build-win.sh -r__ for building and running a debug build<br />
-run install.sh as root to install to __/opt/textsearch__ or __C:\Program Files (x86)\textsearch__ <br />
+run __install.sh__ as root to install to __/opt/textsearch__ or __C:\Program Files (x86)\textsearch__ <br />

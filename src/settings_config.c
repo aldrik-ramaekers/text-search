@@ -108,7 +108,6 @@ settings_config settings_config_load_from_file(char *path)
 	settings_config config;
 	config.settings = array_create(sizeof(config_setting));
 	
-	
 	set_active_directory(binary_path);
 	
 	file_content content = platform_read_file_content(path, "rb");

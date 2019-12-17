@@ -74,7 +74,6 @@ struct t_platform_window
 	bool has_focus;
 	cursor_type curr_cursor_type;
 	cursor_type next_cursor_type;
-	struct drag_drop_info drag_drop_info;
 };
 
 // --- libX11.so
@@ -618,8 +617,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	platform_window window;
 	window.has_focus = true;
-	window.drag_drop_info.path = 0;
-	window.drag_drop_info.state = DRAG_DROP_NONE;
 	window.curr_cursor_type = CURSOR_DEFAULT;
 	window.next_cursor_type = CURSOR_DEFAULT;
 	window.clipboard_str = 0;
@@ -792,7 +789,6 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	// recieve window close event
 	window.quit = XInternAtom(window.display, "WM_DELETE_WINDOW", False);
 	
-	// drag and drop atoms
 	GET_ATOM(XdndEnter);
 	GET_ATOM(XdndPosition);
 	GET_ATOM(XdndStatus);
@@ -862,154 +858,6 @@ void platform_destroy_window(platform_window *window)
 	window->display = 0;
 }
 
-typedef struct {
-	unsigned char *data;
-	int format, count;
-	Atom type;
-} x11Prop;
-
-static void XReadProperty(x11Prop *p, Display *disp, Window w, Atom prop)
-{
-	unsigned char *ret=NULL;
-	Atom type;
-	int fmt;
-	unsigned long count;
-	unsigned long bytes_left;
-	int bytes_fetch = 0;
-	
-	do {
-		if (ret != 0) XFree(ret);
-		XGetWindowProperty(disp, w, prop, 0, bytes_fetch, False, AnyPropertyType, &type, &fmt, &count, &bytes_left, &ret);
-		bytes_fetch += bytes_left;
-	} while (bytes_left != 0);
-	
-	p->data=ret;
-	p->format=fmt;
-	p->count=count;
-	p->type=type;
-}
-
-static Atom XPickTarget(Display *disp, Atom list[], int list_count)
-{
-	Atom request = None;
-	char *name;
-	int i;
-	for (i=0; i < list_count && request == None; i++) {
-		name = XGetAtomName(disp, list[i]);
-		if ((strcmp("text/uri-list", name) == 0) || (strcmp("text/plain", name) == 0)) {
-			request = list[i];
-		}
-		XFree(name);
-	}
-	return request;
-}
-
-static Atom XPickTargetFromAtoms(Display *disp, Atom a0, Atom a1, Atom a2)
-{
-	int count=0;
-	Atom atom[3];
-	if (a0 != None) atom[count++] = a0;
-	if (a1 != None) atom[count++] = a1;
-	if (a2 != None) atom[count++] = a2;
-	return XPickTarget(disp, atom, count);
-}
-
-static int XURIDecode(char *buf, int len) {
-	int ri, wi, di;
-	char decode = '\0';
-	if (buf == NULL || len < 0) {
-		errno = EINVAL;
-		return -1;
-	}
-	if (len == 0) {
-		len = strlen(buf);
-	}
-	for (ri = 0, wi = 0, di = 0; ri < len && wi < len; ri += 1) {
-		if (di == 0) {
-			/* start decoding */
-			if (buf[ri] == '%') {
-				decode = '\0';
-				di += 1;
-				continue;
-			}
-			/* normal write */
-			buf[wi] = buf[ri];
-			wi += 1;
-			continue;
-		} else if (di == 1 || di == 2) {
-			char off = '\0';
-			char isa = buf[ri] >= 'a' && buf[ri] <= 'f';
-			char isA = buf[ri] >= 'A' && buf[ri] <= 'F';
-			char isn = buf[ri] >= '0' && buf[ri] <= '9';
-			if (!(isa || isA || isn)) {
-				/* not a hexadecimal */
-				int sri;
-				for (sri = ri - di; sri <= ri; sri += 1) {
-					buf[wi] = buf[sri];
-					wi += 1;
-				}
-				di = 0;
-				continue;
-			}
-			/* itsy bitsy magicsy */
-			if (isn) {
-				off = 0 - '0';
-			} else if (isa) {
-				off = 10 - 'a';
-			} else if (isA) {
-				off = 10 - 'A';
-			}
-			decode |= (buf[ri] + off) << (2 - di) * 4;
-			if (di == 2) {
-				buf[wi] = decode;
-				wi += 1;
-				di = 0;
-			} else {
-				di += 1;
-			}
-			continue;
-		}
-	}
-	buf[wi] = '\0';
-	return wi;
-}
-
-static char* XURIToLocal(char* uri) {
-	char *file = NULL;
-	bool local;
-	
-	if (memcmp(uri,"file:/",6) == 0) uri += 6;      /* local file? */
-	else if (strstr(uri,":/") != NULL) return file; /* wrong scheme */
-	
-	local = uri[0] != '/' || (uri[0] != '\0' && uri[1] == '/');
-	
-	/* got a hostname? */
-	if (!local && uri[0] == '/' && uri[2] != '/') {
-		char* hostname_end = strchr(uri+1, '/');
-		if (hostname_end != NULL) {
-			char hostname[ 257 ];
-			if (gethostname(hostname, 255) == 0) {
-				hostname[ 256 ] = '\0';
-				if (memcmp(uri+1, hostname, hostname_end - (uri+1)) == 0) {
-					uri = hostname_end + 1;
-					local = 1;
-				}
-			}
-		}
-	}
-	if (local) {
-		file = uri;
-		/* Convert URI escape sequences to real characters */
-		XURIDecode(file, 0);
-		if (uri[1] == '/') {
-			file++;
-		} else {
-			file--;
-		}
-	}
-	return file;
-}
-
 void platform_hide_window_taskbar_icon(platform_window *window)
 {
 	XClientMessageEvent m;
@@ -1043,16 +891,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->move_x = 0;
 	mouse->move_y = 0;
 	mouse->scroll_state = 0;
-	
-	if (window->drag_drop_info.state == DRAG_DROP_FINISHED)
-	{
-		window->drag_drop_info.path = 0;
-		window->drag_drop_info.state = DRAG_DROP_NONE;
-	}
-	if (window->drag_drop_info.state == DRAG_DROP_LEAVE)
-	{
-		window->drag_drop_info.state = DRAG_DROP_NONE;
-	}
 	
 	XClientMessageEvent m;
 	
@@ -1091,91 +929,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 						//XConvertSelection(window->display, window->XdndSelection, window->xdnd_req, window->PRIMARY, window->xwindow, CurrentTime);
 					}
 				}
-			}
-			else if (window->event.xclient.message_type == window->XdndLeave)
-			{
-				window->drag_drop_info.state = DRAG_DROP_LEAVE;
-			}
-			else if (window->event.xclient.message_type == window->XdndActionCopy)
-			{
-				memset(&m, 0, sizeof(XClientMessageEvent));
-				m.type = ClientMessage;
-				m.display = window->event.xclient.display;
-				m.window = window->event.xclient.data.l[0];
-				m.message_type = window->XdndStatus;
-				m.format=32;
-				m.data.l[0] = window->window;
-				m.data.l[1] = (window->xdnd_req != None);
-				m.data.l[2] = 0; /* specify an empty rectangle */
-				m.data.l[3] = 0;
-				m.data.l[4] = window->XdndActionCopy; /* we only accept copying anyway */
-				
-				XSendEvent(window->display, window->event.xclient.data.l[0], False, NoEventMask, (XEvent*)&m);
-				XFlush(window->display);
-			}
-			else if (window->event.xclient.message_type == window->XdndEnter)
-			{
-				window->drag_drop_info.state = DRAG_DROP_ENTER;
-				
-				bool use_list = window->event.xclient.data.l[1] & 1;
-				window->xdnd_source = window->event.xclient.data.l[0];
-				xdnd_version = (window->event.xclient.data.l[1] >> 24);
-				
-				if (use_list) {
-					/* fetch conversion targets */
-					x11Prop p;
-					XReadProperty(&p, window->display, window->xdnd_source, window->XdndTypeList);
-					/* pick one */
-					window->xdnd_req = XPickTarget(window->display, (Atom*)p.data, p.count);
-				} else {
-					/* pick from list of three */
-					window->xdnd_req = XPickTargetFromAtoms(window->display, window->event.xclient.data.l[2], window->event.xclient.data.l[3], window->event.xclient.data.l[4]);
-				}
-			}
-		}
-		else if (window->event.type == SelectionNotify)
-		{
-			Atom target = window->event.xselection.target;
-			
-			if (target == window->xdnd_req) {
-				x11Prop p;
-				XReadProperty(&p, window->display, window->window, window->PRIMARY);
-				
-				if (p.format == 8) {
-					/* !!! FIXME: don't use strtok here. It's not reentrant and not in stdinc. */
-					char* name = XGetAtomName(window->display, target);
-					char *token = strtok((char *) p.data, "\r\n");
-					s32 count = 0;
-					while (token != NULL) {
-						if (strcmp("text/uri-list", name)==0) {
-							count++;
-							char *fn = XURIToLocal(token);
-							if (fn)
-							{
-								window->drag_drop_info.state = DRAG_DROP_FINISHED;
-								window->drag_drop_info.path = fn;
-							}
-						}
-						token = strtok(NULL, "\r\n");
-					}
-					
-					if (count >= 2)
-						platform_show_message(window, localize("multiple_import_not_supported"), localize("error_importing_results"));
-				}
-				
-				/* send reply */
-				memset(&m, 0, sizeof(XClientMessageEvent));
-				m.type = ClientMessage;
-				m.display = window->display;
-				m.window = window->xdnd_source;
-				m.message_type = window->XdndFinished;
-				m.format = 32;
-				m.data.l[0] = window->window;
-				m.data.l[1] = 1;
-				m.data.l[2] = window->XdndActionCopy;
-				XSendEvent(window->display, window->xdnd_source, False, NoEventMask, (XEvent*)&m);
-				
-				XSync(window->display, False);
 			}
 		}
 		else if (window->event.type == LeaveNotify)

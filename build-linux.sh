@@ -23,7 +23,22 @@ fi
 rm -rf bin
 mkdir bin
 cd src
-gcc -Wall -g -m64 -DMODE_DEVELOPER -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+
+ld -r -b binary -o ../bin/data.o \
+../data/imgs/en.png \
+../data/imgs/error.png \
+../data/imgs/folder.png \
+../data/imgs/nl.png \
+../data/imgs/search.png \
+../data/imgs/logo_32.png \
+../data/imgs/logo_512.png \
+../data/fonts/mono.ttf \
+../data/translations/en-English.mo \
+../data/translations/nl-Dutch.mo \
+
+gcc -Wall -g -m64 -DMODE_DEVELOPER -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+
+rm -f ../bin/data.o
 
 if [ $? -ne 0 ]; then
 	cd ../
@@ -32,7 +47,7 @@ fi
 
 cd ../
 
-cp -r data/ bin/
+cp data/config.txt bin/config.txt
 
 if [ "$1" == "-r" ]; then
 	cd bin

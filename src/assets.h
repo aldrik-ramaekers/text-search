@@ -30,10 +30,41 @@
 #define ASSET_QUEUE_COUNT 100
 #endif
 
+// binary blobs
+extern u8 _binary____data_imgs_en_png_start[];
+extern u8 _binary____data_imgs_en_png_end[];
+
+extern u8 _binary____data_imgs_error_png_start[];
+extern u8 _binary____data_imgs_error_png_end[];
+
+extern u8 _binary____data_imgs_folder_png_start[];
+extern u8 _binary____data_imgs_folder_png_end[];
+
+extern u8 _binary____data_imgs_nl_png_start[];
+extern u8 _binary____data_imgs_nl_png_end[];
+
+extern u8 _binary____data_imgs_search_png_start[];
+extern u8 _binary____data_imgs_search_png_end[];
+
+extern u8 _binary____data_imgs_logo_32_png_start[];
+extern u8 _binary____data_imgs_logo_32_png_end[];
+
+extern u8 _binary____data_imgs_logo_512_png_start[];
+extern u8 _binary____data_imgs_logo_512_png_end[];
+
+extern u8 _binary____data_fonts_mono_ttf_start[];
+extern u8 _binary____data_fonts_mono_ttf_end[];
+
+extern u8 _binary____data_translations_en_English_mo_start[];
+extern u8 _binary____data_translations_en_English_mo_end[];
+
+extern u8 _binary____data_translations_nl_Dutch_mo_start[];
+extern u8 _binary____data_translations_nl_Dutch_mo_end[];
+
 typedef struct t_image {
-	char *path;
+	u8 *start_addr;
+	u8 *end_addr;
 	bool loaded;
-	bool keep_in_memory;
 	s32 width;
 	s32 height;
 	s32 channels;
@@ -44,7 +75,8 @@ typedef struct t_image {
 
 typedef struct t_font
 {
-	char *path;
+	u8 *start_addr;
+	u8 *end_addr;
 	bool loaded;
 	s16 references;
 	s16 size;
@@ -104,10 +136,10 @@ void assets_destroy();
 void assets_do_post_process();
 void *assets_queue_worker();
 
-image *assets_load_image(char *file, bool keep_in_memory);
+image *assets_load_image(u8 *start_addr, u8 *end_addr);
 void assets_destroy_image(image *image);
 
-font *assets_load_font(char *file, s16 size);
+font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size);
 void assets_destroy_font(font *font);
 
 #endif

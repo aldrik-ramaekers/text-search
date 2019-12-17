@@ -96,26 +96,11 @@ typedef struct t_list_file_args
 	bool *state;
 } list_file_args;
 
-typedef enum t_drag_drop_state
-{
-	DRAG_DROP_NONE,
-	DRAG_DROP_ENTER,
-	DRAG_DROP_LEAVE,
-	DRAG_DROP_FINISHED,
-	DRAG_DROP_ACTIVE,
-} drag_drop_state;
-
 typedef enum t_cursor_type
 {
 	CURSOR_DEFAULT,
 	CURSOR_POINTER,
 } cursor_type;
-
-struct drag_drop_info
-{
-	s32 state;
-	char *path;
-};
 
 bool platform_cancel_search = false;
 

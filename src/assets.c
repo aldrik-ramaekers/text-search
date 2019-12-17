@@ -69,8 +69,7 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				task->image->loaded = true;
 				
-				if (!task->image->keep_in_memory)
-					stbi_image_free(task->image->data);
+				stbi_image_free(task->image->data);
 			}
 		}
 		else if (task->type == ASSET_FONT)
@@ -85,7 +84,6 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				
 				task->font->loaded = true;
-				mem_free(task->font->bitmap);
 			}
 		}
 		
@@ -99,30 +97,26 @@ bool assets_queue_worker_load_image(image *image)
 {
 	set_active_directory(binary_path);
 	
-	image->data = stbi_load(image->path,
-							&image->width,
-							&image->height,
-							&image->channels,
-							STBI_rgb_alpha);
+	image->data = stbi_load_from_memory(image->start_addr,
+										image->end_addr - image->start_addr,
+										&image->width,
+										&image->height,
+										&image->channels,
+										STBI_rgb_alpha);
 	
 	return !(image->data == 0);
 }
 
 bool assets_queue_worker_load_font(font *font)
 {
-	set_active_directory(binary_path);
-	
 	font->bitmap = 0;
-	file_content content = platform_read_file_content(font->path, "rb");
-	if (!content.content) return false;
 	
-	unsigned char *ttf_buffer = content.content;
+	unsigned char *ttf_buffer = (unsigned char*)font->start_addr;
 	
 	/* prepare font */
     stbtt_fontinfo info;
     if (!stbtt_InitFont(&info, ttf_buffer, 0))
     {
-		mem_free(ttf_buffer);
 		return false;
 	}
 	
@@ -174,7 +168,6 @@ bool assets_queue_worker_load_font(font *font)
 	font->scale = scale;
 	
 	font->bitmap = bitmap;
-	platform_destroy_file_content(&content);
 	
 	return true;
 }
@@ -225,14 +218,14 @@ void *assets_queue_worker()
 	return 0;
 }
 
-image *assets_load_image(char *file, bool keep_in_memory)
+image *assets_load_image(u8 *start_addr, u8 *end_addr)
 {
 	// check if image is already loaded or loading
 	for (int i = 0; i < global_asset_collection.images.length; i++)
 	{
 		image *img_at = array_at(&global_asset_collection.images, i);
 		
-		if (strcmp(img_at->path, file) == 0)
+		if (start_addr == img_at->start_addr)
 		{
 			// image is already loaded/loading
 			img_at->references++;
@@ -241,12 +234,10 @@ image *assets_load_image(char *file, bool keep_in_memory)
 	}
 	
 	image new_image;
-	new_image.path = mem_alloc(strlen(file)+1);
-	strcpy(new_image.path, file);
 	new_image.loaded = false;
-	
+	new_image.start_addr = start_addr;
+	new_image.end_addr = end_addr;
 	new_image.references = 1;
-	new_image.keep_in_memory = keep_in_memory;
 	
 	// NOTE(Aldrik): we should never realloc the image array because pointers will be 
 	// invalidated.
@@ -269,13 +260,9 @@ void assets_destroy_image(image *image_to_destroy)
 {
 	if (image_to_destroy->references == 1)
 	{
-		if (image_to_destroy->keep_in_memory)
-			stbi_image_free(image_to_destroy->data);
-		
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &image_to_destroy->textureID);
 		
-		mem_free(image_to_destroy->path);
 		//array_remove(&global_asset_collection.images, image_at);
 	}
 	else
@@ -284,14 +271,14 @@ void assets_destroy_image(image *image_to_destroy)
 	}
 }
 
-font *assets_load_font(char *file, s16 size)
+font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size)
 {
 	assert(!(size % 4));
 	for (int i = 0; i < global_asset_collection.fonts.length; i++)
 	{
 		font *font_at = array_at(&global_asset_collection.fonts, i);
 		
-		if (strcmp(font_at->path, file) == 0 && font_at->size == size)
+		if (start_addr == font_at->start_addr && font_at->size == size)
 		{
 			// font is already loaded/loading
 			font_at->references++;
@@ -300,12 +287,12 @@ font *assets_load_font(char *file, s16 size)
 	}
 	
 	font new_font;
-	new_font.path = mem_alloc(strlen(file)+1);
-	new_font.size = size;
-	strcpy(new_font.path, file);
 	new_font.loaded = false;
-	
+	new_font.start_addr = start_addr;
+	new_font.end_addr = end_addr;
+	new_font.size = size;
 	new_font.references = 1;
+	
 	//new_font.loaded = true;
 	
 	// NOTE(Aldrik): we should never realloc the font array because pointers will be 
@@ -332,7 +319,7 @@ void assets_destroy_font(font *font_to_destroy)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &font_to_destroy->textureID);
 		
-		mem_free(font_to_destroy->path);
+		mem_free(font_to_destroy->bitmap);
 		//array_remove(&global_asset_collection.fonts, font_at);
 	}
 	else

@@ -15,83 +15,23 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-static void locale_get_id_from_path(char *buffer, char *path)
-{
-	s32 len = strlen(path);
-	s32 start = 0;
-	for (s32 i = len-1; i >= 0; i--)
-	{
-		char ch = path[i];
-		
-		if (ch == '-')
-		{
-			start = i;
-		}
-		if (ch == '/')
-		{
-			char cc = path[start];
-			path[start] = 0;
-			strcpy(buffer, path+i+1);
-			path[start] = cc;
-			
-			return;
-		}
-	}
-}
-
-static void locale_get_name_from_path(char *buffer, char *path)
-{
-	s32 len = strlen(path);
-	s32 start = 0;
-	for (s32 i = len-1; i >= 0; i--)
-	{
-		char ch = path[i];
-		
-		if (ch == '.')
-		{
-			start = i;
-		}
-		if (ch == '-')
-		{
-			char cc = path[start];
-			path[start] = 0;
-			strcpy(buffer, path+i+1);
-			path[start] = cc;
-			return;
-		}
-	}
-}
-
-mo_file load_localization_file(char *path)
+mo_file load_localization_file(u8 *start_addr, u8 *end_addr, u8 *img_start, u8 *img_end,
+							   char *locale_id, char *locale_name)
 {
 	mo_file mo;
 	mo.translations = array_create(sizeof(mo_translation));
 	
-	set_active_directory(binary_path);
-	file_content content = platform_read_file_content(path, "rb");
-	mo.content = content;
-	
-	if (content.content && !content.file_error && content.content_length > sizeof(mo_header))
 	{
-		mo.header = *(mo_header*)content.content;
+		mo.header = *(mo_header*)start_addr;
+		mo.locale_id = mem_alloc(strlen(locale_id)+1);
+		strcpy(mo.locale_id, locale_id);
 		
-		// get country id
-		s32 len = strlen(path);
-		mo.locale_id = mem_alloc(len);
-		locale_get_id_from_path(mo.locale_id, path);
+		mo.locale_full = mem_alloc(strlen(locale_name)+1);
+		strcpy(mo.locale_full, locale_name);
 		
-		mo.locale_full = mem_alloc(len);
-		locale_get_name_from_path(mo.locale_full, path);
+		mo.icon = assets_load_image(img_start, img_end);
 		
-		char icon_path_buf[50];
-		sprintf(icon_path_buf, "data/imgs/%s.png", mo.locale_id);
-		mo.icon = assets_load_image(icon_path_buf, false);
-		
-#if 0
-		printf("magic: %d\nfile revision: %d\nstring count: %d\nidentifier offset: %d\ntranslation offset: %d\nhashtable size: %d\nhashtable offset: %d\n", mo.header.magic_number, mo.header.file_format_revision, mo.header.number_of_strings, mo.header.identifier_table_offset, mo.header.translation_table_offset, mo.header.hashtable_size, mo.header.hashtable_offset);
-#endif
-		
-		char *buffer = content.content;
+		char *buffer = (char*)start_addr;
 		mo_entry *identifiers = (mo_entry*)(buffer + mo.header.identifier_table_offset);
 		mo_entry *translations = (mo_entry*)(buffer + mo.header.translation_table_offset);
 		
@@ -183,24 +123,20 @@ void load_available_localizations()
 	global_localization.mo_files = array_create(sizeof(mo_file));
 	array_reserve(&global_localization.mo_files, 10);
 	
-	array file_list = array_create(sizeof(found_file));
-	array_reserve(&file_list, 10);
+	mo_file en = load_localization_file(_binary____data_translations_en_English_mo_start,
+										_binary____data_translations_en_English_mo_end,
+										_binary____data_imgs_en_png_start,
+										_binary____data_imgs_en_png_end,
+										"en", "English");
 	
-	set_active_directory(binary_path);
+	mo_file nl = load_localization_file(_binary____data_translations_nl_Dutch_mo_start,
+										_binary____data_translations_nl_Dutch_mo_end,
+										_binary____data_imgs_nl_png_start,
+										_binary____data_imgs_nl_png_end,
+										"nl", "Dutch");
 	
-	array filters = get_filters("*.mo");
-	platform_list_files_block(&file_list, "data/translations/",
-							  filters, false, false);
-	array_destroy(&filters);
-	
-	for (s32 i = 0; i < file_list.length; i++)
-	{
-		found_file *file = array_at(&file_list, i);
-		mo_file mo = load_localization_file(file->path);
-		s32 index = array_push(&global_localization.mo_files, &mo);
-	}
-	
-	destroy_found_file_array(&file_list);
+	array_push(&global_localization.mo_files, &en);
+	array_push(&global_localization.mo_files, &nl);
 }
 
 void destroy_available_localizations()
@@ -211,7 +147,6 @@ void destroy_available_localizations()
 		array_destroy(&file->translations);
 		mem_free(file->locale_id);
 		mem_free(file->locale_full);
-		platform_destroy_file_content(&file->content);
 		
 		if (file->icon)
 			assets_destroy_image(file->icon);

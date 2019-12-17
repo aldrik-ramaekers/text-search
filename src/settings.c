@@ -18,8 +18,10 @@
 void settings_page_create()
 {
 	global_settings_page.active = false;
-	global_settings_page.font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	global_settings_page.logo_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
+	global_settings_page.font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
+													   _binary____data_fonts_mono_ttf_end, 16);
+	global_settings_page.logo_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
+													  _binary____data_imgs_logo_32_png_end);
 	global_settings_page.keyboard = keyboard_input_create();
 	global_settings_page.mouse = mouse_input_create();
     

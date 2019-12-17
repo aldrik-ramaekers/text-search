@@ -76,10 +76,7 @@ image *search_img;
 image *error_img;
 image *directory_img;
 image *logo_img;
-image *drag_drop_img;
-image *notification_bg_img;
 image *logo_small_img;
-image *gpl_img;
 
 font *font_big;
 font *font_medium;
@@ -95,6 +92,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): edit install script to not copy data folder
+// TODO(Aldrik): include assets in binary, make it a portable application
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
@@ -332,36 +331,6 @@ static void find_text_in_files(search_result *search_result)
 	
 	thread thr = thread_start(find_text_in_files_t, search_result);
 	thread_detach(&thr);
-}
-
-static void render_drag_drop_feedback(platform_window *window)
-{
-	if (window->drag_drop_info.state == DRAG_DROP_ENTER)
-	{
-		char *text = localize("drag_drop_import");
-		static s32 rec_width = 450;
-		static s32 rec_height = 200;
-		static s32 icon_width = 100;
-		static s32 icon_height = 100;
-		s32 rec_pos_x = (window->width / 2) - (rec_width / 2);
-		s32 rec_pos_y = (window->height / 2) - (rec_height / 2);
-		s32 icon_pos_x = rec_pos_x + (rec_width / 2) - (icon_width / 2);
-		s32 icon_pos_y = rec_pos_y + 30;
-		s32 text_w = calculate_text_width(font_small, text);
-		s32 text_pos_y = rec_pos_y + rec_height - font_small->size - 35;
-		s32 text_pos_x = rec_pos_x + (rec_width / 2) - (text_w / 2);
-		
-		render_rectangle(0, 0, window->width, window->height, rgba(0,0,0,180));
-		render_image_tint(notification_bg_img, rec_pos_x+5, rec_pos_y+5, rec_width, rec_height, rgba(0,0,0, 100));
-		render_image(notification_bg_img, rec_pos_x, rec_pos_y, rec_width, rec_height);
-		render_image(drag_drop_img, icon_pos_x, icon_pos_y, icon_width, icon_height);
-		render_text(font_small, text_pos_x, text_pos_y, text, rgb(35,31,32));
-	}
-	
-	if (window->drag_drop_info.state == DRAG_DROP_FINISHED)
-	{
-		import_results_from_file(current_search_result, window->drag_drop_info.path);
-	}
 }
 
 static void render_status_bar(platform_window *window, font *font_small)
@@ -786,21 +755,27 @@ static void do_search()
 
 static void load_assets()
 {
-	search_img = assets_load_image("data/imgs/search.png", false);
-	logo_img = assets_load_image("data/imgs/text-search-logo_512px.png", false);
-	logo_small_img = assets_load_image("data/imgs/text-search-logo_32px.png", true);
-	directory_img = assets_load_image("data/imgs/folder.png", false);
-	error_img = assets_load_image("data/imgs/error.png", false);
-	drag_drop_img = assets_load_image("data/imgs/drag_drop.png", false);
-	notification_bg_img = assets_load_image("data/imgs/notification_bg.png", false);
+	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
+								   _binary____data_imgs_search_png_end);
+	logo_img = assets_load_image(_binary____data_imgs_logo_512_png_start,
+								 _binary____data_imgs_logo_512_png_end);
+	logo_small_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
+									   _binary____data_imgs_logo_32_png_end);
+	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
+									  _binary____data_imgs_folder_png_end);
+	error_img = assets_load_image(_binary____data_imgs_error_png_start,
+								  _binary____data_imgs_error_png_end);
 	
-	font_medium = assets_load_font("data/fonts/mono.ttf", 24);
-	font_small = assets_load_font("data/fonts/mono.ttf", 16);
-	font_mini = assets_load_font("data/fonts/mono.ttf", 12);
+	font_medium = assets_load_font(_binary____data_fonts_mono_ttf_start,
+								   _binary____data_fonts_mono_ttf_end, 24);
+	font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
+								  _binary____data_fonts_mono_ttf_end, 16);
+	font_mini = assets_load_font(_binary____data_fonts_mono_ttf_start,
+								 _binary____data_fonts_mono_ttf_end, 12);
 	
-	// assets used in other windo
-	gpl_img = assets_load_image("data/imgs/gplv3-or-later.png", false);
-	font_big = assets_load_font("data/fonts/mono.ttf", 32);
+	// assets used in other window
+	font_big = assets_load_font(_binary____data_fonts_mono_ttf_start,
+								_binary____data_fonts_mono_ttf_end, 32);
 }
 
 void load_config(settings_config *config)
@@ -1107,7 +1082,6 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		render_drag_drop_feedback(&window);
 		assets_do_post_process();
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
@@ -1174,9 +1148,6 @@ int main(int argc, char **argv)
 	assets_destroy_image(logo_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
-	assets_destroy_image(drag_drop_img);
-	assets_destroy_image(notification_bg_img);
-	assets_destroy_image(gpl_img);
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);
