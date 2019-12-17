@@ -1554,7 +1554,7 @@ void platform_show_message(platform_window *window, char *message, char *title)
 	FILE *f = popen(command, "r");
 }
 
-static void* platform_open_file_dialog_dd(void *data)
+static void* platform_open_file_dialog_thread(void *data)
 {
 	struct open_dialog_args *args = data;
 	
@@ -1616,7 +1616,7 @@ static void* platform_open_file_dialog_dd(void *data)
 
 void *platform_open_file_dialog_block(void *arg)
 {
-	thread thr = thread_start(platform_open_file_dialog_dd, arg);
+	thread thr = thread_start(platform_open_file_dialog_thread, arg);
 	thread_join(&thr);
 	mem_free(arg);
 	return 0;

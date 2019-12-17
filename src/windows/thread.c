@@ -85,6 +85,11 @@ mutex mutex_create()
 	return result;
 }
 
+mutex mutex_create_recursive()
+{
+	return mutex_create();
+}
+
 void mutex_lock(mutex *mutex)
 {
 	WaitForSingleObject( 

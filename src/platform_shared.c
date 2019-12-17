@@ -139,7 +139,7 @@ array get_filters(char *pattern)
 	return result;
 }
 
-void *platform_list_files_t(void *args)
+void *platform_list_files_thread(void *args)
 {
 	list_file_args *info = args;
 	
@@ -171,7 +171,7 @@ void platform_list_files(array *list, char *start_dir, char *filter, bool recurs
 	args->state = state;
 	args->include_directories = 0;
 	
-	thread thr = thread_start(platform_list_files_t, args);
+	thread thr = thread_start(platform_list_files_thread, args);
 	thread_detach(&thr);
 }
 

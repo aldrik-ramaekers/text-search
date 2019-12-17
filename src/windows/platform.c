@@ -118,7 +118,6 @@ inline void platform_show_alert(char *title, char *message)
 
 inline void platform_destroy()
 {
-	memory_bucket_destroy(&global_platform_memory_bucket);
 	assets_destroy();
 	
 #if defined(MODE_DEVELOPER)
@@ -132,12 +131,6 @@ inline void platform_set_cursor(platform_window *window, cursor_type type)
 	{
 		window->next_cursor_type = type;
 	}
-}
-
-void platform_destroy_list_file_result(array *files)
-{
-	memory_bucket_reset(&global_platform_memory_bucket);
-	files->length = 0;
 }
 
 bool platform_directory_exists(char *path)
@@ -824,12 +817,12 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 										  &matched_filter)) && len != -1)
 				{
 					// is file
-					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+					char *buf = mem_alloc(MAX_INPUT_LENGTH);
 					sprintf(buf, "%s%s",start_dir, name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
+					f.matched_filter = mem_alloc(len+1);
 					strncpy(f.matched_filter, matched_filter, len+1);
 					array_push_size(list, &f, sizeof(found_file));
 				}
@@ -859,12 +852,12 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 									  &matched_filter)) && len != -1)
 			{
 				// is file
-				char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+				char *buf = mem_alloc(MAX_INPUT_LENGTH);
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;
 				f.path = buf;
-				f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
+				f.matched_filter = mem_alloc(len+1);
 				strncpy(f.matched_filter, matched_filter, len+1);
 				array_push_size(list, &f, sizeof(found_file));
 			}
@@ -877,7 +870,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 	FindClose(handle);
 }
 
-static void* platform_open_file_dialog_dd(void *data)
+static void* platform_open_file_dialog_implementation(void *data)
 {
 	struct open_dialog_args *args = data;
 	
@@ -941,7 +934,7 @@ static void* platform_open_file_dialog_dd(void *data)
 
 void *platform_open_file_dialog_block(void *arg)
 {
-	platform_open_file_dialog_dd(arg);
+	platform_open_file_dialog_implementation(arg);
 	mem_free(arg);
 	return 0;
 }
@@ -975,8 +968,6 @@ void platform_window_make_current(platform_window *window)
 
 void platform_init(int argc, char **argv)
 {
-    global_platform_memory_bucket = memory_bucket_init(megabytes(1));
-    
 	QueryPerformanceFrequency(&perf_frequency);
     CoInitialize(NULL);
 	create_key_tables();

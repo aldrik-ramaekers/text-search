@@ -117,7 +117,6 @@ struct drag_drop_info
 	char *path;
 };
 
-//memory_bucket_collection global_platform_memory_bucket;
 bool platform_cancel_search = false;
 
 bool platform_window_is_valid(platform_window *window);

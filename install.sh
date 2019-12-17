@@ -20,7 +20,7 @@ if [ $(dpkg-query -W -f='${Status}' libgl1-mesa-dev 2>/dev/null | grep -c "ok in
 then
   apt-get install libgl1-mesa-dev;
 fi
-echo "dependencies are installed"
+echo "Dependencies are installed"
 
 echo "Removing previous installation.."
 rm -rf /opt/textsearch/
@@ -53,7 +53,7 @@ printf " " > /opt/textsearch/data/config.txt
 sudo chmod 777 /opt/textsearch/data/config.txt
 
 echo "Done copying data"
-echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed as \"/usr/local/bin/text-search\""
+echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed at \"/usr/local/bin/text-search\""
 
 ########################################################################
 ########################################################################

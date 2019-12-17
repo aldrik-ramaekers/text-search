@@ -95,7 +95,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): rename _t and _t_t to better names like _thread,_worker,_passthrough,_spawner
+// TODO(Aldrik): command line usage
+// TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): control scrollbar with mouse
 // TODO(Aldrik): scroll with arrow keys
