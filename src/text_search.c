@@ -93,7 +93,7 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): edit install script to not copy data folder
-// TODO(Aldrik): include assets in binary, make it a portable application
+// TODO(Aldrik)(Windows): include assets in binary, make it a portable application
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
@@ -682,6 +682,10 @@ static void do_search()
 	{
 		search_result *new_result = create_empty_search_result();
 		
+		search_result *old_result = current_search_result;
+		current_search_result = new_result;
+		destroy_search_result(old_result); // TODO(Aldrik): this is taking WAYYYY too long
+		
 		new_result->files_searched = 0;
 		new_result->cancel_search = false;
 		scroll_y = 0;
@@ -745,10 +749,6 @@ static void do_search()
 				new_result->text_to_find = text_to_find_buf;
 				find_text_in_files(new_result);
 			}
-			
-			search_result *old_result = current_search_result;
-			current_search_result = new_result;
-			destroy_search_result(old_result);
 		}
 	}
 }
@@ -884,7 +884,7 @@ int main(int argc, char **argv)
 	reset_status_text();
 	
 	// load config
-	settings_config config = settings_config_load_from_file("data/config.txt");
+	settings_config config = settings_config_load_from_file("config.txt");
 	load_config(&config);
 	
 	current_search_result = create_empty_search_result();
@@ -1120,7 +1120,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	settings_config_write_to_file(&config, "data/config.txt");
+	settings_config_write_to_file(&config, "config.txt");
 #ifdef MODE_DEVELOPER
 	settings_config_write_to_file(&config, "../data/config.txt");
 #endif
