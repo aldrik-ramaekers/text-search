@@ -200,8 +200,7 @@ void load_available_localizations()
 		s32 index = array_push(&global_localization.mo_files, &mo);
 	}
 	
-	platform_destroy_list_file_result(&file_list);
-	array_destroy(&file_list);
+	destroy_found_file_array(&file_list);
 }
 
 void destroy_available_localizations()

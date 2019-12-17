@@ -136,7 +136,6 @@ bool platform_write_file_content(char *path, const char *mode, char *buffer, s32
 void platform_destroy_file_content(file_content *content);
 bool get_active_directory(char *buffer);
 bool set_active_directory(char *path);
-void platform_destroy_list_file_result(array *files);
 void platform_show_message(platform_window *window, char *message, char *title);
 array get_filters(char *filter);
 void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories);
@@ -155,6 +154,7 @@ void platform_autocomplete_path(char *buffer, bool want_dir);
 bool platform_directory_exists(char *path);
 bool platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);
+void destroy_found_file_array(array *found_files);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

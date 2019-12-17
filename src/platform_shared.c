@@ -155,6 +155,7 @@ void *platform_list_files_t(void *args)
 		*(info->state) = !(*info->state);
 	
 	array_destroy(&filters);
+	mem_free(info);
 	
 	return 0;
 }
@@ -188,4 +189,15 @@ void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_f
 	while (!thr.valid)
 		thr = thread_start(platform_open_file_dialog_block, args);
 	thread_detach(&thr);
+}
+
+void destroy_found_file_array(array *found_files)
+{
+	for (s32 i = 0; i < found_files->length; i++)
+	{
+		found_file *f = array_at(found_files, i);
+		mem_free(f->matched_filter);
+		mem_free(f->path);
+	}
+	array_destroy(found_files);
 }

@@ -174,12 +174,6 @@ bool set_active_directory(char *path)
 	return !chdir(path);
 }
 
-void platform_destroy_list_file_result(array *files)
-{
-	//memory_bucket_reset(&global_platform_memory_bucket);
-	files->length = 0;
-}
-
 bool platform_write_file_content(char *path, const char *mode, char *buffer, s32 len)
 {
 	bool result = false;

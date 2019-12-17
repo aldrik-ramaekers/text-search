@@ -63,8 +63,8 @@ typedef struct t_search_result
 typedef struct t_find_text_args
 {
 	text_match *match;
-	char *text_to_find;
-	s32 search_id;
+	char *text_to_find; // TODO(Aldrik): can be removed, is stored in search_result_buffer
+	s32 search_id; // // TODO(Aldrik): can be removed, is stored in search_result_buffer
 	search_result *search_result_buffer;
 } find_text_args;
 
@@ -94,6 +94,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): store search settings in search result so they cant be changed during a search
+// TODO(Aldrik): rename _t and _t_t to better names like _thread,_worker,_passthrough,_spawner
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): control scrollbar with mouse
 // TODO(Aldrik): scroll with arrow keys
@@ -108,99 +110,121 @@ button_state button_select_directory;
 button_state button_find_text;
 button_state button_cancel;
 
-static void *find_text_in_file_t(void *arg)
+void destroy_search_result(search_result *buffer)
 {
-	find_text_args *args = arg;
-	text_match *match = args->match;
-	s32 search_id = args->search_id;
+	array_destroy(&buffer->work_queue);
+	
+	for (s32 i = 0; i < buffer->files.length; i++)
+	{
+		text_match *match = array_at(&buffer->files, i);
+		mem_free(match->line_info);
+		mem_free(match->file.matched_filter);
+		mem_free(match->file.path);
+	}
+	array_destroy(&buffer->files);
+	array_destroy(&buffer->errors);
+	
+	mutex_destroy(&buffer->mutex);
+	mem_free(buffer);
+}
+
+static void* find_text_in_file_worker(void *arg)
+{
+	search_result *result_buffer = arg;
 	
 	file_content content;
 	content.content = 0;
 	
-	try_again:
+	while(!result_buffer->done_finding_matches)
 	{
-		if (args->search_result_buffer->cancel_search) { goto finish_early; }
+		if (result_buffer->cancel_search) { goto finish_early; }
 		
-		content = platform_read_file_content(match->file.path, "r");
-		match->file_size = content.content_length;
-		
-		s32 kb_to_b = global_settings_page.max_file_size * 1000;
-		if (global_settings_page.max_file_size && content.content_length > kb_to_b)
+		mutex_lock(&result_buffer->work_queue.mutex);
+		if (result_buffer->work_queue.length)
 		{
-			goto finish_early;
-		}
-		
-		if (args->search_result_buffer->cancel_search) { goto finish_early; }
-		
-		if (content.content && !content.file_error)
-		{
-			s32 line_nr = 0;
-			char *line;
-			s32 word_offset = 0;
-			if (string_contains_ex(content.content, args->text_to_find, &line_nr, &line, &word_offset))
+			find_text_args args = *(find_text_args*)array_at(&result_buffer->work_queue, 0);
+			array_remove_at(&result_buffer->work_queue, 0);
+			mutex_unlock(&result_buffer->work_queue.mutex);
+			
+			// read file
+			content = platform_read_file_content(args.match->file.path, "r");
+			args.match->file_size = content.content_length;
+			
+			// check if file is not too big for set filter
+			s32 kb_to_b = global_settings_page.max_file_size * 1000;
+			if (global_settings_page.max_file_size && content.content_length > kb_to_b)
 			{
-				args->search_result_buffer->match_found = true;
-				
-				// match info
-				match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
-				sprintf(match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
-				
-				char *tmp = match->line_info;
-				while(*tmp)
+				platform_destroy_file_content(&content);
+				continue;
+			}
+			
+			// check if file has opened correctly
+			if (content.content && !content.file_error)
+			{
+				s32 line_nr = 0, word_offset = 0;
+				char *line;
+				if (string_contains_ex(content.content, args.text_to_find, &line_nr, &line, &word_offset))
 				{
-					if (*tmp == '\n')
+					args.search_result_buffer->match_found = true;
+					
+					// match info
+					args.match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
+					sprintf(args.match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
+					
+					char *tmp = args.match->line_info;
+					while(*tmp)
 					{
-						*tmp = 0;
-						break;
+						if (*tmp == '\n')
+						{
+							*tmp = 0;
+							break;
+						}
+						++tmp;
 					}
-					++tmp;
-				}
-				
-				if (search_id == args->search_result_buffer->search_id)
-				{
-					mutex_lock(&args->search_result_buffer->mutex);
-					match->match_count++;
-					args->search_result_buffer->files_matched++;
-					mutex_unlock(&args->search_result_buffer->mutex);
+					
+					mutex_lock(&result_buffer->mutex);
+					args.match->match_count++;
+					result_buffer->files_matched++;
+					mutex_unlock(&result_buffer->mutex);
 				}
 			}
+			else
+			{
+				if (content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS ||
+					content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
+				{
+					// TODO(Aldrik): maybe retry here
+				}
+				
+				if (content.file_error)
+					args.match->file_error = content.file_error;
+				else
+					args.match->file_error = FILE_ERROR_GENERIC;
+				
+				mutex_lock(&args.search_result_buffer->mutex);
+				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
+				mutex_unlock(&args.search_result_buffer->mutex);
+			}
+			
+			mutex_lock(&result_buffer->mutex);
+			result_buffer->files_searched++;
+			mutex_unlock(&result_buffer->mutex);
+			
+			platform_destroy_file_content(&content);
 		}
 		else
 		{
-			if (content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS ||
-				content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
-			{
-				thread_sleep(1000);
-				
-				goto try_again;
-			}
-			
-			if (content.file_error)
-				match->file_error = content.file_error;
-			else
-				match->file_error = FILE_ERROR_GENERIC;
-			
-			if (search_id == args->search_result_buffer->search_id)
-			{
-				mutex_lock(&args->search_result_buffer->mutex);
-				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
-				mutex_unlock(&args->search_result_buffer->mutex);
-			}
+			mutex_unlock(&result_buffer->work_queue.mutex);
 		}
 	}
 	
 	finish_early:
 	{
-		platform_destroy_file_content(&content);
-		
-		if (!args->search_result_buffer->cancel_search && args->search_result_buffer->search_id == search_id)
-		{
-			mutex_lock(&args->search_result_buffer->mutex);
-			args->search_result_buffer->files_searched++;
-			sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (args->search_result_buffer->files_searched/(float)args->search_result_buffer->files.length)*100);
-			mutex_unlock(&args->search_result_buffer->mutex);
-		}
+		mutex_lock(&result_buffer->mutex);
+		sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
+		mutex_unlock(&result_buffer->mutex);
 	}
+	
 	
 	return 0;
 }
@@ -214,6 +238,13 @@ static void* find_text_in_files_t(void *arg)
 	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
 	char *text_to_find = result_buffer->text_to_find;
 	
+	// create worker threads
+	for(s32 i = 0; i < global_settings_page.max_thread_count; i++)
+	{
+		thread new_thr = thread_start(find_text_in_file_worker, result_buffer);
+		array_push(&threads, &new_thr);
+	}
+	
 	s32 start = 0;
 	s32 len = 0;
 	do_work:
@@ -224,51 +255,21 @@ static void* find_text_in_files_t(void *arg)
 		
 		for (s32 i = start; i < len; i++)
 		{
-			find_text_args *args = mem_alloc(sizeof(find_text_args));
-			args->match = array_at(&result_buffer->files, i);
-			args->match->match_count = 0;
-			args->match->file_error = 0;
-			args->match->file_size = 0;
-			args->match->line_info = 0;
-			args->text_to_find = text_to_find;
-			args->search_id = current_search_id;
-			args->search_result_buffer = result_buffer;
+			find_text_args args;
+			args.match = array_at(&result_buffer->files, i);
+			args.match->match_count = 0;
+			args.match->file_error = 0;
+			args.match->file_size = 0;
+			args.match->line_info = 0;
+			args.text_to_find = text_to_find;
+			args.search_id = current_search_id;
+			args.search_result_buffer = result_buffer;
 			
-			//array_push(search_result_buffer);
-			
-			// limit thread usage
-			if (global_settings_page.max_thread_count)
-			{
-				if (threads.length >= global_settings_page.max_thread_count)
-				{
-					for (s32 i = 0; i < threads.length; i++)
-					{
-						thread *thr = array_at(&threads, i);
-						bool joined = thread_tryjoin(thr);
-						if (joined)
-						{
-							array_remove(&threads, thr);
-							break;
-						}
-					}
-				}
-			}
-			
-			thread new_thr = thread_start(find_text_in_file_t, args);
+			array_push(&result_buffer->work_queue, &args);
 			
 			if (result_buffer->cancel_search) 
 			{
 				goto finish_early;
-			}
-			
-			if (new_thr.valid)
-			{
-				array_push(&threads, &new_thr);
-				//thread_join(&new_thr);
-			}
-			else
-			{
-				i--;
 			}
 		}
 	}
@@ -296,30 +297,28 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->walking_file_system = false;
 	}
 	
+	finish_early:
+	{
+		u64 end_f = platform_get_time(TIME_FULL, TIME_US);
+		
+		result_buffer->find_duration_us = end_f - result_buffer->start_time;
+		result_buffer->done_finding_matches = true;
+		result_buffer->files_searched = result_buffer->files.length;
+		
+		if (!main_window->has_focus)
+			platform_show_alert("Text-search", localize("search_result_completed"));
+		
+	}
+	
 	for (s32 i = 0; i < threads.length; i++)
 	{
 		thread *thr = array_at(&threads, i);
 		thread_join(thr);
 	}
 	
-	finish_early:
-	{
-		if (current_search_id == result_buffer->search_id)
-		{
-			u64 end_f = platform_get_time(TIME_FULL, TIME_US);
-			
-			result_buffer->find_duration_us = end_f - result_buffer->start_time;
-			sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
-			
-			result_buffer->done_finding_matches = true;
-			result_buffer->files_searched = result_buffer->files.length;
-			
-			if (!main_window->has_focus)
-				platform_show_alert("Text-search", localize("search_result_completed"));
-		}
-		array_destroy(&threads);
-	}
+	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 	
+	array_destroy(&threads);
 	mem_free(text_to_find);
 	
 	return 0;
@@ -695,6 +694,11 @@ search_result *create_empty_search_result()
 	new_result_buffer->files.reserve_jump = 1000;
 	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
 	
+	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
+	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
+	new_result_buffer->search_directory_buffer = textbox_path.buffer;
+	new_result_buffer->recursive_state_buffer = &checkbox_recursive.state;
+	
 	return new_result_buffer;
 }
 
@@ -758,8 +762,6 @@ static void do_search()
 			new_result->search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
 																					 new_result->search_result_source_dir_len);
 			
-			platform_destroy_list_file_result(&new_result->files);
-			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
 			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
 								&new_result->done_finding_files);
@@ -772,7 +774,9 @@ static void do_search()
 				find_text_in_files(new_result);
 			}
 			
+			search_result *old_result = current_search_result;
 			current_search_result = new_result;
+			destroy_search_result(old_result);
 		}
 	}
 }
@@ -957,6 +961,8 @@ int main(int argc, char **argv)
 				// shortcuts begin
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
 				{
+					// TODO(Aldrik): do this after selecting a file..
+					current_search_result = create_empty_search_result();
 					import_results(current_search_result);
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
@@ -985,6 +991,8 @@ int main(int argc, char **argv)
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
 					{ 
+						// TODO(Aldrik): do this after selecting a file..
+						current_search_result = create_empty_search_result(); 
 						import_results(current_search_result); 
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
@@ -1155,9 +1163,7 @@ int main(int argc, char **argv)
 	mem_free(global_status_bar.error_status_text);
 	
 	// cleanup results
-	mutex_destroy(&current_search_result->mutex);
-	array_destroy(&current_search_result->files);
-	array_destroy(&current_search_result->errors);
+	destroy_search_result(current_search_result);
 	
 	// delete assets
 	assets_destroy_image(search_img);
