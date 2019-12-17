@@ -176,7 +176,7 @@ bool set_active_directory(char *path)
 
 void platform_destroy_list_file_result(array *files)
 {
-	memory_bucket_reset(&global_platform_memory_bucket);
+	//memory_bucket_reset(&global_platform_memory_bucket);
 	files->length = 0;
 }
 
@@ -574,7 +574,7 @@ inline void platform_init(int argc, char **argv)
 	void *randr = dlopen("libXrandr.so", RTLD_NOW | RTLD_GLOBAL);
 #endif
 	
-	global_platform_memory_bucket = memory_bucket_init(megabytes(1));
+	//global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
 	
 	// get fullpath of the directory the binary is residing in
@@ -596,7 +596,7 @@ inline void platform_init(int argc, char **argv)
 inline void platform_destroy()
 {
 	assets_destroy();
-	memory_bucket_destroy(&global_platform_memory_bucket);
+	//memory_bucket_destroy(&global_platform_memory_bucket);
 	
 #if defined(MODE_DEVELOPER)
 	memory_print_leaks();
@@ -1670,13 +1670,13 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					if ((len = filter_matches(&filters, dir->d_name, 
 											  &matched_filter)) && len != -1)
 					{
-						char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+						char *buf = mem_alloc(MAX_INPUT_LENGTH);
 						//realpath(dir->d_name, buf);
 						sprintf(buf, "%s%s",start_dir, dir->d_name);
 						
 						found_file f;
 						f.path = buf;
-						f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
+						f.matched_filter = mem_alloc(len+1);
 						strncpy(f.matched_filter, matched_filter, len+1);
 						
 						array_push_size(list, &f, sizeof(found_file));
@@ -1700,13 +1700,13 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 				if ((len = filter_matches(&filters, dir->d_name, 
 										  &matched_filter)) && len != -1)
 				{
-					char *buf = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+					char *buf = mem_alloc(MAX_INPUT_LENGTH);
 					//realpath(dir->d_name, buf);
 					sprintf(buf, "%s%s",start_dir, dir->d_name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, len+1);
+					f.matched_filter = mem_alloc(len+1);
 					strncpy(f.matched_filter, matched_filter, len+1);
 					
 					array_push_size(list, &f, sizeof(found_file));

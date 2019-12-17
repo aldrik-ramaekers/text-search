@@ -106,13 +106,15 @@ bool export_results(search_result *search_result)
 
 void import_results_from_file(search_result *search_result, char *path_buf)
 {
+	memory_bucket_collection bucket = memory_bucket_init(megabytes(1));
+	
 	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
 	{
 		platform_show_message(main_window, localize("invalid_search_result_file"), localize("error_importing_results"));
 		return;
 	}
 	
-	platform_destroy_list_file_result(&global_search_result.files);
+	//platform_destroy_list_file_result(&global_search_result.files);
 	scroll_y = 0;
 	
 	// sprintf(buffer, "%.16lu\n%.1d\n%.1d\n%.8d\n%.8d\n%.8d\n%.1d\n",
@@ -146,24 +148,25 @@ void import_results_from_file(search_result *search_result, char *path_buf)
 	text_match match;
 	while (!buffer_done_reading(&save_file_buffer))
 	{
-		match.file.path = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+		match.file.path = memory_bucket_reserve(&bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.file.path);
 		
-		match.file.matched_filter = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+		match.file.matched_filter = memory_bucket_reserve(&bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.file.matched_filter);
 		
 		match.file_error = buffer_read_signed(&save_file_buffer);
 		match.match_count = buffer_read_signed(&save_file_buffer);
 		match.file_size = buffer_read_signed(&save_file_buffer);
 		
-		match.line_info = memory_bucket_reserve(&global_platform_memory_bucket, MAX_INPUT_LENGTH);
+		match.line_info = memory_bucket_reserve(&bucket, MAX_INPUT_LENGTH);
 		buffer_read_string(&save_file_buffer, match.line_info);
 		
 		array_push(&search_result->files, &match);
 	}
 	
-	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
+	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), current_search_result->files_matched, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
 	
+	memory_bucket_destroy(&bucket);
 	platform_destroy_file_content(&content);
 }
 

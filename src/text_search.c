@@ -35,6 +35,7 @@ typedef struct t_status_bar
 
 typedef struct t_search_result
 {
+	array work_queue;
 	array files;
 	u64 find_duration_us;
 	array errors;
@@ -56,6 +57,7 @@ typedef struct t_search_result
 	u64 start_time;
 	bool done_finding_files;
 	bool is_parallelized;
+	char *text_to_find;
 } search_result;
 
 typedef struct t_find_text_args
@@ -63,10 +65,11 @@ typedef struct t_find_text_args
 	text_match *match;
 	char *text_to_find;
 	s32 search_id;
+	search_result *search_result_buffer;
 } find_text_args;
 
 status_bar global_status_bar;
-search_result global_search_result;
+search_result *current_search_result;
 
 image *search_img;
 image *error_img;
@@ -91,6 +94,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
+// TODO(Aldrik): control scrollbar with mouse
+// TODO(Aldrik): scroll with arrow keys
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -113,7 +119,7 @@ static void *find_text_in_file_t(void *arg)
 	
 	try_again:
 	{
-		if (global_search_result.cancel_search) { goto finish_early; }
+		if (args->search_result_buffer->cancel_search) { goto finish_early; }
 		
 		content = platform_read_file_content(match->file.path, "r");
 		match->file_size = content.content_length;
@@ -124,7 +130,7 @@ static void *find_text_in_file_t(void *arg)
 			goto finish_early;
 		}
 		
-		if (global_search_result.cancel_search) { goto finish_early; }
+		if (args->search_result_buffer->cancel_search) { goto finish_early; }
 		
 		if (content.content && !content.file_error)
 		{
@@ -133,10 +139,10 @@ static void *find_text_in_file_t(void *arg)
 			s32 word_offset = 0;
 			if (string_contains_ex(content.content, args->text_to_find, &line_nr, &line, &word_offset))
 			{
-				global_search_result.match_found = true;
+				args->search_result_buffer->match_found = true;
 				
 				// match info
-				match->line_info = memory_bucket_reserve(&global_platform_memory_bucket, word_offset+80); // show 20 chars behind text match. + 10 extra space
+				match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
 				sprintf(match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
 				
 				char *tmp = match->line_info;
@@ -150,12 +156,12 @@ static void *find_text_in_file_t(void *arg)
 					++tmp;
 				}
 				
-				if (search_id == global_search_result.search_id)
+				if (search_id == args->search_result_buffer->search_id)
 				{
-					mutex_lock(&global_search_result.mutex);
+					mutex_lock(&args->search_result_buffer->mutex);
 					match->match_count++;
-					global_search_result.files_matched++;
-					mutex_unlock(&global_search_result.mutex);
+					args->search_result_buffer->files_matched++;
+					mutex_unlock(&args->search_result_buffer->mutex);
 				}
 			}
 		}
@@ -174,11 +180,11 @@ static void *find_text_in_file_t(void *arg)
 			else
 				match->file_error = FILE_ERROR_GENERIC;
 			
-			if (search_id == global_search_result.search_id)
+			if (search_id == args->search_result_buffer->search_id)
 			{
-				mutex_lock(&global_search_result.mutex);
+				mutex_lock(&args->search_result_buffer->mutex);
 				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
-				mutex_unlock(&global_search_result.mutex);
+				mutex_unlock(&args->search_result_buffer->mutex);
 			}
 		}
 	}
@@ -187,12 +193,12 @@ static void *find_text_in_file_t(void *arg)
 	{
 		platform_destroy_file_content(&content);
 		
-		if (!global_search_result.cancel_search && global_search_result.search_id == search_id)
+		if (!args->search_result_buffer->cancel_search && args->search_result_buffer->search_id == search_id)
 		{
-			mutex_lock(&global_search_result.mutex);
-			global_search_result.files_searched++;
-			sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (global_search_result.files_searched/(float)global_search_result.files.length)*100);
-			mutex_unlock(&global_search_result.mutex);
+			mutex_lock(&args->search_result_buffer->mutex);
+			args->search_result_buffer->files_searched++;
+			sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (args->search_result_buffer->files_searched/(float)args->search_result_buffer->files.length)*100);
+			mutex_unlock(&args->search_result_buffer->mutex);
 		}
 	}
 	
@@ -201,30 +207,34 @@ static void *find_text_in_file_t(void *arg)
 
 static void* find_text_in_files_t(void *arg)
 {
-	s32 current_search_id = global_search_result.search_id;
+	search_result *result_buffer = arg;
+	s32 current_search_id = result_buffer->search_id;
 	
 	array threads = array_create(sizeof(thread));
 	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
-	char *text_to_find = arg;
+	char *text_to_find = result_buffer->text_to_find;
 	
 	s32 start = 0;
 	s32 len = 0;
 	do_work:
 	{
-		mutex_lock(&global_search_result.files.mutex);
-		len = global_search_result.files.length;
-		mutex_unlock(&global_search_result.files.mutex);
+		mutex_lock(&result_buffer->files.mutex);
+		len = result_buffer->files.length;
+		mutex_unlock(&result_buffer->files.mutex);
 		
 		for (s32 i = start; i < len; i++)
 		{
-			find_text_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(find_text_args));
-			args->match = array_at(&global_search_result.files, i);
+			find_text_args *args = mem_alloc(sizeof(find_text_args));
+			args->match = array_at(&result_buffer->files, i);
 			args->match->match_count = 0;
 			args->match->file_error = 0;
 			args->match->file_size = 0;
 			args->match->line_info = 0;
 			args->text_to_find = text_to_find;
 			args->search_id = current_search_id;
+			args->search_result_buffer = result_buffer;
+			
+			//array_push(search_result_buffer);
 			
 			// limit thread usage
 			if (global_settings_page.max_thread_count)
@@ -246,7 +256,7 @@ static void* find_text_in_files_t(void *arg)
 			
 			thread new_thr = thread_start(find_text_in_file_t, args);
 			
-			if (global_search_result.cancel_search) 
+			if (result_buffer->cancel_search) 
 			{
 				goto finish_early;
 			}
@@ -265,25 +275,25 @@ static void* find_text_in_files_t(void *arg)
 	
 	if (global_settings_page.enable_parallelization)
 	{
-		if (global_search_result.done_finding_files)
+		if (result_buffer->done_finding_files)
 		{
-			if (len != global_search_result.files.length)
+			if (len != result_buffer->files.length)
 			{
 				start = len;
-				len = global_search_result.files.length;
+				len = result_buffer->files.length;
 				goto do_work;
 			}
 		}
 		else
 		{
 			start = len;
-			len = global_search_result.files.length;
+			len = result_buffer->files.length;
 			thread_sleep(1000);
 			goto do_work;
 		}
 		
-		global_search_result.done_finding_files = false;
-		global_search_result.walking_file_system = false;
+		result_buffer->done_finding_files = false;
+		result_buffer->walking_file_system = false;
 	}
 	
 	for (s32 i = 0; i < threads.length; i++)
@@ -294,15 +304,15 @@ static void* find_text_in_files_t(void *arg)
 	
 	finish_early:
 	{
-		if (current_search_id == global_search_result.search_id)
+		if (current_search_id == result_buffer->search_id)
 		{
 			u64 end_f = platform_get_time(TIME_FULL, TIME_US);
 			
-			global_search_result.find_duration_us = end_f - global_search_result.start_time;
-			sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), global_search_result.files_matched, global_search_result.files.length, global_search_result.find_duration_us/1000.0);
+			result_buffer->find_duration_us = end_f - result_buffer->start_time;
+			sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 			
-			global_search_result.done_finding_matches = true;
-			global_search_result.files_searched = global_search_result.files.length;
+			result_buffer->done_finding_matches = true;
+			result_buffer->files_searched = result_buffer->files.length;
 			
 			if (!main_window->has_focus)
 				platform_show_alert("Text-search", localize("search_result_completed"));
@@ -315,14 +325,14 @@ static void* find_text_in_files_t(void *arg)
 	return 0;
 }
 
-static void find_text_in_files(char *text_to_find)
+static void find_text_in_files(search_result *search_result)
 {
-	global_search_result.files_matched = 0;
-	global_search_result.files_searched = 0;
-	global_search_result.found_file_matches = true;
-	global_search_result.match_found = false;
+	search_result->files_matched = 0;
+	search_result->files_searched = 0;
+	search_result->found_file_matches = true;
+	search_result->match_found = false;
 	
-	thread thr = thread_start(find_text_in_files_t, text_to_find);
+	thread thr = thread_start(find_text_in_files_t, search_result);
 	thread_detach(&thr);
 }
 
@@ -352,7 +362,7 @@ static void render_drag_drop_feedback(platform_window *window)
 	
 	if (window->drag_drop_info.state == DRAG_DROP_FINISHED)
 	{
-		import_results_from_file(&global_search_result, window->drag_drop_info.path);
+		import_results_from_file(current_search_result, window->drag_drop_info.path);
 	}
 }
 
@@ -396,11 +406,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
-	if (global_search_result.match_found)
+	if (current_search_result->match_found)
 	{
 		if (!global_settings_page.enable_parallelization)
 		{
-			render_rectangle(0, y-WIDGET_PADDING, (global_search_result.files_searched/(float)global_search_result.files.length)*window->width, 20, rgb(0,200,0));
+			render_rectangle(0, y-WIDGET_PADDING, (current_search_result->files_searched/(float)current_search_result->files.length)*window->width, 20, rgb(0,200,0));
 			y += 11;
 		}
 		else
@@ -432,9 +442,9 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		/// draw entries ////////
 		s32 drawn_entity_count = 0;
-		for (s32 i = 0; i < global_search_result.files.length; i++)
+		for (s32 i = 0; i < current_search_result->files.length; i++)
 		{
-			text_match *match = array_at(&global_search_result.files, i);
+			text_match *match = array_at(&current_search_result->files, i);
 			
 			if (match->match_count || match->file_error)
 			{
@@ -457,7 +467,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					
 					// path
 					render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
-					render_text(font_small, 10, rec_y + (h/2)-(font_small->size/2) + 1, match->file.path + global_search_result.search_result_source_dir_len, global_ui_context.style.foreground);
+					render_text(font_small, 10, rec_y + (h/2)-(font_small->size/2) + 1, match->file.path + current_search_result->search_result_source_dir_len, global_ui_context.style.foreground);
 					
 					// pattern
 					render_set_scissor(window, 0, start_y, 
@@ -563,18 +573,18 @@ static void render_update_result(platform_window *window, font *font_small, mous
 
 static void render_info(platform_window *window, font *font_small)
 {
-	if (!global_search_result.walking_file_system)
+	if (!current_search_result->walking_file_system)
 	{
-		if (global_search_result.show_error_message)
+		if (current_search_result->show_error_message)
 		{
 			s32 h = 30;
 			s32 yy = global_ui_context.layout.offset_y;
 			
 			s32 img_size = 16;
 			
-			for (s32 e = 0; e < global_search_result.errors.length; e++)
+			for (s32 e = 0; e < current_search_result->errors.length; e++)
 			{
-				char *message = array_at(&global_search_result.errors, e);
+				char *message = array_at(&current_search_result->errors, e);
 				
 				render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
 				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, ERROR_TEXT_COLOR);
@@ -638,16 +648,16 @@ static s32 prepare_search_directory_path(char *path, s32 len)
 
 static void clear_errors()
 {
-	global_search_result.errors.length = 0;
-	global_search_result.show_error_message = false;
+	current_search_result->errors.length = 0;
+	current_search_result->show_error_message = false;
 }
 
 static void set_error(char *message)
 {
-	global_search_result.show_error_message = true;
-	global_search_result.found_file_matches = false;
+	current_search_result->show_error_message = true;
+	current_search_result->found_file_matches = false;
 	
-	array_push(&global_search_result.errors, message);
+	array_push(&current_search_result->errors, message);
 }
 
 static void reset_status_text()
@@ -655,21 +665,57 @@ static void reset_status_text()
 	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
+search_result *create_empty_search_result()
+{
+	search_result *new_result_buffer = mem_alloc(sizeof(search_result));
+	new_result_buffer->done_finding_matches = true;
+	new_result_buffer->find_duration_us = 0;
+	new_result_buffer->show_error_message = false;
+	new_result_buffer->found_file_matches = false;
+	new_result_buffer->files_searched = 0;
+	new_result_buffer->files_matched = 0;
+	new_result_buffer->search_result_source_dir_len = 0;
+	new_result_buffer->match_found = false;
+	new_result_buffer->cancel_search = false;
+	new_result_buffer->mutex = mutex_create();
+	new_result_buffer->search_id = 0;
+	new_result_buffer->done_finding_files = false;
+	new_result_buffer->walking_file_system = false;
+	
+	new_result_buffer->errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
+	array_reserve(&new_result_buffer->errors, ERROR_RESERVE_COUNT);
+	
+	// list of files found in current search
+	new_result_buffer->files = array_create(sizeof(text_match));
+	new_result_buffer->files.reserve_jump = 1000;
+	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
+	
+	// work queue when searching for matches
+	new_result_buffer->work_queue = array_create(sizeof(find_text_args));
+	new_result_buffer->files.reserve_jump = 1000;
+	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
+	
+	return new_result_buffer;
+}
+
 static void do_search()
 {
 	bool continue_search = true;
 	
-	if (global_search_result.walking_file_system) continue_search = false;
-	if (!global_search_result.done_finding_matches) continue_search = false;
+	// check if a search is already in progress
+	if (current_search_result->walking_file_system) continue_search = false;
+	if (!current_search_result->done_finding_matches) continue_search = false;
 	
 	if (continue_search)
 	{
-		global_search_result.files_searched = 0;
-		global_search_result.cancel_search = false;
+		search_result *new_result = create_empty_search_result();
+		
+		new_result->files_searched = 0;
+		new_result->cancel_search = false;
 		scroll_y = 0;
-		global_search_result.found_file_matches = false;
-		global_search_result.done_finding_files = false;
-		global_search_result.is_parallelized = global_settings_page.enable_parallelization;
+		new_result->found_file_matches = false;
+		new_result->done_finding_files = false;
+		new_result->is_parallelized = global_settings_page.enable_parallelization;
 		reset_status_text();
 		clear_errors();
 		
@@ -703,27 +749,30 @@ static void do_search()
 		
 		if (continue_search)
 		{
-			global_search_result.search_id++;
+			new_result->search_id++;
 			
-			global_search_result.walking_file_system = true;
-			global_search_result.done_finding_matches = false;
+			new_result->walking_file_system = true;
+			new_result->done_finding_matches = false;
 			
-			global_search_result.search_result_source_dir_len = strlen(textbox_path.buffer);
-			global_search_result.search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
-																							  global_search_result.search_result_source_dir_len);
+			new_result->search_result_source_dir_len = strlen(textbox_path.buffer);
+			new_result->search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
+																					 new_result->search_result_source_dir_len);
 			
-			platform_destroy_list_file_result(&global_search_result.files);
+			platform_destroy_list_file_result(&new_result->files);
 			
-			global_search_result.start_time = platform_get_time(TIME_FULL, TIME_US);
-			platform_list_files(&global_search_result.files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
-								&global_search_result.done_finding_files);
+			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
+			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
+								&new_result->done_finding_files);
 			
 			if (global_settings_page.enable_parallelization)
 			{
 				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
 				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
-				find_text_in_files(text_to_find_buf);
+				new_result->text_to_find = text_to_find_buf;
+				find_text_in_files(new_result);
 			}
+			
+			current_search_result = new_result;
 		}
 	}
 }
@@ -850,38 +899,13 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
-	// starting values
-	global_search_result.done_finding_matches = true;
-	global_search_result.find_duration_us = 0;
-	global_search_result.show_error_message = false;
-	global_search_result.found_file_matches = false;
-	global_search_result.files_searched = 0;
-	global_search_result.files_matched = 0;
-	global_search_result.search_result_source_dir_len = 0;
-	global_search_result.match_found = false;
-	global_search_result.cancel_search = false;
-	global_search_result.mutex = mutex_create();
-	global_search_result.search_id = 0;
-	global_search_result.done_finding_files = false;
-	
-	global_search_result.errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
-	array_reserve(&global_search_result.errors, ERROR_RESERVE_COUNT);
-	
 	reset_status_text();
-	
-	global_search_result.files = array_create(sizeof(text_match));
-	// alocate space for 1000 extra files when limit is reached
-	global_search_result.files.reserve_jump = 1000;
-	array_reserve(&global_search_result.files, FILE_RESERVE_COUNT);
 	
 	// load config
 	settings_config config = settings_config_load_from_file("data/config.txt");
 	load_config(&config);
 	
-	global_search_result.filter_buffer = textbox_file_filter.buffer;
-	global_search_result.text_to_find_buffer = textbox_search_text.buffer;
-	global_search_result.search_directory_buffer = textbox_path.buffer;
-	global_search_result.recursive_state_buffer = &checkbox_recursive.state;
+	current_search_result = create_empty_search_result();
 	
 	while(window.is_open) {
         u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
@@ -933,12 +957,12 @@ int main(int argc, char **argv)
 				// shortcuts begin
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
 				{
-					import_results(&global_search_result);
+					import_results(current_search_result);
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
 				{
-					if (global_search_result.found_file_matches)
-						export_results(&global_search_result);
+					if (current_search_result->found_file_matches)
+						export_results(current_search_result);
 					else
 						platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 				}
@@ -961,12 +985,12 @@ int main(int argc, char **argv)
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
 					{ 
-						import_results(&global_search_result); 
+						import_results(current_search_result); 
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
-						if (global_search_result.found_file_matches)
-							export_results(&global_search_result); 
+						if (current_search_result->found_file_matches)
+							export_results(current_search_result); 
 						else
 							platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 					}
@@ -1026,18 +1050,16 @@ int main(int argc, char **argv)
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
 				
-				/*
-	if (global_search_result.walking_file_system || !global_search_result.done_finding_matches)
-	{
-	 if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
-	 {
-	  platform_cancel_search = true;
-	  global_search_result.cancel_search = true;
-	  global_search_result.done_finding_matches = true;
-	  global_search_result.walking_file_system = false;
-	 }
-	}
- \*/
+				if (current_search_result->walking_file_system || !current_search_result->done_finding_matches)
+				{
+					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
+					{
+						platform_cancel_search = true;
+						current_search_result->cancel_search = true;
+						current_search_result->done_finding_matches = true;
+						current_search_result->walking_file_system = false;
+					}
+				}
 			}
 			ui_block_end();
 			
@@ -1048,14 +1070,15 @@ int main(int argc, char **argv)
 		
 		if (!global_settings_page.enable_parallelization)
 		{
-			if (global_search_result.done_finding_files)
+			if (current_search_result->done_finding_files)
 			{
 				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
 				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+				current_search_result->text_to_find = text_to_find_buf;
 				
-				find_text_in_files(text_to_find_buf);
-				global_search_result.done_finding_files = false;
-				global_search_result.walking_file_system = false;
+				find_text_in_files(current_search_result);
+				current_search_result->done_finding_files = false;
+				current_search_result->walking_file_system = false;
 			}
 		}
 		
@@ -1063,7 +1086,7 @@ int main(int argc, char **argv)
 		{
 			render_status_bar(&window, font_small);
 			
-			if (!global_search_result.found_file_matches)
+			if (!current_search_result->found_file_matches)
 			{
 				render_info(&window, font_small);
 			}
@@ -1131,10 +1154,10 @@ int main(int argc, char **argv)
 	mem_free(global_status_bar.result_status_text);
 	mem_free(global_status_bar.error_status_text);
 	
-	// cleanup resuls
-	mutex_destroy(&global_search_result.mutex);
-	array_destroy(&global_search_result.files);
-	array_destroy(&global_search_result.errors);
+	// cleanup results
+	mutex_destroy(&current_search_result->mutex);
+	array_destroy(&current_search_result->files);
+	array_destroy(&current_search_result->errors);
 	
 	// delete assets
 	assets_destroy_image(search_img);

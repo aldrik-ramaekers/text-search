@@ -66,6 +66,7 @@ void thread_stop(thread *thread);
 u32 thread_get_id();
 void thread_sleep(u64 microseconds);
 
+mutex mutex_create_recursive();
 mutex mutex_create();
 
 void mutex_lock(mutex *mutex);

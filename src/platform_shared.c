@@ -162,7 +162,7 @@ void *platform_list_files_t(void *args)
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
 {
 	platform_cancel_search = false;
-	list_file_args *args = memory_bucket_reserve(&global_platform_memory_bucket, sizeof(list_file_args));
+	list_file_args *args = mem_alloc(sizeof(list_file_args));
 	args->list = list;
 	args->start_dir = start_dir;
 	args->pattern = filter;

@@ -23,7 +23,7 @@ array array_create(u16 entry_size)
 	new_array.entry_size = entry_size;
 	new_array.data = 0;
 	new_array.reserve_jump = 1;
-	new_array.mutex = mutex_create();
+	new_array.mutex = mutex_create_recursive();
 	
 	return new_array;
 }
