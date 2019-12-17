@@ -130,7 +130,7 @@ void settings_page_update_render()
 				global_ui_context.layout.offset_y += 10;
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					ui_push_checkbox(&global_settings_page.checkbox_parallelize_search, localize("parallelize_search"));
+					//ui_push_checkbox(&global_settings_page.checkbox_parallelize_search, localize("parallelize_search"));
 				}
 				ui_block_end();
 			}

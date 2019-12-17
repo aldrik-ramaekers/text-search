@@ -56,15 +56,16 @@ typedef struct t_search_result
 	s32 search_id;
 	u64 start_time;
 	bool done_finding_files;
-	bool is_parallelized;
 	char *text_to_find;
+	
+	s32 max_thread_count;
+	s32 max_file_size;
+	bool is_parallelized;
 } search_result;
 
 typedef struct t_find_text_args
 {
 	text_match *match;
-	char *text_to_find; // TODO(Aldrik): can be removed, is stored in search_result_buffer
-	s32 search_id; // // TODO(Aldrik): can be removed, is stored in search_result_buffer
 	search_result *search_result_buffer;
 } find_text_args;
 
@@ -151,8 +152,8 @@ static void* find_text_in_file_worker(void *arg)
 			args.match->file_size = content.content_length;
 			
 			// check if file is not too big for set filter
-			s32 kb_to_b = global_settings_page.max_file_size * 1000;
-			if (global_settings_page.max_file_size && content.content_length > kb_to_b)
+			s32 kb_to_b = result_buffer->max_file_size * 1000;
+			if (result_buffer->max_file_size && content.content_length > kb_to_b)
 			{
 				platform_destroy_file_content(&content);
 				continue;
@@ -163,7 +164,7 @@ static void* find_text_in_file_worker(void *arg)
 			{
 				s32 line_nr = 0, word_offset = 0;
 				char *line;
-				if (string_contains_ex(content.content, args.text_to_find, &line_nr, &line, &word_offset))
+				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset))
 				{
 					args.search_result_buffer->match_found = true;
 					
@@ -239,7 +240,7 @@ static void* find_text_in_files_t(void *arg)
 	char *text_to_find = result_buffer->text_to_find;
 	
 	// create worker threads
-	for(s32 i = 0; i < global_settings_page.max_thread_count; i++)
+	for(s32 i = 0; i < result_buffer->max_thread_count; i++)
 	{
 		thread new_thr = thread_start(find_text_in_file_worker, result_buffer);
 		array_push(&threads, &new_thr);
@@ -261,8 +262,6 @@ static void* find_text_in_files_t(void *arg)
 			args.match->file_error = 0;
 			args.match->file_size = 0;
 			args.match->line_info = 0;
-			args.text_to_find = text_to_find;
-			args.search_id = current_search_id;
 			args.search_result_buffer = result_buffer;
 			
 			array_push(&result_buffer->work_queue, &args);
@@ -274,7 +273,7 @@ static void* find_text_in_files_t(void *arg)
 		}
 	}
 	
-	if (global_settings_page.enable_parallelization)
+	if (result_buffer->is_parallelized)
 	{
 		if (result_buffer->done_finding_files)
 		{
@@ -719,7 +718,11 @@ static void do_search()
 		scroll_y = 0;
 		new_result->found_file_matches = false;
 		new_result->done_finding_files = false;
+		
 		new_result->is_parallelized = global_settings_page.enable_parallelization;
+		new_result->max_thread_count = global_settings_page.max_thread_count;
+		new_result->max_file_size = global_settings_page.max_file_size;
+		
 		reset_status_text();
 		clear_errors();
 		
