@@ -822,7 +822,7 @@ void load_config(settings_config *config)
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
 		
-		strncpy(textbox_path.buffer, INSTALL_DIRECTORY, MAX_INPUT_LENGTH);
+		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
 	
 	

@@ -595,10 +595,10 @@ inline void platform_init(int argc, char **argv)
 	platform_create_config_directory();
 	
 	// if program is run from a folder included in PATH
-	if (string_equals(binary_path, ""))
-	{
-		sprintf(binary_path, "%s", INSTALL_DIRECTORY);
-	}
+	//if (string_equals(binary_path, ""))
+	//{
+	//sprintf(binary_path, "%s", INSTALL_DIRECTORY);
+	//}
 	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
