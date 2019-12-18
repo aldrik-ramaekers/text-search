@@ -139,6 +139,7 @@ bool platform_directory_exists(char *path);
 bool platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);
 void destroy_found_file_array(array *found_files);
+char *get_config_save_location(char *buffer);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

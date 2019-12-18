@@ -883,8 +883,11 @@ int main(int argc, char **argv)
 	
 	reset_status_text();
 	
+	char config_path_buffer[PATH_MAX];
+	get_config_save_location(config_path_buffer);
+	
 	// load config
-	settings_config config = settings_config_load_from_file("config.txt");
+	settings_config config = settings_config_load_from_file(config_path_buffer);
 	load_config(&config);
 	
 	current_search_result = create_empty_search_result();
@@ -1120,11 +1123,7 @@ int main(int argc, char **argv)
 		}
 	}
 	
-	settings_config_write_to_file(&config, "config.txt");
-#ifdef MODE_DEVELOPER
-	settings_config_write_to_file(&config, "../data/config.txt");
-#endif
-	
+	settings_config_write_to_file(&config, config_path_buffer);
 	settings_config_destroy(&config);
 	
 	settings_page_destroy();

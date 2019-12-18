@@ -149,6 +149,25 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 	return false;
 }
 
+void platform_create_config_directory()
+{
+	char *env = getenv("HOME");
+	char tmp[PATH_MAX];
+	sprintf(tmp, "%s%s", env, "/.config/text-search");
+	
+	if (!platform_directory_exists(tmp))
+	{
+		mkdir(tmp, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	}
+}
+
+char* get_config_save_location(char *buffer)
+{
+	char *env = getenv("HOME");
+	sprintf(buffer, "%s%s", env, "/.config/text-search/config.txt");
+	return buffer;
+}
+
 inline void platform_set_cursor(platform_window *window, cursor_type type)
 {
 	if (window->next_cursor_type != type)
@@ -572,6 +591,8 @@ inline void platform_init(int argc, char **argv)
 	
 	// get fullpath of the directory the binary is residing in
 	binary_path = platform_get_full_path(argv[0]);
+	
+	platform_create_config_directory();
 	
 	// if program is run from a folder included in PATH
 	if (string_equals(binary_path, ""))

@@ -22,38 +22,30 @@ then
 fi
 echo "Dependencies are installed"
 
-echo "Removing previous installation.."
-rm -rf /opt/textsearch/
-mkdir /opt/textsearch/
-
 echo "Compiling program.."
 cd src
-gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c -o /opt/textsearch/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+
+ld -r -b binary -o ../bin/data.o \
+../data/imgs/en.png \
+../data/imgs/error.png \
+../data/imgs/folder.png \
+../data/imgs/nl.png \
+../data/imgs/search.png \
+../data/imgs/logo_32.png \
+../data/imgs/logo_512.png \
+../data/fonts/mono.ttf \
+../data/translations/en-English.mo \
+../data/translations/nl-Dutch.mo \
+
+gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+
+rm -f ../bin/data.o
+
 echo "Done compiling program"
 
-ln -sf /opt/textsearch/text-search /usr/local/bin/text-search
-
-if [ $? -ne 0 ]; then
-	cd ../
-	exit 1
-fi
+cp --remove-destination ../bin/text-search /usr/local/bin/text-search
 
 cd ../
-
-echo "Copying data.."
-cp COPYING /opt/textsearch/
-
-cp -r data/ /opt/textsearch/
-rm -rf /opt/textsearch/data/export/
-mkdir /opt/textsearch/data/export/
-
-sudo chmod 775 -R /opt/textsearch/
-rm /opt/textsearch/data/config.txt
-printf " " > /opt/textsearch/data/config.txt
-sudo chmod 777 /opt/textsearch/data/config.txt
-
-echo "Done copying data"
-echo "Done. Program is installed at \"/opt/textsearch/\", symlink is installed at \"/usr/local/bin/text-search\""
 
 ########################################################################
 ########################################################################
@@ -61,23 +53,30 @@ elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
 
 windres misc/icon.rc -O coff -o misc/icon.res
 
-echo "Removing previous installation.."
-rm -rf "C:/Program Files (x86)/textsearch/"
-mkdir "C:/Program Files (x86)/textsearch/"
+echo "Compiling program.."
 cd src
 
-echo "Compiling program.."
-x86_64-w64-mingw32-gcc -Wall -m64 -O3 -Wno-unused-label -Wno-unused-variable text_search.c -o "C:/Program Files (x86)/textsearch/text-search.exe" ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
-echo "Done compiling program"
+ld -r -b binary -o ../bin/data.o \
+../data/imgs/en.png \
+../data/imgs/error.png \
+../data/imgs/folder.png \
+../data/imgs/nl.png \
+../data/imgs/search.png \
+../data/imgs/logo_32.png \
+../data/imgs/logo_512.png \
+../data/fonts/mono.ttf \
+../data/translations/en-English.mo \
+../data/translations/nl-Dutch.mo \
 
-echo "Copying data.."
+x86_64-w64-mingw32-gcc -Wall -m64 -O3 -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
+
+rm -f ../bin/data.o
+
+echo "Done compiling program, text-search.exe is located on your desktop"
+
+cp --remove-destination ../bin/text-search.exe ~/Desktop/text-search.exe
+
 cd ../
-cp -r data/ "C:/Program Files (x86)/textsearch/"
-
-rm "C:/Program Files (x86)/textsearch/data/config.txt"
-
-echo "Done copying data"
-echo "Done. Program is installed at \"C:\\Program Files (x86)\\\""
 
 ########################################################################
 ########################################################################

@@ -46,7 +46,6 @@ struct t_platform_window
 	bool has_focus;
 	cursor_type curr_cursor_type;
 	cursor_type next_cursor_type;
-	struct drag_drop_info drag_drop_info;
 };
 
 extern BOOL GetPhysicallyInstalledSystemMemory(PULONGLONG TotalMemoryInKilobytes);
@@ -262,6 +261,32 @@ bool platform_file_exists(char *path)
 	
 	return (dwAttrib != INVALID_FILE_ATTRIBUTES && 
 			!(dwAttrib & FILE_ATTRIBUTE_DIRECTORY));
+}
+
+void platform_create_config_directory()
+{
+	char tmp[PATH_MAX];
+	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, tmp)))
+	{
+		strcat(tmp, "/text-search");
+	}
+	
+	
+	if (!platform_directory_exists(tmp))
+	{
+		CreateDirectoryA(tmp, NULL);
+	}
+}
+
+char* get_config_save_location(char *buffer)
+{
+	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer)))
+	{
+		strcat(buffer, "/text-search/config.txt");
+		return buffer;
+	}
+	
+	return 0;
 }
 
 void platform_show_message(platform_window *window, char *message, char *title)
@@ -977,6 +1002,8 @@ void platform_init(int argc, char **argv)
 	
 	// get fullpath of the directory the exe is residing in
 	binary_path = platform_get_full_path(argv[0]);
+	
+	platform_create_config_directory();
 	
 	// if program is run from a folder included in PATH
 	if (string_equals(binary_path, ""))

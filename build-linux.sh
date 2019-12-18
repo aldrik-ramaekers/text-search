@@ -47,8 +47,6 @@ fi
 
 cd ../
 
-cp data/config.txt bin/config.txt
-
 if [ "$1" == "-r" ]; then
 	cd bin
    ./text-search
