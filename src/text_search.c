@@ -370,7 +370,9 @@ static void reset_status_text()
 static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse)
 {
 	if (!current_search_result->done_finding_matches)
+	{
 		set_status_text_to_active();
+	}
 	
 	s32 y = global_ui_context.layout.offset_y;
 	s32 h = 24;

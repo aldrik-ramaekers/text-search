@@ -1,5 +1,5 @@
 # text-search
-Text-search is a GUI Program to find files and text within files for Linux and Windows(not well tested). <br>
+Text-search is a GUI Program to find files and text within files for Linux. <br>
 text-search is a single and small executable.
 
 # Requirements
@@ -9,7 +9,7 @@ text-search is a single and small executable.
 - libglu1-mesa-dev, libgl1-mesa-dev (automatically installed with build/install script)
 - ld
 
-## Windows
+## Windows (not working)
 - MinGW32
 - Windres
 - ld

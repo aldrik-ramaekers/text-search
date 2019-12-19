@@ -291,7 +291,7 @@ file_content platform_read_file_content(char *path, const char *mode)
 	if (!result.content) goto done;
 	
 	s32 read_result = fread(result.content, 1, length, file);
-	if (read_result == 0)
+	if (read_result == 0 && length != 0)
 	{
 		mem_free(result.content);
 		result.content = 0;
