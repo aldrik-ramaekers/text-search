@@ -73,9 +73,10 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 	// create filter
 	strncat(name, "*", MAX_INPUT_LENGTH);
 	
+	// TODO(Aldrik): use memory bucket here..
 	array files = array_create(sizeof(found_file));
 	array filters = get_filters(name);
-	platform_list_files_block(&files, dir, filters, false, want_dir);
+	platform_list_files_block(&files, dir, filters, false, 0, want_dir);
 	
 	s32 index_to_take = -1;
 	if (want_dir)
@@ -104,6 +105,12 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
 	}
 	
+	for (s32 i = 0; i < files.length; i++)
+	{
+		found_file *match = array_at(&files, i);
+		mem_free(match->matched_filter);
+		mem_free(match->path);
+	}
 	array_destroy(&files);
 }
 
@@ -149,27 +156,27 @@ void *platform_list_files_thread(void *args)
 	char *start_dir = info->start_dir;
 	bool recursive = info->recursive;
 	
-	platform_list_files_block(info->list, info->start_dir, filters, info->recursive, info->include_directories);
+	platform_list_files_block(info->list, info->start_dir, filters, info->recursive, info->bucket, info->include_directories);
 	
 	if (!platform_cancel_search)
 		*(info->state) = !(*info->state);
 	
 	array_destroy(&filters);
-	mem_free(info);
 	
 	return 0;
 }
 
-void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, bool *state)
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, memory_bucket *bucket, bool *state)
 {
 	platform_cancel_search = false;
-	list_file_args *args = mem_alloc(sizeof(list_file_args));
+	list_file_args *args = memory_bucket_reserve(bucket, sizeof(list_file_args));
 	args->list = list;
 	args->start_dir = start_dir;
 	args->pattern = filter;
 	args->recursive = recursive;
 	args->state = state;
 	args->include_directories = 0;
+	args->bucket = bucket;
 	
 	thread thr = thread_start(platform_list_files_thread, args);
 	thread_detach(&thr);

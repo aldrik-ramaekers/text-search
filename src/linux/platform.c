@@ -1410,14 +1410,18 @@ s32 filter_matches(array *filters, char *string, char **matched_filter)
 	return -1;
 }
 
-void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories)
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories)
 {
 	assert(list);
 	
 	s32 len = 0;
 	char *matched_filter = 0;
 	
-	char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
+	char *subdirname_buf;
+	if (bucket)
+		subdirname_buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+	else
+		subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
 	
 	DIR *d;
 	struct dirent *dir;
@@ -1438,15 +1442,24 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					if ((len = filter_matches(&filters, dir->d_name, 
 											  &matched_filter)) && len != -1)
 					{
-						char *buf = mem_alloc(MAX_INPUT_LENGTH);
+						char *buf;
+						if (bucket)
+							buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+						else
+							buf = mem_alloc(MAX_INPUT_LENGTH);
+						
 						//realpath(dir->d_name, buf);
 						sprintf(buf, "%s%s",start_dir, dir->d_name);
 						
 						found_file f;
 						f.path = buf;
-						f.matched_filter = mem_alloc(len+1);
-						strncpy(f.matched_filter, matched_filter, len+1);
 						
+						if (bucket)
+							f.matched_filter = memory_bucket_reserve(bucket, len+1);
+						else
+							f.matched_filter = mem_alloc(len+1);
+						
+						strncpy(f.matched_filter, matched_filter, len+1);
 						array_push_size(list, &f, sizeof(found_file));
 					}
 				}
@@ -1458,7 +1471,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					strcat(subdirname_buf, "/");
 					
 					// do recursive search
-					platform_list_files_block(list, subdirname_buf, filters, recursive, include_directories);
+					platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories);
 				}
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.
@@ -1468,15 +1481,24 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 				if ((len = filter_matches(&filters, dir->d_name, 
 										  &matched_filter)) && len != -1)
 				{
-					char *buf = mem_alloc(MAX_INPUT_LENGTH);
+					char *buf;
+					if (bucket)
+						buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+					else
+						buf = mem_alloc(MAX_INPUT_LENGTH);
+					
 					//realpath(dir->d_name, buf);
 					sprintf(buf, "%s%s",start_dir, dir->d_name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = mem_alloc(len+1);
-					strncpy(f.matched_filter, matched_filter, len+1);
 					
+					if (bucket)
+						f.matched_filter = memory_bucket_reserve(bucket, len+1);
+					else
+						f.matched_filter = mem_alloc(len+1);
+					
+					strncpy(f.matched_filter, matched_filter, len+1);
 					array_push_size(list, &f, sizeof(found_file));
 				}
 			}
@@ -1484,7 +1506,8 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 		closedir(d);
 	}
 	
-	mem_free(subdirname_buf);
+	if (!bucket)
+		mem_free(subdirname_buf);
 }
 
 char *platform_get_full_path(char *file)

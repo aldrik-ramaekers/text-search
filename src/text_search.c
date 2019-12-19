@@ -57,7 +57,7 @@ typedef struct t_search_result
 	u64 start_time;
 	bool done_finding_files;
 	char *text_to_find;
-	
+	memory_bucket mem_bucket;
 	s32 max_thread_count;
 	s32 max_file_size;
 	bool is_parallelized;
@@ -101,6 +101,7 @@ platform_window *main_window;
 // TODO(Aldrik): scroll with arrow keys
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
+// TODO(Aldrik): double click path in results list to copy to clipboard
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -113,16 +114,10 @@ button_state button_cancel;
 void destroy_search_result(search_result *buffer)
 {
 	array_destroy(&buffer->work_queue);
-	
-	for (s32 i = 0; i < buffer->files.length; i++)
-	{
-		text_match *match = array_at(&buffer->files, i);
-		mem_free(match->line_info);
-		mem_free(match->file.matched_filter);
-		mem_free(match->file.path);
-	}
 	array_destroy(&buffer->files);
 	array_destroy(&buffer->errors);
+	
+	memory_bucket_destroy(&buffer->mem_bucket);
 	
 	mutex_destroy(&buffer->mutex);
 	mem_free(buffer);
@@ -168,7 +163,7 @@ static void* find_text_in_file_worker(void *arg)
 					args.search_result_buffer->match_found = true;
 					
 					// match info
-					args.match->line_info = mem_alloc(word_offset+80); // show 20 chars behind text match. + 10 extra space
+					args.match->line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
 					sprintf(args.match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
 					
 					char *tmp = args.match->line_info;
@@ -235,6 +230,8 @@ static void* find_text_in_files_t(void *arg)
 	s32 current_search_id = result_buffer->search_id;
 	
 	array threads = array_create(sizeof(thread));
+	array_reserve(&threads, result_buffer->max_thread_count);
+	
 	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
 	char *text_to_find = result_buffer->text_to_find;
 	
@@ -317,7 +314,6 @@ static void* find_text_in_files_t(void *arg)
 	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 	
 	array_destroy(&threads);
-	mem_free(text_to_find);
 	
 	return 0;
 }
@@ -354,15 +350,35 @@ static void render_status_bar(platform_window *window, font *font_small)
 	}
 }
 
+static void set_status_text_to_active()
+{
+	char text[40];
+	
+	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
+	s32 dot_count = (dot_count_t % 1000) / 250;
+	
+	sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
+	
+	strncpy(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
+}
+
+static void reset_status_text()
+{
+	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
+}
+
 static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse)
 {
+	if (!current_search_result->done_finding_matches)
+		set_status_text_to_active();
+	
 	s32 y = global_ui_context.layout.offset_y;
 	s32 h = 24;
 	
 	s32 render_y = y - WIDGET_PADDING;
 	s32 render_h;
 	
-	if (global_settings_page.enable_parallelization)
+	if (current_search_result->is_parallelized)
 	{
 		render_h = window->height - render_y - 10;
 	}
@@ -375,7 +391,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	if (current_search_result->match_found)
 	{
-		if (!global_settings_page.enable_parallelization)
+		if (!current_search_result->is_parallelized)
 		{
 			render_rectangle(0, y-WIDGET_PADDING, (current_search_result->files_searched/(float)current_search_result->files.length)*window->width, 20, rgb(0,200,0));
 			y += 11;
@@ -627,11 +643,6 @@ static void set_error(char *message)
 	array_push(&current_search_result->errors, message);
 }
 
-static void reset_status_text()
-{
-	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
-}
-
 search_result *create_empty_search_result()
 {
 	search_result *new_result_buffer = mem_alloc(sizeof(search_result));
@@ -648,6 +659,8 @@ search_result *create_empty_search_result()
 	new_result_buffer->search_id = 0;
 	new_result_buffer->done_finding_files = false;
 	new_result_buffer->walking_file_system = false;
+	
+	new_result_buffer->mem_bucket = memory_bucket_init(megabytes(5));
 	
 	new_result_buffer->errors = array_create(MAX_ERROR_MESSAGE_LENGTH);
 	array_reserve(&new_result_buffer->errors, ERROR_RESERVE_COUNT);
@@ -692,7 +705,7 @@ static void do_search()
 		new_result->found_file_matches = false;
 		new_result->done_finding_files = false;
 		
-		new_result->is_parallelized = global_settings_page.enable_parallelization;
+		new_result->is_parallelized = 1;
 		new_result->max_thread_count = global_settings_page.max_thread_count;
 		new_result->max_file_size = global_settings_page.max_file_size;
 		
@@ -739,16 +752,18 @@ static void do_search()
 																					 new_result->search_result_source_dir_len);
 			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
-			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state,
+			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
 								&new_result->done_finding_files);
 			
-			if (global_settings_page.enable_parallelization)
+			if (current_search_result->is_parallelized)
 			{
-				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
+				char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
 				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
 				new_result->text_to_find = text_to_find_buf;
 				find_text_in_files(new_result);
 			}
+			
+			set_status_text_to_active();
 		}
 	}
 }
@@ -782,7 +797,7 @@ void load_config(settings_config *config)
 {
 	char *path = settings_config_get_string(config, "SEARCH_DIRECTORY");
 	bool recursive = settings_config_get_number(config, "SEARCH_DIRECTORIES");
-	bool parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
+	//bool parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
 	char *search_text = settings_config_get_string(config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(config, "FILE_FILTER");
 	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");
@@ -811,14 +826,14 @@ void load_config(settings_config *config)
 		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
 		
 		checkbox_recursive.state = recursive;
-		global_settings_page.enable_parallelization = parallelize;
+		//global_settings_page.enable_parallelization = parallelize;
 		global_settings_page.max_thread_count = max_thread_count;
 		global_settings_page.max_file_size = max_file_size;
 	}
 	else
 	{
 		checkbox_recursive.state = 1;
-		global_settings_page.enable_parallelization = 1;
+		//global_settings_page.enable_parallelization = 1;
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
 		
@@ -1057,19 +1072,21 @@ int main(int argc, char **argv)
 		ui_end();
 		// end ui
 		
-		if (!global_settings_page.enable_parallelization)
-		{
-			if (current_search_result->done_finding_files)
-			{
-				char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
-				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
-				current_search_result->text_to_find = text_to_find_buf;
-				
-				find_text_in_files(current_search_result);
-				current_search_result->done_finding_files = false;
-				current_search_result->walking_file_system = false;
-			}
-		}
+		/*
+  if (!global_settings_page.enable_parallelization)
+  {
+   if (current_search_result->done_finding_files)
+   {
+ char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
+ strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+ current_search_result->text_to_find = text_to_find_buf;
+ 
+ find_text_in_files(current_search_result);
+ current_search_result->done_finding_files = false;
+ current_search_result->walking_file_system = false;
+   }
+  }
+  */
 		
 		// draw info or results
 		{
@@ -1112,7 +1129,7 @@ int main(int argc, char **argv)
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
-	settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
+	//settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
 	
 	if (global_localization.active_localization != 0)
 	{

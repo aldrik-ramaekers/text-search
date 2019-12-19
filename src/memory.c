@@ -20,6 +20,7 @@
 static bool initializing = false;
 inline void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line)
 {
+	alloc_count++;
 	if (global_memory_usage.data == 0 && !initializing)
 	{
 		initializing = true;
@@ -97,6 +98,13 @@ inline void mem_free_d(void *ptr, const char *caller_name, s32 caller_line)
 
 void memory_print_leaks()
 {
+#ifdef OS_WIN
+	printf("total allocations: %I64d\n", alloc_count);
+#endif
+#ifdef OS_LINUX
+	printf("total allocations: %ld\n", alloc_count);
+#endif
+	
 	mutex_lock(&global_memory_mutex);
 	for (s32 i = 0; i < global_memory_usage.length; i++)
 	{

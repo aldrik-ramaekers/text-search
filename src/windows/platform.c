@@ -800,23 +800,38 @@ static s32 filter_matches(array *filters, char *string, char **matched_filter)
 	return -1;
 }
 
-void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, bool include_directories)
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket,  bool include_directories)
 {
 	assert(list);
 	
 	s32 len = 0;
 	char *matched_filter = 0;
 	
-	char *start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
+	char *subdirname_buf;
+	if (bucket)
+		subdirname_buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+	else
+		subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
+	
+	char *start_dir_fix;
+	if (bucket)
+		start_dir_fix = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+	else
+		start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
 	sprintf(start_dir_fix, "%s*", start_dir);
 	
-	char *start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
+	char *start_dir_clean;
+	if (bucket)
+		start_dir_clean = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+	else
+		start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
 	strncpy(start_dir_clean, start_dir, MAX_INPUT_LENGTH);
 	
 	WIN32_FIND_DATAA file_info;
 	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
 	
-	mem_free(start_dir_fix);
+	if (!bucket)
+		mem_free(start_dir_fix);
 	
 	if (handle == INVALID_HANDLE_VALUE)
 	{
@@ -842,12 +857,21 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 										  &matched_filter)) && len != -1)
 				{
 					// is file
-					char *buf = mem_alloc(MAX_INPUT_LENGTH);
+					char *buf;
+					if (bucket)
+						buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+					else
+						buf = mem_alloc(MAX_INPUT_LENGTH);
 					sprintf(buf, "%s%s",start_dir, name);
 					
 					found_file f;
 					f.path = buf;
-					f.matched_filter = mem_alloc(len+1);
+					
+					if (bucket)
+						f.matched_filter= memory_bucket_reserve(bucket, len+1);
+					else
+						f.matched_filter= mem_alloc(len+1);
+					
 					strncpy(f.matched_filter, matched_filter, len+1);
 					array_push_size(list, &f, sizeof(found_file));
 				}
@@ -855,15 +879,12 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 			
 			if (recursive)
 			{
-				char *subdirname_buf = mem_alloc(MAX_INPUT_LENGTH);
-				
 				strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
 				strcat(subdirname_buf, name);
 				strcat(subdirname_buf, "\\");
 				
 				// is directory
-				platform_list_files_block(list, subdirname_buf, filters, recursive, include_directories);
-				mem_free(subdirname_buf);
+				platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories);
 			}
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
@@ -877,12 +898,22 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 									  &matched_filter)) && len != -1)
 			{
 				// is file
-				char *buf = mem_alloc(MAX_INPUT_LENGTH);
+				char *buf;
+				if (bucket)
+					buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
+				else
+					buf = mem_alloc(MAX_INPUT_LENGTH);
+				
 				sprintf(buf, "%s%s",start_dir, name);
 				
 				found_file f;
 				f.path = buf;
-				f.matched_filter = mem_alloc(len+1);
+				
+				if (bucket)
+					f.matched_filter = memory_bucket_reserve(bucket, len+1);
+				else
+					f.matched_filter = mem_alloc(len+1);
+				
 				strncpy(f.matched_filter, matched_filter, len+1);
 				array_push_size(list, &f, sizeof(found_file));
 			}
@@ -890,7 +921,8 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 	}
 	while (FindNextFile(handle, &file_info) != 0);
 	
-	mem_free(start_dir_clean);
+	if (!bucket)
+		mem_free(start_dir_clean);
 	
 	FindClose(handle);
 }

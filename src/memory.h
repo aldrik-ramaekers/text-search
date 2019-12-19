@@ -20,6 +20,8 @@
 
 #if defined(MODE_DEVELOPER)
 
+u64 alloc_count = 0;
+
 void *mem_alloc_d(size_t size, const char *caller_name, s32 caller_line);
 void mem_free_d(void *ptr, const char *caller_name, s32 caller_line);
 void *mem_realloc_d(void *ptr, size_t size, const char *caller_name, s32 caller_line);
