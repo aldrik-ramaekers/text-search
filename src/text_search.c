@@ -111,8 +111,14 @@ button_state button_select_directory;
 button_state button_find_text;
 button_state button_cancel;
 
-void destroy_search_result(search_result *buffer)
+void* destroy_search_result_thread(void *arg)
 {
+	return 0;
+	search_result *buffer = arg;
+	
+	// wait 3 sec for all threads writing to memory bucket to finish
+	thread_sleep(1000*1000*3);
+	
 	array_destroy(&buffer->work_queue);
 	array_destroy(&buffer->files);
 	array_destroy(&buffer->errors);
@@ -121,6 +127,8 @@ void destroy_search_result(search_result *buffer)
 	
 	mutex_destroy(&buffer->mutex);
 	mem_free(buffer);
+	
+	return 0;
 }
 
 static void* find_text_in_file_worker(void *arg)
@@ -213,14 +221,11 @@ static void* find_text_in_file_worker(void *arg)
 		}
 	}
 	
-	finish_early:
-	{
-		mutex_lock(&result_buffer->mutex);
-		sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
-		mutex_unlock(&result_buffer->mutex);
-	}
+	mutex_lock(&result_buffer->mutex);
+	sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
+	mutex_unlock(&result_buffer->mutex);
 	
-	
+	finish_early:;
 	return 0;
 }
 
@@ -246,12 +251,18 @@ static void* find_text_in_files_t(void *arg)
 	s32 len = 0;
 	do_work:
 	{
+		if (result_buffer->cancel_search) 
+		{
+			goto finish_early;
+		}
+		
 		mutex_lock(&result_buffer->files.mutex);
 		len = result_buffer->files.length;
 		mutex_unlock(&result_buffer->files.mutex);
 		
 		for (s32 i = start; i < len; i++)
 		{
+#if 1
 			find_text_args args;
 			args.match = array_at(&result_buffer->files, i);
 			args.match->match_count = 0;
@@ -261,11 +272,7 @@ static void* find_text_in_files_t(void *arg)
 			args.search_result_buffer = result_buffer;
 			
 			array_push(&result_buffer->work_queue, &args);
-			
-			if (result_buffer->cancel_search) 
-			{
-				goto finish_early;
-			}
+#endif
 		}
 	}
 	
@@ -312,7 +319,6 @@ static void* find_text_in_files_t(void *arg)
 	}
 	
 	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
-	
 	array_destroy(&threads);
 	
 	return 0;
@@ -699,7 +705,9 @@ static void do_search()
 		
 		search_result *old_result = current_search_result;
 		current_search_result = new_result;
-		destroy_search_result(old_result); // TODO(Aldrik): this is taking WAYYYY too long
+		
+		thread cleanup_thread = thread_start(destroy_search_result_thread, old_result);
+		thread_detach(&cleanup_thread);
 		
 		new_result->files_searched = 0;
 		new_result->cancel_search = false;
@@ -1158,7 +1166,7 @@ int main(int argc, char **argv)
 	mem_free(global_status_bar.error_status_text);
 	
 	// cleanup results
-	destroy_search_result(current_search_result);
+	//destroy_search_result(current_search_result);
 	
 	// delete assets
 	assets_destroy_image(search_img);
