@@ -94,6 +94,7 @@ typedef struct t_list_file_args
 	bool recursive;
 	bool include_directories;
 	bool *state;
+	bool *is_cancelled;
 	memory_bucket *bucket;
 } list_file_args;
 
@@ -102,8 +103,6 @@ typedef enum t_cursor_type
 	CURSOR_DEFAULT,
 	CURSOR_POINTER,
 } cursor_type;
-
-bool platform_cancel_search = false;
 
 bool platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
@@ -123,8 +122,8 @@ bool get_active_directory(char *buffer);
 bool set_active_directory(char *path);
 void platform_show_message(platform_window *window, char *message, char *title);
 array get_filters(char *filter);
-void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories);
-void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, memory_bucket *bucket, bool *state);
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories, bool *is_cancelled);
+void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, memory_bucket *bucket, bool *is_cancelled, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);
 void *platform_open_file_dialog_block(void *arg);
 char *platform_get_full_path(char *file);

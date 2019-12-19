@@ -1410,7 +1410,7 @@ s32 filter_matches(array *filters, char *string, char **matched_filter)
 	return -1;
 }
 
-void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories)
+void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories, bool *is_cancelled)
 {
 	assert(list);
 	
@@ -1429,7 +1429,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 	if (d) {
 		set_active_directory(start_dir);
 		while ((dir = readdir(d)) != NULL) {
-			if (platform_cancel_search) break;
+			if (*is_cancelled) break;
 			set_active_directory(start_dir);
 			
 			if (dir->d_type == DT_DIR)
@@ -1471,7 +1471,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					strcat(subdirname_buf, "/");
 					
 					// do recursive search
-					platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories);
+					platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories, is_cancelled);
 				}
 			}
 			// we handle DT_UNKNOWN for file systems that do not support type lookup.

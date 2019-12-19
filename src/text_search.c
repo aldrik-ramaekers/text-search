@@ -113,7 +113,6 @@ button_state button_cancel;
 
 void* destroy_search_result_thread(void *arg)
 {
-	return 0;
 	search_result *buffer = arg;
 	
 	// wait 3 sec for all threads writing to memory bucket to finish
@@ -763,6 +762,7 @@ static void do_search()
 			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
 			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
+								&new_result->cancel_search,
 								&new_result->done_finding_files);
 			
 			if (current_search_result->is_parallelized)
@@ -1068,7 +1068,6 @@ int main(int argc, char **argv)
 				{
 					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
 					{
-						platform_cancel_search = true;
 						current_search_result->cancel_search = true;
 						current_search_result->done_finding_matches = true;
 						current_search_result->walking_file_system = false;
@@ -1164,9 +1163,6 @@ int main(int argc, char **argv)
 	ui_destroy();
 	mem_free(global_status_bar.result_status_text);
 	mem_free(global_status_bar.error_status_text);
-	
-	// cleanup results
-	//destroy_search_result(current_search_result);
 	
 	// delete assets
 	assets_destroy_image(search_img);
