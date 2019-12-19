@@ -71,6 +71,8 @@ void settings_page_update_render()
 		{
 			ui_begin_menu_bar();
 			{
+				render_rectangle(0, 0, global_settings_page.window.width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
+				
 				if (ui_push_menu(localize("general")))
 				{
 					global_settings_page.selected_tab_index = 0;
@@ -125,22 +127,18 @@ void settings_page_update_render()
 					ui_push_text("Threads");
 				}
 				ui_block_end();
-				
-				/////////////////////////////////////
-				// parallelize
-				/////////////////////////////////////
-				global_ui_context.layout.offset_y += 10;
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					//ui_push_checkbox(&global_settings_page.checkbox_parallelize_search, localize("parallelize_search"));
-				}
-				ui_block_end();
 			}
 			else if (global_settings_page.selected_tab_index == 1)
 			{
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					if (ui_push_dropdown(&global_settings_page.dropdown_language, localize_get_name()))
+					ui_push_text(localize("language"));
+				}
+				ui_block_end();
+				
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					if (ui_push_dropdown(&global_settings_page.dropdown_language, locale_get_name()))
 					{
 						for (s32 i = 0; i < global_localization.mo_files.length; i++)
 						{
@@ -153,6 +151,25 @@ void settings_page_update_render()
 														  localize("text_search_settings"));
 							}
 						}
+					}
+				}
+				ui_block_end();
+				
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					ui_push_text("Style");
+				}
+				ui_block_end();
+				
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					if (ui_push_color_button("Light", global_ui_context.style.id == 0, rgb(250, 250, 250)))
+					{
+						ui_set_style(0);
+					}
+					if (ui_push_color_button("Dark", global_ui_context.style.id == 1, rgb(50, 50, 50)))
+					{
+						ui_set_style(1);
 					}
 				}
 				ui_block_end();
@@ -211,7 +228,7 @@ void settings_page_show()
 													   450, 280, 450, 280);
 	global_settings_page.active = true;
 	global_settings_page.selected_tab_index = 0;
-	global_settings_page.current_locale_id = localize_get_id();
+	global_settings_page.current_locale_id = locale_get_id();
 	platform_set_icon(&global_settings_page.window, global_settings_page.logo_img);
 }
 

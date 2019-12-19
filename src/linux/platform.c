@@ -1158,6 +1158,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			}
 			
 			XSendEvent(window->display, window->event.xselectionrequest.requestor, False, 0, (XEvent*)&event);
+			XFlush(window->display);
 		}
 	}
 }

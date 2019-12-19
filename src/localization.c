@@ -54,7 +54,7 @@ mo_file load_localization_file(u8 *start_addr, u8 *end_addr, u8 *img_start, u8 *
 	return mo;
 }
 
-char* localize_get_name()
+char* locale_get_name()
 {
 	if (!global_localization.active_localization)
 	{
@@ -64,7 +64,7 @@ char* localize_get_name()
 	return global_localization.active_localization->locale_full;
 }
 
-char* localize_get_id()
+char* locale_get_id()
 {
 	if (!global_localization.active_localization)
 	{

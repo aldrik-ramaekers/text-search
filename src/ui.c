@@ -89,16 +89,54 @@ inline dropdown_state ui_create_dropdown()
 	return state;
 }
 
+void ui_set_style(u16 style)
+{
+	global_ui_context.style.id = style;
+	if (style == 0)
+	{
+		global_ui_context.style.image_outline_tint = rgb(200,200,200);
+		global_ui_context.style.scrollbar_handle_background = rgb(225,225,225);
+		global_ui_context.style.info_bar_background = rgb(225,225,225);
+		global_ui_context.style.error_foreground = rgb(224,79,95);
+		global_ui_context.style.item_hover_background = rgb(240,220,220);
+		global_ui_context.style.scrollbar_background = rgb(255,255,255);
+		global_ui_context.style.background = rgb(255,255,255);
+		global_ui_context.style.menu_hover_background = rgb(190,190,190);
+		global_ui_context.style.menu_background = rgb(225,225,225);
+		global_ui_context.style.widget_hover_background = rgb(190,190,190);
+		global_ui_context.style.widget_background = rgb(225,225,225);
+		global_ui_context.style.border = rgb(180,180,180);
+		global_ui_context.style.foreground = rgb(10, 10, 10);
+		global_ui_context.style.textbox_background = rgb(240,240,240);
+		global_ui_context.style.textbox_foreground = rgb(10,10,10);
+		global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
+		global_ui_context.style.button_background = rgb(225,225,225);
+	}
+	if (style == 1)
+	{
+		global_ui_context.style.scrollbar_handle_background = rgb(50,50,50);
+		global_ui_context.style.menu_hover_background = rgb(60,60,60);
+		global_ui_context.style.item_hover_background = rgb(240,220,220);
+		global_ui_context.style.image_outline_tint = rgb(200,200,200);
+		global_ui_context.style.error_foreground = rgb(224,79,95);
+		global_ui_context.style.scrollbar_background = rgb(80,80,80);
+		global_ui_context.style.widget_hover_background = rgb(65,65,65);
+		global_ui_context.style.widget_background = rgb(50,50,50);
+		global_ui_context.style.info_bar_background = rgb(50,50,50);
+		global_ui_context.style.menu_background = rgb(50,50,50);
+		global_ui_context.style.background = rgb(80, 80, 80);
+		global_ui_context.style.border = rgb(60,60,60);
+		global_ui_context.style.foreground = rgb(240,240,240);
+		global_ui_context.style.textbox_background = rgb(65,65,65);
+		global_ui_context.style.textbox_foreground = rgb(240, 240,240);
+		global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
+		global_ui_context.style.button_background = rgb(225,225,225);
+	}
+}
+
 inline void ui_create(platform_window *window, keyboard_input *keyboard, mouse_input *mouse, camera *camera, font *font_small)
 {
-	global_ui_context.style.foreground = rgb(250,250,250);
-	global_ui_context.style.background = rgb(60,60,60);
-	global_ui_context.style.background_hover = rgb(100,100,200);
-	global_ui_context.style.border = rgb(40,40,40);
-	global_ui_context.style.textbox_background = rgb(100,100,100);
-	global_ui_context.style.textbox_active_border = rgb(100,0,0);
-	global_ui_context.style.button_background = rgb(100,100,100);
-	global_ui_context.style.textbox_foreground = rgb(250,250,250);
+	ui_set_style(0);
 	
 	global_ui_context.layout.layout_direction = LAYOUT_VERTICAL;
 	global_ui_context.layout.offset_x = 0;
@@ -211,6 +249,62 @@ static s32 ui_get_scroll()
 	return 0;
 }
 
+bool ui_push_color_button(char *text, bool selected, color c)
+{
+	bool result = false;
+	
+	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
+	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 total_w =
+		BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
+	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
+	s32 h = BUTTON_HEIGHT;
+	
+	if (global_ui_context.layout.block_height < h)
+		global_ui_context.layout.block_height = h;
+	
+	color bg_color = c;
+	
+	s32 virt_top = y;
+	s32 virt_bottom = y + h;
+	if (global_ui_context.layout.scroll.in_scroll)
+	{
+		s32 bottom = global_ui_context.layout.scroll.scroll_start_offset_y + global_ui_context.layout.scroll.height;
+		if (bottom < virt_bottom)
+			virt_bottom = bottom;
+		s32 top = global_ui_context.layout.scroll.scroll_start_offset_y - WIDGET_PADDING;
+		if (top > virt_top)
+			virt_top = top;
+	}
+	
+	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= virt_top && mouse_y < virt_bottom && !global_ui_context.item_hovered)
+	{
+		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
+		bg_color.r-=20;
+		bg_color.g-=20;
+		bg_color.b-=20;
+		
+		if (is_left_clicked(global_ui_context.mouse)) 
+		{
+			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
+			result = true;
+		}
+	}
+	
+	render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
+	render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
+	
+	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
+		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
+	else
+		global_ui_context.layout.offset_y += BUTTON_HEIGHT + WIDGET_PADDING;
+	
+	return result;
+}
+
 bool ui_push_dropdown_item(image *icon, char *title)
 {
 	bool result = false;
@@ -236,7 +330,7 @@ bool ui_push_dropdown_item(image *icon, char *title)
 			result = true;
 		}
 		
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.widget_hover_background;
 	}
 	
 	
@@ -281,7 +375,7 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 			state->state = !state->state;
 		}
 		
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.widget_hover_background;
 	}
 	else if (is_left_down(global_ui_context.mouse) && state->state)
 	{
@@ -324,7 +418,7 @@ bool ui_push_menu(char *title)
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	
-	color bg_color = global_ui_context.style.background;
+	color bg_color = global_ui_context.style.menu_background;
 	
 	bool is_open = ui_is_menu_active(id);
 	result = is_open;
@@ -343,7 +437,7 @@ bool ui_push_menu(char *title)
 			is_open = result;
 		}
 		
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.menu_hover_background;
 	}
 	else if (is_left_down(global_ui_context.mouse))
 	{
@@ -765,12 +859,12 @@ bool ui_push_menu_item(char *title, char *shortcut)
 	if (global_ui_context.layout.block_height < h)
 		global_ui_context.layout.block_height = h;
 	
-	color bg_color = global_ui_context.style.background;
+	color bg_color = global_ui_context.style.menu_background;
 	
 	if ((mouse_x >= x && mouse_x < x + w && mouse_y >= y && mouse_y < y + h))
 	{
 		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.menu_hover_background;
 		global_ui_context.item_hovered = true;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 
@@ -837,8 +931,7 @@ bool ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint)
 		}
 	}
 	
-	
-	render_image_tint(img,x,y,w,h,rgb(200,200,200));
+	render_image_tint(img,x,y,w,h,global_ui_context.style.image_outline_tint);
 	render_image_tint(img,x+outline,y+outline,w-(outline*2),h-(outline*2),tint);
 	
 	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
@@ -883,7 +976,7 @@ bool ui_push_button(button_state *state, char *title)
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= virt_top && mouse_y < virt_bottom && !global_ui_context.item_hovered)
 	{
 		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.widget_hover_background;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 
 		{
@@ -933,7 +1026,7 @@ bool ui_push_button_image(button_state *state, char *title, image *img)
 		total_w = 0;
 	}
 	
-	color bg_color = global_ui_context.style.button_background;
+	color bg_color = global_ui_context.style.widget_background;
 	
 	if (global_ui_context.layout.block_height < h)
 		global_ui_context.layout.block_height = h;
@@ -974,7 +1067,7 @@ bool ui_push_button_image(button_state *state, char *title, image *img)
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= virt_top && mouse_y < virt_bottom && !global_ui_context.item_hovered)
 	{
 		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
-		bg_color = global_ui_context.style.background_hover;
+		bg_color = global_ui_context.style.widget_hover_background;
 		
 		if (is_left_clicked(global_ui_context.mouse)) 
 		{
@@ -1075,7 +1168,7 @@ void ui_scroll_end()
 							scrollbar_height + WIDGET_PADDING - 2) * percentage;
 		
 		render_reset_scissor();
-		render_rectangle(scrollbar_pos_x, scrollbar_pos_y, 10, scrollbar_height, rgb(200, 0, 0));
+		render_rectangle(scrollbar_pos_x, scrollbar_pos_y, 10, scrollbar_height, global_ui_context.style.scrollbar_handle_background);
 	}
 	
 	global_ui_context.layout.scroll.in_scroll = false;

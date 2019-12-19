@@ -75,7 +75,6 @@ search_result *current_search_result;
 image *search_img;
 image *error_img;
 image *directory_img;
-image *logo_img;
 image *logo_small_img;
 
 font *font_big;
@@ -92,8 +91,12 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): edit install script to not copy data folder
-// TODO(Aldrik)(Windows): include assets in binary, make it a portable application
+// TODO(Aldrik): get rid of is_parallelized variable
+// TODO(Aldrik): loading animation when searching and no results have been found yet (get rid of loading animation (dots) in info bar too)
+// TODO(Aldrik): copy config location to clipboard hyperlink button on settings page
+// TODO(Aldrik): UTF-8?
+// TODO(Aldrik): copy paste on windows crashes
+// TODO(Aldrik): put hardcoded colors in style struct to prepare for style settings
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
@@ -102,6 +105,7 @@ platform_window *main_window;
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): double click path in results list to copy to clipboard
+// TODO(Aldrik): check if we can use a smaller font (current is 400kb)
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -342,7 +346,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	
 	// result status
 	s32 text_size = calculate_text_width(font_small, global_status_bar.result_status_text);
-	render_rectangle(-1, y, window->width+2, h, rgb(225,225,225));
+	render_rectangle(-1, y, window->width+2, h, global_ui_context.style.info_bar_background);
 	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->size/2) + 1, global_status_bar.result_status_text, global_ui_context.style.foreground);
 	
@@ -351,7 +355,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	if (global_status_bar.error_status_text[0] != 0)
 	{
 		render_image(error_img, 6, y + (h/2) - (img_size/2), img_size, img_size);
-		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, rgb(224, 79, 95));
+		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, global_ui_context.style.error_foreground);
 	}
 }
 
@@ -398,15 +402,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	if (current_search_result->match_found)
 	{
-		if (!current_search_result->is_parallelized)
-		{
-			render_rectangle(0, y-WIDGET_PADDING, (current_search_result->files_searched/(float)current_search_result->files.length)*window->width, 20, rgb(0,200,0));
-			y += 11;
-		}
-		else
-		{
-			y -= 9;
-		}
+		y -= 9;
 		
 		s32 path_width = window->width / 2.0;
 		s32 pattern_width = window->width / 8.0;
@@ -414,7 +410,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 		
-		render_rectangle(-1, y+1, window->width+2, h-2, rgb(225,225,225));
+		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
 		
 		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
 		
@@ -447,7 +443,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					// hover item and click item
 					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
 					{
-						render_rectangle(-1, rec_y, window->width+2, h, rgb(240,220,220));
+						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
 #endif
@@ -534,7 +530,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			
 			// scroll background
 			render_rectangle(scroll_x,start_y,
-							 scroll_w,total_space,rgb(255,255,255));
+							 scroll_w,total_space,global_ui_context.style.scrollbar_background);
 			
 			render_rectangle_outline(scroll_x,start_y,
 									 scroll_w,total_space, 1,
@@ -542,7 +538,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			
 			// scrollbar
 			render_rectangle(scroll_x,scroll_y,
-							 scroll_w,scroll_h,rgb(225,225,225));
+							 scroll_w,scroll_h,global_ui_context.style.scrollbar_handle_background);
 			
 			render_rectangle_outline(scroll_x,scroll_y,
 									 scroll_w,scroll_h, 1,
@@ -592,24 +588,6 @@ static void render_info(platform_window *window, font *font_small)
 		
 		render_text_cutoff(font_small, 10, y, 
 						   info, global_ui_context.style.foreground, window->width - 20);
-	}
-	else
-	{
-		s32 img_c = window->width/2;
-		s32 img_w = 200;
-		s32 img_h = 200;
-		s32 img_x = window->width/2-img_w/2;
-		s32 img_y = window->height/2-img_h/2-50;
-		char text[40];
-		
-		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
-		s32 dot_count = (dot_count_t % 1000) / 250;
-		
-		sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
-		
-		render_image(logo_img, img_x, img_y, img_w, img_h);
-		s32 text_w = calculate_text_width(font_medium, text);
-		render_text(font_medium, img_c - (text_w/2), img_y + img_h + 50, text, global_ui_context.style.foreground);
 	}
 }
 
@@ -782,8 +760,6 @@ static void load_assets()
 {
 	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
 								   _binary____data_imgs_search_png_end);
-	logo_img = assets_load_image(_binary____data_imgs_logo_512_png_start,
-								 _binary____data_imgs_logo_512_png_end);
 	logo_small_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
 									   _binary____data_imgs_logo_32_png_end);
 	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
@@ -815,6 +791,7 @@ void load_config(settings_config *config)
 	char *locale_id = settings_config_get_string(config, "LOCALE");
 	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
+	u32 style = settings_config_get_number(config, "STYLE");
 	
 	if (search_filter)
 		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
@@ -830,6 +807,8 @@ void load_config(settings_config *config)
 		set_locale(locale_id);
 	else
 		set_locale("en");
+	
+	ui_set_style(style);
 	
 	if (path)
 	{
@@ -953,14 +932,7 @@ int main(int argc, char **argv)
 		// begin ui
 		ui_begin(1);
 		{
-			global_ui_context.style.background_hover = rgb(190,190,190);
-			global_ui_context.style.background = rgb(225,225,225);
-			global_ui_context.style.border = rgb(180,180,180);
-			global_ui_context.style.foreground = rgb(10, 10, 10);
-			global_ui_context.style.textbox_background = rgb(240,240,240);
-			global_ui_context.style.textbox_foreground = rgb(10,10,10);
-			global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
-			global_ui_context.style.button_background = rgb(225,225,225);
+			render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
 			
 			ui_begin_menu_bar();
 			{
@@ -993,6 +965,7 @@ int main(int argc, char **argv)
 				}
 				// shortcuts end
 				
+				render_rectangle(0, 0, main_window->width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
 				if (ui_push_menu(localize("file")))
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
@@ -1023,8 +996,6 @@ int main(int argc, char **argv)
 				}
 			}
 			ui_end_menu_bar();
-			
-			global_ui_context.style.background = rgb(255,255,255);
 			
 			ui_push_separator();
 			
@@ -1138,11 +1109,12 @@ int main(int argc, char **argv)
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
+	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	//settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
 	
 	if (global_localization.active_localization != 0)
 	{
-		char *current_locale_id = localize_get_id();
+		char *current_locale_id = locale_get_id();
 		if (current_locale_id)
 		{
 			settings_config_set_string(&config, "LOCALE", current_locale_id);
@@ -1166,7 +1138,6 @@ int main(int argc, char **argv)
 	
 	// delete assets
 	assets_destroy_image(search_img);
-	assets_destroy_image(logo_img);
 	assets_destroy_image(logo_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);
