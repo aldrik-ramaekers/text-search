@@ -90,6 +90,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search")
 // TODO(Aldrik): icon is broken on linux and windows
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
@@ -100,8 +101,6 @@ platform_window *main_window;
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
-// TODO(Aldrik): control scrollbar with mouse
-// TODO(Aldrik): scroll with arrow keys
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 // TODO(Aldrik): double click path in results list to copy to clipboard
@@ -305,6 +304,9 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->walking_file_system = false;
 	}
 	
+	// wait untill queue is cleared
+	while(result_buffer->work_queue.length) {}
+	
 	finish_early:
 	{
 		u64 end_f = platform_get_time(TIME_FULL, TIME_US);
@@ -384,7 +386,7 @@ static void reset_status_text()
 	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
-static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse)
+static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
 {
 	if (!current_search_result->done_finding_matches)
 	{
@@ -507,16 +509,23 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		{
 			if (global_ui_context.mouse->y >= start_y && global_ui_context.mouse->y <= start_y + total_space)
 			{
-				if (global_ui_context.mouse->scroll_state == SCROLL_UP)
-					scroll_y+=(h*3);
-				if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-					scroll_y-=(h*3);
+				// scroll with mouse
+				{
+					if (global_ui_context.mouse->scroll_state == SCROLL_UP)
+						scroll_y+=(h*3);
+					if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
+						scroll_y-=(h*3);
+				}
+				
+				// scroll with arrow keys
+				{
+					if (keyboard_is_key_pressed(keyboard, KEY_UP))
+						scroll_y+=(h*3);
+					if (keyboard_is_key_pressed(keyboard, KEY_DOWN))
+						scroll_y-=(h*3);
+				}
+				
 			}
-			
-			if (scroll_y > 0)
-				scroll_y = 0;
-			if (scroll_y < -overflow)
-				scroll_y = -overflow;
 			
 			s32 scroll_w = 14;
 			s32 scroll_h = 0;
@@ -527,6 +536,24 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			
 			if (scroll_h < 10)
 				scroll_h = 10;
+			
+			static bool is_scrolling_with_mouse = false;
+			if ((mouse->x >= scroll_x && mouse->x < scroll_x + scroll_w &&
+				 mouse->y >= start_y && mouse->y < start_y + total_space &&
+				 is_left_down(mouse)) || is_scrolling_with_mouse)
+			{
+				is_scrolling_with_mouse = true;
+				
+				if (is_left_released(mouse)) is_scrolling_with_mouse = false;
+				
+				float new_percentage = (mouse->y - start_y - scroll_h) / (float)total_space;
+				scroll_y = -(new_percentage * (total_h-scroll_h)) - (scroll_h*2);
+			}
+			
+			if (scroll_y > 0)
+				scroll_y = 0;
+			if (scroll_y < -overflow)
+				scroll_y = -overflow;
 			
 			float percentage = -scroll_y / (float)overflow;
 			float scroll_y = start_y + (total_space - scroll_h) * percentage;
@@ -1089,7 +1116,7 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				render_update_result(&window, font_mini, &mouse);
+				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
 		}
 		
