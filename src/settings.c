@@ -127,6 +127,17 @@ void settings_page_update_render()
 						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
 					}
 					ui_push_text("Threads");
+					
+				}
+				ui_block_end();
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					if (ui_push_hypertext_link("Copy config path to clipboard"))
+					{
+						char buffer[PATH_MAX];
+						platform_set_clipboard(main_window, get_config_save_location(buffer));
+						//show_notification("Config path copied to clipboard");
+					}
 				}
 				ui_block_end();
 			}

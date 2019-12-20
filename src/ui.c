@@ -94,6 +94,8 @@ void ui_set_style(u16 style)
 	global_ui_context.style.id = style;
 	if (style == UI_STYLE_LIGHT)
 	{
+		global_ui_context.style.hypertext_foreground = rgb(66, 134, 244);
+		global_ui_context.style.hypertext_hover_foreground = rgb(221, 93, 202);
 		global_ui_context.style.image_outline_tint = rgb(200,200,200);
 		global_ui_context.style.scrollbar_handle_background = rgb(225,225,225);
 		global_ui_context.style.info_bar_background = rgb(225,225,225);
@@ -113,6 +115,8 @@ void ui_set_style(u16 style)
 	}
 	if (style == UI_STYLE_DARK)
 	{
+		global_ui_context.style.hypertext_foreground = rgb(66, 134, 244);
+		global_ui_context.style.hypertext_hover_foreground = rgb(221, 93, 202);
 		global_ui_context.style.scrollbar_handle_background = rgb(50,50,50);
 		global_ui_context.style.menu_hover_background = rgb(60,60,60);
 		global_ui_context.style.item_hover_background = rgb(80,60,60);
@@ -758,6 +762,42 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		global_ui_context.layout.offset_x += TEXTBOX_WIDTH + WIDGET_PADDING;
 	else
 		global_ui_context.layout.offset_y += TEXTBOX_HEIGHT + WIDGET_PADDING;
+	
+	return result;
+}
+
+bool ui_push_hypertext_link(char *text)
+{
+	bool result = false;
+	
+	s32 spacing_y = (BLOCK_HEIGHT - CHECKBOX_SIZE)/2;
+	s32 x = global_ui_context.layout.offset_x + global_ui_context.camera->x;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
+	s32 text_x = x + WIDGET_PADDING;
+	s32 text_h = global_ui_context.font_small->size;
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
+	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
+		WIDGET_PADDING + WIDGET_PADDING;
+	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
+	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
+	
+	if (global_ui_context.layout.block_height < global_ui_context.font_small->size)
+		global_ui_context.layout.block_height = global_ui_context.font_small->size;
+	
+	color bg_color = global_ui_context.style.hypertext_foreground;
+	if (mouse_x >= text_x && mouse_x < text_x + total_w && mouse_y >= text_y && mouse_y < text_y+text_h && !global_ui_context.item_hovered)
+	{
+		if (is_left_clicked(global_ui_context.mouse))
+			result = true;
+		bg_color = global_ui_context.style.hypertext_hover_foreground;
+	}
+	
+	render_text(global_ui_context.font_small, text_x, text_y, text, bg_color);
+	
+	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
+		global_ui_context.layout.offset_x += total_w;
+	else
+		global_ui_context.layout.offset_y += CHECKBOX_SIZE + WIDGET_PADDING;
 	
 	return result;
 }

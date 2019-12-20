@@ -90,21 +90,17 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search")
-// TODO(Aldrik): icon is broken on linux and windows
+// TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
 // TODO(Aldrik): loading animation when searching and no results have been found yet (get rid of loading animation (dots) in info bar too)
-// TODO(Aldrik): copy config location to clipboard hyperlink button on settings page
 // TODO(Aldrik): UTF-8?
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
-// TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
+// TODO(Aldrik): set darkmode to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): double click path in results list to copy to clipboard (with notication message)
-// TODO(Aldrik): check if we can use a smaller font (current is 400kb)
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -353,14 +349,17 @@ static void render_status_bar(platform_window *window, font *font_small)
 	s32 text_size = calculate_text_width(font_small, global_status_bar.result_status_text);
 	render_rectangle(-1, y, window->width+2, h, global_ui_context.style.info_bar_background);
 	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+	render_set_scissor(main_window, main_window->width/2, y, main_window->width/2, h);
 	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->size/2) + 1, global_status_bar.result_status_text, global_ui_context.style.foreground);
-	
+	render_reset_scissor(main_window);
 	
 	// error status
 	if (global_status_bar.error_status_text[0] != 0)
 	{
+		render_set_scissor(main_window, 0, y, main_window->width/2, h);
 		render_image(error_img, 6, y + (h/2) - (img_size/2), img_size, img_size);
 		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, global_ui_context.style.error_foreground);
+		render_reset_scissor(main_window);
 	}
 }
 
@@ -451,8 +450,8 @@ static void render_update_result(platform_window *window, font *font_small, mous
 						if (is_left_double_clicked(mouse))
 						{
 							platform_set_clipboard(main_window, match->file.path);
+							//show_notification("Path copied to clipboard");
 						}
-						
 						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
@@ -891,6 +890,7 @@ int main(int argc, char **argv)
 	main_window = &window;
 	
 	settings_page_create();
+	notification_manager_init();
 	
 	load_available_localizations();
 	set_locale("en");
@@ -1095,22 +1095,6 @@ int main(int argc, char **argv)
 		ui_end();
 		// end ui
 		
-		/*
-  if (!global_settings_page.enable_parallelization)
-  {
-   if (current_search_result->done_finding_files)
-   {
- char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
- strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
- current_search_result->text_to_find = text_to_find_buf;
- 
- find_text_in_files(current_search_result);
- current_search_result->done_finding_files = false;
- current_search_result->walking_file_system = false;
-   }
-  }
-  */
-		
 		// draw info or results
 		{
 			render_status_bar(&window, font_small);
@@ -1124,6 +1108,8 @@ int main(int argc, char **argv)
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
 		}
+		
+		update_render_notifications(main_window);
 		
 		assets_do_post_process();
 		
@@ -1168,6 +1154,7 @@ int main(int argc, char **argv)
 	settings_config_destroy(&config);
 	
 	settings_page_destroy();
+	notification_manager_destroy();
 	
 	destroy_available_localizations();
 	

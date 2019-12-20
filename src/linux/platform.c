@@ -902,7 +902,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 {
 	mouse->left_state &= ~MOUSE_CLICK;
 	mouse->right_state &= ~MOUSE_CLICK;
-#if 0
+#if 1
 	mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
 	mouse->right_state &= ~MOUSE_DOUBLE_CLICK;
 #endif
@@ -996,7 +996,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			{
 				mouse->left_state |= MOUSE_DOUBLE_CLICK;
 			}
-			last_ev_time = ev_time;
 			
 			bool is_left_down = window->event.xbutton.button == Button1;
 			bool is_right_down = window->event.xbutton.button == Button3;
@@ -1016,6 +1015,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				mouse->total_move_x = 0;
 				mouse->total_move_y = 0;
+				last_ev_time = ev_time;
 			}
 			if (is_right_down)
 			{

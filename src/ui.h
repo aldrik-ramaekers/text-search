@@ -57,6 +57,8 @@ typedef struct t_ui_style
 	color menu_foreground;
 	color widget_hover_background;
 	color widget_background;
+	color hypertext_foreground;
+	color hypertext_hover_foreground;
 } ui_style;
 
 typedef enum t_layout_direction
@@ -174,6 +176,7 @@ void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
 void ui_push_text(char *text);
+bool ui_push_hypertext_link(char *text);
 bool ui_push_color_button(char *text, bool selected, color color);
 bool ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint);
 bool ui_push_checkbox(checkbox_state *state, char *title);
