@@ -60,7 +60,6 @@ typedef struct t_search_result
 	memory_bucket mem_bucket;
 	s32 max_thread_count;
 	s32 max_file_size;
-	bool is_parallelized;
 } search_result;
 
 typedef struct t_find_text_args
@@ -91,9 +90,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): icon is broken on linux and windows
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
-// TODO(Aldrik): get rid of is_parallelized variable
 // TODO(Aldrik): loading animation when searching and no results have been found yet (get rid of loading animation (dots) in info bar too)
 // TODO(Aldrik): copy config location to clipboard hyperlink button on settings page
 // TODO(Aldrik): UTF-8?
@@ -283,7 +282,7 @@ static void* find_text_in_files_t(void *arg)
 		}
 	}
 	
-	if (result_buffer->is_parallelized)
+	// check if there are files not in queue yet
 	{
 		if (result_buffer->done_finding_files)
 		{
@@ -400,15 +399,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	s32 render_y = y - WIDGET_PADDING;
 	s32 render_h;
-	
-	if (current_search_result->is_parallelized)
-	{
-		render_h = window->height - render_y - 10;
-	}
-	else
-	{
-		render_h = window->height - render_y - 30;
-	}
+	render_h = window->height - render_y - 10;
 	
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
@@ -451,7 +442,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				
 				if (rec_y > start_y - h && rec_y < start_y + total_space)
 				{
-#if 0
+#if 1
 					// hover item and click item
 					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
 					{
@@ -704,7 +695,6 @@ static void do_search()
 		new_result->found_file_matches = false;
 		new_result->done_finding_files = false;
 		
-		new_result->is_parallelized = 1;
 		new_result->max_thread_count = global_settings_page.max_thread_count;
 		new_result->max_file_size = global_settings_page.max_file_size;
 		
@@ -751,11 +741,15 @@ static void do_search()
 																					 new_result->search_result_source_dir_len);
 			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
-			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
-								&new_result->cancel_search,
-								&new_result->done_finding_files);
 			
-			if (current_search_result->is_parallelized)
+			// start search for files
+			{
+				platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
+									&new_result->cancel_search,
+									&new_result->done_finding_files);
+			}
+			
+			// start search for text
 			{
 				char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
 				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);

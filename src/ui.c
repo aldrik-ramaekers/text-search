@@ -115,7 +115,7 @@ void ui_set_style(u16 style)
 	{
 		global_ui_context.style.scrollbar_handle_background = rgb(50,50,50);
 		global_ui_context.style.menu_hover_background = rgb(60,60,60);
-		global_ui_context.style.item_hover_background = rgb(240,220,220);
+		global_ui_context.style.item_hover_background = rgb(80,60,60);
 		global_ui_context.style.image_outline_tint = rgb(200,200,200);
 		global_ui_context.style.error_foreground = rgb(224,79,95);
 		global_ui_context.style.scrollbar_background = rgb(80,80,80);
