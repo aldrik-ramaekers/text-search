@@ -91,12 +91,13 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): config file on windows has extra newlines
+// TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
 // TODO(Aldrik): get rid of is_parallelized variable
 // TODO(Aldrik): loading animation when searching and no results have been found yet (get rid of loading animation (dots) in info bar too)
 // TODO(Aldrik): copy config location to clipboard hyperlink button on settings page
 // TODO(Aldrik): UTF-8?
 // TODO(Aldrik): copy paste on windows crashes
-// TODO(Aldrik): put hardcoded colors in style struct to prepare for style settings
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
@@ -224,9 +225,12 @@ static void* find_text_in_file_worker(void *arg)
 		}
 	}
 	
-	mutex_lock(&result_buffer->mutex);
-	sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
-	mutex_unlock(&result_buffer->mutex);
+	if (!result_buffer->cancel_search)
+	{
+		mutex_lock(&result_buffer->mutex);
+		sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
+		mutex_unlock(&result_buffer->mutex);
+	}
 	
 	finish_early:;
 	return 0;
@@ -371,6 +375,11 @@ static void set_status_text_to_active()
 	strncpy(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
 }
 
+static void set_status_text_to_cancelled()
+{
+	strncpy(global_status_bar.result_status_text, "Cancelling search", MAX_STATUS_TEXT_LENGTH);
+}
+
 static void reset_status_text()
 {
 	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
@@ -380,7 +389,10 @@ static void render_update_result(platform_window *window, font *font_small, mous
 {
 	if (!current_search_result->done_finding_matches)
 	{
-		set_status_text_to_active();
+		if (!current_search_result->cancel_search)
+			set_status_text_to_active();
+		else
+			set_status_text_to_cancelled();
 	}
 	
 	s32 y = global_ui_context.layout.offset_y;
@@ -808,7 +820,10 @@ void load_config(settings_config *config)
 	else
 		set_locale("en");
 	
-	ui_set_style(style);
+	if (style == 0)
+		ui_set_style(UI_STYLE_LIGHT); // TODO(Aldrik): get OS light/darkmode here
+	else
+		ui_set_style(style);
 	
 	if (path)
 	{
@@ -818,6 +833,7 @@ void load_config(settings_config *config)
 		//global_settings_page.enable_parallelization = parallelize;
 		global_settings_page.max_thread_count = max_thread_count;
 		global_settings_page.max_file_size = max_file_size;
+		global_settings_page.current_style = global_ui_context.style.id;
 	}
 	else
 	{
@@ -825,6 +841,7 @@ void load_config(settings_config *config)
 		//global_settings_page.enable_parallelization = 1;
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
+		global_settings_page.current_style = UI_STYLE_LIGHT;
 		
 		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}

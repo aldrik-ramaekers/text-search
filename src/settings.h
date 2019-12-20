@@ -40,6 +40,7 @@ typedef struct t_settings_page
 	s32 selected_tab_index;
 	s32 max_thread_count;
 	s32 max_file_size;
+	u16 current_style;
 	//bool enable_parallelization;
 } settings_page;
 

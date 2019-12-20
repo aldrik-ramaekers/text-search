@@ -92,7 +92,7 @@ inline dropdown_state ui_create_dropdown()
 void ui_set_style(u16 style)
 {
 	global_ui_context.style.id = style;
-	if (style == 0)
+	if (style == UI_STYLE_LIGHT)
 	{
 		global_ui_context.style.image_outline_tint = rgb(200,200,200);
 		global_ui_context.style.scrollbar_handle_background = rgb(225,225,225);
@@ -110,9 +110,8 @@ void ui_set_style(u16 style)
 		global_ui_context.style.textbox_background = rgb(240,240,240);
 		global_ui_context.style.textbox_foreground = rgb(10,10,10);
 		global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
-		global_ui_context.style.button_background = rgb(225,225,225);
 	}
-	if (style == 1)
+	if (style == UI_STYLE_DARK)
 	{
 		global_ui_context.style.scrollbar_handle_background = rgb(50,50,50);
 		global_ui_context.style.menu_hover_background = rgb(60,60,60);
@@ -122,21 +121,20 @@ void ui_set_style(u16 style)
 		global_ui_context.style.scrollbar_background = rgb(80,80,80);
 		global_ui_context.style.widget_hover_background = rgb(65,65,65);
 		global_ui_context.style.widget_background = rgb(50,50,50);
-		global_ui_context.style.info_bar_background = rgb(50,50,50);
-		global_ui_context.style.menu_background = rgb(50,50,50);
+		global_ui_context.style.info_bar_background = rgb(65,65,65);
+		global_ui_context.style.menu_background = rgb(65,65,65);
 		global_ui_context.style.background = rgb(80, 80, 80);
 		global_ui_context.style.border = rgb(60,60,60);
 		global_ui_context.style.foreground = rgb(240,240,240);
 		global_ui_context.style.textbox_background = rgb(65,65,65);
 		global_ui_context.style.textbox_foreground = rgb(240, 240,240);
 		global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
-		global_ui_context.style.button_background = rgb(225,225,225);
 	}
 }
 
 inline void ui_create(platform_window *window, keyboard_input *keyboard, mouse_input *mouse, camera *camera, font *font_small)
 {
-	ui_set_style(0);
+	ui_set_style(UI_STYLE_LIGHT);
 	
 	global_ui_context.layout.layout_direction = LAYOUT_VERTICAL;
 	global_ui_context.layout.offset_x = 0;
@@ -294,8 +292,16 @@ bool ui_push_color_button(char *text, bool selected, color c)
 		}
 	}
 	
-	render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
-	render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
+	if (selected)
+	{
+		render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
+		render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 4, global_ui_context.style.border);
+	}
+	else
+	{
+		render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
+		render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
+	}
 	
 	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
 		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
@@ -309,6 +315,8 @@ bool ui_push_dropdown_item(image *icon, char *title)
 {
 	bool result = false;
 	
+	set_render_depth(30);
+	
 	u32 id = ui_get_id();
 	global_ui_context.layout.dropdown_item_count++;
 	s32 h = BUTTON_HEIGHT;
@@ -320,10 +328,12 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	
-	color bg_color = global_ui_context.style.button_background;
+	color bg_color = global_ui_context.style.widget_background;
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y > y && mouse_y < y + h)
 	{
+		global_ui_context.item_hovered = true;
+		
 		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
@@ -343,6 +353,8 @@ bool ui_push_dropdown_item(image *icon, char *title)
 		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
 	else
 		global_ui_context.layout.offset_y += BUTTON_HEIGHT + WIDGET_PADDING;
+	
+	set_render_depth(1);
 	
 	return result;
 }
@@ -365,7 +377,7 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 	if (global_ui_context.layout.block_height < h)
 		global_ui_context.layout.block_height = h;
 	
-	color bg_color = global_ui_context.style.button_background;
+	color bg_color = global_ui_context.style.widget_background;
 	
 	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
 	{
@@ -959,7 +971,7 @@ bool ui_push_button(button_state *state, char *title)
 	if (global_ui_context.layout.block_height < h)
 		global_ui_context.layout.block_height = h;
 	
-	color bg_color = global_ui_context.style.button_background;
+	color bg_color = global_ui_context.style.widget_background;
 	
 	s32 virt_top = y;
 	s32 virt_bottom = y + h;

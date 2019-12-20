@@ -69,6 +69,8 @@ void settings_page_update_render()
 		
 		ui_begin(3);
 		{
+			render_rectangle(0, 0, global_settings_page.window.width, global_settings_page.window.height, global_ui_context.style.background);
+			
 			ui_begin_menu_bar();
 			{
 				render_rectangle(0, 0, global_settings_page.window.width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
@@ -163,13 +165,13 @@ void settings_page_update_render()
 				
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					if (ui_push_color_button("Light", global_ui_context.style.id == 0, rgb(250, 250, 250)))
+					if (ui_push_color_button("Light", global_ui_context.style.id == UI_STYLE_LIGHT, rgb(250, 250, 250)))
 					{
-						ui_set_style(0);
+						ui_set_style(UI_STYLE_LIGHT);
 					}
-					if (ui_push_color_button("Dark", global_ui_context.style.id == 1, rgb(50, 50, 50)))
+					if (ui_push_color_button("Dark", global_ui_context.style.id == UI_STYLE_DARK, rgb(50, 50, 50)))
 					{
-						ui_set_style(1);
+						ui_set_style(UI_STYLE_DARK);
 					}
 				}
 				ui_block_end();
@@ -183,7 +185,7 @@ void settings_page_update_render()
 				{
 					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
 					global_settings_page.textbox_max_file_size.buffer[0] = 0; 
-					
+					ui_set_style(global_settings_page.current_style);
 					global_settings_page.active = false;
 					set_locale(global_settings_page.current_locale_id);
 					settings_page_hide();
@@ -191,12 +193,13 @@ void settings_page_update_render()
 				}
 				if (ui_push_button(&global_settings_page.btn_close, localize("save")))
 				{
+					global_settings_page.current_style = global_ui_context.style.id;
 					global_settings_page.max_thread_count = string_to_s32(global_settings_page.textbox_max_thread_count.buffer);
 					global_settings_page.max_file_size = string_to_s32(global_settings_page.textbox_max_file_size.buffer);
 					//global_settings_page.enable_parallelization = global_settings_page.checkbox_parallelize_search.state;
 					
 					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
-					global_settings_page.textbox_max_file_size.buffer[0] = 0; 
+					global_settings_page.textbox_max_file_size.buffer[0] = 0;
 					
 					global_settings_page.active = false;
 					settings_page_hide();

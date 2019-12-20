@@ -31,6 +31,12 @@
 #define BUTTON_IMAGE_PADDING 5
 #define BUTTON_IMAGE_SPACING 8
 
+typedef enum t_ui_style_type
+{
+	UI_STYLE_LIGHT = 1,
+	UI_STYLE_DARK = 2,
+} ui_style_type;
+
 typedef struct t_ui_style
 {
 	u16 id;
@@ -40,7 +46,6 @@ typedef struct t_ui_style
 	color textbox_background;
 	color textbox_active_border;
 	color textbox_foreground;
-	color button_background;
 	color image_outline_tint;
 	color scrollbar_handle_background;
 	color info_bar_background;
