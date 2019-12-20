@@ -72,7 +72,7 @@ static s32 length_of_expr(char *word)
 }
 
 // TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
-bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset)
+bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset, bool *cancel_search)
 {
 	bool match_started = false;
 	char *small_original = small;
@@ -94,6 +94,8 @@ bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *
 #endif
 	while(*big)
 	{
+		if (cancel_search && *cancel_search) return false;
+		
 		char expr_ch = *small;
 		char text_ch = *big;
 		

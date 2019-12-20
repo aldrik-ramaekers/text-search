@@ -103,7 +103,7 @@ platform_window *main_window;
 // TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): double click path in results list to copy to clipboard
+// TODO(Aldrik): double click path in results list to copy to clipboard (with notication message)
 // TODO(Aldrik): check if we can use a smaller font (current is 400kb)
 
 checkbox_state checkbox_recursive;
@@ -168,7 +168,7 @@ static void* find_text_in_file_worker(void *arg)
 			{
 				s32 line_nr = 0, word_offset = 0;
 				char *line;
-				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset))
+				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset, &result_buffer->cancel_search))
 				{
 					args.search_result_buffer->match_found = true;
 					
@@ -448,6 +448,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					// hover item and click item
 					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
 					{
+						if (is_left_double_clicked(mouse))
+						{
+							platform_set_clipboard(main_window, match->file.path);
+						}
+						
 						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}

@@ -68,8 +68,6 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				task->image->loaded = true;
-				
-				stbi_image_free(task->image->data);
 			}
 		}
 		else if (task->type == ASSET_FONT)
@@ -82,7 +80,6 @@ void assets_do_post_process()
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, task->font->palette_width,task->font->palette_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, task->font->bitmap);
 				
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				
 				task->font->loaded = true;
 			}
 		}
