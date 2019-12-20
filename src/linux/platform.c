@@ -176,6 +176,11 @@ inline void platform_set_cursor(platform_window *window, cursor_type type)
 	}
 }
 
+bool is_platform_in_darkmode()
+{
+	return false;
+}
+
 bool get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];

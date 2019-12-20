@@ -90,6 +90,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): double click on windows
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
@@ -98,7 +99,7 @@ platform_window *main_window;
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
-// TODO(Aldrik): set darkmode to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
+// TODO(Aldrik): set darkmode to default if win10 is in darkmode (to be tested) https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -845,11 +846,10 @@ void load_config(settings_config *config)
 	else
 		set_locale("en");
 	
-	if (style == 0)
-		ui_set_style(UI_STYLE_LIGHT); // TODO(Aldrik): get OS light/darkmode here
-	else
+	if (style != 0)
+	{
 		ui_set_style(style);
-	
+	}
 	if (path)
 	{
 		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
@@ -866,7 +866,17 @@ void load_config(settings_config *config)
 		//global_settings_page.enable_parallelization = 1;
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
-		global_settings_page.current_style = UI_STYLE_LIGHT;
+		
+		if (is_platform_in_darkmode())
+		{
+			ui_set_style(UI_STYLE_DARK);
+			global_settings_page.current_style = global_ui_context.style.id;
+		}
+		else
+		{
+			ui_set_style(UI_STYLE_LIGHT);
+			global_settings_page.current_style = global_ui_context.style.id;
+		}
 		
 		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}

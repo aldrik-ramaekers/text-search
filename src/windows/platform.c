@@ -124,6 +124,25 @@ inline void platform_destroy()
 #endif
 }
 
+bool is_platform_in_darkmode()
+{
+	char *key = "HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize\\";
+	
+	HKEY result;
+	LSTATUS o = RegOpenKeyExA(HKEY_CURRENT_USER, key, 0, KEY_READ, &result);
+	
+	if (o == 0)
+	{
+		BYTE data;
+		DWORD len = 4;
+		RegQueryValueExA(result, "AppsUseLightTheme", NULL, NULL, &data, &len);
+		
+		if (data == 1) return true;
+	}
+	
+	return false;
+}
+
 inline void platform_set_cursor(platform_window *window, cursor_type type)
 {
 	if (window->next_cursor_type != type)
@@ -140,118 +159,118 @@ bool platform_directory_exists(char *path)
 static void create_key_tables()
 {
 	keycode_map[0x30] = KEY_0;
-    keycode_map[0x31] = KEY_1;
-    keycode_map[0x32] = KEY_2;
-    keycode_map[0x33] = KEY_3;
-    keycode_map[0x34] = KEY_4;
-    keycode_map[0x35] = KEY_5;
-    keycode_map[0x36] = KEY_6;
-    keycode_map[0x37] = KEY_7;
-    keycode_map[0x38] = KEY_8;
-    keycode_map[0x39] = KEY_9;
-    keycode_map[0x41] = KEY_A;
-    keycode_map[0x42] = KEY_B;
-    keycode_map[0x43] = KEY_C;
-    keycode_map[0x44] = KEY_D;
-    keycode_map[0x45] = KEY_E;
-    keycode_map[0x46] = KEY_F;
-    keycode_map[0x47] = KEY_G;
-    keycode_map[0x48] = KEY_H;
-    keycode_map[0x49] = KEY_I;
-    keycode_map[0x4A] = KEY_J;
-    keycode_map[0x4B] = KEY_K;
-    keycode_map[0x4C] = KEY_L;
-    keycode_map[0x4D] = KEY_M;
-    keycode_map[0x4E] = KEY_N;
-    keycode_map[0x4F] = KEY_O;
-    keycode_map[0x50] = KEY_P;
-    keycode_map[0x51] = KEY_Q;
-    keycode_map[0x52] = KEY_R;
-    keycode_map[0x53] = KEY_S;
-    keycode_map[0x54] = KEY_T;
-    keycode_map[0x55] = KEY_U;
-    keycode_map[0x56] = KEY_V;
-    keycode_map[0x57] = KEY_W;
-    keycode_map[0x58] = KEY_X;
-    keycode_map[0x59] = KEY_Y;
-    keycode_map[0x5A] = KEY_Z;
+	keycode_map[0x31] = KEY_1;
+	keycode_map[0x32] = KEY_2;
+	keycode_map[0x33] = KEY_3;
+	keycode_map[0x34] = KEY_4;
+	keycode_map[0x35] = KEY_5;
+	keycode_map[0x36] = KEY_6;
+	keycode_map[0x37] = KEY_7;
+	keycode_map[0x38] = KEY_8;
+	keycode_map[0x39] = KEY_9;
+	keycode_map[0x41] = KEY_A;
+	keycode_map[0x42] = KEY_B;
+	keycode_map[0x43] = KEY_C;
+	keycode_map[0x44] = KEY_D;
+	keycode_map[0x45] = KEY_E;
+	keycode_map[0x46] = KEY_F;
+	keycode_map[0x47] = KEY_G;
+	keycode_map[0x48] = KEY_H;
+	keycode_map[0x49] = KEY_I;
+	keycode_map[0x4A] = KEY_J;
+	keycode_map[0x4B] = KEY_K;
+	keycode_map[0x4C] = KEY_L;
+	keycode_map[0x4D] = KEY_M;
+	keycode_map[0x4E] = KEY_N;
+	keycode_map[0x4F] = KEY_O;
+	keycode_map[0x50] = KEY_P;
+	keycode_map[0x51] = KEY_Q;
+	keycode_map[0x52] = KEY_R;
+	keycode_map[0x53] = KEY_S;
+	keycode_map[0x54] = KEY_T;
+	keycode_map[0x55] = KEY_U;
+	keycode_map[0x56] = KEY_V;
+	keycode_map[0x57] = KEY_W;
+	keycode_map[0x58] = KEY_X;
+	keycode_map[0x59] = KEY_Y;
+	keycode_map[0x5A] = KEY_Z;
 	
-    keycode_map[VK_OEM_7] = KEY_APOSTROPHE;
-    keycode_map[VK_OEM_102] = KEY_BACKSLASH;
-    keycode_map[VK_OEM_COMMA] = KEY_COMMA;
-    keycode_map[VK_OEM_3] = KEY_GRAVE_ACCENT;
-    keycode_map[VK_OEM_4] = KEY_LEFT_BRACKET;
-    keycode_map[VK_OEM_MINUS] = KEY_MINUS;
-    keycode_map[VK_OEM_PERIOD] = KEY_PERIOD;
+	keycode_map[VK_OEM_7] = KEY_APOSTROPHE;
+	keycode_map[VK_OEM_102] = KEY_BACKSLASH;
+	keycode_map[VK_OEM_COMMA] = KEY_COMMA;
+	keycode_map[VK_OEM_3] = KEY_GRAVE_ACCENT;
+	keycode_map[VK_OEM_4] = KEY_LEFT_BRACKET;
+	keycode_map[VK_OEM_MINUS] = KEY_MINUS;
+	keycode_map[VK_OEM_PERIOD] = KEY_PERIOD;
 	
-    keycode_map[VK_BACK] = KEY_BACKSPACE;
-    keycode_map[VK_DELETE] = KEY_DELETE;
-    keycode_map[VK_END] = KEY_END;
-    keycode_map[VK_RETURN] = KEY_ENTER;
-    keycode_map[VK_ESCAPE] = KEY_ESCAPE;
-    keycode_map[VK_HOME] = KEY_HOME;
-    keycode_map[VK_INSERT] = KEY_INSERT;
-    keycode_map[VK_MENU] = KEY_MENU;
-    keycode_map[VK_NEXT] = KEY_PAGE_DOWN;
-    keycode_map[VK_PRIOR] = KEY_PAGE_UP;
-    keycode_map[VK_PAUSE] = KEY_PAUSE;
-    keycode_map[VK_TAB] = KEY_TAB;
-    keycode_map[VK_CAPITAL] = KEY_CAPS_LOCK;
-    keycode_map[VK_NUMLOCK] = KEY_NUM_LOCK;
-    keycode_map[VK_SCROLL] = KEY_SCROLL_LOCK;
-    keycode_map[0x70] = KEY_F1;
-    keycode_map[0x71] = KEY_F2;
-    keycode_map[0x72] = KEY_F3;
-    keycode_map[0x73] = KEY_F4;
-    keycode_map[0x74] = KEY_F5;
-    keycode_map[0x75] = KEY_F6;
-    keycode_map[0x76] = KEY_F7;
-    keycode_map[0x77] = KEY_F8;
-    keycode_map[0x78] = KEY_F9;
-    keycode_map[0x79] = KEY_F10;
-    keycode_map[0x7A] = KEY_F11;
-    keycode_map[0x7B] = KEY_F12;
-    keycode_map[0x7C] = KEY_F13;
-    keycode_map[0x7D] = KEY_F14;
-    keycode_map[0x7E] = KEY_F15;
-    keycode_map[0x7F] = KEY_F16;
-    keycode_map[0x80] = KEY_F17;
-    keycode_map[0x81] = KEY_F18;
-    keycode_map[0x82] = KEY_F19;
-    keycode_map[0x83] = KEY_F20;
-    keycode_map[0x84] = KEY_F21;
-    keycode_map[0x85] = KEY_F22;
-    keycode_map[0x86] = KEY_F23;
-    keycode_map[0x87] = KEY_F24;
-    keycode_map[0x88] = KEY_LEFT_ALT;
+	keycode_map[VK_BACK] = KEY_BACKSPACE;
+	keycode_map[VK_DELETE] = KEY_DELETE;
+	keycode_map[VK_END] = KEY_END;
+	keycode_map[VK_RETURN] = KEY_ENTER;
+	keycode_map[VK_ESCAPE] = KEY_ESCAPE;
+	keycode_map[VK_HOME] = KEY_HOME;
+	keycode_map[VK_INSERT] = KEY_INSERT;
+	keycode_map[VK_MENU] = KEY_MENU;
+	keycode_map[VK_NEXT] = KEY_PAGE_DOWN;
+	keycode_map[VK_PRIOR] = KEY_PAGE_UP;
+	keycode_map[VK_PAUSE] = KEY_PAUSE;
+	keycode_map[VK_TAB] = KEY_TAB;
+	keycode_map[VK_CAPITAL] = KEY_CAPS_LOCK;
+	keycode_map[VK_NUMLOCK] = KEY_NUM_LOCK;
+	keycode_map[VK_SCROLL] = KEY_SCROLL_LOCK;
+	keycode_map[0x70] = KEY_F1;
+	keycode_map[0x71] = KEY_F2;
+	keycode_map[0x72] = KEY_F3;
+	keycode_map[0x73] = KEY_F4;
+	keycode_map[0x74] = KEY_F5;
+	keycode_map[0x75] = KEY_F6;
+	keycode_map[0x76] = KEY_F7;
+	keycode_map[0x77] = KEY_F8;
+	keycode_map[0x78] = KEY_F9;
+	keycode_map[0x79] = KEY_F10;
+	keycode_map[0x7A] = KEY_F11;
+	keycode_map[0x7B] = KEY_F12;
+	keycode_map[0x7C] = KEY_F13;
+	keycode_map[0x7D] = KEY_F14;
+	keycode_map[0x7E] = KEY_F15;
+	keycode_map[0x7F] = KEY_F16;
+	keycode_map[0x80] = KEY_F17;
+	keycode_map[0x81] = KEY_F18;
+	keycode_map[0x82] = KEY_F19;
+	keycode_map[0x83] = KEY_F20;
+	keycode_map[0x84] = KEY_F21;
+	keycode_map[0x85] = KEY_F22;
+	keycode_map[0x86] = KEY_F23;
+	keycode_map[0x87] = KEY_F24;
+	keycode_map[0x88] = KEY_LEFT_ALT;
 	keycode_map[VK_CONTROL] = KEY_LEFT_CONTROL;
-    keycode_map[VK_LCONTROL] = KEY_LEFT_CONTROL;
-    keycode_map[VK_LSHIFT] = KEY_LEFT_SHIFT;
-    keycode_map[VK_LWIN] = KEY_LEFT_SUPER;
-    keycode_map[VK_SNAPSHOT] = KEY_PRINT_SCREEN;
-    keycode_map[VK_RMENU] = KEY_RIGHT_ALT;
-    keycode_map[VK_RCONTROL] = KEY_RIGHT_CONTROL;
-    keycode_map[VK_RSHIFT] = KEY_RIGHT_SHIFT;
-    keycode_map[VK_RWIN] = KEY_RIGHT_SUPER;
-    keycode_map[VK_DOWN] = KEY_DOWN;
-    keycode_map[VK_LEFT] = KEY_LEFT;
-    keycode_map[VK_RIGHT] = KEY_RIGHT;
-    keycode_map[VK_UP] = KEY_UP;
+	keycode_map[VK_LCONTROL] = KEY_LEFT_CONTROL;
+	keycode_map[VK_LSHIFT] = KEY_LEFT_SHIFT;
+	keycode_map[VK_LWIN] = KEY_LEFT_SUPER;
+	keycode_map[VK_SNAPSHOT] = KEY_PRINT_SCREEN;
+	keycode_map[VK_RMENU] = KEY_RIGHT_ALT;
+	keycode_map[VK_RCONTROL] = KEY_RIGHT_CONTROL;
+	keycode_map[VK_RSHIFT] = KEY_RIGHT_SHIFT;
+	keycode_map[VK_RWIN] = KEY_RIGHT_SUPER;
+	keycode_map[VK_DOWN] = KEY_DOWN;
+	keycode_map[VK_LEFT] = KEY_LEFT;
+	keycode_map[VK_RIGHT] = KEY_RIGHT;
+	keycode_map[VK_UP] = KEY_UP;
 	
-    keycode_map[VK_NUMPAD0] = KEY_KP_0;
-    keycode_map[VK_NUMPAD1] = KEY_KP_1;
-    keycode_map[VK_NUMPAD2] = KEY_KP_2;
-    keycode_map[VK_NUMPAD3] = KEY_KP_3;
-    keycode_map[VK_NUMPAD4] = KEY_KP_4;
-    keycode_map[VK_NUMPAD5] = KEY_KP_5;
-    keycode_map[VK_NUMPAD6] = KEY_KP_6;
-    keycode_map[VK_NUMPAD7] = KEY_KP_7;
-    keycode_map[VK_NUMPAD8] = KEY_KP_8;
-    keycode_map[VK_NUMPAD9] = KEY_KP_9;
-    keycode_map[VK_ADD] = KEY_KP_ADD;
-    keycode_map[VK_DECIMAL] = KEY_KP_DECIMAL;
-    keycode_map[VK_DIVIDE] = KEY_KP_DIVIDE;
-    keycode_map[VK_MULTIPLY] = KEY_KP_MULTIPLY;
+	keycode_map[VK_NUMPAD0] = KEY_KP_0;
+	keycode_map[VK_NUMPAD1] = KEY_KP_1;
+	keycode_map[VK_NUMPAD2] = KEY_KP_2;
+	keycode_map[VK_NUMPAD3] = KEY_KP_3;
+	keycode_map[VK_NUMPAD4] = KEY_KP_4;
+	keycode_map[VK_NUMPAD5] = KEY_KP_5;
+	keycode_map[VK_NUMPAD6] = KEY_KP_6;
+	keycode_map[VK_NUMPAD7] = KEY_KP_7;
+	keycode_map[VK_NUMPAD8] = KEY_KP_8;
+	keycode_map[VK_NUMPAD9] = KEY_KP_9;
+	keycode_map[VK_ADD] = KEY_KP_ADD;
+	keycode_map[VK_DECIMAL] = KEY_KP_DECIMAL;
+	keycode_map[VK_DIVIDE] = KEY_KP_DIVIDE;
+	keycode_map[VK_MULTIPLY] = KEY_KP_MULTIPLY;
 	keycode_map[VK_SUBTRACT] = KEY_KP_SUBTRACT;
 }
 
@@ -337,6 +356,20 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 			if (ch != 0)
 				keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
 		}
+	}
+	else if (message == WM_WININICHANGE)
+	{
+		/*
+not sure if we should do this
+if (string_equals(lParam, "ImmersiveColorSet"))
+{
+ui_set_style(UI_STYLE_DARK);
+}
+else
+{
+ui_set_style(UI_STYLE_LIGHT);
+}
+*/
 	}
 	else if (message == WM_MOUSELEAVE)
 	{
@@ -479,13 +512,13 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	current_window_to_handle = &window;
 	
-    memset(&window.window_class, 0, sizeof(WNDCLASS));
+	memset(&window.window_class, 0, sizeof(WNDCLASS));
 	window.window_class.style = CS_OWNDC;
 	window.window_class.lpfnWndProc = main_window_callback;
 	window.window_class.hInstance = instance;
 	window.window_class.lpszClassName = name;
-    window.window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
-    //window.window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+	window.window_class.hIcon = LoadIcon(NULL, IDI_WINLOGO);
+	//window.window_class.hCursor = LoadCursor(NULL, IDC_ARROW);
 	
 	if (RegisterClass(&window.window_class))
 	{
@@ -594,17 +627,17 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			track.dwFlags = TME_LEAVE;
 			track.hwndTrack = window.window_handle;
 		}
-        else
-        {
+		else
+		{
 			platform_show_message(0, "An error occured within Windows, please restart the program.", "Error");
-            abort();
-        }
+			abort();
+		}
 	}
-    else
-    {
+	else
+	{
 		platform_show_message(0, "An error occured within Windows, please restart the program.", "Error");
-        abort();
-    }
+		abort();
+	}
 	
 	return window;
 }
@@ -841,13 +874,13 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 	do
 	{
 		char *name = file_info.cFileName;
-        
-        // symbolic link is not allowed..
-        if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
-            continue;
+		
+		// symbolic link is not allowed..
+		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
+			continue;
 		
 		if (*is_cancelled) break;
-        
+		
 		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
 			if ((strcmp(name, ".") == 0) || (strcmp(name, "..") == 0))
@@ -971,7 +1004,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 		strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
 	else if (args->type == OPEN_DIRECTORY)
-    {
+	{
 		BROWSEINFOA inf;
 		
 		PIDLIST_ABSOLUTE result = SHBrowseForFolderA(&inf);
@@ -1028,7 +1061,7 @@ void platform_window_make_current(platform_window *window)
 void platform_init(int argc, char **argv)
 {
 	QueryPerformanceFrequency(&perf_frequency);
-    CoInitialize(NULL);
+	CoInitialize(NULL);
 	create_key_tables();
 	
 	instance = GetModuleHandle(NULL);
