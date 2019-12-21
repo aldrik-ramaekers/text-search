@@ -85,10 +85,10 @@ void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint)
 	glBegin(GL_QUADS);
 	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
 	
-	glTexCoord2i(0, 0); glVertex2i(x, y);
-	glTexCoord2i(0, 1); glVertex2i(x, y+h);
-	glTexCoord2i(1, 1); glVertex2i(x+w, y+h);
-	glTexCoord2i(1, 0); glVertex2i(x+w, y);
+	glTexCoord2i(0, 0); glVertex3i(x, y, render_depth);
+	glTexCoord2i(0, 1); glVertex3i(x, y+h, render_depth);
+	glTexCoord2i(1, 1); glVertex3i(x+w, y+h, render_depth);
+	glTexCoord2i(1, 0); glVertex3i(x+w, y, render_depth);
 	
 	glEnd();
 	
@@ -121,8 +121,13 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	{
 		char ch = *text;
 		if (ch == 9) ch = 32;
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
 		char ch_next = *(text+1);
-		s32 offsetx = (font->size*2)*(ch-32);
+		s32 offsetx = (font->size*2)*(ch-TEXT_CHARSET_START);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
@@ -132,21 +137,20 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		sx1 = ipw*(offsetx+font->size*2);
 		sy1 = iph*font->size*2;
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch-TEXT_CHARSET_START];
 		glTexCoord2f(sx0,sy0); glVertex3i(x_,y, render_depth);
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y+font->size, render_depth);
 		glTexCoord2f(sx1,sy1); glVertex3i(x_+font->size,y+font->size, render_depth);
 		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y, render_depth);
 		
 		/* add kerning */
-        //int kern = 0;
-		
-		//if (ch_next != 0)
-		//{
-		//kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
-		
-		//if (kern != 0) printf("%d\n", kern);
-		//}
+        /*
+  int kern = 0;
+  kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+  {
+   if (kern != 0) printf("%d\n", kern);
+  }
+  */
 		
 		x_ += add_char_width(ch,width,font);
 		

@@ -112,13 +112,12 @@ bool assets_queue_worker_load_font(font *font)
 	
 	/* prepare font */
     stbtt_fontinfo info;
-    if (!stbtt_InitFont(&info, ttf_buffer, 0))
+    if (!stbtt_InitFont(&info, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0)))
     {
 		return false;
 	}
 	
-	// ascii 32 - 126
-	int b_w = 95*(font->size*2); /* bitmap width */
+	int b_w = (TEXT_CHARSET_END-TEXT_CHARSET_START+1)*(font->size*2); /* bitmap width */
     int b_h = font->size*2; /* bitmap height */
 	int l_h = font->size*2; /* line height */
 	
@@ -140,8 +139,10 @@ bool assets_queue_worker_load_font(font *font)
 	ascent *= scale;
 	descent *= scale;
 	
-    for (int i = 32; i <= 126; ++i)
+    for (int i = TEXT_CHARSET_START; i <= TEXT_CHARSET_END; ++i)
     {
+		if (!stbtt_FindGlyphIndex(&info, i)) continue;
+		
         /* get bounding box for character (may be offset to account for chars that dip above or below the line */
         int c_x1, c_y1, c_x2, c_y2;
         stbtt_GetCodepointBitmapBox(&info, i, scale, scale, &c_x1, &c_y1, &c_x2, &c_y2);
@@ -158,7 +159,7 @@ bool assets_queue_worker_load_font(font *font)
         stbtt_GetCodepointHMetrics(&info, i, &ax, 0);
         x += font->size*2;
         
-		font->glyph_widths[i-32] = (ax*scale);
+		font->glyph_widths[i-TEXT_CHARSET_START] = (ax*scale);
 	}
 	
 	font->info = info;

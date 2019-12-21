@@ -90,7 +90,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): double click on windows
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
@@ -99,7 +98,6 @@ platform_window *main_window;
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
-// TODO(Aldrik): set darkmode to default if win10 is in darkmode (to be tested) https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
 // TODO(Aldrik): implement directX11 render layer for windows
 // TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
 
@@ -900,7 +898,6 @@ int main(int argc, char **argv)
 	main_window = &window;
 	
 	settings_page_create();
-	notification_manager_init();
 	
 	load_available_localizations();
 	set_locale("en");
@@ -1119,7 +1116,7 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		update_render_notifications(main_window);
+		//render_font_palette(font_mini, -1000, 300, 1800, 20, rgb(200,0,0));
 		
 		assets_do_post_process();
 		
@@ -1164,7 +1161,6 @@ int main(int argc, char **argv)
 	settings_config_destroy(&config);
 	
 	settings_page_destroy();
-	notification_manager_destroy();
 	
 	destroy_available_localizations();
 	

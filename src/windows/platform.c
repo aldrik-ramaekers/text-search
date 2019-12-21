@@ -357,20 +357,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 				keyboard_handle_input_string(current_window_to_handle, current_keyboard_to_handle, ch);
 		}
 	}
-	else if (message == WM_WININICHANGE)
-	{
-		/*
-not sure if we should do this
-if (string_equals(lParam, "ImmersiveColorSet"))
-{
-ui_set_style(UI_STYLE_DARK);
-}
-else
-{
-ui_set_style(UI_STYLE_LIGHT);
-}
-*/
-	}
 	else if (message == WM_MOUSELEAVE)
 	{
 		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
@@ -413,6 +399,9 @@ ui_set_style(UI_STYLE_LIGHT);
 		bool is_right_down = wparam & MK_RBUTTON;
 		bool is_middle_down = wparam & MK_MBUTTON;
 		
+		u64 ev_time = platform_get_time(TIME_FULL, TIME_MILI_S);
+		static u64  last_ev_time = 0;
+		
 		if (message == WM_MOUSEWHEEL)
 		{
 			s16 scroll_val = wparam>>16;
@@ -425,8 +414,17 @@ ui_set_style(UI_STYLE_LIGHT);
 		
 		if (is_left_down)
 		{
+			if (ev_time - last_ev_time < 200)
+			{
+				current_mouse_to_handle->left_state |= MOUSE_DOUBLE_CLICK;
+			}
+			
 			current_mouse_to_handle->left_state |= MOUSE_DOWN;
 			current_mouse_to_handle->left_state |= MOUSE_CLICK;
+			
+			current_mouse_to_handle->total_move_x = 0;
+			current_mouse_to_handle->total_move_y = 0;
+			last_ev_time = ev_time;
 		}
 		if (is_right_down)
 		{
@@ -682,6 +680,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	
 	mouse->left_state &= ~MOUSE_CLICK;
 	mouse->right_state &= ~MOUSE_CLICK;
+	mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
+	mouse->right_state &= ~MOUSE_DOUBLE_CLICK;
 	mouse->left_state &= ~MOUSE_RELEASE;
 	mouse->right_state &= ~MOUSE_RELEASE;
 	memset(keyboard->input_keys, 0, MAX_KEYCODE);
