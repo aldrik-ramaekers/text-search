@@ -549,8 +549,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				
 				if (is_left_released(mouse)) is_scrolling_with_mouse = false;
 				
-				float new_percentage = (mouse->y - start_y - scroll_h) / (float)total_space;
-				scroll_y = -(new_percentage * (total_h-scroll_h)) - (scroll_h*2);
+				if (main_window->has_focus && mouse->x != MOUSE_OFFSCREEN && mouse->y != MOUSE_OFFSCREEN)
+				{
+					float new_percentage = (mouse->y - start_y) / (float)total_space;
+					scroll_y = -(new_percentage * (total_h-scroll_h));
+				}
 			}
 			
 			if (scroll_y > 0)

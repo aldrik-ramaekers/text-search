@@ -47,8 +47,6 @@ static void load_current_settings_into_ui()
 	
 	if (global_settings_page.max_file_size != 0)
 		sprintf(global_settings_page.textbox_max_file_size.buffer, "%d", global_settings_page.max_file_size);
-	
-	//global_settings_page.checkbox_parallelize_search.state = global_settings_page.enable_parallelization;
 }
 
 void settings_page_update_render()
@@ -168,6 +166,7 @@ void settings_page_update_render()
 				}
 				ui_block_end();
 				
+#if 0
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
 					ui_push_text("Style");
@@ -186,6 +185,7 @@ void settings_page_update_render()
 					}
 				}
 				ui_block_end();
+#endif
 			}
 			
 			global_ui_context.layout.offset_y = global_settings_page.window.height - 33;
