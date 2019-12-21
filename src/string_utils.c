@@ -312,3 +312,46 @@ inline bool string_equals(char *first, char *second)
 {
 	return (strcmp(first, second) == 0);
 }
+
+char *s32_to_string(s32 val, char *buffer)
+{
+	sprintf(buffer, "%d", val);
+	return buffer;
+}
+
+// replaces " with \" for file formats
+void string_appendf(char *buffer, char *text)
+{
+	u32 len = strlen(buffer);
+	while(*text)
+	{
+		if (*text < 32)
+		{
+			buffer[len] = ' ';
+			len++;
+			text++;
+			continue;
+		}
+		
+		if (*text == '"')
+		{
+			buffer[len] = '\\';
+			len++;
+		}
+		
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+}
+
+void string_append(char *buffer, char *text)
+{
+	u32 len = strlen(buffer);
+	while(*text)
+	{
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+}

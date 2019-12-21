@@ -21,10 +21,10 @@
 typedef struct t_text_match
 {
 	found_file file;
-	u32 match_count;
+	u32 line_nr;
 	s16 file_error;
 	s32 file_size;
-	char *line_info;
+	char *line_info; // will be null when no match is found
 } text_match;
 
 typedef struct t_status_bar
@@ -93,13 +93,11 @@ platform_window *main_window;
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
-// TODO(Aldrik): loading animation when searching and no results have been found yet (get rid of loading animation (dots) in info bar too)
-// TODO(Aldrik): UTF-8?
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
-// TODO(Aldrik): multiple import/export formats like: json, xml, yaml
+// TODO(Aldrik): multiple import/export formats like: json, xml, yaml, .tts
 // TODO(Aldrik): implement directX11 render layer for windows
-// TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
+// TODO(Aldrik): get rid of match_count varible
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -168,8 +166,9 @@ static void* find_text_in_file_worker(void *arg)
 					args.search_result_buffer->match_found = true;
 					
 					// match info
+					args.match->line_nr = line_nr;
 					args.match->line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
-					sprintf(args.match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
+					sprintf(args.match->line_info, "%.40s", word_offset < 20 ? line : line+word_offset-20);
 					
 					char *tmp = args.match->line_info;
 					while(*tmp)
@@ -183,7 +182,6 @@ static void* find_text_in_file_worker(void *arg)
 					}
 					
 					mutex_lock(&result_buffer->mutex);
-					args.match->match_count++;
 					result_buffer->files_matched++;
 					mutex_unlock(&result_buffer->mutex);
 				}
@@ -265,7 +263,6 @@ static void* find_text_in_files_t(void *arg)
 #if 1
 			find_text_args args;
 			args.match = array_at(&result_buffer->files, i);
-			args.match->match_count = 0;
 			args.match->file_error = 0;
 			args.match->file_size = 0;
 			args.match->line_info = 0;
@@ -369,7 +366,7 @@ static void set_status_text_to_active()
 	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
 	s32 dot_count = (dot_count_t % 1000) / 250;
 	
-	sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
+	sprintf(text, "%.*s%s", dot_count, "...", localize("finding_files"));
 	
 	strncpy(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
 }
@@ -435,7 +432,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		{
 			text_match *match = array_at(&current_search_result->files, i);
 			
-			if (match->match_count || match->file_error)
+			if (match->line_info || match->file_error)
 			{
 				drawn_entity_count++;
 				s32 rec_y = y+scroll_y;
@@ -472,10 +469,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
 					if (!match->file_error)
 					{
-						//char snum[20];
-						//sprintf(snum, "(%d Bytes)", match->file_size);
+						char tmp[80];
+						sprintf(tmp, "line %d: %s", match->line_nr, match->line_info);
+						
 						if (match->line_info)
-							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, match->line_info, global_ui_context.style.foreground);
+							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, tmp, global_ui_context.style.foreground);
 					}
 					else
 					{
