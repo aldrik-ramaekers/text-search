@@ -15,6 +15,104 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+static void write_yaml_file(char *buffer, search_result *search_result)
+{
+	array matches = search_result->files;
+	char conv_buf[20];
+	
+	string_append(buffer, "---\n");
+	string_append(buffer, "file_list:\n");
+	
+	for (s32 i = 0; i < matches.length; i++)
+	{
+		text_match* m = array_at(&matches, i);
+		
+		string_append(buffer, "  -\n");
+		
+		string_append(buffer, "    path: \"");
+		string_appendf(buffer, m->file.path);
+		string_append(buffer, "\"\n");
+		
+		string_append(buffer, "    matched_filter: \"");
+		string_appendf(buffer, m->file.matched_filter);
+		string_append(buffer, "\"\n");
+		
+		string_append(buffer, "    file_error: ");
+		string_appendf(buffer, s32_to_string(m->file_error, conv_buf));
+		string_append(buffer, "\n");
+		
+		string_append(buffer, "    line_nr: ");
+		string_appendf(buffer, s32_to_string(m->line_nr, conv_buf));
+		string_append(buffer, "\n");
+		
+		string_append(buffer, "    file_size: ");
+		string_appendf(buffer, s32_to_string(m->file_size, conv_buf));
+		string_append(buffer, "\n");
+		
+		if (m->line_info)
+		{
+			string_append(buffer, "    line_info: \"");
+			string_appendf(buffer, m->line_info);
+			string_append(buffer, "\"\n");
+		}
+		else
+		{
+			string_append(buffer, "    line_info: 0\n");
+		}
+	}
+	
+}
+
+static void write_xml_file(char *buffer, search_result *search_result)
+{
+	array matches = search_result->files;
+	char conv_buf[20];
+	
+	string_append(buffer, "<file_list>");
+	
+	for (s32 i = 0; i < matches.length; i++)
+	{
+		text_match* m = array_at(&matches, i);
+		
+		string_append(buffer, "<file>");
+		
+		string_append(buffer, "<path>");
+		string_appendf(buffer, m->file.path);
+		string_append(buffer, "</path>");
+		
+		string_append(buffer, "<matched_filter>");
+		string_appendf(buffer, m->file.matched_filter);
+		string_append(buffer, "</matched_filter>");
+		
+		string_append(buffer, "<file_error>");
+		string_appendf(buffer, s32_to_string(m->file_error, conv_buf));
+		string_append(buffer, "</file_error>");
+		
+		string_append(buffer, "<line_nr>");
+		string_appendf(buffer, s32_to_string(m->line_nr, conv_buf));
+		string_append(buffer, "</line_nr>");
+		
+		string_append(buffer, "<file_size>");
+		string_appendf(buffer, s32_to_string(m->file_size, conv_buf));
+		string_append(buffer, "</file_size>");
+		
+		if (m->line_info)
+		{
+			string_append(buffer, "<line_info>");
+			string_appendf(buffer, m->line_info);
+			string_append(buffer, "</line_info>");
+		}
+		else
+		{
+			string_append(buffer, "<line_info>0</line_info>");
+		}
+		
+		string_append(buffer, "</file>");
+	}
+	
+	string_append(buffer, "</file_list>");
+}
+
 static void write_json_file(char *buffer, search_result *search_result)
 {
 	array matches = search_result->files;
@@ -83,7 +181,7 @@ static void *export_result_d(void *arg)
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = SAVE_FILE;
-	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
+	args->file_filter = SEARCH_RESULT_AVAILABLE_FORMATS;
 	args->start_path = start_path;
 	
 	platform_open_file_dialog_block(args);
@@ -103,13 +201,20 @@ static void *export_result_d(void *arg)
 	memset(buffer, 0, size);
 	
 	char *file_extension = get_file_extension(path_buf);
-	printf("%s\n", file_extension);
 	if (string_equals(file_extension, ".json") || string_equals(file_extension, ""))
 	{
 		write_json_file(buffer, search_result);
 	}
+	if (string_equals(file_extension, ".xml"))
+	{
+		write_xml_file(buffer, search_result);
+	}
+	if (string_equals(file_extension, ".yaml"))
+	{
+		write_yaml_file(buffer, search_result);
+	}
 	
-	if (!string_contains(path_buf, SEARCH_RESULT_FILE_EXTENSION))
+	if (string_equals(file_extension, ""))
 	{
 		strcat(path_buf, ".json");
 	}

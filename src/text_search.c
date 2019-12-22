@@ -90,12 +90,13 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): export not saving on windows?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
-// TODO(Aldrik): multiple import/export formats like: json, xml, yaml, .tts
+// TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): implement directX11 render layer for windows
 
 checkbox_state checkbox_recursive;

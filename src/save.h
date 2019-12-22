@@ -19,6 +19,7 @@
 #define INCLUDE_SAVE
 
 #define SEARCH_RESULT_FILE_EXTENSION "*.json"
+#define SEARCH_RESULT_AVAILABLE_FORMATS "*.json, *.xml, *.yaml"
 
 bool export_results(search_result *result);
 void import_results_from_file(search_result *search_result, char *path_buf);
