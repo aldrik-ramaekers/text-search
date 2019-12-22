@@ -97,7 +97,6 @@ platform_window *main_window;
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml, .tts
 // TODO(Aldrik): implement directX11 render layer for windows
-// TODO(Aldrik): get rid of match_count varible
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -421,6 +420,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		y += h-1;
 		
+		s32 scroll_w = 14;
 		s32 total_h = 0;
 		s32 start_y = y;
 		s32 total_space = window->height - start_y - 30 + 1;
@@ -441,13 +441,15 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				{
 #if 1
 					// hover item and click item
-					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
+					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30 &&
+						mouse->x >= 0 && mouse->x < window->width - scroll_w)
 					{
 						if (is_left_double_clicked(mouse))
 						{
 							platform_set_clipboard(main_window, match->file.path);
 							//show_notification("Path copied to clipboard");
 						}
+						
 						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
@@ -528,7 +530,6 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				
 			}
 			
-			s32 scroll_w = 14;
 			s32 scroll_h = 0;
 			s32 scroll_x = window->width - scroll_w;
 			
