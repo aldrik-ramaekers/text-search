@@ -344,6 +344,11 @@ void string_appendf(char *buffer, char *text)
 			buffer[len] = '\\';
 			len++;
 		}
+		if (*text == '\\')
+		{
+			buffer[len] = '\\';
+			len++;
+		}
 		
 		buffer[len] = *text;
 		len++;

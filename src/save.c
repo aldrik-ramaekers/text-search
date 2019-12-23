@@ -18,103 +18,98 @@
 search_result *create_empty_search_result();
 void* destroy_search_result_thread(void *arg);
 
-static void write_json_file(char *buffer, search_result *search_result)
+static void write_json_file(char *buffer, s32 length, search_result *search_result)
 {
 	array matches = search_result->files;
-	char conv_buf[20];
 	
-	string_append(buffer, "{");
+	cJSON *result = cJSON_CreateObject();
+	if (cJSON_AddStringToObject(result, "search_directory", 
+								search_result->search_directory_buffer) == NULL)
+		return;
 	
-	// header
-	string_append(buffer, "\"search_directory\": \"");
-	string_appendf(buffer, search_result->search_directory_buffer);
-	string_append(buffer, "\",");
+	if (cJSON_AddStringToObject(result, "filter", 
+								search_result->filter_buffer) == NULL)
+		return;
 	
-	string_append(buffer, "\"filter\": \"");
-	string_appendf(buffer, search_result->filter_buffer);
-	string_append(buffer, "\",");
+	if (cJSON_AddStringToObject(result, "search_query", 
+								search_result->text_to_find_buffer) == NULL)
+		return;
 	
-	string_append(buffer, "\"search_query\": \"");
-	string_appendf(buffer, search_result->text_to_find_buffer);
-	string_append(buffer, "\",");
+	if (cJSON_AddNumberToObject(result, "duration_us", 
+								search_result->find_duration_us) == NULL)
+		return;
 	
-	string_append(buffer, "\"duration_us\": ");
-	string_appendf(buffer, u64_to_string(search_result->find_duration_us, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "show_error", 
+								search_result->show_error_message) == NULL)
+		return;
 	
-	string_append(buffer, "\"show_error\": ");
-	string_appendf(buffer, s32_to_string(search_result->show_error_message, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "file_match_found", 
+								search_result->found_file_matches) == NULL)
+		return;
 	
-	string_append(buffer, "\"file_match_found\": ");
-	string_appendf(buffer, s32_to_string(search_result->found_file_matches, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "files_searched", 
+								search_result->files_searched) == NULL)
+		return;
 	
-	string_append(buffer, "\"files_searched\": ");
-	string_appendf(buffer, s32_to_string(search_result->files_searched, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "files_matched", 
+								search_result->files_matched) == NULL)
+		return;
 	
-	string_append(buffer, "\"files_matched\": ");
-	string_appendf(buffer, s32_to_string(search_result->files_matched, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "query_match_found", 
+								search_result->match_found) == NULL)
+		return;
 	
-	string_append(buffer, "\"query_match_found\": ");
-	string_appendf(buffer, s32_to_string(search_result->match_found, conv_buf));
-	string_append(buffer, ",");
+	if (cJSON_AddNumberToObject(result, "recursive_search", 
+								search_result->is_recursive) == NULL)
+		return;
 	
-	string_append(buffer, "\"recursive_search\": ");
-	string_appendf(buffer, s32_to_string(search_result->is_recursive, conv_buf));
-	string_append(buffer, ",");
+	cJSON *match_list = cJSON_AddArrayToObject(result, "match_list");
 	
-	string_append(buffer, "\"match_list\": ");
-	
-	string_append(buffer, "[");
+	if (!match_list) return;
 	
 	for (s32 i = 0; i < matches.length; i++)
 	{
 		text_match* m = array_at(&matches, i);
 		
-		string_append(buffer, "{");
+		cJSON *item = cJSON_CreateObject();
 		
-		string_append(buffer, "\"path\": \"");
-		string_appendf(buffer, m->file.path);
-		string_append(buffer, "\",");
+		if (cJSON_AddStringToObject(item, "path", 
+									m->file.path) == NULL)
+			return;
 		
-		string_append(buffer, "\"matched_filter\": \"");
-		string_appendf(buffer, m->file.matched_filter);
-		string_append(buffer, "\",");
+		if (cJSON_AddStringToObject(item, "matched_filter", 
+									m->file.matched_filter) == NULL)
+			return;
 		
-		string_append(buffer, "\"file_error\": ");
-		string_appendf(buffer, s32_to_string(m->file_error, conv_buf));
-		string_append(buffer, ",");
+		if (cJSON_AddNumberToObject(item, "file_error", 
+									m->file_error) == NULL)
+			return;
 		
-		string_append(buffer, "\"line_nr\": ");
-		string_appendf(buffer, s32_to_string(m->line_nr, conv_buf));
-		string_append(buffer, ",");
+		if (cJSON_AddNumberToObject(item, "line_nr", 
+									m->line_nr) == NULL)
+			return;
 		
-		string_append(buffer, "\"file_size\": ");
-		string_appendf(buffer, s32_to_string(m->file_size, conv_buf));
-		string_append(buffer, ",");
+		if (cJSON_AddNumberToObject(item, "file_size", 
+									m->file_size) == NULL)
+			return;
 		
 		if (m->line_info)
 		{
-			string_append(buffer, "\"line_info\": \"");
-			string_appendf(buffer, m->line_info);
-			string_append(buffer, "\"");
+			if (cJSON_AddStringToObject(item, "line_info", 
+										m->line_info) == NULL)
+				return;
 		}
 		else
 		{
-			string_append(buffer, "\"line_info\": 0");
+			if (cJSON_AddNumberToObject(item, "line_info", 0) == NULL)
+				return;
 		}
 		
-		string_append(buffer, "}");
-		
-		if (i != matches.length-1)
-			string_append(buffer, ",");
+		cJSON_AddItemToArray(match_list, item);
 	}
 	
-	string_append(buffer, "]");
-	string_append(buffer, "}");
+	cJSON_PrintPreallocated(result, buffer, length, true);
+	cJSON_Delete(result);
 }
 
 static void *export_result_d(void *arg)
@@ -154,7 +149,7 @@ static void *export_result_d(void *arg)
 	char *file_extension = get_file_extension(path_buf);
 	if (string_equals(file_extension, ".json") || string_equals(file_extension, ""))
 	{
-		write_json_file(buffer, search_result);
+		write_json_file(buffer, size, search_result);
 	}
 	
 	if (string_equals(file_extension, ""))
@@ -182,119 +177,87 @@ bool export_results(search_result *search_result)
 static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 {
 	array matches = search_result->files;
-	char conv_buf[100];
 	
 	text_match new_match;
 	
-	if (!string_remove(&buffer, "{")) return false;
+	cJSON *result = cJSON_Parse(buffer);
+	if (!result) return false;
 	
-	// header
-	if (!string_remove(&buffer, "\"search_directory\": \"")) return false;
-	char *search_directory = string_get_json_literal(&buffer, conv_buf);
-	if (!string_remove(&buffer, "\",")) return false;
-	strcpy(search_result->search_directory_buffer, search_directory);
+	cJSON *search_directory = cJSON_GetObjectItemCaseSensitive(result, "search_directory");
+	strcpy(search_result->search_directory_buffer, search_directory->valuestring);
 	
-	if (!string_remove(&buffer, "\"filter\": \"")) return false;
-	char *filter = string_get_json_literal(&buffer, conv_buf);
-	if (!string_remove(&buffer, "\",")) return false;
-	strcpy(search_result->filter_buffer, filter);
+	cJSON *filter = cJSON_GetObjectItemCaseSensitive(result, "filter");
+	strcpy(search_result->filter_buffer, filter->valuestring);
 	
-	if (!string_remove(&buffer, "\"search_query\": \"")) return false;
-	char *text_query = string_get_json_literal(&buffer, conv_buf);
-	if (!string_remove(&buffer, "\",")) return false;
-	strcpy(search_result->text_to_find_buffer, text_query);
+	cJSON *search_query = cJSON_GetObjectItemCaseSensitive(result, "search_query");
+	strcpy(search_result->text_to_find_buffer, search_query->valuestring);
 	
-	if (!string_remove(&buffer, "\"duration_us\": ")) return false;
-	s32 duration_us = string_get_json_ulong_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->find_duration_us = duration_us;
+	cJSON *duration_us = cJSON_GetObjectItemCaseSensitive(result, "duration_us");
+	search_result->find_duration_us = duration_us->valueint;
 	
-	if (!string_remove(&buffer, "\"show_error\": ")) return false;
-	s32 show_error = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->show_error_message = show_error;
+	cJSON *show_error = cJSON_GetObjectItemCaseSensitive(result, "show_error");
+	search_result->show_error_message = show_error->valueint;
 	
-	if (!string_remove(&buffer, "\"file_match_found\": ")) return false;
-	s32 found_file_match = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->found_file_matches = found_file_match;
+	cJSON *file_match_found = cJSON_GetObjectItemCaseSensitive(result, "file_match_found");
+	search_result->found_file_matches = file_match_found->valueint;
 	
-	if (!string_remove(&buffer, "\"files_searched\": ")) return false;
-	s32 files_searched = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->files_searched = files_searched;
+	cJSON *files_searched = cJSON_GetObjectItemCaseSensitive(result, "files_searched");
+	search_result->files_searched = files_searched->valueint;
 	
-	if (!string_remove(&buffer, "\"files_matched\": ")) return false;
-	s32 files_matched = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->files_matched = files_matched;
+	cJSON *files_matched = cJSON_GetObjectItemCaseSensitive(result, "files_matched");
+	search_result->files_matched = files_matched->valueint;
 	
-	if (!string_remove(&buffer, "\"query_match_found\": ")) return false;
-	s32 match_found = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->match_found = match_found;
+	cJSON *query_match_found = cJSON_GetObjectItemCaseSensitive(result, "query_match_found");
+	search_result->match_found = query_match_found->valueint;
 	
-	if (!string_remove(&buffer, "\"recursive_search\": ")) return false;
-	s32 recursive = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	search_result->is_recursive = recursive;
-	
-	if (!string_remove(&buffer, "\"match_list\": ")) return false;
-	if (!string_remove(&buffer, "[")) return false;
+	cJSON *recursive = cJSON_GetObjectItemCaseSensitive(result, "recursive_search");
+	search_result->is_recursive = recursive->valueint;
+	*search_result->recursive_buffer = search_result->is_recursive;
 	
 	search_result->search_result_source_dir_len = strlen(search_result->search_directory_buffer);
 	
-	new_item_found:
-	if (!string_remove(&buffer, "{")) return false;
-	if (!string_remove(&buffer, "\"path\": \"")) return false;
-	char *path = string_get_json_literal(&buffer, conv_buf);
-	if (!string_remove(&buffer, "\",")) return false;
-	new_match.file.path = memory_bucket_reserve(&search_result->mem_bucket, strlen(path)+1);
-	strcpy(new_match.file.path, path);
-	
-	if (!string_remove(&buffer, "\"matched_filter\": \"")) return false;
-	char *filter_matched = string_get_json_literal(&buffer, conv_buf);
-	if (!string_remove(&buffer, "\",")) return false;
-	new_match.file.matched_filter = memory_bucket_reserve(&search_result->mem_bucket, strlen(filter_matched)+1);
-	strcpy(new_match.file.matched_filter, filter_matched);
-	
-	if (!string_remove(&buffer, "\"file_error\": ")) return false;
-	s32 file_error = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	new_match.file_error = file_error;
-	
-	if (!string_remove(&buffer, "\"line_nr\": ")) return false;
-	s32 line_nr = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	new_match.line_nr = line_nr;
-	
-	if (!string_remove(&buffer, "\"file_size\": ")) return false;
-	s32 file_size = string_get_json_number(&buffer);
-	if (!string_remove(&buffer, ",")) return false;
-	new_match.file_size = file_size;
-	
-	if (!string_remove(&buffer, "\"line_info\": ")) return false;
-	char *line_info = 0;
-	if (!string_remove(&buffer, "\""))
+	cJSON *file_list = cJSON_GetObjectItem(result, "match_list");
+	cJSON *file;
+	cJSON_ArrayForEach(file, file_list)
 	{
-		string_get_json_number(&buffer);
-		new_match.line_info = 0;
-	}
-	else
-	{
-		line_info = string_get_json_literal(&buffer, conv_buf);
-		if (!string_remove(&buffer, "\"")) return false;
+		text_match new_match;
 		
-		new_match.line_info = memory_bucket_reserve(&search_result->mem_bucket, strlen(line_info)+1);
-		strcpy(new_match.line_info, line_info);
+		////
+		cJSON *path = cJSON_GetObjectItem(file, "path");
+		new_match.file.path = memory_bucket_reserve(&search_result->mem_bucket, strlen(path->valuestring)+1);
+		strcpy(new_match.file.path, path->valuestring);
 		
+		////
+        cJSON *matched_filter = cJSON_GetObjectItem(file, "matched_filter");
+		new_match.file.matched_filter = memory_bucket_reserve(&search_result->mem_bucket, strlen(matched_filter->valuestring)+1);
+		strcpy(new_match.file.matched_filter, matched_filter->valuestring);
+		
+		////
+		cJSON *file_error = cJSON_GetObjectItem(file, "file_error");
+		new_match.file_error = file_error->valueint;
+		
+		////
+		cJSON *line_nr = cJSON_GetObjectItem(file, "line_nr");
+		new_match.line_nr = line_nr->valueint;
+		
+		////
+		cJSON *file_size = cJSON_GetObjectItem(file, "file_size");
+		new_match.file_size = file_size->valueint;
+		
+		////
+		cJSON *line_info = cJSON_GetObjectItem(file, "line_info");
+		if (cJSON_IsString(line_info))
+		{
+			new_match.line_info = memory_bucket_reserve(&search_result->mem_bucket, strlen(line_info->valuestring)+1);
+			strcpy(new_match.line_info, line_info->valuestring);
+		}
+		else
+		{
+			new_match.line_info = 0;
+		}
+		
+		array_push(&search_result->files, &new_match);
 	}
-	
-	if (!string_remove(&buffer, "}")) return false;
-	array_push(&search_result->files, &new_match);
-	if (string_remove(&buffer, ",")) goto new_item_found;
-	if (!string_remove(&buffer, "]")) return false;
-	if (!string_remove(&buffer, "}")) return false;
 	
 	return true;
 }

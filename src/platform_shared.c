@@ -26,10 +26,18 @@ static void get_name_from_path(char *buffer, char *path)
 	}
 	
 	char *path_end = path + len;
+#ifdef OS_LINUX
 	while (*path_end != '/' && path_end >= path)
 	{
 		--path_end;
 	}
+#endif
+#ifdef OS_WIN
+	while (*path_end != '\\' && path_end >= path)
+	{
+		--path_end;
+	}
+#endif
 	
 	strncpy(buffer, path_end+1, MAX_INPUT_LENGTH);
 }
@@ -45,10 +53,18 @@ static void get_directory_from_path(char *buffer, char *path)
 	}
 	
 	char *path_end = path + len;
+#ifdef OS_LINUX
 	while (*path_end != '/' && path_end >= path)
 	{
 		--path_end;
 	}
+#endif
+#ifdef OS_WIN
+	while (*path_end != '\\' && path_end >= path)
+	{
+		--path_end;
+	}
+#endif
 	
 	s32 offset = path_end - path;
 	char ch = path[offset+1];

@@ -125,4 +125,7 @@
 #include "memory.c"
 #endif
 
+#include "external/cJSON.h"
+#include "external/cJSON.c"
+
 #endif

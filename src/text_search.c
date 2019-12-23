@@ -52,6 +52,7 @@ typedef struct t_search_result
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
+	bool *recursive_buffer;
 	s32 search_id;
 	u64 start_time;
 	bool done_finding_files;
@@ -93,7 +94,6 @@ platform_window *main_window;
 // TODO(Aldrik): export not saving on windows?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
-// TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): implement directX11 render layer for windows
 
@@ -697,6 +697,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
 	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
 	new_result_buffer->search_directory_buffer = textbox_path.buffer;
+	new_result_buffer->recursive_buffer = &checkbox_recursive.state;
 	
 	return new_result_buffer;
 }
