@@ -60,15 +60,21 @@ int cmd_show;
 
 bool platform_get_clipboard(platform_window *window, char *buffer)
 {
-	if (!IsClipboardFormatAvailable(CF_TEXT)) 
-		return false; 
-	
 	if (!OpenClipboard(NULL))
 		return false;
 	
+	if (!IsClipboardFormatAvailable(CF_TEXT)) 
+	{
+		CloseClipboard();
+		return false;
+	}
+	
 	char *clip_str = GetClipboardData(CF_TEXT);
 	if (!clip_str)
+	{
+		CloseClipboard();
 		return false;
+	}
 	
 	strncpy(buffer, clip_str, MAX_INPUT_LENGTH);
 	
@@ -96,11 +102,11 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 			CloseClipboard();
 			return false;
 		}
-		
-		SetClipboardData(CF_TEXT, addr);
-		GlobalFree(clipboard_data);
+		else
+		{	
+			SetClipboardData(CF_TEXT, addr);
+		}
 	}
-	else
 	{
 		CloseClipboard();
 		return false;
