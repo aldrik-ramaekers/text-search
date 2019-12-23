@@ -63,7 +63,7 @@ static void write_json_file(char *buffer, search_result *search_result)
 	string_append(buffer, ",");
 	
 	string_append(buffer, "\"recursive_search\": ");
-	string_appendf(buffer, s32_to_string(*search_result->recursive_state_buffer, conv_buf));
+	string_appendf(buffer, s32_to_string(search_result->is_recursive, conv_buf));
 	string_append(buffer, ",");
 	
 	string_append(buffer, "\"match_list\": ");
@@ -237,7 +237,7 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	if (!string_remove(&buffer, "\"recursive_search\": ")) return false;
 	s32 recursive = string_get_json_number(&buffer);
 	if (!string_remove(&buffer, ",")) return false;
-	*search_result->recursive_state_buffer = recursive;
+	search_result->is_recursive = recursive;
 	
 	if (!string_remove(&buffer, "\"match_list\": ")) return false;
 	if (!string_remove(&buffer, "[")) return false;

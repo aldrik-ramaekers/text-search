@@ -52,7 +52,6 @@ typedef struct t_search_result
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
-	bool *recursive_state_buffer;
 	s32 search_id;
 	u64 start_time;
 	bool done_finding_files;
@@ -60,6 +59,7 @@ typedef struct t_search_result
 	memory_bucket mem_bucket;
 	s32 max_thread_count;
 	s32 max_file_size;
+	bool is_recursive;
 } search_result;
 
 typedef struct t_find_text_args
@@ -93,8 +93,6 @@ platform_window *main_window;
 // TODO(Aldrik): export not saving on windows?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
-// TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
-// TODO(Aldrik): recursive option is editable during search, restart search when changed
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): implement directX11 render layer for windows
@@ -699,23 +697,16 @@ search_result *create_empty_search_result()
 	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
 	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
 	new_result_buffer->search_directory_buffer = textbox_path.buffer;
-	new_result_buffer->recursive_state_buffer = &checkbox_recursive.state;
 	
 	return new_result_buffer;
 }
 
-static void do_search()
+static bool start_file_search(search_result *new_result)
 {
 	bool continue_search = true;
 	
-	// check if a search is already in progress
-	if (current_search_result->walking_file_system) continue_search = false;
-	if (!current_search_result->done_finding_matches) continue_search = false;
-	
 	if (continue_search)
 	{
-		search_result *new_result = create_empty_search_result();
-		
 		search_result *old_result = current_search_result;
 		current_search_result = new_result;
 		
@@ -766,6 +757,7 @@ static void do_search()
 		{
 			new_result->search_id++;
 			
+			new_result->is_recursive = checkbox_recursive.state;
 			new_result->walking_file_system = true;
 			new_result->done_finding_matches = false;
 			
@@ -781,17 +773,33 @@ static void do_search()
 									&new_result->cancel_search,
 									&new_result->done_finding_files);
 			}
-			
-			// start search for text
-			{
-				char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
-				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
-				new_result->text_to_find = text_to_find_buf;
-				find_text_in_files(new_result);
-			}
-			
-			set_status_text_to_active();
 		}
+	}
+	
+	return continue_search;
+}
+
+static void start_text_search(search_result *new_result)
+{
+	// start search for text
+	char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
+	strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+	new_result->text_to_find = text_to_find_buf;
+	find_text_in_files(new_result);
+}
+
+static void do_search()
+{
+	// check if a search is already in progress
+	if (current_search_result->walking_file_system) return;
+	if (!current_search_result->done_finding_matches) return;
+	
+	search_result *new_result = create_empty_search_result();
+	
+	if (start_file_search(new_result))
+	{
+		start_text_search(new_result);
+		set_status_text_to_active();
 	}
 }
 
