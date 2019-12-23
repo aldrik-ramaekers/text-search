@@ -18,147 +18,6 @@
 search_result *create_empty_search_result();
 void* destroy_search_result_thread(void *arg);
 
-static void write_yaml_file(char *buffer, search_result *search_result)
-{
-	array matches = search_result->files;
-	char conv_buf[20];
-	
-	string_append(buffer, "---\n");
-	string_append(buffer, "file_list:\n");
-	
-	for (s32 i = 0; i < matches.length; i++)
-	{
-		text_match* m = array_at(&matches, i);
-		
-		string_append(buffer, "  -\n");
-		
-		string_append(buffer, "    path: \"");
-		string_appendf(buffer, m->file.path);
-		string_append(buffer, "\"\n");
-		
-		string_append(buffer, "    matched_filter: \"");
-		string_appendf(buffer, m->file.matched_filter);
-		string_append(buffer, "\"\n");
-		
-		string_append(buffer, "    file_error: ");
-		string_appendf(buffer, s32_to_string(m->file_error, conv_buf));
-		string_append(buffer, "\n");
-		
-		string_append(buffer, "    line_nr: ");
-		string_appendf(buffer, s32_to_string(m->line_nr, conv_buf));
-		string_append(buffer, "\n");
-		
-		string_append(buffer, "    file_size: ");
-		string_appendf(buffer, s32_to_string(m->file_size, conv_buf));
-		string_append(buffer, "\n");
-		
-		if (m->line_info)
-		{
-			string_append(buffer, "    line_info: \"");
-			string_appendf(buffer, m->line_info);
-			string_append(buffer, "\"\n");
-		}
-		else
-		{
-			string_append(buffer, "    line_info: 0\n");
-		}
-	}
-	
-}
-
-static void write_xml_file(char *buffer, search_result *search_result)
-{
-	array matches = search_result->files;
-	char conv_buf[20];
-	
-	// header
-	string_append(buffer, "<search_info>");
-	string_append(buffer, "<search_directory>");
-	string_appendf(buffer, search_result->search_directory_buffer);
-	string_append(buffer, "</search_directory>");
-	
-	string_append(buffer, "<filter>");
-	string_appendf(buffer, search_result->filter_buffer);
-	string_append(buffer, "</filter>");
-	
-	string_append(buffer, "<search_query>");
-	string_appendf(buffer, search_result->text_to_find_buffer);
-	string_append(buffer, "</search_query>");
-	
-	string_append(buffer, "<duration_us>");
-	string_appendf(buffer, u64_to_string(search_result->find_duration_us, conv_buf));
-	string_append(buffer, "</duration_us>");
-	
-	string_append(buffer, "<show_error>");
-	string_appendf(buffer, s32_to_string(search_result->show_error_message, conv_buf));
-	string_append(buffer, "</show_error>");
-	
-	string_append(buffer, "<file_match_found>");
-	string_appendf(buffer, s32_to_string(search_result->found_file_matches, conv_buf));
-	string_append(buffer, "</file_match_found>");
-	
-	string_append(buffer, "<files_searched>");
-	string_appendf(buffer, s32_to_string(search_result->files_searched, conv_buf));
-	string_append(buffer, "</files_searched>");
-	
-	string_append(buffer, "<files_matched>");
-	string_appendf(buffer, s32_to_string(search_result->files_matched, conv_buf));
-	string_append(buffer, "</files_matched>");
-	
-	string_append(buffer, "<query_match_found>");
-	string_appendf(buffer, s32_to_string(search_result->match_found, conv_buf));
-	string_append(buffer, "</query_match_found>");
-	
-	string_append(buffer, "<recursive_search>");
-	string_appendf(buffer, s32_to_string(*search_result->recursive_state_buffer, conv_buf));
-	string_append(buffer, "</recursive_search>");
-	
-	string_append(buffer, "<file_list>");
-	
-	for (s32 i = 0; i < matches.length; i++)
-	{
-		text_match* m = array_at(&matches, i);
-		
-		string_append(buffer, "<file>");
-		
-		string_append(buffer, "<path>");
-		string_appendf(buffer, m->file.path);
-		string_append(buffer, "</path>");
-		
-		string_append(buffer, "<matched_filter>");
-		string_appendf(buffer, m->file.matched_filter);
-		string_append(buffer, "</matched_filter>");
-		
-		string_append(buffer, "<file_error>");
-		string_appendf(buffer, s32_to_string(m->file_error, conv_buf));
-		string_append(buffer, "</file_error>");
-		
-		string_append(buffer, "<line_nr>");
-		string_appendf(buffer, s32_to_string(m->line_nr, conv_buf));
-		string_append(buffer, "</line_nr>");
-		
-		string_append(buffer, "<file_size>");
-		string_appendf(buffer, s32_to_string(m->file_size, conv_buf));
-		string_append(buffer, "</file_size>");
-		
-		if (m->line_info)
-		{
-			string_append(buffer, "<line_info>");
-			string_appendf(buffer, m->line_info);
-			string_append(buffer, "</line_info>");
-		}
-		else
-		{
-			string_append(buffer, "<line_info>0</line_info>");
-		}
-		
-		string_append(buffer, "</file>");
-	}
-	
-	string_append(buffer, "</file_list>");
-	string_append(buffer, "</search_info>");
-}
-
 static void write_json_file(char *buffer, search_result *search_result)
 {
 	array matches = search_result->files;
@@ -273,7 +132,7 @@ static void *export_result_d(void *arg)
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = SAVE_FILE;
-	args->file_filter = SEARCH_RESULT_AVAILABLE_FORMATS;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
 	args->start_path = start_path;
 	
 	platform_open_file_dialog_block(args);
@@ -297,14 +156,6 @@ static void *export_result_d(void *arg)
 	{
 		write_json_file(buffer, search_result);
 	}
-	if (string_equals(file_extension, ".xml"))
-	{
-		write_xml_file(buffer, search_result);
-	}
-	if (string_equals(file_extension, ".yaml"))
-	{
-		write_yaml_file(buffer, search_result);
-	}
 	
 	if (string_equals(file_extension, ""))
 	{
@@ -324,42 +175,6 @@ bool export_results(search_result *search_result)
 	while (!thr.valid)
 		thr = thread_start(export_result_d, search_result);
 	thread_detach(&thr);
-	
-	return true;
-}
-
-static bool read_xml_file(char *buffer, s32 size, search_result *search_result)
-{
-	struct xml_document* document = xml_parse_document((u8*)buffer, size);
-	if (!document) return false;
-	
-#define load_root_string(buffer, index){\
-		struct xml_node* s1 = xml_node_child(root, index);\
-		struct xml_string* s1_content = xml_node_content(s1);\
-		memset(buffer+xml_string_length(s1_content), 0, 1);\
-		xml_string_copy(s1_content, (u8*)buffer, xml_string_length(s1_content));}
-	
-#define load_root_number(buffer, index){\
-		struct xml_node* s1 = xml_node_child(root, index);\
-		struct xml_string* s1_content = xml_node_content(s1);\
-		char tmp[50];\
-		memset(tmp+xml_string_length(s1_content), 0, 1);\
-		xml_string_copy(s1_content, (u8*)tmp, xml_string_length(s1_content));\
-		buffer = string_to_s32(tmp);}
-	
-	struct xml_node* root = xml_document_root(document);
-	
-	load_root_string(search_result->search_directory_buffer, 0);
-	load_root_string(search_result->filter_buffer, 1);
-	load_root_string(search_result->text_to_find_buffer, 2);
-	
-	load_root_number(search_result->find_duration_us, 3);
-	load_root_number(search_result->show_error_message, 4);
-	load_root_number(search_result->found_file_matches, 5);
-	load_root_number(search_result->files_searched, 6);
-	load_root_number(search_result->files_matched, 7);
-	load_root_number(search_result->match_found, 8);
-	load_root_number(*search_result->recursive_state_buffer, 9);
 	
 	return true;
 }
@@ -514,11 +329,6 @@ void import_results_from_file(char *path_buf)
 		bool result = read_json_file(content.content, content.content_length, new_result);
 		if (!result) goto failed_to_load_file;
 	}
-	else if (string_equals(file_extension, ".xml"))
-	{
-		bool result = read_xml_file(content.content, content.content_length, new_result);
-		if (!result) goto failed_to_load_file;
-	}
 	else
 	{
 		goto failed_to_load_file;
@@ -549,7 +359,7 @@ static void* import_results_d(void *arg)
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = OPEN_FILE;
-	args->file_filter = SEARCH_RESULT_AVAILABLE_FORMATS;
+	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
 	args->start_path = start_path;
 	
 	platform_open_file_dialog_block(args);

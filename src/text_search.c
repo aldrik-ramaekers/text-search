@@ -90,6 +90,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): improve textbox feeling
 // TODO(Aldrik): export not saving on windows?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
@@ -97,7 +98,6 @@ platform_window *main_window;
 // TODO(Aldrik): recursive option is editable during search, restart search when changed
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
-// TODO(Aldrik): multiple import/export formats like: json, xml, yaml
 // TODO(Aldrik): implement directX11 render layer for windows
 
 checkbox_state checkbox_recursive;

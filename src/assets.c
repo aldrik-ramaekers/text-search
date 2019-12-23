@@ -271,7 +271,7 @@ void assets_destroy_image(image *image_to_destroy)
 
 font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size)
 {
-	assert(!(size % 4));
+	//assert(!(size % 4));
 	for (int i = 0; i < global_asset_collection.fonts.length; i++)
 	{
 		font *font_at = array_at(&global_asset_collection.fonts, i);
