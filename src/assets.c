@@ -68,8 +68,6 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				task->image->loaded = true;
-				
-				stbi_image_free(task->image->data);
 			}
 		}
 		else if (task->type == ASSET_FONT)
@@ -82,7 +80,6 @@ void assets_do_post_process()
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, task->font->palette_width,task->font->palette_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, task->font->bitmap);
 				
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-				
 				task->font->loaded = true;
 			}
 		}
@@ -115,13 +112,12 @@ bool assets_queue_worker_load_font(font *font)
 	
 	/* prepare font */
     stbtt_fontinfo info;
-    if (!stbtt_InitFont(&info, ttf_buffer, 0))
+    if (!stbtt_InitFont(&info, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0)))
     {
 		return false;
 	}
 	
-	// ascii 32 - 126
-	int b_w = 95*(font->size*2); /* bitmap width */
+	int b_w = (TEXT_CHARSET_END-TEXT_CHARSET_START+1)*(font->size*2); /* bitmap width */
     int b_h = font->size*2; /* bitmap height */
 	int l_h = font->size*2; /* line height */
 	
@@ -143,8 +139,10 @@ bool assets_queue_worker_load_font(font *font)
 	ascent *= scale;
 	descent *= scale;
 	
-    for (int i = 32; i <= 126; ++i)
+    for (int i = TEXT_CHARSET_START; i <= TEXT_CHARSET_END; ++i)
     {
+		if (!stbtt_FindGlyphIndex(&info, i)) continue;
+		
         /* get bounding box for character (may be offset to account for chars that dip above or below the line */
         int c_x1, c_y1, c_x2, c_y2;
         stbtt_GetCodepointBitmapBox(&info, i, scale, scale, &c_x1, &c_y1, &c_x2, &c_y2);
@@ -161,7 +159,7 @@ bool assets_queue_worker_load_font(font *font)
         stbtt_GetCodepointHMetrics(&info, i, &ax, 0);
         x += font->size*2;
         
-		font->glyph_widths[i-32] = (ax*scale);
+		font->glyph_widths[i-TEXT_CHARSET_START] = (ax*scale);
 	}
 	
 	font->info = info;
@@ -273,7 +271,7 @@ void assets_destroy_image(image *image_to_destroy)
 
 font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size)
 {
-	assert(!(size % 4));
+	//assert(!(size % 4));
 	for (int i = 0; i < global_asset_collection.fonts.length; i++)
 	{
 		font *font_at = array_at(&global_asset_collection.fonts, i);

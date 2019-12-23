@@ -61,10 +61,18 @@ printf("[lllll][*lllll*] : %d\n", string_contains("lllll", "*lllll*"));
 printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
 #endif
 
-#define string_contains(big, small) string_contains_ex(big, small, 0, 0, 0)
+#define string_contains(big, small) string_contains_ex(big, small, 0, 0, 0, 0)
 bool string_match(char *first, char *second);
-bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset);
+bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset, bool *cancel_search);
 void string_trim(char *string);
 bool string_equals(char *first, char *second);
+char *s32_to_string(s32 val, char *buffer);
+char *u64_to_string(u64 val, char *buffer);
+void string_append(char *buffer, char *text);
+void string_appendf(char *buffer, char *text);
+bool string_remove(char **buffer, char *text);
+char* string_get_json_literal(char **buffer, char *tmp);
+s32 string_get_json_number(char **buffer);
+s32 string_get_json_ulong_number(char **buffer);
 
 #endif

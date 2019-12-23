@@ -93,7 +93,7 @@
 #include "string_utils.h"
 #include "settings_config.h"
 #include "localization.h"
-#include "text_buffer.h"
+#include "notification.h"
 
 #include "platform_shared.c"
 
@@ -118,8 +118,8 @@
 #include "string_utils.c"
 #include "settings_config.c"
 #include "localization.c"
-#include "text_buffer.c"
 #include "memory_bucket.c"
+#include "notification.c"
 
 #ifdef MODE_DEVELOPER
 #include "memory.c"

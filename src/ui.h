@@ -31,16 +31,34 @@
 #define BUTTON_IMAGE_PADDING 5
 #define BUTTON_IMAGE_SPACING 8
 
+typedef enum t_ui_style_type
+{
+	UI_STYLE_LIGHT = 1,
+	UI_STYLE_DARK = 2,
+} ui_style_type;
+
 typedef struct t_ui_style
 {
+	u16 id;
 	color foreground;
 	color background;
-	color background_hover;
 	color border;
 	color textbox_background;
 	color textbox_active_border;
 	color textbox_foreground;
-	color button_background;
+	color image_outline_tint;
+	color scrollbar_handle_background;
+	color info_bar_background;
+	color error_foreground;
+	color item_hover_background;
+	color scrollbar_background;
+	color menu_background;
+	color menu_hover_background;
+	color menu_foreground;
+	color widget_hover_background;
+	color widget_background;
+	color hypertext_foreground;
+	color hypertext_hover_foreground;
 } ui_style;
 
 typedef enum t_layout_direction
@@ -134,6 +152,7 @@ void ui_end();
 bool ui_is_menu_active(u32 id);
 char* name_of_day(s32 day);
 char* name_of_month(s32 month);
+void ui_set_style(u16 style);
 
 // widget initialization
 checkbox_state ui_create_checkbox(bool selected);
@@ -157,6 +176,8 @@ void ui_block_begin(layout_direction direction);
 void ui_block_end();
 void ui_end_menu_bar();
 void ui_push_text(char *text);
+bool ui_push_hypertext_link(char *text);
+bool ui_push_color_button(char *text, bool selected, color color);
 bool ui_push_image(image *img, s32 w, s32 h, s32 outline, color tint);
 bool ui_push_checkbox(checkbox_state *state, char *title);
 bool ui_push_textbox(textbox_state *state, char *title);

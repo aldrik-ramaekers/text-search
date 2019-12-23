@@ -72,7 +72,7 @@ static s32 length_of_expr(char *word)
 }
 
 // TODO(Aldrik): were only checking word terminators ' ' and '\n', are there any other end of line characters?
-bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset)
+bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset, bool *cancel_search)
 {
 	bool match_started = false;
 	char *small_original = small;
@@ -94,6 +94,8 @@ bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *
 #endif
 	while(*big)
 	{
+		if (cancel_search && *cancel_search) return false;
+		
 		char expr_ch = *small;
 		char text_ch = *big;
 		
@@ -309,4 +311,137 @@ inline void string_trim(char *string)
 inline bool string_equals(char *first, char *second)
 {
 	return (strcmp(first, second) == 0);
+}
+
+char *u64_to_string(u64 val, char *buffer)
+{
+	sprintf(buffer, "%lu", val);
+	return buffer;
+}
+
+char *s32_to_string(s32 val, char *buffer)
+{
+	sprintf(buffer, "%d", val);
+	return buffer;
+}
+
+// replaces " with \" for file formats
+void string_appendf(char *buffer, char *text)
+{
+	u32 len = strlen(buffer);
+	while(*text)
+	{
+		if (*text < 32)
+		{
+			buffer[len] = ' ';
+			len++;
+			text++;
+			continue;
+		}
+		
+		if (*text == '"')
+		{
+			buffer[len] = '\\';
+			len++;
+		}
+		
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+}
+
+void string_append(char *buffer, char *text)
+{
+	u32 len = strlen(buffer);
+	while(*text)
+	{
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+}
+
+bool string_remove(char **buffer, char *text)
+{
+	s32 len = strlen(text);
+	char tmp[200];
+	memcpy(tmp, *buffer, len);
+	memset(tmp+len, 0, 1);
+	
+	if (string_equals(tmp, text))
+	{
+		*buffer += len;
+		return true;
+	}
+	
+	return false;
+}
+
+char* string_get_json_literal(char **buffer, char *tmp)
+{
+	char *buf_start = *buffer;
+	char *buf = *buffer;
+	s32 len = 0;
+	while(*buf)
+	{
+		if ((*buf == ',' || *buf == '}') && (len > 0 && *(buf-1) == '"') && (len > 1 && *(buf-2) != '\\'))
+		{
+			memcpy(tmp, buf_start, len);
+			memset(tmp+len-1, 0, 1);
+			*buffer += len-1;
+			return tmp;
+		}
+		
+		len++;
+		buf++;
+	}
+	
+	return tmp;
+}
+
+s32 string_get_json_ulong_number(char **buffer)
+{
+	char tmp[20];
+	char *buf_start = *buffer;
+	char *buf = *buffer;
+	s32 len = 0;
+	while(*buf)
+	{
+		if (*buf == ',' || *buf == '}')
+		{
+			memcpy(tmp, buf_start, len);
+			memset(tmp+len, 0, 1);
+			*buffer += len;
+			return string_to_u64(tmp);
+		}
+		
+		len++;
+		buf++;
+	}
+	
+	return 0;
+}
+
+s32 string_get_json_number(char **buffer)
+{
+	char tmp[20];
+	char *buf_start = *buffer;
+	char *buf = *buffer;
+	s32 len = 0;
+	while(*buf)
+	{
+		if (*buf == ',' || *buf == '}')
+		{
+			memcpy(tmp, buf_start, len);
+			memset(tmp+len, 0, 1);
+			*buffer += len;
+			return string_to_s32(tmp);
+		}
+		
+		len++;
+		buf++;
+	}
+	
+	return 0;
 }

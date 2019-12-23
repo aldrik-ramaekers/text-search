@@ -73,6 +73,9 @@ typedef struct t_image {
 	GLuint textureID;
 } image;
 
+#define TEXT_CHARSET_START 32
+#define TEXT_CHARSET_END 191
+
 typedef struct t_font
 {
 	u8 *start_addr;
@@ -83,7 +86,7 @@ typedef struct t_font
 	GLuint textureID;
 	s32 palette_width;
 	s32 palette_height;
-	s16 glyph_widths[223];
+	s16 glyph_widths[TEXT_CHARSET_END-TEXT_CHARSET_START+1];
 	float32 scale;
 	stbtt_fontinfo info;
 	void *bitmap;

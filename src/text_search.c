@@ -21,10 +21,10 @@
 typedef struct t_text_match
 {
 	found_file file;
-	u32 match_count;
+	u32 line_nr;
 	s16 file_error;
 	s32 file_size;
-	char *line_info;
+	char *line_info; // will be null when no match is found
 } text_match;
 
 typedef struct t_status_bar
@@ -40,11 +40,11 @@ typedef struct t_search_result
 	u64 find_duration_us;
 	array errors;
 	bool show_error_message; // error occured
-	bool found_file_matches; // found/finding matches
+	bool found_file_matches; // found/finding file matches
 	s32 files_searched;
 	s32 files_matched;
 	s32 search_result_source_dir_len;
-	bool match_found;
+	bool match_found; // found text match
 	mutex mutex;
 	bool walking_file_system;
 	bool cancel_search;
@@ -52,7 +52,6 @@ typedef struct t_search_result
 	char *filter_buffer;
 	char *text_to_find_buffer;
 	char *search_directory_buffer;
-	bool *recursive_state_buffer;
 	s32 search_id;
 	u64 start_time;
 	bool done_finding_files;
@@ -60,7 +59,7 @@ typedef struct t_search_result
 	memory_bucket mem_bucket;
 	s32 max_thread_count;
 	s32 max_file_size;
-	bool is_parallelized;
+	bool is_recursive;
 } search_result;
 
 typedef struct t_find_text_args
@@ -75,7 +74,6 @@ search_result *current_search_result;
 image *search_img;
 image *error_img;
 image *directory_img;
-image *logo_img;
 image *logo_small_img;
 
 font *font_big;
@@ -92,16 +90,12 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): edit install script to not copy data folder
-// TODO(Aldrik)(Windows): include assets in binary, make it a portable application
+// TODO(Aldrik): export not saving on windows?
+// TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
+// TODO(Aldrik): config file on windows has extra newlines
+// TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
-// TODO(Aldrik): multiple import/export formats like: json, xml, yaml
-// TODO(Aldrik): light/dark mode, set dark to default if win10 is in darkmode https://stackoverflow.com/questions/51334674/how-to-detect-windows-10-light-dark-mode-in-win32-application
-// TODO(Aldrik): control scrollbar with mouse
-// TODO(Aldrik): scroll with arrow keys
 // TODO(Aldrik): implement directX11 render layer for windows
-// TODO(Aldrik): click on result line to open in active editor (4coder,emacs,vim,gedit,vis studio code)
-// TODO(Aldrik): double click path in results list to copy to clipboard
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
@@ -165,13 +159,14 @@ static void* find_text_in_file_worker(void *arg)
 			{
 				s32 line_nr = 0, word_offset = 0;
 				char *line;
-				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset))
+				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset, &result_buffer->cancel_search))
 				{
 					args.search_result_buffer->match_found = true;
 					
 					// match info
+					args.match->line_nr = line_nr;
 					args.match->line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
-					sprintf(args.match->line_info, "line %d: %.40s", line_nr, word_offset < 20 ? line : line+word_offset-20);
+					sprintf(args.match->line_info, "%.40s", word_offset < 20 ? line : line+word_offset-20);
 					
 					char *tmp = args.match->line_info;
 					while(*tmp)
@@ -185,7 +180,6 @@ static void* find_text_in_file_worker(void *arg)
 					}
 					
 					mutex_lock(&result_buffer->mutex);
-					args.match->match_count++;
 					result_buffer->files_matched++;
 					mutex_unlock(&result_buffer->mutex);
 				}
@@ -220,9 +214,12 @@ static void* find_text_in_file_worker(void *arg)
 		}
 	}
 	
-	mutex_lock(&result_buffer->mutex);
-	sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
-	mutex_unlock(&result_buffer->mutex);
+	if (!result_buffer->cancel_search)
+	{
+		mutex_lock(&result_buffer->mutex);
+		sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
+		mutex_unlock(&result_buffer->mutex);
+	}
 	
 	finish_early:;
 	return 0;
@@ -264,7 +261,6 @@ static void* find_text_in_files_t(void *arg)
 #if 1
 			find_text_args args;
 			args.match = array_at(&result_buffer->files, i);
-			args.match->match_count = 0;
 			args.match->file_error = 0;
 			args.match->file_size = 0;
 			args.match->line_info = 0;
@@ -275,7 +271,7 @@ static void* find_text_in_files_t(void *arg)
 		}
 	}
 	
-	if (result_buffer->is_parallelized)
+	// check if there are files not in queue yet
 	{
 		if (result_buffer->done_finding_files)
 		{
@@ -297,6 +293,9 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->done_finding_files = false;
 		result_buffer->walking_file_system = false;
 	}
+	
+	// wait untill queue is cleared
+	while(result_buffer->work_queue.length) {}
 	
 	finish_early:
 	{
@@ -342,16 +341,19 @@ static void render_status_bar(platform_window *window, font *font_small)
 	
 	// result status
 	s32 text_size = calculate_text_width(font_small, global_status_bar.result_status_text);
-	render_rectangle(-1, y, window->width+2, h, rgb(225,225,225));
+	render_rectangle(-1, y, window->width+2, h, global_ui_context.style.info_bar_background);
 	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+	render_set_scissor(main_window, main_window->width/2, y, main_window->width/2, h);
 	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->size/2) + 1, global_status_bar.result_status_text, global_ui_context.style.foreground);
-	
+	render_reset_scissor(main_window);
 	
 	// error status
 	if (global_status_bar.error_status_text[0] != 0)
 	{
+		render_set_scissor(main_window, 0, y, main_window->width/2, h);
 		render_image(error_img, 6, y + (h/2) - (img_size/2), img_size, img_size);
-		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, rgb(224, 79, 95));
+		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, global_ui_context.style.error_foreground);
+		render_reset_scissor(main_window);
 	}
 }
 
@@ -362,9 +364,14 @@ static void set_status_text_to_active()
 	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
 	s32 dot_count = (dot_count_t % 1000) / 250;
 	
-	sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
+	sprintf(text, "%.*s%s", dot_count, "...", localize("finding_files"));
 	
 	strncpy(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
+}
+
+static void set_status_text_to_cancelled()
+{
+	strncpy(global_status_bar.result_status_text, "Cancelling search", MAX_STATUS_TEXT_LENGTH);
 }
 
 static void reset_status_text()
@@ -372,11 +379,14 @@ static void reset_status_text()
 	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
-static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse)
+static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
 {
 	if (!current_search_result->done_finding_matches)
 	{
-		set_status_text_to_active();
+		if (!current_search_result->cancel_search)
+			set_status_text_to_active();
+		else
+			set_status_text_to_cancelled();
 	}
 	
 	s32 y = global_ui_context.layout.offset_y;
@@ -384,29 +394,13 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	s32 render_y = y - WIDGET_PADDING;
 	s32 render_h;
-	
-	if (current_search_result->is_parallelized)
-	{
-		render_h = window->height - render_y - 10;
-	}
-	else
-	{
-		render_h = window->height - render_y - 30;
-	}
+	render_h = window->height - render_y - 10;
 	
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
 	if (current_search_result->match_found)
 	{
-		if (!current_search_result->is_parallelized)
-		{
-			render_rectangle(0, y-WIDGET_PADDING, (current_search_result->files_searched/(float)current_search_result->files.length)*window->width, 20, rgb(0,200,0));
-			y += 11;
-		}
-		else
-		{
-			y -= 9;
-		}
+		y -= 9;
 		
 		s32 path_width = window->width / 2.0;
 		s32 pattern_width = window->width / 8.0;
@@ -414,7 +408,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		/// header /////////////
 		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 		
-		render_rectangle(-1, y+1, window->width+2, h-2, rgb(225,225,225));
+		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
 		
 		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
 		
@@ -425,6 +419,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		y += h-1;
 		
+		s32 scroll_w = 14;
 		s32 total_h = 0;
 		s32 start_y = y;
 		s32 total_space = window->height - start_y - 30 + 1;
@@ -436,18 +431,25 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		{
 			text_match *match = array_at(&current_search_result->files, i);
 			
-			if (match->match_count || match->file_error)
+			if (match->line_info || match->file_error)
 			{
 				drawn_entity_count++;
 				s32 rec_y = y+scroll_y;
 				
 				if (rec_y > start_y - h && rec_y < start_y + total_space)
 				{
-#if 0
+#if 1
 					// hover item and click item
-					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30)
+					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30 &&
+						mouse->x >= 0 && mouse->x < window->width - scroll_w)
 					{
-						render_rectangle(-1, rec_y, window->width+2, h, rgb(240,220,220));
+						if (is_left_double_clicked(mouse))
+						{
+							platform_set_clipboard(main_window, match->file.path);
+							//show_notification("Path copied to clipboard");
+						}
+						
+						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
 #endif
@@ -468,10 +470,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
 					if (!match->file_error)
 					{
-						//char snum[20];
-						//sprintf(snum, "(%d Bytes)", match->file_size);
+						char tmp[80];
+						sprintf(tmp, "line %d: %s", match->line_nr, match->line_info);
+						
 						if (match->line_info)
-							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, match->line_info, global_ui_context.style.foreground);
+							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, tmp, global_ui_context.style.foreground);
 					}
 					else
 					{
@@ -508,18 +511,24 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		{
 			if (global_ui_context.mouse->y >= start_y && global_ui_context.mouse->y <= start_y + total_space)
 			{
-				if (global_ui_context.mouse->scroll_state == SCROLL_UP)
-					scroll_y+=(h*3);
-				if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-					scroll_y-=(h*3);
+				// scroll with mouse
+				{
+					if (global_ui_context.mouse->scroll_state == SCROLL_UP)
+						scroll_y+=(h*3);
+					if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
+						scroll_y-=(h*3);
+				}
+				
+				// scroll with arrow keys
+				{
+					if (keyboard_is_key_pressed(keyboard, KEY_UP))
+						scroll_y+=(h*3);
+					if (keyboard_is_key_pressed(keyboard, KEY_DOWN))
+						scroll_y-=(h*3);
+				}
+				
 			}
 			
-			if (scroll_y > 0)
-				scroll_y = 0;
-			if (scroll_y < -overflow)
-				scroll_y = -overflow;
-			
-			s32 scroll_w = 14;
 			s32 scroll_h = 0;
 			s32 scroll_x = window->width - scroll_w;
 			
@@ -529,12 +538,33 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			if (scroll_h < 10)
 				scroll_h = 10;
 			
+			static bool is_scrolling_with_mouse = false;
+			if ((mouse->x >= scroll_x && mouse->x < scroll_x + scroll_w &&
+				 mouse->y >= start_y && mouse->y < start_y + total_space &&
+				 is_left_down(mouse)) || is_scrolling_with_mouse)
+			{
+				is_scrolling_with_mouse = true;
+				
+				if (is_left_released(mouse)) is_scrolling_with_mouse = false;
+				
+				if (main_window->has_focus && mouse->x != MOUSE_OFFSCREEN && mouse->y != MOUSE_OFFSCREEN)
+				{
+					float new_percentage = (mouse->y - start_y) / (float)total_space;
+					scroll_y = -(new_percentage * (total_h-scroll_h));
+				}
+			}
+			
+			if (scroll_y > 0)
+				scroll_y = 0;
+			if (scroll_y < -overflow)
+				scroll_y = -overflow;
+			
 			float percentage = -scroll_y / (float)overflow;
 			float scroll_y = start_y + (total_space - scroll_h) * percentage;
 			
 			// scroll background
 			render_rectangle(scroll_x,start_y,
-							 scroll_w,total_space,rgb(255,255,255));
+							 scroll_w,total_space,global_ui_context.style.scrollbar_background);
 			
 			render_rectangle_outline(scroll_x,start_y,
 									 scroll_w,total_space, 1,
@@ -542,7 +572,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			
 			// scrollbar
 			render_rectangle(scroll_x,scroll_y,
-							 scroll_w,scroll_h,rgb(225,225,225));
+							 scroll_w,scroll_h,global_ui_context.style.scrollbar_handle_background);
 			
 			render_rectangle_outline(scroll_x,scroll_y,
 									 scroll_w,scroll_h, 1,
@@ -592,24 +622,6 @@ static void render_info(platform_window *window, font *font_small)
 		
 		render_text_cutoff(font_small, 10, y, 
 						   info, global_ui_context.style.foreground, window->width - 20);
-	}
-	else
-	{
-		s32 img_c = window->width/2;
-		s32 img_w = 200;
-		s32 img_h = 200;
-		s32 img_x = window->width/2-img_w/2;
-		s32 img_y = window->height/2-img_h/2-50;
-		char text[40];
-		
-		u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
-		s32 dot_count = (dot_count_t % 1000) / 250;
-		
-		sprintf(text, "%s%.*s", localize("finding_files"), dot_count, "...");
-		
-		render_image(logo_img, img_x, img_y, img_w, img_h);
-		s32 text_w = calculate_text_width(font_medium, text);
-		render_text(font_medium, img_c - (text_w/2), img_y + img_h + 50, text, global_ui_context.style.foreground);
 	}
 }
 
@@ -685,23 +697,16 @@ search_result *create_empty_search_result()
 	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
 	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
 	new_result_buffer->search_directory_buffer = textbox_path.buffer;
-	new_result_buffer->recursive_state_buffer = &checkbox_recursive.state;
 	
 	return new_result_buffer;
 }
 
-static void do_search()
+static bool start_file_search(search_result *new_result)
 {
 	bool continue_search = true;
 	
-	// check if a search is already in progress
-	if (current_search_result->walking_file_system) continue_search = false;
-	if (!current_search_result->done_finding_matches) continue_search = false;
-	
 	if (continue_search)
 	{
-		search_result *new_result = create_empty_search_result();
-		
 		search_result *old_result = current_search_result;
 		current_search_result = new_result;
 		
@@ -714,7 +719,6 @@ static void do_search()
 		new_result->found_file_matches = false;
 		new_result->done_finding_files = false;
 		
-		new_result->is_parallelized = 1;
 		new_result->max_thread_count = global_settings_page.max_thread_count;
 		new_result->max_file_size = global_settings_page.max_file_size;
 		
@@ -753,6 +757,7 @@ static void do_search()
 		{
 			new_result->search_id++;
 			
+			new_result->is_recursive = checkbox_recursive.state;
 			new_result->walking_file_system = true;
 			new_result->done_finding_matches = false;
 			
@@ -761,20 +766,40 @@ static void do_search()
 																					 new_result->search_result_source_dir_len);
 			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
-			platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
-								&new_result->cancel_search,
-								&new_result->done_finding_files);
 			
-			if (current_search_result->is_parallelized)
+			// start search for files
 			{
-				char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
-				strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
-				new_result->text_to_find = text_to_find_buf;
-				find_text_in_files(new_result);
+				platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
+									&new_result->cancel_search,
+									&new_result->done_finding_files);
 			}
-			
-			set_status_text_to_active();
 		}
+	}
+	
+	return continue_search;
+}
+
+static void start_text_search(search_result *new_result)
+{
+	// start search for text
+	char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
+	strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+	new_result->text_to_find = text_to_find_buf;
+	find_text_in_files(new_result);
+}
+
+static void do_search()
+{
+	// check if a search is already in progress
+	if (current_search_result->walking_file_system) return;
+	if (!current_search_result->done_finding_matches) return;
+	
+	search_result *new_result = create_empty_search_result();
+	
+	if (start_file_search(new_result))
+	{
+		start_text_search(new_result);
+		set_status_text_to_active();
 	}
 }
 
@@ -782,8 +807,6 @@ static void load_assets()
 {
 	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
 								   _binary____data_imgs_search_png_end);
-	logo_img = assets_load_image(_binary____data_imgs_logo_512_png_start,
-								 _binary____data_imgs_logo_512_png_end);
 	logo_small_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
 									   _binary____data_imgs_logo_32_png_end);
 	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
@@ -815,6 +838,7 @@ void load_config(settings_config *config)
 	char *locale_id = settings_config_get_string(config, "LOCALE");
 	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
+	u32 style = settings_config_get_number(config, "STYLE");
 	
 	if (search_filter)
 		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
@@ -831,6 +855,10 @@ void load_config(settings_config *config)
 	else
 		set_locale("en");
 	
+	if (style != 0)
+	{
+		ui_set_style(style);
+	}
 	if (path)
 	{
 		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
@@ -839,6 +867,7 @@ void load_config(settings_config *config)
 		//global_settings_page.enable_parallelization = parallelize;
 		global_settings_page.max_thread_count = max_thread_count;
 		global_settings_page.max_file_size = max_file_size;
+		global_settings_page.current_style = global_ui_context.style.id;
 	}
 	else
 	{
@@ -846,6 +875,17 @@ void load_config(settings_config *config)
 		//global_settings_page.enable_parallelization = 1;
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
+		
+		if (is_platform_in_darkmode())
+		{
+			ui_set_style(UI_STYLE_DARK);
+			global_settings_page.current_style = global_ui_context.style.id;
+		}
+		else
+		{
+			ui_set_style(UI_STYLE_LIGHT);
+			global_settings_page.current_style = global_ui_context.style.id;
+		}
 		
 		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
@@ -953,23 +993,14 @@ int main(int argc, char **argv)
 		// begin ui
 		ui_begin(1);
 		{
-			global_ui_context.style.background_hover = rgb(190,190,190);
-			global_ui_context.style.background = rgb(225,225,225);
-			global_ui_context.style.border = rgb(180,180,180);
-			global_ui_context.style.foreground = rgb(10, 10, 10);
-			global_ui_context.style.textbox_background = rgb(240,240,240);
-			global_ui_context.style.textbox_foreground = rgb(10,10,10);
-			global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
-			global_ui_context.style.button_background = rgb(225,225,225);
+			render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
 			
 			ui_begin_menu_bar();
 			{
 				// shortcuts begin
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
 				{
-					// TODO(Aldrik): do this after selecting a file..
-					current_search_result = create_empty_search_result();
-					import_results(current_search_result);
+					import_results();
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
 				{
@@ -993,13 +1024,12 @@ int main(int argc, char **argv)
 				}
 				// shortcuts end
 				
+				render_rectangle(0, 0, main_window->width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
 				if (ui_push_menu(localize("file")))
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
 					{ 
-						// TODO(Aldrik): do this after selecting a file..
-						current_search_result = create_empty_search_result(); 
-						import_results(current_search_result); 
+						import_results(); 
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
@@ -1023,8 +1053,6 @@ int main(int argc, char **argv)
 				}
 			}
 			ui_end_menu_bar();
-			
-			global_ui_context.style.background = rgb(255,255,255);
 			
 			ui_push_separator();
 			
@@ -1081,22 +1109,6 @@ int main(int argc, char **argv)
 		ui_end();
 		// end ui
 		
-		/*
-  if (!global_settings_page.enable_parallelization)
-  {
-   if (current_search_result->done_finding_files)
-   {
- char *text_to_find_buf = mem_alloc(MAX_INPUT_LENGTH);
- strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
- current_search_result->text_to_find = text_to_find_buf;
- 
- find_text_in_files(current_search_result);
- current_search_result->done_finding_files = false;
- current_search_result->walking_file_system = false;
-   }
-  }
-  */
-		
 		// draw info or results
 		{
 			render_status_bar(&window, font_small);
@@ -1107,9 +1119,11 @@ int main(int argc, char **argv)
 			}
 			else
 			{
-				render_update_result(&window, font_mini, &mouse);
+				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
 		}
+		
+		//render_font_palette(font_mini, -1000, 300, 1800, 20, rgb(200,0,0));
 		
 		assets_do_post_process();
 		
@@ -1138,11 +1152,12 @@ int main(int argc, char **argv)
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
+	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	//settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
 	
 	if (global_localization.active_localization != 0)
 	{
-		char *current_locale_id = localize_get_id();
+		char *current_locale_id = locale_get_id();
 		if (current_locale_id)
 		{
 			settings_config_set_string(&config, "LOCALE", current_locale_id);
@@ -1166,7 +1181,6 @@ int main(int argc, char **argv)
 	
 	// delete assets
 	assets_destroy_image(search_img);
-	assets_destroy_image(logo_img);
 	assets_destroy_image(logo_small_img);
 	assets_destroy_image(directory_img);
 	assets_destroy_image(error_img);

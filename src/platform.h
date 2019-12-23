@@ -125,6 +125,7 @@ array get_filters(char *filter);
 void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories, bool *is_cancelled);
 void platform_list_files(array *list, char *start_dir, char *filter, bool recursive, memory_bucket *bucket, bool *is_cancelled, bool *state);
 void platform_open_file_dialog(file_dialog_type type, char *buffer, char *file_filter, char *start_path);
+bool is_platform_in_darkmode();
 void *platform_open_file_dialog_block(void *arg);
 char *platform_get_full_path(char *file);
 void platform_open_url(char *command);
@@ -140,6 +141,7 @@ bool platform_file_exists(char *path);
 void platform_show_alert(char *title, char *message);
 void destroy_found_file_array(array *found_files);
 char *get_config_save_location(char *buffer);
+char *get_file_extension(char *path);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

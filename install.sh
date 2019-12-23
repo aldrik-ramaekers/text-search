@@ -32,7 +32,6 @@ ld -r -b binary -o ../bin/data.o \
 ../data/imgs/nl.png \
 ../data/imgs/search.png \
 ../data/imgs/logo_32.png \
-../data/imgs/logo_512.png \
 ../data/fonts/mono.ttf \
 ../data/translations/en-English.mo \
 ../data/translations/nl-Dutch.mo \
@@ -63,7 +62,6 @@ ld -r -b binary -o ../bin/data.o \
 ../data/imgs/nl.png \
 ../data/imgs/search.png \
 ../data/imgs/logo_32.png \
-../data/imgs/logo_512.png \
 ../data/fonts/mono.ttf \
 ../data/translations/en-English.mo \
 ../data/translations/nl-Dutch.mo \

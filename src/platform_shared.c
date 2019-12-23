@@ -209,3 +209,12 @@ void destroy_found_file_array(array *found_files)
 	}
 	array_destroy(found_files);
 }
+
+char *get_file_extension(char *path)
+{
+	while(*path != '.' && *path)
+	{
+		path++;
+	}
+	return path;
+}

@@ -15,6 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <locale.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <X11/X.h>
@@ -174,6 +175,11 @@ inline void platform_set_cursor(platform_window *window, cursor_type type)
 	{
 		window->next_cursor_type = type;
 	}
+}
+
+bool is_platform_in_darkmode()
+{
+	return false;
 }
 
 bool get_active_directory(char *buffer)
@@ -586,6 +592,8 @@ inline void platform_init(int argc, char **argv)
 	void *randr = dlopen("libXrandr.so", RTLD_NOW | RTLD_GLOBAL);
 #endif
 	
+	setlocale(LC_ALL, "en_US.UTF-8");
+	
 	//global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
 	
@@ -902,10 +910,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 {
 	mouse->left_state &= ~MOUSE_CLICK;
 	mouse->right_state &= ~MOUSE_CLICK;
-#if 0
 	mouse->left_state &= ~MOUSE_DOUBLE_CLICK;
 	mouse->right_state &= ~MOUSE_DOUBLE_CLICK;
-#endif
 	mouse->left_state &= ~MOUSE_RELEASE;
 	mouse->right_state &= ~MOUSE_RELEASE;
 	memset(keyboard->input_keys, 0, MAX_KEYCODE);
@@ -992,11 +998,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 		{
 			Time ev_time = window->event.xbutton.time;
 			static Time last_ev_time = 0;
-			if (ev_time - last_ev_time < 200)
-			{
-				mouse->left_state |= MOUSE_DOUBLE_CLICK;
-			}
-			last_ev_time = ev_time;
 			
 			bool is_left_down = window->event.xbutton.button == Button1;
 			bool is_right_down = window->event.xbutton.button == Button3;
@@ -1011,11 +1012,17 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			
 			if (is_left_down)
 			{
+				if (ev_time - last_ev_time < 200)
+				{
+					mouse->left_state |= MOUSE_DOUBLE_CLICK;
+				}
+				
 				mouse->left_state |= MOUSE_DOWN;
 				mouse->left_state |= MOUSE_CLICK;
 				
 				mouse->total_move_x = 0;
 				mouse->total_move_y = 0;
+				last_ev_time = ev_time;
 			}
 			if (is_right_down)
 			{
@@ -1158,6 +1165,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			}
 			
 			XSendEvent(window->display, window->event.xselectionrequest.requestor, False, 0, (XEvent*)&event);
+			XFlush(window->display);
 		}
 	}
 }

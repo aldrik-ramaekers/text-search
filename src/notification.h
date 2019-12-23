@@ -15,28 +15,20 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-#ifndef INCLUDE_FILE
-#define INCLUDE_FILE
+#ifndef INCLUDE_NOTIFICATION
+#define INCLUDE_NOTIFICATION
 
-typedef struct t_text_buffer
+typedef struct t_notification_manager
 {
-	char *data;
-	s32 len;
-	s32 buffer_size;
-	s32 read_cursor;
-} text_buffer;
+	u64 current_notification_display_stamp;
+	array messages;
+} notification_manager;
 
-text_buffer text_buffer_create(s32 buffer_size);
+notification_manager global_notification_manager;
 
-void buffer_write_signed(text_buffer *buffer, s64 val);
-void buffer_write_unsigned(text_buffer *buffer, u64 val);
-void buffer_write_string(text_buffer *buffer, char *string);
-
-s64 buffer_read_signed(text_buffer *buffer);
-u64 buffer_read_unsigned(text_buffer *buffer);
-char *buffer_read_string(text_buffer *buffer, char *string_buffer);
-bool buffer_done_reading(text_buffer *buffer);
-
-void text_buffer_destroy(text_buffer *buffer);
+void notification_manager_init();
+void show_notification(char message[MAX_INPUT_LENGTH]);
+void update_render_notifications();
+void notification_manager_destroy();
 
 #endif
