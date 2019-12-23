@@ -111,6 +111,7 @@ void ui_set_style(u16 style)
 		global_ui_context.style.foreground = rgb(10, 10, 10);
 		global_ui_context.style.textbox_background = rgb(240,240,240);
 		global_ui_context.style.textbox_foreground = rgb(10,10,10);
+		global_ui_context.style.textbox_placeholder_foreground = rgb(80,80,80);
 		global_ui_context.style.textbox_active_border = rgb(66, 134, 244);
 	}
 	if (style == UI_STYLE_DARK)
@@ -748,7 +749,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	if (!has_text)
 	{
 		render_text(global_ui_context.font_small, text_x - diff, text_y, 
-					placeholder, global_ui_context.style.textbox_foreground);
+					placeholder, global_ui_context.style.textbox_placeholder_foreground);
 	}
 	else
 	{

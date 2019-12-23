@@ -59,6 +59,7 @@ typedef struct t_ui_style
 	color widget_background;
 	color hypertext_foreground;
 	color hypertext_hover_foreground;
+	color textbox_placeholder_foreground;
 } ui_style;
 
 typedef enum t_layout_direction

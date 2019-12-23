@@ -91,7 +91,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): export not saving on windows?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): command line usage
@@ -1081,10 +1080,13 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
+				s32 len1 = strlen(textbox_search_text.buffer);
 				if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
 				{
 					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
 				}
+				s32 len2 = strlen(textbox_search_text.buffer);
+				if (len1 != len2) do_search();
 				
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
