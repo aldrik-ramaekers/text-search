@@ -22,7 +22,7 @@
 #define SEARCH_RESULT_AVAILABLE_FORMATS "*.json, *.xml, *.yaml"
 
 bool export_results(search_result *result);
-void import_results_from_file(search_result *search_result, char *path_buf);
-void import_results(search_result *result);
+void import_results_from_file(char *path_buf);
+void import_results();
 
 #endif

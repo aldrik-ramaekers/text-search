@@ -40,11 +40,11 @@ typedef struct t_search_result
 	u64 find_duration_us;
 	array errors;
 	bool show_error_message; // error occured
-	bool found_file_matches; // found/finding matches
+	bool found_file_matches; // found/finding file matches
 	s32 files_searched;
 	s32 files_matched;
 	s32 search_result_source_dir_len;
-	bool match_found;
+	bool match_found; // found text match
 	mutex mutex;
 	bool walking_file_system;
 	bool cancel_search;
@@ -94,6 +94,7 @@ platform_window *main_window;
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): when a search has been completed/is active, a change in the search text should restart the text search, but not the file search (search while you type) 
+// TODO(Aldrik): recursive option is editable during search, restart search when changed
 // TODO(Aldrik): copy paste on windows crashes
 // TODO(Aldrik): command line usage
 // TODO(Aldrik): multiple import/export formats like: json, xml, yaml
@@ -992,9 +993,7 @@ int main(int argc, char **argv)
 				// shortcuts begin
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
 				{
-					// TODO(Aldrik): do this after selecting a file..
-					current_search_result = create_empty_search_result();
-					import_results(current_search_result);
+					import_results();
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
 				{
@@ -1023,9 +1022,7 @@ int main(int argc, char **argv)
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
 					{ 
-						// TODO(Aldrik): do this after selecting a file..
-						current_search_result = create_empty_search_result(); 
-						import_results(current_search_result); 
+						import_results(); 
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
