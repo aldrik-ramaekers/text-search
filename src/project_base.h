@@ -127,4 +127,7 @@
 #include "memory.c"
 #endif
 
+#include "external/xml.h"
+#include "external/xml.c"
+
 #endif

@@ -385,7 +385,7 @@ char* string_get_json_literal(char **buffer, char *tmp)
 	s32 len = 0;
 	while(*buf)
 	{
-		if ((*buf == ',' || *buf == '}') && (len > 0 && *(buf-1) == '"'))
+		if ((*buf == ',' || *buf == '}') && (len > 0 && *(buf-1) == '"') && (len > 1 && *(buf-2) != '\\'))
 		{
 			memcpy(tmp, buf_start, len);
 			memset(tmp+len-1, 0, 1);
