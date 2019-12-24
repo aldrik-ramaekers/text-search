@@ -27,7 +27,7 @@ void settings_config_write_to_file(settings_config *config, char *path)
 		config_setting *setting = array_at(&config->settings, i);
 		
 		char entry_buf[200];
-		sprintf(entry_buf, "%s = \"%s\"%c%c", setting->name, setting->value, 0x0D, 0x0A);
+		sprintf(entry_buf, "%s = \"%s\"\n", setting->name, setting->value);
 		strcat(buffer, entry_buf);
 	}
 	

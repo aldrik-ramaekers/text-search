@@ -307,7 +307,7 @@ char* get_config_save_location(char *buffer)
 {
 	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer)))
 	{
-		strcat(buffer, "/text-search/config.txt");
+		strcat(buffer, "\\text-search\\config.txt");
 		return buffer;
 	}
 	

@@ -92,9 +92,7 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
-// TODO(Aldrik): config file on windows has extra newlines
 // TODO(Aldrik): command line usage
-// TODO(Aldrik): implement directX11 render layer for windows
 
 checkbox_state checkbox_recursive;
 textbox_state textbox_search_text;
