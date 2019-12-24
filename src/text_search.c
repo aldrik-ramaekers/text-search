@@ -788,10 +788,6 @@ static void start_text_search(search_result *new_result)
 
 static void do_search()
 {
-	// check if a search is already in progress
-	if (current_search_result->walking_file_system) return;
-	if (!current_search_result->done_finding_matches) return;
-	
 	search_result *new_result = create_empty_search_result();
 	
 	if (start_file_search(new_result))
