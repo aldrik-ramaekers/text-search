@@ -315,13 +315,23 @@ inline bool string_equals(char *first, char *second)
 
 char *u64_to_string(u64 val, char *buffer)
 {
+#ifdef OS_LINUX
 	sprintf(buffer, "%lu", val);
+#endif
+#ifdef IS_WIN
+	sprintf(buffer, "%I64u", val);
+#endif
 	return buffer;
 }
 
 char *s32_to_string(s32 val, char *buffer)
 {
-	sprintf(buffer, "%d", val);
+#ifdef OS_LINUX
+	sprintf(buffer, "%lu", val);
+#endif
+#ifdef IS_WIN
+	sprintf(buffer, "%I64u", val);
+#endif
 	return buffer;
 }
 
