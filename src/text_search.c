@@ -91,6 +91,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): chars like ( have extra space
+// TODO(Aldrik): some searches arent completing?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): command line usage
 
@@ -255,7 +257,6 @@ static void* find_text_in_files_t(void *arg)
 		
 		for (s32 i = start; i < len; i++)
 		{
-#if 1
 			find_text_args args;
 			args.match = array_at(&result_buffer->files, i);
 			args.match->file_error = 0;
@@ -264,7 +265,6 @@ static void* find_text_in_files_t(void *arg)
 			args.search_result_buffer = result_buffer;
 			
 			array_push(&result_buffer->work_queue, &args);
-#endif
 		}
 	}
 	
@@ -291,8 +291,18 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->walking_file_system = false;
 	}
 	
+	thread_sleep(15000);
+	
 	// wait untill queue is cleared
-	while(result_buffer->work_queue.length) {}
+	while(result_buffer->work_queue.length) 
+	{
+		if (result_buffer->cancel_search) 
+		{
+			goto finish_early;
+		}
+	}
+	
+	thread_sleep(15000);
 	
 	finish_early:
 	{
@@ -793,8 +803,8 @@ static void do_search()
 	
 	if (start_file_search(new_result))
 	{
-		start_text_search(new_result);
 		set_status_text_to_active();
+		start_text_search(new_result);
 	}
 }
 
@@ -1090,13 +1100,11 @@ int main(int argc, char **argv)
 				}
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
 				
-				if (current_search_result->walking_file_system || !current_search_result->done_finding_matches)
+				if (!current_search_result->done_finding_matches)
 				{
 					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
 					{
 						current_search_result->cancel_search = true;
-						current_search_result->done_finding_matches = true;
-						current_search_result->walking_file_system = false;
 					}
 				}
 			}
