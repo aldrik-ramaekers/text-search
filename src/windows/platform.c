@@ -842,7 +842,6 @@ static s32 filter_matches(array *filters, char *string, char **matched_filter)
 void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket,  bool include_directories, bool *is_cancelled)
 {
 	assert(list);
-	
 	s32 len = 0;
 	char *matched_filter = 0;
 	
@@ -879,13 +878,13 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 	
 	do
 	{
+		if (*is_cancelled) break;
 		char *name = file_info.cFileName;
 		
 		// symbolic link is not allowed..
 		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_REPARSE_POINT))
 			continue;
 		
-		if (*is_cancelled) break;
 		
 		if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
 		{

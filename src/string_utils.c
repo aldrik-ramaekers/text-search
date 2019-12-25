@@ -327,10 +327,10 @@ char *u64_to_string(u64 val, char *buffer)
 char *s32_to_string(s32 val, char *buffer)
 {
 #ifdef OS_LINUX
-	sprintf(buffer, "%lu", val);
+	sprintf(buffer, "%d", val);
 #endif
 #ifdef IS_WIN
-	sprintf(buffer, "%I64u", val);
+	sprintf(buffer, "%I32s", val);
 #endif
 	return buffer;
 }

@@ -708,6 +708,7 @@ static bool start_file_search(search_result *new_result)
 		search_result *old_result = current_search_result;
 		current_search_result = new_result;
 		
+		old_result->cancel_search = true;
 		thread cleanup_thread = thread_start(destroy_search_result_thread, old_result);
 		thread_detach(&cleanup_thread);
 		
@@ -800,13 +801,13 @@ static void do_search()
 static void load_assets()
 {
 	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
-								   _binary____data_imgs_search_png_end);
+								   _binary____data_imgs_search_png_end, false);
 	logo_small_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
-									   _binary____data_imgs_logo_32_png_end);
+									   _binary____data_imgs_logo_32_png_end, true);
 	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
-									  _binary____data_imgs_folder_png_end);
+									  _binary____data_imgs_folder_png_end, false);
 	error_img = assets_load_image(_binary____data_imgs_error_png_start,
-								  _binary____data_imgs_error_png_end);
+								  _binary____data_imgs_error_png_end, false);
 	
 	font_medium = assets_load_font(_binary____data_fonts_mono_ttf_start,
 								   _binary____data_fonts_mono_ttf_end, 24);
@@ -1150,7 +1151,6 @@ int main(int argc, char **argv)
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
-	//settings_config_set_number(&config, "PARALLELIZE_SEARCH", global_settings_page.enable_parallelization);
 	
 	if (global_localization.active_localization != 0)
 	{

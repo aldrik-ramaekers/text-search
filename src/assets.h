@@ -65,6 +65,7 @@ typedef struct t_image {
 	u8 *start_addr;
 	u8 *end_addr;
 	bool loaded;
+	bool keep_in_memory;
 	s32 width;
 	s32 height;
 	s32 channels;
@@ -139,7 +140,7 @@ void assets_destroy();
 void assets_do_post_process();
 void *assets_queue_worker();
 
-image *assets_load_image(u8 *start_addr, u8 *end_addr);
+image *assets_load_image(u8 *start_addr, u8 *end_addr, bool keep_in_memory);
 void assets_destroy_image(image *image);
 
 font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size);

@@ -68,6 +68,9 @@ void assets_do_post_process()
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 				task->image->loaded = true;
+				
+				if (!task->image->keep_in_memory)
+					stbi_image_free(task->image->data);
 			}
 		}
 		else if (task->type == ASSET_FONT)
@@ -216,7 +219,7 @@ void *assets_queue_worker()
 	return 0;
 }
 
-image *assets_load_image(u8 *start_addr, u8 *end_addr)
+image *assets_load_image(u8 *start_addr, u8 *end_addr, bool keep_in_memory)
 {
 	// check if image is already loaded or loading
 	for (int i = 0; i < global_asset_collection.images.length; i++)
@@ -236,6 +239,7 @@ image *assets_load_image(u8 *start_addr, u8 *end_addr)
 	new_image.start_addr = start_addr;
 	new_image.end_addr = end_addr;
 	new_image.references = 1;
+	new_image.keep_in_memory = keep_in_memory;
 	
 	// NOTE(Aldrik): we should never realloc the image array because pointers will be 
 	// invalidated.
@@ -260,6 +264,9 @@ void assets_destroy_image(image *image_to_destroy)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, &image_to_destroy->textureID);
+		
+		if (image_to_destroy->keep_in_memory)
+			stbi_image_free(image_to_destroy->data);
 		
 		//array_remove(&global_asset_collection.images, image_at);
 	}

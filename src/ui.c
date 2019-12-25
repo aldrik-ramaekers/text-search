@@ -48,7 +48,11 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.state = false;
 	state.text_offset_x = 0;
 	state.history = array_create(sizeof(textbox_history_entry));
+	array_reserve(&state.history, 100);
+	state.history.reserve_jump = 100;
 	state.selection_start_index = 0;
+	state.double_clicked_to_select = false;
+	state.double_clicked_to_select_cursor_index = 0;
 	
 	return state;
 }

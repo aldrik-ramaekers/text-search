@@ -29,7 +29,7 @@ mo_file load_localization_file(u8 *start_addr, u8 *end_addr, u8 *img_start, u8 *
 		mo.locale_full = mem_alloc(strlen(locale_name)+1);
 		strcpy(mo.locale_full, locale_name);
 		
-		mo.icon = assets_load_image(img_start, img_end);
+		mo.icon = assets_load_image(img_start, img_end, false);
 		
 		char *buffer = (char*)start_addr;
 		mo_entry *identifiers = (mo_entry*)(buffer + mo.header.identifier_table_offset);
