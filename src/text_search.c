@@ -91,7 +91,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): chars like ( have extra space
+// TODO(Aldrik): chars like ( have extra render space
 // TODO(Aldrik): some searches arent completing?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): command line usage
@@ -286,12 +286,9 @@ static void* find_text_in_files_t(void *arg)
 			thread_sleep(1000);
 			goto do_work;
 		}
-		
-		result_buffer->done_finding_files = false;
-		result_buffer->walking_file_system = false;
 	}
 	
-	thread_sleep(15000);
+	//thread_sleep(15000);
 	
 	// wait untill queue is cleared
 	while(result_buffer->work_queue.length) 
@@ -300,9 +297,10 @@ static void* find_text_in_files_t(void *arg)
 		{
 			goto finish_early;
 		}
+		thread_sleep(1000);
 	}
 	
-	thread_sleep(15000);
+	//thread_sleep(15000);
 	
 	finish_early:
 	{
@@ -310,6 +308,7 @@ static void* find_text_in_files_t(void *arg)
 		
 		result_buffer->find_duration_us = end_f - result_buffer->start_time;
 		result_buffer->done_finding_matches = true;
+		result_buffer->walking_file_system = false;
 		result_buffer->files_searched = result_buffer->files.length;
 		
 		if (!main_window->has_focus)
@@ -630,6 +629,10 @@ static void render_info(platform_window *window, font *font_small)
 		render_text_cutoff(font_small, 10, y, 
 						   info, global_ui_context.style.foreground, window->width - 20);
 	}
+	else
+	{
+		// TODO(Aldrik): loading animation here?
+	}
 }
 
 static s32 prepare_search_directory_path(char *path, s32 len)
@@ -750,9 +753,9 @@ static bool start_file_search(search_result *new_result)
 			
 			if (strcmp(textbox_search_text.buffer, "") == 0)
 			{
-				//set_error(localize("no_search_text_specified"));
-				//continue_search = false;
-				strcpy(textbox_search_text.buffer, "*");
+				set_error(localize("no_search_text_specified"));
+				continue_search = false;
+				//strcpy(textbox_search_text.buffer, "*");
 			}
 			
 			if (!platform_directory_exists(textbox_path.buffer))

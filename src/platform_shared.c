@@ -175,8 +175,10 @@ void *platform_list_files_thread(void *args)
 	
 	platform_list_files_block(info->list, info->start_dir, filters, info->recursive, info->bucket, info->include_directories, info->is_cancelled);
 	
+	mutex_lock(&info->list->mutex);
 	if (!(*info->is_cancelled))
-		*(info->state) = !(*info->state);
+		*(info->state) = true;
+	mutex_unlock(&info->list->mutex);
 	
 	array_destroy(&filters);
 	
