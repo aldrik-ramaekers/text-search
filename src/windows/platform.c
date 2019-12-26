@@ -913,7 +913,10 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 						f.matched_filter= mem_alloc(len+1);
 					
 					strncpy(f.matched_filter, matched_filter, len+1);
+					
+					mutex_lock(&list->mutex);
 					array_push_size(list, &f, sizeof(found_file));
+					mutex_unlock(&list->mutex);
 				}
 			}
 			
@@ -955,7 +958,10 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					f.matched_filter = mem_alloc(len+1);
 				
 				strncpy(f.matched_filter, matched_filter, len+1);
+				
+				mutex_lock(&list->mutex);
 				array_push_size(list, &f, sizeof(found_file));
+				mutex_unlock(&list->mutex);
 			}
 		}
 	}
@@ -1113,12 +1119,15 @@ void platform_set_icon(platform_window *window, image *img)
 		{
 			s32 img_pixel = *(((s32*)img->data+(x+(y*img->width))));
 			
-			s32 r =  ((img_pixel & 0xFF000000) >> 24) | //______AA
-				((img_pixel & 0x00FF0000) >> 8) | //____RR__
-				((img_pixel & 0x0000FF00) << 16) | //__GG____
-				((img_pixel & 0x000000FF) << 24);  //BB______
+			// 0xAABBGGRR
+			s32 a = (img_pixel>>24) & 0x000000FF;
+			s32 b = (img_pixel>>16) & 0x000000FF;
+			s32 g = (img_pixel>> 8) & 0x000000FF;
+			s32 r = (img_pixel>> 0) & 0x000000FF;
 			
-			memcpy(bmp+40+(index*4), &r, 4);
+			//s32 c = (b << 24) | (g << 16) | (r << 8) | (a << 0);
+			s32 c = (r << 24) | (g << 16) | (b << 8) | (a << 0);
+			memcpy(bmp+40+(index*4), &c, 4);
 			
 			++index;
 		}

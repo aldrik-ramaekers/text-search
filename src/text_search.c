@@ -37,6 +37,7 @@ typedef struct t_search_result
 {
 	array work_queue;
 	array files;
+	array matches;
 	u64 find_duration_us;
 	array errors;
 	bool show_error_message; // error occured
@@ -65,7 +66,7 @@ typedef struct t_search_result
 
 typedef struct t_find_text_args
 {
-	text_match *match;
+	text_match file;
 	search_result *search_result_buffer;
 } find_text_args;
 
@@ -91,8 +92,14 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): check if icon is OK on windows (not wine)
+// TODO(Aldrik): name of application in taskbar on linux
+// TODO(Aldrik): multiple results in file?
+// TODO(Aldrik): throughly test it, make a fuzzer or something
+// TODO(Aldrik): integrate new logo (make 32px size first)
+// TODO(Aldrik): save as dialog on windows not showing available file types
+// TODO(Aldrik): dont allow saving while search is active
 // TODO(Aldrik): chars like ( have extra render space
-// TODO(Aldrik): some searches arent completing?
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): command line usage
 
@@ -111,8 +118,7 @@ void* destroy_search_result_thread(void *arg)
 	// wait 3 sec for all threads writing to memory bucket to finish
 	thread_sleep(1000*1000*3);
 	
-	array_destroy(&buffer->work_queue);
-	array_destroy(&buffer->files);
+	array_destroy(&buffer->matches);
 	array_destroy(&buffer->errors);
 	
 	memory_bucket_destroy(&buffer->mem_bucket);
@@ -142,13 +148,17 @@ static void* find_text_in_file_worker(void *arg)
 			mutex_unlock(&result_buffer->work_queue.mutex);
 			
 			// read file
-			content = platform_read_file_content(args.match->file.path, "r");
-			args.match->file_size = content.content_length;
+			content = platform_read_file_content(args.file.file.path, "r");
+			args.file.file_size = content.content_length;
 			
 			// check if file is not too big for set filter
 			s32 kb_to_b = result_buffer->max_file_size * 1000;
 			if (result_buffer->max_file_size && content.content_length > kb_to_b)
 			{
+				mutex_lock(&result_buffer->mutex);
+				result_buffer->files_searched++;
+				mutex_unlock(&result_buffer->mutex);
+				
 				platform_destroy_file_content(&content);
 				continue;
 			}
@@ -163,11 +173,11 @@ static void* find_text_in_file_worker(void *arg)
 					args.search_result_buffer->match_found = true;
 					
 					// match info
-					args.match->line_nr = line_nr;
-					args.match->line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
-					sprintf(args.match->line_info, "%.40s", word_offset < 20 ? line : line+word_offset-20);
+					args.file.line_nr = line_nr;
+					args.file.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
+					sprintf(args.file.line_info, "%.40s", word_offset < 20 ? line : line+word_offset-20);
 					
-					char *tmp = args.match->line_info;
+					char *tmp = args.file.line_info;
 					while(*tmp)
 					{
 						if (*tmp == '\n')
@@ -181,6 +191,8 @@ static void* find_text_in_file_worker(void *arg)
 					mutex_lock(&result_buffer->mutex);
 					result_buffer->files_matched++;
 					mutex_unlock(&result_buffer->mutex);
+					
+					array_push(&result_buffer->matches, &args.file);
 				}
 			}
 			else
@@ -192,9 +204,9 @@ static void* find_text_in_file_worker(void *arg)
 				}
 				
 				if (content.file_error)
-					args.match->file_error = content.file_error;
+					args.file.file_error = content.file_error;
 				else
-					args.match->file_error = FILE_ERROR_GENERIC;
+					args.file.file_error = FILE_ERROR_GENERIC;
 				
 				mutex_lock(&args.search_result_buffer->mutex);
 				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
@@ -253,37 +265,42 @@ static void* find_text_in_files_t(void *arg)
 		
 		mutex_lock(&result_buffer->files.mutex);
 		len = result_buffer->files.length;
-		mutex_unlock(&result_buffer->files.mutex);
-		
 		for (s32 i = start; i < len; i++)
 		{
 			find_text_args args;
-			args.match = array_at(&result_buffer->files, i);
-			args.match->file_error = 0;
-			args.match->file_size = 0;
-			args.match->line_info = 0;
+			args.file = *(text_match*)array_at(&result_buffer->files, i);
+			args.file.file_error = 0;
+			args.file.file_size = 0;
+			args.file.line_info = 0;
 			args.search_result_buffer = result_buffer;
 			
+			mutex_lock(&result_buffer->work_queue.mutex);
 			array_push(&result_buffer->work_queue, &args);
+			mutex_unlock(&result_buffer->work_queue.mutex);
 		}
+		mutex_unlock(&result_buffer->files.mutex);
 	}
 	
 	// check if there are files not in queue yet
 	{
+		mutex_lock(&result_buffer->files.mutex);
 		if (result_buffer->done_finding_files)
 		{
 			if (len != result_buffer->files.length)
 			{
 				start = len;
 				len = result_buffer->files.length;
+				mutex_unlock(&result_buffer->files.mutex);
 				goto do_work;
 			}
+			mutex_unlock(&result_buffer->files.mutex);
 		}
 		else
 		{
 			start = len;
 			len = result_buffer->files.length;
-			thread_sleep(1000);
+			mutex_unlock(&result_buffer->files.mutex);
+			thread_sleep(100);
 			goto do_work;
 		}
 	}
@@ -293,11 +310,12 @@ static void* find_text_in_files_t(void *arg)
 	// wait untill queue is cleared
 	while(result_buffer->work_queue.length) 
 	{
+		//printf("in queue: %d, cancelled: %d\n", result_buffer->work_queue.length, result_buffer->cancel_search);
 		if (result_buffer->cancel_search) 
 		{
 			goto finish_early;
 		}
-		thread_sleep(1000);
+		thread_sleep(100);
 	}
 	
 	//thread_sleep(15000);
@@ -323,7 +341,10 @@ static void* find_text_in_files_t(void *arg)
 	}
 	
 	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
+	
 	array_destroy(&threads);
+	array_destroy(&result_buffer->work_queue);
+	array_destroy(&result_buffer->files);
 	
 	return 0;
 }
@@ -433,9 +454,9 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		/// draw entries ////////
 		s32 drawn_entity_count = 0;
-		for (s32 i = 0; i < current_search_result->files.length; i++)
+		for (s32 i = 0; i < current_search_result->matches.length; i++)
 		{
-			text_match *match = array_at(&current_search_result->files, i);
+			text_match *match = array_at(&current_search_result->matches, i);
 			
 			if (match->line_info || match->file_error)
 			{
@@ -696,13 +717,17 @@ search_result *create_empty_search_result()
 	
 	// list of files found in current search
 	new_result_buffer->files = array_create(sizeof(text_match));
-	new_result_buffer->files.reserve_jump = 1000;
+	new_result_buffer->files.reserve_jump = 5000;
 	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
+	
+	new_result_buffer->matches = array_create(sizeof(text_match));
+	new_result_buffer->matches.reserve_jump = 5000;
+	array_reserve(&new_result_buffer->matches, FILE_RESERVE_COUNT);
 	
 	// work queue when searching for matches
 	new_result_buffer->work_queue = array_create(sizeof(find_text_args));
-	new_result_buffer->files.reserve_jump = 1000;
-	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
+	new_result_buffer->work_queue.reserve_jump = 5000;
+	array_reserve(&new_result_buffer->work_queue, FILE_RESERVE_COUNT);
 	
 	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
 	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
@@ -815,8 +840,8 @@ static void load_assets()
 {
 	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
 								   _binary____data_imgs_search_png_end, false);
-	logo_small_img = assets_load_image(_binary____data_imgs_logo_32_png_start,
-									   _binary____data_imgs_logo_32_png_end, true);
+	logo_small_img = assets_load_image(_binary____data_imgs_logo_64_png_start,
+									   _binary____data_imgs_logo_64_png_end, true);
 	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
 									  _binary____data_imgs_folder_png_end, false);
 	error_img = assets_load_image(_binary____data_imgs_error_png_start,
