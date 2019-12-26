@@ -83,6 +83,7 @@
 #define STB_TRUETYPE_IMPLEMENTATION
 #include "external/stb_truetype.h"
 
+#include "external/utf8.h"
 #include "input.h"
 #include "assets.h"
 #include "memory_bucket.h"

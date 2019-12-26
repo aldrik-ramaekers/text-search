@@ -114,7 +114,7 @@ char* localize(const char *identifier)
 			return trans->translation;
 		}
 	}
-	printf("MISSING TRANSLATION: [%s][%s]", identifier, global_localization.active_localization->locale_id);
+	printf("MISSING TRANSLATION: [%s][%s]\n", identifier, global_localization.active_localization->locale_id);
 	return "MISSING";
 }
 

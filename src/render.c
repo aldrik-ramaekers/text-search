@@ -100,7 +100,8 @@ void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint)
 
 static s32 add_char_width(char ch, s32 width, font *font)
 {
-	if (ch != '.' && ch != ',' && ch != ':')
+	if (ch != '.' && ch != ',' && ch != ':' && ch != '(' && ch != ')' && ch != '!' && 
+		ch != ';' && ch != '`')
 		return width/2;
 	else
 		return font->size/4;
@@ -148,7 +149,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
   int kern = 0;
   kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
   {
-   if (kern != 0) printf("%d\n", kern);
+  if (kern != 0) printf("%d\n", kern);
   }
   */
 		
@@ -318,7 +319,12 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 	while(*text)
 	{
 		char ch = *text;
-		char ch_next = *(text+1);
+		if (ch == 9) ch = 32;
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
 		s32 width = font->glyph_widths[ch-32];
 		
 		x += add_char_width(ch,width,font);
@@ -344,7 +350,12 @@ s32 calculate_text_width(font *font, char *text)
 	while(*text)
 	{
 		char ch = *text;
-		char ch_next = *(text+1);
+		if (ch == 9) ch = 32;
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
 		s32 width = font->glyph_widths[ch-32];
 		
 		x += add_char_width(ch,width,font);

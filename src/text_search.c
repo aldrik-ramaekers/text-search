@@ -92,14 +92,13 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): check if icon is OK on windows (not wine)
+// TODO(Aldrik): utf8 https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/
+// TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
+// TODO(Aldrik): colors if icon are wrong
 // TODO(Aldrik): name of application in taskbar on linux
 // TODO(Aldrik): multiple results in file?
-// TODO(Aldrik): throughly test it, make a fuzzer or something
-// TODO(Aldrik): integrate new logo (make 32px size first)
+// TODO(Aldrik): thoroughly test it, make a fuzzer or something
 // TODO(Aldrik): save as dialog on windows not showing available file types
-// TODO(Aldrik): dont allow saving while search is active
-// TODO(Aldrik): chars like ( have extra render space
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): command line usage
 
@@ -931,6 +930,13 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
+#if 1
+	char *tmp = u8"ʀ";//²
+	utf8_int32_t out;
+	utf8codepoint(tmp, &out);
+	printf("%d\n", out);
+#endif
+	
 	platform_init(argc, argv);
 	
 #ifdef MODE_DEVELOPER
@@ -1037,7 +1043,9 @@ int main(int argc, char **argv)
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
 				{
-					if (current_search_result->found_file_matches)
+					if (current_search_result->done_finding_matches)
+						platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
+					else if (current_search_result->found_file_matches)
 						export_results(current_search_result);
 					else
 						platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
@@ -1066,8 +1074,10 @@ int main(int argc, char **argv)
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
-						if (current_search_result->found_file_matches)
-							export_results(current_search_result); 
+						if (current_search_result->done_finding_matches)
+							platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
+						else if (current_search_result->found_file_matches)
+							export_results(current_search_result);
 						else
 							platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 					}

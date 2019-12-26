@@ -15,6 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+#include <locale.h>
 #include <windows.h>
 #include <GL/gl.h>
 #include <stdbool.h>
@@ -1071,6 +1072,8 @@ void platform_window_make_current(platform_window *window)
 
 void platform_init(int argc, char **argv)
 {
+	setlocale(LC_ALL, "en_US.UTF-8");
+	
 	QueryPerformanceFrequency(&perf_frequency);
 	CoInitialize(NULL);
 	create_key_tables();
@@ -1125,8 +1128,8 @@ void platform_set_icon(platform_window *window, image *img)
 			s32 g = (img_pixel>> 8) & 0x000000FF;
 			s32 r = (img_pixel>> 0) & 0x000000FF;
 			
-			//s32 c = (b << 24) | (g << 16) | (r << 8) | (a << 0);
-			s32 c = (r << 24) | (g << 16) | (b << 8) | (a << 0);
+			//s32 c = (r << 24) | (g << 16) | (b << 8) | (a << 0);
+			s32 c = (b << 24) | (r << 16) | (g << 8) | (a << 0);
 			memcpy(bmp+40+(index*4), &c, 4);
 			
 			++index;
