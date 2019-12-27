@@ -375,6 +375,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 		
 		current_window_to_handle->has_focus = false;
+		memset(current_keyboard_to_handle->keys, 0, MAX_KEYCODE);
 	}
 	else if (message == WM_SETFOCUS)
 	{

@@ -200,8 +200,6 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y_+font->size, render_depth);
 		
 		y_+=width/2;
-		
-		++text;
 	}
 	
 	glEnd();
@@ -242,7 +240,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		{
 			x_ = x;
 			y_ += font->size;
-			++text;
 			is_new_line = true;
 			continue;
 		}
@@ -250,7 +247,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		if (is_new_line && ch == ' ')
 		{
 			is_new_line = false;
-			++text;
 			continue;
 		}
 		else if (is_new_line && ch != ' ')
@@ -291,8 +287,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 			y_ += font->size;
 			is_new_line = true;
 		}
-		
-		++text;
 	}
 	
 	glEnd();

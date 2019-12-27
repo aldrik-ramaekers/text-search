@@ -1049,7 +1049,7 @@ int main(int argc, char **argv)
 				}
 				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
 				{
-					if (current_search_result->done_finding_matches)
+					if (!current_search_result->done_finding_matches)
 						platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
 					else if (current_search_result->found_file_matches)
 						export_results(current_search_result);
@@ -1080,7 +1080,7 @@ int main(int argc, char **argv)
 					}
 					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
 					{ 
-						if (current_search_result->done_finding_matches)
+						if (!current_search_result->done_finding_matches)
 							platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
 						else if (current_search_result->found_file_matches)
 							export_results(current_search_result);
@@ -1177,8 +1177,8 @@ int main(int argc, char **argv)
 		
 		{
 			char buf[200];
-			sprintf(buf, "%d", keyboard.input_text_len);
-			render_text(font_mini, 50, 50, buf, rgb(200,0,0));
+			sprintf(buf, "%d", keyboard_is_key_down(&keyboard, KEY_LEFT_CONTROL));
+			render_text(font_big, 50, 50, buf, rgb(200,0,0));
 		}
 		
 		assets_do_post_process();
