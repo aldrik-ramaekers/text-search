@@ -92,6 +92,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): copy paste utf8 on windows
 // TODO(Aldrik): utf8 https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): colors if icon are wrong
@@ -921,7 +922,6 @@ void load_config(settings_config *config)
 		
 		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
-	
 	
 	if (window_w >= 800 && window_h >= 600)
         platform_window_set_size(main_window, window_w, window_h);

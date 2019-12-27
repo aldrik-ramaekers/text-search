@@ -118,16 +118,15 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
 	
 	s32 x_ = x;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
-		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-TEXT_CHARSET_START);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
@@ -154,8 +153,6 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
   */
 		
 		x_ += add_char_width(ch,width,font);
-		
-		++text;
 	}
 	
 	glEnd();
@@ -180,7 +177,8 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	
 	s32 x_ = x-(font->size/4);
 	s32 y_ = y;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		char ch = *text;
 		if (ch == 9) ch = 32;
@@ -316,7 +314,8 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 	
 	s32 x = 0;
 	s32 index = 0;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		char ch = *text;
 		if (ch == 9) ch = 32;
@@ -335,7 +334,6 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		}
 		
 		++index;
-		++text;
 	}
 	
 	return x;
@@ -347,7 +345,8 @@ s32 calculate_text_width(font *font, char *text)
 		return 0;
 	
 	s32 x = 0;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		char ch = *text;
 		if (ch == 9) ch = 32;
@@ -359,8 +358,6 @@ s32 calculate_text_width(font *font, char *text)
 		s32 width = font->glyph_widths[ch-32];
 		
 		x += add_char_width(ch,width,font);
-		
-		++text;
 	}
 	
 	return x;
@@ -373,7 +370,8 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	
 	s32 x_ = 0;
 	s32 y = 0;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		char ch = *text;
 		if (ch == 9) ch = 32;
@@ -387,8 +385,6 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 			x_ = 0;
 			y += font->size;
 		}
-		
-		++text;
 	}
 	
 	return y + font->size;

@@ -245,6 +245,13 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			char buf_left[MAX_INPUT_LENGTH];
 			char buf_right[MAX_INPUT_LENGTH];
 			
+			utf8_int32_t ch;
+			char *tmp = keyboard->input_text;
+			while((tmp = utf8codepoint(tmp, &ch)) && ch)
+			{
+				
+			}
+			
 			sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
 			strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
 			
@@ -264,12 +271,31 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		}
 		else if (keyboard->cursor > 0)
 		{
-			s32 len = keyboard->input_text_len;
-			//keyboard->input_text[len-1] = '\0';
-			strcpy(keyboard->input_text+keyboard->cursor-1, keyboard->input_text+keyboard->cursor);
+			size_t codepoint_count = utf8len(keyboard->input_text);
+			utf8_int32_t ch;
+			char *tmp = keyboard->input_text;
+			char *to_overwrite = 0;
+			char *to_overwrite_with = 0;
+			int i = 0;
+			while((tmp = utf8codepoint(tmp, &ch)) && ch && ++i)
+			{
+				if (i == keyboard->cursor-2)
+				{
+					to_overwrite = tmp;
+				}
+				else if (i == keyboard->cursor-1)
+				{
+					to_overwrite_with = tmp;
+				}
+			}
 			
-			keyboard->cursor--;
-			keyboard->input_text_len--;
+			if (to_overwrite && to_overwrite_with)
+			{
+				strcpy(to_overwrite, to_overwrite_with);
+				
+				keyboard->cursor--;
+				keyboard->input_text_len--;
+			}
 		}
 	}
 }
