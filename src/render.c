@@ -180,7 +180,6 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	utf8_int32_t ch;
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
@@ -232,9 +231,9 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	s32 x_ = x;
 	s32 y_ = y;
 	bool is_new_line = false;
-	while(*text)
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 offsetx = (font->size*2)*(ch-32);
@@ -317,7 +316,6 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 	utf8_int32_t ch;
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
@@ -334,6 +332,34 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		}
 		
 		++index;
+	}
+	
+	return x;
+}
+
+s32 calculate_text_width_upto(font *font, char *text, s32 index)
+{
+	if (!font->loaded)
+		return 0;
+	
+	s32 x = 0;
+	utf8_int32_t ch;
+	s32 i = 0;
+	while((text = utf8codepoint(text, &ch)) && ch)
+	{
+		if (index == i) return x;
+		
+		if (ch == 9) ch = 32;
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
+		s32 width = font->glyph_widths[ch-32];
+		
+		x += add_char_width(ch,width,font);
+		
+		i++;
 	}
 	
 	return x;
@@ -373,7 +399,6 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	utf8_int32_t ch;
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
 		s32 width = font->glyph_widths[ch-32];

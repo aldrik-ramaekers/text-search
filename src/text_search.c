@@ -930,11 +930,17 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
-#if 1
-	char *tmp = u8"ʀ";//²
-	utf8_int32_t out;
-	utf8codepoint(tmp, &out);
-	printf("%d\n", out);
+#if 0
+	char *tmp = mem_alloc(100);
+	strcpy(tmp, u8"test1ʀ34");
+	
+	printf("-- %s\n", tmp);
+	utf8_str_insert_at(tmp, 1, 52);
+	printf("-- %s\n", tmp);
+	utf8_str_replace_at(tmp, 2, 40);
+	printf("-- %s\n", tmp);
+	utf8_str_remove_at(tmp, 3, 40);
+	printf("-- %s\n", tmp);
 #endif
 	
 	platform_init(argc, argv);
@@ -1168,6 +1174,12 @@ int main(int argc, char **argv)
 		}
 		
 		//render_font_palette(font_mini, -1000, 300, 1800, 20, rgb(200,0,0));
+		
+		{
+			char buf[200];
+			sprintf(buf, "%d", keyboard.input_text_len);
+			render_text(font_mini, 50, 50, buf, rgb(200,0,0));
+		}
 		
 		assets_do_post_process();
 		

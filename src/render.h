@@ -54,6 +54,7 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint);
 
 s32 calculate_cursor_position(font *font, char *text, s32 click_x);
 s32 calculate_text_width(font *font, char *text);
+s32 calculate_text_width_upto(font *font, char *text, s32 index);
 s32 calculate_text_height(font *font, s32 cutoff_width, char *text);
 
 // primitives

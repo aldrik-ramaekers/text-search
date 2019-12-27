@@ -493,9 +493,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	static u64 last_cursor_pos = -1;
 	
 	if (!global_ui_context.layout.active_window->has_focus)
-	{
 		state->state = false;
-	}
 	
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
@@ -532,6 +530,10 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		if (top > virt_top)
 			virt_top = top;
 	}
+	
+	/////////////////////////////////////////////
+	/////////////////////////////////////////////
+	/////////////////////////////////////////////
 	
 	bool is_selecting = false;
 	bool clicked_to_select = false;
@@ -666,12 +668,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
 		// draw cursor
-		char calculate_text[MAX_INPUT_LENGTH];
-		strcpy(calculate_text, state->buffer);
-		calculate_text[global_ui_context.keyboard->cursor] = 0;
-		
-		cursor_text_w = calculate_text_width(global_ui_context.font_small, 
-											 calculate_text);
+		cursor_text_w = calculate_text_width_upto(global_ui_context.font_small, 
+												  state->buffer, global_ui_context.keyboard->cursor);
 		
 		cursor_x = text_x + cursor_text_w;
 		
@@ -706,6 +704,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	// change selection area based on cursor position.
 	// if double clicked to select the entire textbox we should only 
 	// do this when the mouse has moved enough to select a new character
+#if 0
 	if (is_selecting)
 	{
 		s32 index = calculate_cursor_position(global_ui_context.font_small, 
@@ -731,13 +730,16 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 	}
 	
+	
 	// render selection area
 	if (global_ui_context.keyboard->has_selection && state->state)
 	{
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 		
 		// calculate selection start x
-		char ch = state->buffer[global_ui_context.keyboard->selection_begin_offset];
+		utf8_int32_t ch = utf8_str_at(state->buffer, 
+									  global_ui_context.keyboard->selection_begin_offset);
+		
 		state->buffer[global_ui_context.keyboard->selection_begin_offset] = 0;
 		s32 selection_start_x =  calculate_text_width(global_ui_context.font_small, state->buffer);
 		state->buffer[global_ui_context.keyboard->selection_begin_offset] = ch;
@@ -750,6 +752,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		render_rectangle(text_x - diff + selection_start_x, y+4, selection_width, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
 	}
+#endif
+	
 	if (!has_text)
 	{
 		render_text(global_ui_context.font_small, text_x - diff, text_y, 

@@ -75,4 +75,9 @@ char* string_get_json_literal(char **buffer, char *tmp);
 s32 string_get_json_number(char **buffer);
 s32 string_get_json_ulong_number(char **buffer);
 
+utf8_int32_t utf8_str_at(char *str, s32 index);
+void utf8_str_remove_at(char *str, s32 at);
+void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval);
+void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval);
+
 #endif

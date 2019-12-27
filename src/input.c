@@ -63,7 +63,7 @@ inline bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
 inline void keyboard_set_input_text(keyboard_input *keyboard, char *text)
 {
 	strncpy(keyboard->input_text, text, MAX_INPUT_LENGTH);
-	u32 len = strlen(keyboard->input_text);
+	u32 len = utf8len(keyboard->input_text);
 	keyboard->cursor = len;
 	keyboard->input_text_len = len;
 }
@@ -132,7 +132,7 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 			keyboard->cursor = keyboard->selection_begin_offset;
 			keyboard->selection_length = 0;
 			keyboard->selection_begin_offset = 0;
-			keyboard->input_text_len = strlen(keyboard->input_text);
+			keyboard->input_text_len = utf8len(keyboard->input_text);
 		}
 		
 		if (result)
@@ -140,7 +140,7 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 			char string_right[MAX_INPUT_LENGTH];
 			snprintf(string_right, MAX_INPUT_LENGTH, "%s", keyboard->input_text+keyboard->cursor);
 			
-			s32 len = strlen(buf);
+			s32 len = utf8len(buf);
 			
 			snprintf(keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH, "%s%s", buf, string_right);
 			
@@ -170,41 +170,12 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		{
 			if (keyboard->has_selection)
 			{
-				char buf_left[MAX_INPUT_LENGTH];
-				char buf_right[MAX_INPUT_LENGTH];
-				
-				sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
-				strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
-				
-				sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
-				
-				keyboard->has_selection = false;
-				keyboard->cursor = keyboard->selection_begin_offset;
-				keyboard->selection_length = 0;
-				keyboard->selection_begin_offset = 0;
-				keyboard->input_text_len = strlen(keyboard->input_text);
+				///
 			}
 			
 			if (keyboard->input_text_len)
 			{
-				char buffer[MAX_INPUT_LENGTH];
-				if (keyboard->cursor)
-				{
-					char buf_left[MAX_INPUT_LENGTH];
-					char buf_right[MAX_INPUT_LENGTH];
-					
-					sprintf(buf_left, "%.*s", keyboard->cursor, keyboard->input_text);
-					strcpy(buf_right, keyboard->input_text+keyboard->cursor);
-					
-					
-					snprintf(buffer, MAX_INPUT_LENGTH, "%s%c%s", buf_left, *ch, buf_right);
-				}
-				else
-				{
-					snprintf(buffer, MAX_INPUT_LENGTH, "%c%s", *ch, keyboard->input_text);
-				}
-				
-				strcpy(keyboard->input_text, buffer);
+				utf8_str_insert_at(keyboard->input_text, keyboard->cursor, *ch);
 			}
 			else
 			{
@@ -230,7 +201,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		if (keyboard_is_key_down(keyboard, KEY_RIGHT) && keyboard->cursor < keyboard->input_text_len)
 		{
 			if (is_lctrl_down)
-				keyboard->cursor = keyboard->input_text_len;
+				keyboard->cursor = utf8len(keyboard->input_text);
 			else
 				keyboard->cursor++;
 		}
@@ -242,60 +213,23 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		
 		if (keyboard->has_selection)
 		{
-			char buf_left[MAX_INPUT_LENGTH];
-			char buf_right[MAX_INPUT_LENGTH];
-			
-			utf8_int32_t ch;
-			char *tmp = keyboard->input_text;
-			while((tmp = utf8codepoint(tmp, &ch)) && ch)
-			{
-				
-			}
-			
-			sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
-			strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
-			
-			sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
-			
-			keyboard->has_selection = false;
-			keyboard->cursor = keyboard->selection_begin_offset;
-			keyboard->selection_length = 0;
-			keyboard->selection_begin_offset = 0;
-			keyboard->input_text_len = strlen(keyboard->input_text);
+			///
 		}
 		else if (is_lctrl_down)
 		{
-			strncpy(keyboard->input_text, keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH);
+			for (s32 i = 0; i < keyboard->cursor; i++)
+			{
+				utf8_str_remove_at(keyboard->input_text, 0);
+			}
 			keyboard->input_text_len -= keyboard->cursor;
 			keyboard->cursor = 0;
 		}
 		else if (keyboard->cursor > 0)
 		{
-			size_t codepoint_count = utf8len(keyboard->input_text);
-			utf8_int32_t ch;
-			char *tmp = keyboard->input_text;
-			char *to_overwrite = 0;
-			char *to_overwrite_with = 0;
-			int i = 0;
-			while((tmp = utf8codepoint(tmp, &ch)) && ch && ++i)
-			{
-				if (i == keyboard->cursor-2)
-				{
-					to_overwrite = tmp;
-				}
-				else if (i == keyboard->cursor-1)
-				{
-					to_overwrite_with = tmp;
-				}
-			}
+			utf8_str_remove_at(keyboard->input_text, keyboard->cursor-1);
 			
-			if (to_overwrite && to_overwrite_with)
-			{
-				strcpy(to_overwrite, to_overwrite_with);
-				
-				keyboard->cursor--;
-				keyboard->input_text_len--;
-			}
+			keyboard->cursor--;
+			keyboard->input_text_len--;
 		}
 	}
 }
