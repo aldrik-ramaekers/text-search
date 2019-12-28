@@ -92,10 +92,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): copy paste utf8 on windows
-// TODO(Aldrik): utf8 https://unicode-org.github.io/icu-docs/apidoc/released/icu4c/
+// TODO(Aldrik): cant type with capslock on (linux & windows)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
-// TODO(Aldrik): colors if icon are wrong
+// TODO(Aldrik): colors of icon are wrong
 // TODO(Aldrik): name of application in taskbar on linux
 // TODO(Aldrik): multiple results in file?
 // TODO(Aldrik): thoroughly test it, make a fuzzer or something

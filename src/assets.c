@@ -56,13 +56,11 @@ void assets_do_post_process()
 			if (task->image->data && task->valid)
 			{
 				glGenTextures(1, &task->image->textureID);
-				// "Bind" the newly created texture : all future texture functions will modify this texture
 				glBindTexture(GL_TEXTURE_2D, task->image->textureID);
 				
 				s32 flag = is_big_endian() ? GL_UNSIGNED_INT_8_8_8_8 : 
 				GL_UNSIGNED_INT_8_8_8_8_REV;
 				
-				// Give the image to OpenGL
 				glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA8, task->image->width, 
 							 task->image->height, 0,  GL_RGBA, flag, task->image->data);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

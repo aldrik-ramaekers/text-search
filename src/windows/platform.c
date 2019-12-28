@@ -64,20 +64,20 @@ bool platform_get_clipboard(platform_window *window, char *buffer)
 	if (!OpenClipboard(NULL))
 		return false;
 	
-	if (!IsClipboardFormatAvailable(CF_TEXT)) 
+	if (!IsClipboardFormatAvailable(CF_UNICODETEXT)) 
 	{
 		CloseClipboard();
 		return false;
 	}
 	
-	char *clip_str = GetClipboardData(CF_TEXT);
+	wchar_t* clip_str = GetClipboardData(CF_UNICODETEXT);
 	if (!clip_str)
 	{
 		CloseClipboard();
 		return false;
 	}
 	
-	strncpy(buffer, clip_str, MAX_INPUT_LENGTH);
+	WideCharToMultiByte(CP_UTF8, 0, clip_str, -1, buffer, MAX_INPUT_LENGTH ,0,0);
 	
 	CloseClipboard();
 	return true;
@@ -106,6 +106,12 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 		else
 		{	
 			SetClipboardData(CF_TEXT, addr);
+			
+			wchar_t tmp8to16buf[MAX_INPUT_LENGTH];
+			
+			MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, buffer, strlen(buffer),
+								tmp8to16buf, MAX_INPUT_LENGTH);
+			SetClipboardData(CF_UNICODETEXT, tmp8to16buf);
 		}
 	}
 	{
