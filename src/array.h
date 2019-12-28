@@ -5,12 +5,12 @@
 *  it under the terms of the GNU General Public License as published by
 *  the Free Software Foundation, either version 3 of the License, or
 *  (at your option) any later version.
-	
+
 *  This program is distributed in the hope that it will be useful,
 *  but WITHOUT ANY WARRANTY; without even the implied warranty of
 *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 *  GNU General Public License for more details.
-	
+
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
@@ -22,13 +22,13 @@ typedef struct t_array
 {
 	u32 length;
 	u32 reserved_length;
-	u16 entry_size;
+	u64 entry_size;
 	u16 reserve_jump;
 	void *data;
 	mutex mutex;
 } array;
 
-array array_create(u16 entry_size);
+array array_create(u64 entry_size);
 int array_push(array *array, void *data);
 int array_push_size(array *array, void *data, s32 data_size);
 void array_remove_at(array *array, u32 at);

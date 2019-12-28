@@ -15,7 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-array array_create(u16 entry_size)
+array array_create(u64 entry_size)
 {
 	array new_array;
 	new_array.length = 0;

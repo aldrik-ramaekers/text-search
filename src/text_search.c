@@ -1173,13 +1173,7 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		render_font_palette(font_mini, -2400, 300, font_mini->palette_width, font_mini->palette_height, rgb(200,0,0));
-		
-		{
-			//char buf[200];
-			//sprintf(buf, "%d", keyboard_is_key_down(&keyboard, KEY_LEFT_CONTROL));
-			//render_text(font_big, 50, 50, buf, rgb(200,0,0));
-		}
+		//render_font_palette(font_mini, -15000, 300, font_mini->palette_width/2, font_mini->palette_height/2, rgb(200,0,0));
 		
 		assets_do_post_process();
 		

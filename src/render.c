@@ -80,22 +80,25 @@ void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint)
 	if (!font->loaded)
 		return;
 	
-	glBindTexture(GL_TEXTURE_2D, font->textureID);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
-	
-	glTexCoord2i(0, 0); glVertex3i(x, y, render_depth);
-	glTexCoord2i(0, 1); glVertex3i(x, y+h, render_depth);
-	glTexCoord2i(1, 1); glVertex3i(x+w, y+h, render_depth);
-	glTexCoord2i(1, 0); glVertex3i(x+w, y, render_depth);
-	
-	glEnd();
-	
-	glFlush();
-	
-	glDisable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	for (s32 i = 0; i < TOTAL_GLYPH_BITMAPS; i++)
+	{
+		glBindTexture(GL_TEXTURE_2D, font->textureIDs[i]);
+		glEnable(GL_TEXTURE_2D);
+		glBegin(GL_QUADS);
+		glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
+		
+		glTexCoord2i(0, 0); glVertex3i(x, y, render_depth);
+		glTexCoord2i(0, 1); glVertex3i(x, y+h, render_depth);
+		glTexCoord2i(1, 1); glVertex3i(x+w, y+h, render_depth);
+		glTexCoord2i(1, 0); glVertex3i(x+w, y, render_depth);
+		
+		x += w;
+		
+		glEnd();
+		glFlush();
+		glDisable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 }
 
 static s32 add_char_width(char ch, s32 width, font *font)
@@ -112,22 +115,26 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 	if (!font->loaded)
 		return 0;
 	
-	glBindTexture(GL_TEXTURE_2D, font->textureID);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
-	
 	s32 x_ = x;
 	utf8_int32_t ch;
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		if (ch == 9) ch = 32;
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
-		s32 offsetx = (font->size*2)*(ch);
+		s32 bitmap_index = ch / GLYPHS_PER_BITMAP;
+		
+		glBindTexture(GL_TEXTURE_2D, font->textureIDs[bitmap_index]);
+		glEnable(GL_TEXTURE_2D);
+		glBegin(GL_QUADS);
+		glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
+		
+		s32 offsetx = (font->size*2)*(ch%GLYPHS_PER_BITMAP);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
@@ -138,93 +145,34 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		sy1 = iph*font->size*2;
 		
 		s32 width = font->glyph_widths[ch];
+		
 		glTexCoord2f(sx0,sy0); glVertex3i(x_,y, render_depth);
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y+font->size, render_depth);
 		glTexCoord2f(sx1,sy1); glVertex3i(x_+font->size,y+font->size, render_depth);
 		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y, render_depth);
 		
+		glEnd();
+		glFlush();
+		glDisable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		
 		/* add kerning */
-        /*
-  int kern = 0;
-  kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
-  {
-  if (kern != 0) printf("%d\n", kern);
-  }
-  */
+		int kern = 0;
+		kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		{
+			if (kern != 0) printf("%d\n", kern);
+		}
 		
 		x_ += add_char_width(ch,width,font);
 	}
 	
-	glEnd();
-	
-	glFlush();
-	
-	glDisable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
 	return x_ - x;
-}
-
-s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
-{
-	if (!font->loaded)
-		return 0;
-	
-	glBindTexture(GL_TEXTURE_2D, font->textureID);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
-	
-	s32 x_ = x-(font->size/4);
-	s32 y_ = y;
-	utf8_int32_t ch;
-	while((text = utf8codepoint(text, &ch)) && ch)
-	{
-		if (ch == 9) ch = 32;
-		char ch_next = *(text+1);
-		s32 offsetx = (font->size*2)*(ch);
-		
-		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
-		
-		float sx0, sy0, sx1, sy1;
-		sx0 = ipw*offsetx;
-		sy0 = 0;
-		sx1 = ipw*(offsetx+font->size*2);
-		sy1 = iph*font->size*2;
-		
-		s32 width = font->glyph_widths[ch];
-		
-		glTexCoord2f(sx0,sy0); glVertex3i(x_+font->size,y_, render_depth);
-		glTexCoord2f(sx0,sy1); glVertex3i(x_,y_, render_depth);
-		glTexCoord2f(sx1,sy1); glVertex3i(x_,y_+font->size, render_depth);
-		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y_+font->size, render_depth);
-		
-		y_+=width/2;
-	}
-	
-	glEnd();
-	
-	glFlush();
-	
-	glDisable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	return y_ -y;
 }
 
 s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cutoff_width)
 {
 	if (!font->loaded)
 		return 0;
-	
-	glBindTexture(GL_TEXTURE_2D, font->textureID);
-	glEnable(GL_TEXTURE_2D);
-	glBegin(GL_QUADS);
-	glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
-	//glTexCoord2i(0, 0); glVertex2i(x, y);
-	//glTexCoord2i(0, 1); glVertex2i(x, y+font->palette_height);
-	//glTexCoord2i(1, 1); glVertex2i(x+font->palette_width, y+font->palette_height);
-	//glTexCoord2i(1, 0); glVertex2i(x+font->palette_width, y);
 	
 	s32 x_ = x;
 	s32 y_ = y;
@@ -234,7 +182,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	{
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
-		s32 offsetx = (font->size*2)*(ch);
+		s32 offsetx = (font->size*2)*(ch%GLYPHS_PER_BITMAP);
 		
 		if (ch == '\n')
 		{
@@ -254,6 +202,13 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 			is_new_line = false;
 		}
 		
+		s32 bitmap_index = ch / GLYPHS_PER_BITMAP;
+		
+		glBindTexture(GL_TEXTURE_2D, font->textureIDs[bitmap_index]);
+		glEnable(GL_TEXTURE_2D);
+		glBegin(GL_QUADS);
+		glColor4f(tint.r/255.0f, tint.g/255.0f, tint.b/255.0f, tint.a/255.0f); 
+		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
 		float sx0, sy0, sx1, sy1;
@@ -268,6 +223,11 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y_+font->size, render_depth);
 		glTexCoord2f(sx1,sy1); glVertex3i(x_+font->size,y_+font->size, render_depth);
 		glTexCoord2f(sx1,sy0); glVertex3i(x_+font->size,y_, render_depth);
+		
+		glEnd();
+		glFlush();
+		glDisable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		
 		/* add kerning */
         //int kern = 0;
@@ -288,13 +248,6 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 			is_new_line = true;
 		}
 	}
-	
-	glEnd();
-	
-	glFlush();
-	
-	glDisable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	return (y_ - y) + font->size;
 	

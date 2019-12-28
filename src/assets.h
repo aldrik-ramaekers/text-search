@@ -75,7 +75,9 @@ typedef struct t_image {
 } image;
 
 #define TEXT_CHARSET_START 0
-#define TEXT_CHARSET_END 1024
+#define GLYPHS_PER_BITMAP 512
+#define TEXT_CHARSET_END GLYPHS_PER_BITMAP*26
+#define TOTAL_GLYPH_BITMAPS TEXT_CHARSET_END/GLYPHS_PER_BITMAP
 
 typedef struct t_font
 {
@@ -84,13 +86,13 @@ typedef struct t_font
 	bool loaded;
 	s16 references;
 	s16 size;
-	GLuint textureID;
+	GLuint textureIDs[TOTAL_GLYPH_BITMAPS];
 	s32 palette_width;
 	s32 palette_height;
-	s16 glyph_widths[TEXT_CHARSET_END-TEXT_CHARSET_START+1];
+	s16 glyph_widths[TOTAL_GLYPH_BITMAPS*TEXT_CHARSET_END+1];
 	float32 scale;
 	stbtt_fontinfo info;
-	void *bitmap; // 0-1024
+	void *bitmaps[TOTAL_GLYPH_BITMAPS];
 } font;
 
 typedef enum t_asset_task_type
