@@ -74,8 +74,8 @@ typedef struct t_image {
 	GLuint textureID;
 } image;
 
-#define TEXT_CHARSET_START 32
-#define TEXT_CHARSET_END 191
+#define TEXT_CHARSET_START 0
+#define TEXT_CHARSET_END 1024
 
 typedef struct t_font
 {
@@ -90,7 +90,7 @@ typedef struct t_font
 	s16 glyph_widths[TEXT_CHARSET_END-TEXT_CHARSET_START+1];
 	float32 scale;
 	stbtt_fontinfo info;
-	void *bitmap;
+	void *bitmap; // 0-1024
 } font;
 
 typedef enum t_asset_task_type

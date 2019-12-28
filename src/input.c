@@ -120,29 +120,15 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 		
 		if (keyboard->has_selection)
 		{
-			char buf_left[MAX_INPUT_LENGTH];
-			char buf_right[MAX_INPUT_LENGTH];
-			
-			sprintf(buf_left, "%.*s", keyboard->selection_begin_offset, keyboard->input_text);
-			strcpy(buf_right, keyboard->input_text+keyboard->selection_begin_offset+keyboard->selection_length);
-			
-			sprintf(keyboard->input_text, "%s%s", buf_left, buf_right);
-			
-			keyboard->has_selection = false;
-			keyboard->cursor = keyboard->selection_begin_offset;
-			keyboard->selection_length = 0;
-			keyboard->selection_begin_offset = 0;
-			keyboard->input_text_len = utf8len(keyboard->input_text);
+			//
 		}
 		
 		if (result)
 		{
-			char string_right[MAX_INPUT_LENGTH];
-			snprintf(string_right, MAX_INPUT_LENGTH, "%s", keyboard->input_text+keyboard->cursor);
-			
 			s32 len = utf8len(buf);
 			
-			snprintf(keyboard->input_text+keyboard->cursor, MAX_INPUT_LENGTH, "%s%s", buf, string_right);
+			
+			utf8cat(keyboard->input_text, buf);
 			
 			keyboard->cursor += len;
 			keyboard->input_text_len += len;

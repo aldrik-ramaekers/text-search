@@ -96,7 +96,7 @@ bool platform_get_clipboard(platform_window *window, char *buffer)
 	unsigned long ressize, restail;
 	int resbits;
 	Atom bufid = XInternAtom(window->display, "CLIPBOARD", False),
-	fmtid = XInternAtom(window->display, "STRING", False),
+	fmtid = XInternAtom(window->display, "UTF8_STRING", False),
 	propid = XInternAtom(window->display, "XSEL_DATA", False),
 	incrid = XInternAtom(window->display, "INCR", False);
 	XEvent event;

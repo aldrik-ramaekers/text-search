@@ -127,7 +127,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 			ch = 0x3f;
 		}
 		
-		s32 offsetx = (font->size*2)*(ch-TEXT_CHARSET_START);
+		s32 offsetx = (font->size*2)*(ch);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
@@ -137,7 +137,7 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		sx1 = ipw*(offsetx+font->size*2);
 		sy1 = iph*font->size*2;
 		
-		s32 width = font->glyph_widths[ch-TEXT_CHARSET_START];
+		s32 width = font->glyph_widths[ch];
 		glTexCoord2f(sx0,sy0); glVertex3i(x_,y, render_depth);
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y+font->size, render_depth);
 		glTexCoord2f(sx1,sy1); glVertex3i(x_+font->size,y+font->size, render_depth);
@@ -182,7 +182,7 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 	{
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
-		s32 offsetx = (font->size*2)*(ch-32);
+		s32 offsetx = (font->size*2)*(ch);
 		
 		float ipw = 1.0f / font->palette_width, iph = 1.0f / font->palette_height;
 		
@@ -192,7 +192,7 @@ s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint)
 		sx1 = ipw*(offsetx+font->size*2);
 		sy1 = iph*font->size*2;
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		glTexCoord2f(sx0,sy0); glVertex3i(x_+font->size,y_, render_depth);
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y_, render_depth);
@@ -234,7 +234,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	{
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
-		s32 offsetx = (font->size*2)*(ch-32);
+		s32 offsetx = (font->size*2)*(ch);
 		
 		if (ch == '\n')
 		{
@@ -262,7 +262,7 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		sx1 = ipw*(offsetx+font->size*2);
 		sy1 = iph*font->size*2;
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		glTexCoord2f(sx0,sy0); glVertex3i(x_,y_, render_depth);
 		glTexCoord2f(sx0,sy1); glVertex3i(x_,y_+font->size, render_depth);
@@ -316,7 +316,7 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 			ch = 0x3f;
 		}
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		x += add_char_width(ch,width,font);
 		
@@ -349,7 +349,7 @@ s32 calculate_text_width_upto(font *font, char *text, s32 index)
 			ch = 0x3f;
 		}
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		x += add_char_width(ch,width,font);
 		
@@ -368,14 +368,13 @@ s32 calculate_text_width(font *font, char *text)
 	utf8_int32_t ch;
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
-		char ch = *text;
 		if (ch == 9) ch = 32;
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		x += add_char_width(ch,width,font);
 	}
@@ -395,7 +394,7 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	{
 		if (ch == 9) ch = 32;
 		char ch_next = *(text+1);
-		s32 width = font->glyph_widths[ch-32];
+		s32 width = font->glyph_widths[ch];
 		
 		x_ += width / 2;
 		

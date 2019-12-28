@@ -81,8 +81,8 @@ void assets_do_post_process()
 				glBindTexture(GL_TEXTURE_2D, task->font->textureID);
 				
 				glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, task->font->palette_width,task->font->palette_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, task->font->bitmap);
-				
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+				
 				task->font->loaded = true;
 			}
 		}
@@ -120,29 +120,37 @@ bool assets_queue_worker_load_font(font *font)
 		return false;
 	}
 	
-	int b_w = (TEXT_CHARSET_END-TEXT_CHARSET_START+1)*(font->size*2); /* bitmap width */
-    int b_h = font->size*2; /* bitmap height */
+	int b_w = 32768; /* bitmap width */
+    int b_h = 128; /* bitmap height */
 	int l_h = font->size*2; /* line height */
 	
 	font->palette_width = b_w;
 	font->palette_height = b_h;
 	
-	/* create a bitmap for the phrase */
-    unsigned char* bitmap = mem_alloc(b_w * b_h);
-	memset(bitmap, 0, b_w * b_h);
-	
 	/* calculate font scaling */
 	float scale = stbtt_ScaleForPixelHeight(&info, l_h);
-	
 	int x = 0;
+	
 	
     int ascent, descent, lineGap;
 	stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
 	
+	
+#if 0
+	s32 total_bitmaps_to_load = (TEXT_CHARSET_END / GLYPHS_PER_BITMAP);
+	for (s32 i = 0; i < total_bitmaps_to_load; i++)
+	{
+		
+	}
+#endif
+	
+	/* create a bitmap for the phrase */
+    unsigned char* bitmap = mem_alloc(b_w * b_h);
+	memset(bitmap, 0, b_w * b_h);
+	
 	ascent *= scale;
 	descent *= scale;
-	
-    for (int i = TEXT_CHARSET_START; i <= TEXT_CHARSET_END; ++i)
+    for (int i = 0; i <= TEXT_CHARSET_END; ++i)
     {
 		if (!stbtt_FindGlyphIndex(&info, i)) continue;
 		
@@ -154,15 +162,17 @@ bool assets_queue_worker_load_font(font *font)
         int y = ascent + c_y1;
         
         /* render character (stride and offset is important here) */
-        int byteOffset = x + (y  * b_w);
-        stbtt_MakeCodepointBitmap(&info, bitmap + byteOffset, c_x2 - c_x1, c_y2 - c_y1, b_w, scale, scale, i);
+        int byteOffset = ((i) * font->size*2) + (y  * b_w);
+		
+		if (y > 0)
+			stbtt_MakeCodepointBitmap(&info, bitmap + byteOffset, c_x2 - c_x1, c_y2 - c_y1, b_w, scale, scale, i);
         
         /* how wide is this character */
         int ax;
         stbtt_GetCodepointHMetrics(&info, i, &ax, 0);
         x += font->size*2;
         
-		font->glyph_widths[i-TEXT_CHARSET_START] = (ax*scale);
+		font->glyph_widths[i] = (ax*scale);
 	}
 	
 	font->info = info;
