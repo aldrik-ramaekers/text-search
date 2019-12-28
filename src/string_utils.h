@@ -61,9 +61,18 @@ printf("[lllll][*lllll*] : %d\n", string_contains("lllll", "*lllll*"));
 printf("[lllll][*ll*] : %d\n", string_contains("lllll", "*ll*"));
 #endif
 
+typedef struct t_text_match
+{
+	u32 line_nr;
+	s32 word_offset;
+	s32 word_match_len;
+	char *line_start;
+	char *line_info;
+} text_match;
+
 #define string_contains(big, small) string_contains_ex(big, small, 0, 0, 0, 0)
 bool string_match(char *first, char *second);
-bool string_contains_ex(char *big, char *small, s32 *line_nr, char **line, s32 *word_offset, bool *cancel_search);
+bool string_contains_ex(char *big, char *small, array *text_matches, bool *cancel_search);
 void string_trim(char *string);
 bool string_equals(char *first, char *second);
 char *s32_to_string(s32 val, char *buffer);

@@ -20,7 +20,7 @@ void* destroy_search_result_thread(void *arg);
 
 static void write_json_file(char *buffer, s32 length, search_result *search_result)
 {
-	array matches = search_result->files;
+	array matches = search_result->matches;
 	
 	cJSON *result = cJSON_CreateObject();
 	if (cJSON_AddStringToObject(result, "search_directory", 

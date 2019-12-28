@@ -40,19 +40,15 @@ bool string_match(char *first, char *second)
     return false; 
 }
 
-bool string_contains_ex(char *text_to_search, char *text_to_find, s32 *line_nr, char **line, s32 *word_offset, bool *cancel_search)
+bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_matches, bool *cancel_search)
 {
+	bool final_result = false;
+	
 	// * wildcard at the start of text to find is not needed
 	if (*text_to_find == '*') text_to_find++;
 	
 	char *text_to_find_original = text_to_find;
-	bool save_info = (line_nr != 0);
-	if (save_info)
-	{
-		*line_nr = 1;
-		*word_offset = 0;
-		*line = text_to_search;
-	}
+	bool save_info = (text_matches != 0);
 	
 	utf8_int32_t text_to_search_ch = 0;
 	utf8_int32_t text_to_find_ch = 0;
@@ -106,7 +102,18 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, s32 *line_nr, 
 			
 			// text to find has reached 0byte, word has been found
 			if (text_to_find_ch == 0)
-				goto set_info_and_return_success;
+			{
+				text_match new_match;
+				new_match.line_nr = line_nr_val;
+				new_match.word_offset = word_offset_val;
+				new_match.word_match_len = 0;
+				new_match.line_start = line_start_ptr;
+				new_match.line_info = 0;
+				array_push(text_matches, &new_match);
+				
+				final_result = true;
+				break;
+			}
 			
 			// character does not match, continue search
 			if (text_to_find_ch != text_to_search_current_attempt_ch && !in_wildcard)
@@ -125,17 +132,10 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, s32 *line_nr, 
 		index++;
 	}
 	
-	set_info_and_return_failure:
-	*line_nr = line_nr_val;
-	*word_offset = word_offset_val;
-	*line = line_start_ptr;
-	return false;
+	return final_result;
 	
-	set_info_and_return_success:
-	*line_nr = line_nr_val;
-	*word_offset = word_offset_val;
-	*line = line_start_ptr;
-	return true;
+	set_info_and_return_failure:
+	return false;
 }
 
 static char *ltrim(char *str, const char *seps)

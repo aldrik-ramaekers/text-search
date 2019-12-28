@@ -21,9 +21,12 @@
 typedef struct t_file_match
 {
 	found_file file;
-	u32 line_nr;
 	s16 file_error;
 	s32 file_size;
+	
+	u32 line_nr;
+	s32 word_match_offset_x;
+	s32 word_match_width;
 	char *line_info; // will be null when no match is found
 } file_match;
 
@@ -168,34 +171,54 @@ static void* find_text_in_file_worker(void *arg)
 			// check if file has opened correctly
 			if (content.content && !content.file_error)
 			{
-				s32 line_nr = 0, word_offset = 0;
-				char *line;
-				if (string_contains_ex(content.content, result_buffer->text_to_find, &line_nr, &line, &word_offset, &result_buffer->cancel_search))
+				array text_matches = array_create(sizeof(text_match));
+				
+				if (string_contains_ex(content.content, result_buffer->text_to_find, &text_matches, &result_buffer->cancel_search))
 				{
 					args.search_result_buffer->match_found = true;
 					
-					// match info
-					args.file.line_nr = line_nr;
-					args.file.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
-					sprintf(args.file.line_info, "%.40s", word_offset < 20 ? line : line+word_offset-20);
-					
-					char *tmp = args.file.line_info;
-					while(*tmp)
+					for (s32 i = 0; i < text_matches.length; i++)
 					{
-						if (*tmp == '\n')
+						text_match *m = array_at(&text_matches, i);
+						file_match file_match = args.file;
+						
+						// match info
+						file_match.line_nr = m->line_nr;
+						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
+						
+						s32 offset_to_render = m->word_offset;// < 20 ? m->word_offset : 
+						//m->word_offset < 20 - 20;
+						
+						char *str_to_copy = m->line_start;//offset_to_render < 20 ?
+						//m->line_start : m->line_start+offset_to_render-20;
+						
+						file_match.word_match_offset_x = 
+							calculate_text_width_upto(font_small, str_to_copy, offset_to_render-1);
+						
+						file_match.word_match_width = 50;
+						
+						sprintf(file_match.line_info, "%.40s", str_to_copy);
+						char *tmp = file_match.line_info;
+						while(*tmp)
 						{
-							*tmp = 0;
-							break;
+							if (*tmp == '\n')
+							{
+								*tmp = 0;
+								break;
+							}
+							++tmp;
 						}
-						++tmp;
+						
+						array_push(&result_buffer->matches, &file_match);
 					}
+					
 					
 					mutex_lock(&result_buffer->mutex);
 					result_buffer->files_matched++;
 					mutex_unlock(&result_buffer->mutex);
-					
-					array_push(&result_buffer->matches, &args.file);
 				}
+				
+				array_destroy(&text_matches);
 			}
 			else
 			{
@@ -342,7 +365,8 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->files_matched, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
+	// TODO(Aldrik): LOCALIZE!
+	sprintf(global_status_bar.result_status_text, "%d matches found in %d files, %.2fms", result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 	
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
@@ -497,13 +521,22 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					
 					// state
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
-					if (!match->file_error)
+					if (!match->file_error && match->line_info)
 					{
-						char tmp[80];
-						sprintf(tmp, "line %d: %s", match->line_nr, match->line_info);
+						s32 text_sx = 10 + path_width + pattern_width;
+						s32 text_sy = rec_y + (h/2)-(font_small->size/2) + 1;
 						
-						if (match->line_info)
-							render_text(font_small, 10 + path_width + pattern_width, rec_y + (h/2)-(font_small->size/2) + 1, tmp, global_ui_context.style.foreground);
+						char tmp[80];
+						sprintf(tmp, "line %d: ", match->line_nr);
+						
+						text_sx += render_text(font_small, text_sx, text_sy, 
+											   tmp, global_ui_context.style.foreground);
+						
+						// highlight matched text
+						render_rectangle(text_sx + match->word_match_offset_x, text_sy, match->word_match_width, 10, rgb(255,0,0));
+						
+						render_text(font_small, text_sx, text_sy, 
+									match->line_info, global_ui_context.style.foreground);
 					}
 					else
 					{
