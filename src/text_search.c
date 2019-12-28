@@ -18,14 +18,14 @@
 #include "config.h"
 #include "project_base.h"
 
-typedef struct t_text_match
+typedef struct t_file_match
 {
 	found_file file;
 	u32 line_nr;
 	s16 file_error;
 	s32 file_size;
 	char *line_info; // will be null when no match is found
-} text_match;
+} file_match;
 
 typedef struct t_status_bar
 {
@@ -66,7 +66,7 @@ typedef struct t_search_result
 
 typedef struct t_find_text_args
 {
-	text_match file;
+	file_match file;
 	search_result *search_result_buffer;
 } find_text_args;
 
@@ -92,6 +92,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): highlight matched text in line_info
 // TODO(Aldrik): textbox sometimes doesnt take input?
 // TODO(Aldrik): double click to select path/path:line/path:line:match_text/path:line:matched_filter:matched_text config option
 // TODO(Aldrik): redo (ctrl+y)
@@ -269,7 +270,7 @@ static void* find_text_in_files_t(void *arg)
 		for (s32 i = start; i < len; i++)
 		{
 			find_text_args args;
-			args.file = *(text_match*)array_at(&result_buffer->files, i);
+			args.file = *(file_match*)array_at(&result_buffer->files, i);
 			args.file.file_error = 0;
 			args.file.file_size = 0;
 			args.file.line_info = 0;
@@ -457,7 +458,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		s32 drawn_entity_count = 0;
 		for (s32 i = 0; i < current_search_result->matches.length; i++)
 		{
-			text_match *match = array_at(&current_search_result->matches, i);
+			file_match *match = array_at(&current_search_result->matches, i);
 			
 			if (match->line_info || match->file_error)
 			{
@@ -717,11 +718,11 @@ search_result *create_empty_search_result()
 	array_reserve(&new_result_buffer->errors, ERROR_RESERVE_COUNT);
 	
 	// list of files found in current search
-	new_result_buffer->files = array_create(sizeof(text_match));
+	new_result_buffer->files = array_create(sizeof(file_match));
 	new_result_buffer->files.reserve_jump = 5000;
 	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
 	
-	new_result_buffer->matches = array_create(sizeof(text_match));
+	new_result_buffer->matches = array_create(sizeof(file_match));
 	new_result_buffer->matches.reserve_jump = 5000;
 	array_reserve(&new_result_buffer->matches, FILE_RESERVE_COUNT);
 	

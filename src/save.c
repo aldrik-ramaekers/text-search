@@ -69,7 +69,7 @@ static void write_json_file(char *buffer, s32 length, search_result *search_resu
 	
 	for (s32 i = 0; i < matches.length; i++)
 	{
-		text_match* m = array_at(&matches, i);
+		file_match* m = array_at(&matches, i);
 		
 		cJSON *item = cJSON_CreateObject();
 		
@@ -176,10 +176,6 @@ bool export_results(search_result *search_result)
 
 static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 {
-	array matches = search_result->files;
-	
-	text_match new_match;
-	
 	cJSON *result = cJSON_Parse(buffer);
 	if (!result) return false;
 	
@@ -220,7 +216,7 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	cJSON *file;
 	cJSON_ArrayForEach(file, file_list)
 	{
-		text_match new_match;
+		file_match new_match;
 		
 		////
 		cJSON *path = cJSON_GetObjectItem(file, "path");
@@ -250,12 +246,14 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		{
 			new_match.line_info = memory_bucket_reserve(&search_result->mem_bucket, strlen(line_info->valuestring)+1);
 			strcpy(new_match.line_info, line_info->valuestring);
+			search_result->match_found = true;
 		}
 		else
 		{
 			new_match.line_info = 0;
 		}
 		
+		array_push(&search_result->matches, &new_match);
 		array_push(&search_result->files, &new_match);
 	}
 	
@@ -303,6 +301,7 @@ void import_results_from_file(char *path_buf)
 	
 	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), current_search_result->files_matched, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
 	
+	array_destroy(&new_result->files);
 	platform_destroy_file_content(&content);
 	return;
 	
