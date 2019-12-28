@@ -275,7 +275,7 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		
 		if (x > click_x)
 		{
-			return index;
+			return index-1;
 		}
 		
 		++index;

@@ -92,7 +92,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): cant type with capslock on (linux & windows)
+// TODO(Aldrik): double click to select path/path:line/path:line:match_text/path:line:matched_filter:matched_text config option
+// TODO(Aldrik): text selection in textbox
+// TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): colors of icon are wrong
 // TODO(Aldrik): name of application in taskbar on linux

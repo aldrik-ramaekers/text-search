@@ -1061,6 +1061,10 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			// remove key control key from mask so it doesnt block input
 			window->event.xkey.state &= ~ControlMask;
 			
+			// replace capslock with shiftkey else keylookup returns 0...
+			if (window->event.xkey.state == 2)
+				window->event.xkey.state = 1;
+			
 			KeySym ksym = XLookupKeysym(&window->event.xkey, window->event.xkey.state);
 			
 			if (keyboard->take_input)

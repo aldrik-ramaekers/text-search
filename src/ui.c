@@ -704,7 +704,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	// change selection area based on cursor position.
 	// if double clicked to select the entire textbox we should only 
 	// do this when the mouse has moved enough to select a new character
-#if 0
+#if 1
 	if (is_selecting)
 	{
 		s32 index = calculate_cursor_position(global_ui_context.font_small, 
@@ -736,19 +736,23 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 		
-		// calculate selection start x
-		utf8_int32_t ch = utf8_str_at(state->buffer, 
-									  global_ui_context.keyboard->selection_begin_offset);
+		char tmp_buffer[MAX_INPUT_LENGTH];
+		utf8_str_copy_upto(state->buffer,
+						   global_ui_context.keyboard->selection_begin_offset,
+						   tmp_buffer);
 		
-		state->buffer[global_ui_context.keyboard->selection_begin_offset] = 0;
-		s32 selection_start_x =  calculate_text_width(global_ui_context.font_small, state->buffer);
-		state->buffer[global_ui_context.keyboard->selection_begin_offset] = ch;
+		s32 selection_start_x = calculate_text_width(global_ui_context.font_small, 
+													 tmp_buffer);
 		
-		// calculate selection width
-		ch = state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length];
-		state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length] = 0;
-		s32 selection_width =  calculate_text_width(global_ui_context.font_small, state->buffer+global_ui_context.keyboard->selection_begin_offset);
-		state->buffer[global_ui_context.keyboard->selection_begin_offset+global_ui_context.keyboard->selection_length] = ch;
+		utf8_str_copy_upto(
+			utf8_str_upto(
+			state->buffer,
+			global_ui_context.keyboard->selection_begin_offset),
+			global_ui_context.keyboard->selection_length,
+			tmp_buffer);
+		
+		s32 selection_width = calculate_text_width(global_ui_context.font_small, 
+												   tmp_buffer);
 		
 		render_rectangle(text_x - diff + selection_start_x, y+4, selection_width, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
 	}

@@ -353,6 +353,16 @@ void utf8_str_remove_at(char *str, s32 at)
 	strcpy(orig_str, replacement);
 }
 
+void utf8_str_insert_utf8str(char *str, s32 at, char *toinsert)
+{
+	s32 index = 0;
+	utf8_int32_t ch;
+	while((toinsert = utf8codepoint(toinsert, &ch)) && ch)
+	{
+		utf8_str_insert_at(str, at+index, ch);
+		index++;
+	}
+}
 
 void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval)
 {
@@ -382,6 +392,22 @@ void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval)
 	strcpy(orig_str, replacement);
 }
 
+char *utf8_str_copy_upto(char *str, s32 roof, char *buffer)
+{
+	utf8_int32_t ch = 0;
+	s32 index = 0;
+	char *orig_buffer = buffer;
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+		buffer = utf8catcodepoint(buffer, ch, 5);
+		if (index == roof) break;
+		index++;
+	}
+	buffer = utf8catcodepoint(buffer, 0, 5);
+	
+	return orig_buffer;
+}
+
 void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval)
 {
 	char *orig_str = str;
@@ -407,6 +433,21 @@ void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval)
 	*rep_off = 0;
 	
 	strcpy(orig_str, replacement);
+}
+
+char* utf8_str_upto(char *str, s32 index)
+{
+	s32 i = 0;
+	utf8_int32_t ch;
+	char *prev_str = str;
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+		if (index == i) return prev_str;
+		prev_str = str;
+		++i;
+	}
+	
+	return str;
 }
 
 utf8_int32_t utf8_str_at(char *str, s32 index)

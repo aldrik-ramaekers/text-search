@@ -127,8 +127,7 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 		{
 			s32 len = utf8len(buf);
 			
-			
-			utf8cat(keyboard->input_text, buf);
+			utf8_str_insert_utf8str(keyboard->input_text, keyboard->cursor, buf);
 			
 			keyboard->cursor += len;
 			keyboard->input_text_len += len;
