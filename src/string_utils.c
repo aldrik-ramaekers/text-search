@@ -399,8 +399,8 @@ char *utf8_str_copy_upto(char *str, s32 roof, char *buffer)
 	char *orig_buffer = buffer;
 	while((str = utf8codepoint(str, &ch)) && ch)
 	{
-		buffer = utf8catcodepoint(buffer, ch, 5);
 		if (index == roof) break;
+		buffer = utf8catcodepoint(buffer, ch, 5);
 		index++;
 	}
 	buffer = utf8catcodepoint(buffer, 0, 5);
