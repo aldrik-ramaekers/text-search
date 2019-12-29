@@ -372,6 +372,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_MOUSELEAVE)
 	{
+		printf("MEMES\n");
 		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
 		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 	}
@@ -472,6 +473,12 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		
 		current_mouse_to_handle->x = x;
 		current_mouse_to_handle->y = y;
+		
+		TRACKMOUSEEVENT track;
+		track.cbSize = sizeof(track);
+		track.dwFlags = TME_LEAVE;
+		track.hwndTrack = window.window_handle;
+		TrackMouseEvent(&track);
 	}
 	else if (message == WM_GETMINMAXINFO)
 	{
@@ -638,6 +645,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 			track.cbSize = sizeof(track);
 			track.dwFlags = TME_LEAVE;
 			track.hwndTrack = window.window_handle;
+			TrackMouseEvent(&track);
 		}
 		else
 		{
