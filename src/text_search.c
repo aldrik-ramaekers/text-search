@@ -1241,27 +1241,18 @@ int main(int argc, char **argv)
 		}
 		
 		assets_do_post_process();
+		platform_window_swap_buffers(&window);
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
 		u64 diff = current_stamp - last_stamp;
 		float diff_ms = diff / 1000.0f;
 		last_stamp = current_stamp;
 		
-		
-		{
-			char tmp[10];
-			sprintf(tmp, "%.3f", diff_ms);
-			render_text(font_big, 0, 500, tmp, rgb(200,0,0));
-		}
-		
-		
 		if (diff_ms < TARGET_FRAMERATE)
 		{
 			double time_to_wait = (TARGET_FRAMERATE) - diff_ms;
 			thread_sleep(time_to_wait*1000);
 		}
-        
-		platform_window_swap_buffers(&window);
     }
 	
 	settings_page_hide_without_save();
