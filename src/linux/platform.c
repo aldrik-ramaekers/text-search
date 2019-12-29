@@ -1627,7 +1627,7 @@ void platform_set_icon(platform_window *window, image *img)
 			s32 r = (img_pixel>> 0) & 0x000000FF;
 			
 			//s32 c = (r << 24) | (g << 16) | (b << 8) | (a << 0);
-			s32 c = (b << 24) | (r << 16) | (g << 8) | (a << 0);
+			s32 c = (a << 24) | (r << 16) | (g << 8) | (b << 0);
 			*pixel = c;
 		}
 	}

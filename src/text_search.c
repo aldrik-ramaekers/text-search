@@ -99,7 +99,6 @@ platform_window *main_window;
 // TODO(Aldrik): double click to select path/path:line/path:line:match_text/path:line:matched_filter:matched_text config option
 // TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
-// TODO(Aldrik): colors of icon are wrong
 // TODO(Aldrik): name of application in taskbar on linux
 // TODO(Aldrik): thoroughly test it, make a fuzzer or something
 // TODO(Aldrik): save as dialog on windows not showing available file types
