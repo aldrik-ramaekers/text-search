@@ -95,8 +95,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): textbox sometimes doesnt take input?
-// TODO(Aldrik): double click to select path/path:line/path:line:match_text/path:line:matched_filter:matched_text config option
 // TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): name of application in taskbar on linux
@@ -181,10 +179,19 @@ static void* find_text_in_file_worker(void *arg)
 						
 						// match info
 						file_match.line_nr = m->line_nr;
-						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
+						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 170);
 						
 						s32 offset_to_render = m->word_offset;
-						char *str_to_copy = m->line_start;
+						
+#define MAX_CHARS_LEFT 15
+						s32 overflow = 0;
+						if (offset_to_render > MAX_CHARS_LEFT)
+						{
+							overflow = (offset_to_render-MAX_CHARS_LEFT);
+							offset_to_render = offset_to_render - overflow;
+						}
+						
+						char *str_to_copy = utf8_str_upto(m->line_start, overflow);
 						
 						sprintf(file_match.line_info, "%.40s", str_to_copy);
 						char *tmp = file_match.line_info;
@@ -486,21 +493,45 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				
 				if (rec_y > start_y - h && rec_y < start_y + total_space)
 				{
-#if 1
 					// hover item and click item
 					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30 &&
 						mouse->x >= 0 && mouse->x < window->width - scroll_w)
 					{
 						if (is_left_double_clicked(mouse))
 						{
-							platform_set_clipboard(main_window, match->file.path);
-							//show_notification("Path copied to clipboard");
+							switch(global_settings_page.selected_double_click_selection_option)
+							{
+								case OPTION_PATH: 
+								platform_set_clipboard(main_window, match->file.path);
+								break;
+								
+								case OPTION_PATH_LINE:
+								{
+									char *clipboard_tmp_buffer = malloc(200);
+									sprintf(clipboard_tmp_buffer, "%s:%d", match->file.path, match->line_nr);
+									platform_set_clipboard(main_window, clipboard_tmp_buffer);
+									mem_free(clipboard_tmp_buffer);
+								}
+								break;
+								
+								case OPTION_PATH_LINE_FILTER:
+								{
+									char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
+									sprintf(clipboard_tmp_buffer, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
+									platform_set_clipboard(main_window, clipboard_tmp_buffer);
+									mem_free(clipboard_tmp_buffer);
+								}
+								break;
+								
+								case OPTION_RESULT: 
+								platform_set_clipboard(main_window, match->line_info);
+								break;
+							}
 						}
 						
 						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
 						platform_set_cursor(window, CURSOR_POINTER);
 					}
-#endif
 					
 					// outline
 					render_rectangle_outline(-1, rec_y, window->width+2, h, 1, global_ui_context.style.border);
@@ -902,6 +933,7 @@ void load_config(settings_config *config)
 	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
 	u32 style = settings_config_get_number(config, "STYLE");
+	u32 double_click_action = settings_config_get_number(config, "DOUBLE_CLICK_ACTION");
 	
 	if (search_filter)
 		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
@@ -922,23 +954,26 @@ void load_config(settings_config *config)
 	{
 		ui_set_style(style);
 	}
+	
 	if (path)
 	{
 		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
 		
 		checkbox_recursive.state = recursive;
-		//global_settings_page.enable_parallelization = parallelize;
 		global_settings_page.max_thread_count = max_thread_count;
 		global_settings_page.max_file_size = max_file_size;
 		global_settings_page.current_style = global_ui_context.style.id;
+		global_settings_page.selected_double_click_selection_option = double_click_action;
 	}
 	else
 	{
 		checkbox_recursive.state = 1;
-		//global_settings_page.enable_parallelization = 1;
 		global_settings_page.max_thread_count = 20;
 		global_settings_page.max_file_size = 200;
+		global_settings_page.current_style = 1;
+		global_settings_page.selected_double_click_selection_option = 0;
 		
+#if 0
 		if (is_platform_in_darkmode())
 		{
 			ui_set_style(UI_STYLE_DARK);
@@ -949,6 +984,7 @@ void load_config(settings_config *config)
 			ui_set_style(UI_STYLE_LIGHT);
 			global_settings_page.current_style = global_ui_context.style.id;
 		}
+#endif
 		
 		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
@@ -1233,6 +1269,7 @@ int main(int argc, char **argv)
 	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
 	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
+	settings_config_set_number(&config, "DOUBLE_CLICK_ACTION", global_settings_page.selected_double_click_selection_option);
 	
 	if (global_localization.active_localization != 0)
 	{

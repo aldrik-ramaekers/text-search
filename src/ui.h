@@ -138,6 +138,7 @@ typedef struct t_ui_context
 	array active_menus;
 	u32 next_id;
 	s32 menu_item_count;
+	dropdown_state *active_dropdown;
 	textbox_state *current_active_textbox;
 	bool item_hovered;
 } ui_context;

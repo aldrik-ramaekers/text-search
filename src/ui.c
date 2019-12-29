@@ -355,8 +355,13 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	
 	render_rectangle(x, y, total_w, BUTTON_HEIGHT, bg_color);
 	render_rectangle_outline(x, y, total_w, BUTTON_HEIGHT, 1, global_ui_context.style.border);
-	render_image(icon, x+(BUTTON_HORIZONTAL_TEXT_PADDING/2), y + (h - (h-10))/2, h-10, h-10);
-	render_text(global_ui_context.font_small, text_x+(BUTTON_HORIZONTAL_TEXT_PADDING/2)+h-15, text_y, title, global_ui_context.style.foreground);
+	if (icon)
+	{
+		render_image(icon, x+(BUTTON_HORIZONTAL_TEXT_PADDING/2), 
+					 y + (h - (h-10))/2, h-10, h-10);
+		text_x += h-10;
+	}
+	render_text(global_ui_context.font_small, text_x+(BUTTON_HORIZONTAL_TEXT_PADDING/2)-5, text_y, title, global_ui_context.style.foreground);
 	
 	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
 		global_ui_context.layout.offset_x += total_w + WIDGET_PADDING;
@@ -388,8 +393,9 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 	
 	color bg_color = global_ui_context.style.widget_background;
 	
-	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h)
+	if (mouse_x >= x && mouse_x < x + total_w && mouse_y >= y && mouse_y < y + h && !global_ui_context.item_hovered)
 	{
+		global_ui_context.item_hovered = true;
 		platform_set_cursor(global_ui_context.layout.active_window, CURSOR_POINTER);
 		if (is_left_clicked(global_ui_context.mouse))
 		{
