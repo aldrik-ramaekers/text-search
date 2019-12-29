@@ -95,14 +95,12 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): highlight matched text in line_info
 // TODO(Aldrik): textbox sometimes doesnt take input?
 // TODO(Aldrik): double click to select path/path:line/path:line:match_text/path:line:matched_filter:matched_text config option
 // TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): colors of icon are wrong
 // TODO(Aldrik): name of application in taskbar on linux
-// TODO(Aldrik): multiple results in file?
 // TODO(Aldrik): thoroughly test it, make a fuzzer or something
 // TODO(Aldrik): save as dialog on windows not showing available file types
 // TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
@@ -186,16 +184,8 @@ static void* find_text_in_file_worker(void *arg)
 						file_match.line_nr = m->line_nr;
 						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 120); // show 20 chars behind text match. + 10 extra space
 						
-						s32 offset_to_render = m->word_offset;// < 20 ? m->word_offset : 
-						//m->word_offset < 20 - 20;
-						
-						char *str_to_copy = m->line_start;//offset_to_render < 20 ?
-						//m->line_start : m->line_start+offset_to_render-20;
-						
-						file_match.word_match_offset_x = 
-							calculate_text_width_upto(font_small, str_to_copy, offset_to_render-1);
-						
-						file_match.word_match_width = 50;
+						s32 offset_to_render = m->word_offset;
+						char *str_to_copy = m->line_start;
 						
 						sprintf(file_match.line_info, "%.40s", str_to_copy);
 						char *tmp = file_match.line_info;
@@ -208,6 +198,12 @@ static void* find_text_in_file_worker(void *arg)
 							}
 							++tmp;
 						}
+						
+						file_match.word_match_offset_x = 
+							calculate_text_width_upto(font_mini, file_match.line_info, offset_to_render);
+						
+						file_match.word_match_width =
+							calculate_text_width_from_upto(font_mini, file_match.line_info, offset_to_render, offset_to_render + m->word_match_len);
 						
 						array_push(&result_buffer->matches, &file_match);
 					}
@@ -533,7 +529,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 											   tmp, global_ui_context.style.foreground);
 						
 						// highlight matched text
-						render_rectangle(text_sx + match->word_match_offset_x, text_sy, match->word_match_width, 10, rgb(255,0,0));
+						render_rectangle(text_sx+match->word_match_offset_x, text_sy, match->word_match_width, 10, rgba(255,0,0,80));
 						
 						render_text(font_small, text_sx, text_sy, 
 									match->line_info, global_ui_context.style.foreground);

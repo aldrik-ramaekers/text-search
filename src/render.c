@@ -284,6 +284,35 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 	return x;
 }
 
+s32 calculate_text_width_from_upto(font *font, char *text, s32 from, s32 index)
+{
+	if (!font->loaded)
+		return 0;
+	
+	s32 x = 0;
+	utf8_int32_t ch;
+	s32 i = 0;
+	while((text = utf8codepoint(text, &ch)) && ch)
+	{
+		if (index == i) return x;
+		
+		if (ch == 9) ch = 32;
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
+		s32 width = font->glyph_widths[ch];
+		
+		if (i >= from)
+			x += add_char_width(ch,width,font);
+		
+		i++;
+	}
+	
+	return x;
+}
+
 s32 calculate_text_width_upto(font *font, char *text, s32 index)
 {
 	if (!font->loaded)

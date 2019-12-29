@@ -70,7 +70,7 @@ typedef struct t_text_match
 	char *line_info;
 } text_match;
 
-#define string_contains(big, small) string_contains_ex(big, small, 0, 0, 0, 0)
+#define string_contains(big, small) string_contains_ex(big, small, 0, 0)
 bool string_match(char *first, char *second);
 bool string_contains_ex(char *big, char *small, array *text_matches, bool *cancel_search);
 void string_trim(char *string);

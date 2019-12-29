@@ -56,13 +56,14 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 	
 	s32 line_nr_val = 1;
 	s32 word_offset_val = 0;
+	s32 word_match_len_val = 0;
 	char* line_start_ptr = text_to_search;
 	
 	s32 index = 0;
 	while((text_to_search = utf8codepoint(text_to_search, &text_to_search_ch)) 
 		  && text_to_search_ch)
 	{
-		if (*cancel_search) goto set_info_and_return_failure;
+		if (cancel_search && *cancel_search) goto set_info_and_return_failure;
 		
 		word_offset_val++;
 		if (text_to_search_ch == '\n') 
@@ -81,9 +82,10 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 		text_to_search_current_attempt = utf8codepoint(text_to_search_current_attempt,
 													   &text_to_search_current_attempt_ch);
 		
+		word_match_len_val = 0;
 		while(text_to_search_current_attempt_ch)
 		{
-			if (*cancel_search) goto set_info_and_return_failure;
+			if (cancel_search && *cancel_search) goto set_info_and_return_failure;
 			
 			// wildcard, accept any character in text to search
 			if (text_to_find_ch == '?')
@@ -103,13 +105,16 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 			// text to find has reached 0byte, word has been found
 			if (text_to_find_ch == 0)
 			{
-				text_match new_match;
-				new_match.line_nr = line_nr_val;
-				new_match.word_offset = word_offset_val;
-				new_match.word_match_len = 0;
-				new_match.line_start = line_start_ptr;
-				new_match.line_info = 0;
-				array_push(text_matches, &new_match);
+				if (save_info)
+				{
+					text_match new_match;
+					new_match.line_nr = line_nr_val;
+					new_match.word_offset = word_offset_val;
+					new_match.word_match_len = word_match_len_val;
+					new_match.line_start = line_start_ptr;
+					new_match.line_info = 0;
+					array_push(text_matches, &new_match);
+				}
 				
 				final_result = true;
 				break;
@@ -126,6 +131,8 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 			text_to_search_current_attempt = utf8codepoint(
 				text_to_search_current_attempt,
 				&text_to_search_current_attempt_ch);
+			
+			word_match_len_val++;
 		}
 		
 		text_to_find = text_to_find_original;
