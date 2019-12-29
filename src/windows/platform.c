@@ -372,7 +372,6 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_MOUSELEAVE)
 	{
-		printf("MEMES\n");
 		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
 		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 	}

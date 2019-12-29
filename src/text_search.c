@@ -95,6 +95,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): text editing of selected area
 // TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): name of application in taskbar on linux
@@ -1239,14 +1240,20 @@ int main(int argc, char **argv)
 			}
 		}
 		
-		//render_font_palette(font_mini, -15000, 300, font_mini->palette_width/2, font_mini->palette_height/2, rgb(200,0,0));
-		
 		assets_do_post_process();
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
 		u64 diff = current_stamp - last_stamp;
 		float diff_ms = diff / 1000.0f;
 		last_stamp = current_stamp;
+		
+		
+		{
+			char tmp[10];
+			sprintf(tmp, "%.3f", diff_ms);
+			render_text(font_big, 0, 500, tmp, rgb(200,0,0));
+		}
+		
 		
 		if (diff_ms < TARGET_FRAMERATE)
 		{
