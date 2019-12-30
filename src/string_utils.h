@@ -92,5 +92,6 @@ void utf8_str_insert_utf8str(char *str, s32 at, char *toinsert);
 void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval);
 char* utf8_str_upto(char *str, s32 index);
 char *utf8_str_copy_upto(char *str, s32 roof, char *buffer);
+char *utf8_str_copy_range(char *str, s32 floor, s32 roof, char *buffer);
 
 #endif

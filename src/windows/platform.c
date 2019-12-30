@@ -87,13 +87,14 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 {
 	HANDLE clipboard_data;
 	
-	wchar_t convstr[MAX_INPUT_LENGTH];
-	MultiByteToWideChar(CP_UTF8, 0, buffer, -1,
-								convstr, MAX_INPUT_LENGTH);
-	size_t len = wcslen(convstr);
+	int char_num = MultiByteToWideChar(CP_UTF8, 0, buffer, -1, 0, 0);
+	wchar_t *convstr = mem_alloc(char_num);
+	int result = MultiByteToWideChar(CP_UTF8, 0, buffer, -1, convstr, char_num);
+	
+	size_t len = result;
 	size_t size = (len+1) * sizeof(wchar_t);
 	LPSTR dst;
-								
+	
 	if (!OpenClipboard(NULL))
 		return false;
 	
@@ -106,8 +107,8 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 		GlobalUnlock(clipboard_data);
 		
 		SetClipboardData(CF_UNICODETEXT, clipboard_data);
-		
 	}
+	else
 	{
 		CloseClipboard();
 		return false;

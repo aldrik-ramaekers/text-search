@@ -333,7 +333,6 @@ void assets_destroy_font(font *font_to_destroy)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glDeleteTextures(1, font_to_destroy->textureIDs);
-		//array_remove(&global_asset_collection.fonts, font_at);
 	}
 	else
 	{

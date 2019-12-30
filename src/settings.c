@@ -15,6 +15,8 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+void reset_status_text();
+
 void settings_page_create()
 {
 	global_settings_page.active = false;
@@ -78,8 +80,7 @@ void settings_page_update_render()
 				{
 					global_settings_page.selected_tab_index = 0;
 				}
-				// TODO(Aldrik): LOCALIZE
-				if (ui_push_menu("Interface"))
+				if (ui_push_menu(localize("interface")))
 				{
 					global_settings_page.selected_tab_index = 1;
 				}
@@ -132,11 +133,10 @@ void settings_page_update_render()
 				ui_block_end();
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					if (ui_push_hypertext_link("Copy config path to clipboard"))
+					if (ui_push_hypertext_link(localize("copy_config_path")))
 					{
 						char buffer[PATH_MAX];
 						platform_set_clipboard(main_window, get_config_save_location(buffer));
-						//show_notification("Config path copied to clipboard");
 					}
 				}
 				ui_block_end();
@@ -162,6 +162,7 @@ void settings_page_update_render()
 								set_locale(file->locale_id);
 								platform_window_set_title(&global_settings_page.window,
 														  localize("text_search_settings"));
+								reset_status_text();
 							}
 						}
 					}
@@ -170,22 +171,19 @@ void settings_page_update_render()
 				
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					// TODO(Aldrik): localize
-					ui_push_text("Double click result to select");
+					ui_push_text(localize("double_click_action"));
 				}
 				ui_block_end();
 				
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					// TODO(Aldrik): localize
 					char* available_options[OPTION_RESULT+1] = {
-						"[path]",
-						"[path]:[line]",
-						"[path]:[line]:[filter]",
-						"[matched line]",
+						localize("double_click_action_1"),
+						localize("double_click_action_2"),
+						localize("double_click_action_3"),
+						localize("double_click_action_4"),
 					};
 					
-					// TODO(Aldrik): localize
 					if (ui_push_dropdown(&global_settings_page.dropdown_doubleclick, available_options[global_settings_page.current_double_click_selection_option]))
 					{
 						for (s32 i = 0; i < OPTION_RESULT+1; i++)
@@ -232,10 +230,10 @@ void settings_page_update_render()
 					global_settings_page.textbox_max_file_size.buffer[0] = 0; 
 					ui_set_style(global_settings_page.current_style);
 					global_settings_page.current_double_click_selection_option = global_settings_page.selected_double_click_selection_option;
-					
 					global_settings_page.active = false;
 					set_locale(global_settings_page.current_locale_id);
 					settings_page_hide();
+					reset_status_text();
 					return;
 				}
 				if (ui_push_button(&global_settings_page.btn_close, localize("save")))

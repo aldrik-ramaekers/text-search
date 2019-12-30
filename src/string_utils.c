@@ -439,6 +439,23 @@ char *utf8_str_copy_upto(char *str, s32 roof, char *buffer)
 	return orig_buffer;
 }
 
+char *utf8_str_copy_range(char *str, s32 floor, s32 roof, char *buffer)
+{
+	utf8_int32_t ch = 0;
+	s32 index = 0;
+	char *orig_buffer = buffer;
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+		if (index == roof) break;
+		if (index >= floor)
+			buffer = utf8catcodepoint(buffer, ch, 5);
+		index++;
+	}
+	buffer = utf8catcodepoint(buffer, 0, 5);
+	
+	return orig_buffer;
+}
+
 void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval)
 {
 	char *orig_str = str;

@@ -95,11 +95,10 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): clipboard on windows kinda buggy
 // TODO(Aldrik): redo (ctrl+y)
-// TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
-// TODO(Aldrik): thoroughly test it, make a fuzzer or something
+// TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getcursorpos
 // TODO(Aldrik): save as dialog on windows not showing available file types
-// TODO(Aldrik): localize hardcoded strings ("style","no search completed","Cancelling search","Copy config path to clipboard")
 // TODO(Aldrik): command line usage
 
 checkbox_state checkbox_recursive;
@@ -366,8 +365,7 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	// TODO(Aldrik): LOCALIZE!
-	sprintf(global_status_bar.result_status_text, "%d matches found in %d files, %.2fms", result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
+	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 	
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
@@ -425,10 +423,10 @@ static void set_status_text_to_active()
 
 static void set_status_text_to_cancelled()
 {
-	strncpy(global_status_bar.result_status_text, "Cancelling search", MAX_STATUS_TEXT_LENGTH);
+	strncpy(global_status_bar.result_status_text, localize("cancelling_search"), MAX_STATUS_TEXT_LENGTH);
 }
 
-static void reset_status_text()
+void reset_status_text()
 {
 	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
@@ -1056,14 +1054,14 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
-	reset_status_text();
-	
 	char config_path_buffer[PATH_MAX];
 	get_config_save_location(config_path_buffer);
 	
 	// load config
 	settings_config config = settings_config_load_from_file(config_path_buffer);
 	load_config(&config);
+	
+	reset_status_text();
 	
 	current_search_result = create_empty_search_result();
 	
@@ -1234,12 +1232,6 @@ int main(int argc, char **argv)
 			{
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
-		}
-		
-		{
-			char buf[10];
-			sprintf(buf, "%d", textbox_path.history.length);
-			render_text(font_medium, 0, 500, buf, rgb(255,0,0));
 		}
 		
 		assets_do_post_process();

@@ -125,14 +125,6 @@ typedef struct t_assets {
 
 char *binary_path;
 
-// TODO(Aldrik): remove asset from load queue and post process queue when destroyed
-
-// TODO(Aldrik): we are destroying assets right now by comparing the names of every asset first while we have the pointer within the array..
-
-// TODO(Aldrik): destroying assets is not thread safe..
-
-// TODO(Aldrik): fix relative paths for asset loading (not sure if this is actually a problem)
-
 mutex asset_mutex;
 assets global_asset_collection;
 
