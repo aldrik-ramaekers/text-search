@@ -551,7 +551,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			ui_set_active_textbox(state);
 			
 			global_ui_context.keyboard->selection_begin_offset = 0;
-			global_ui_context.keyboard->selection_length = strlen(global_ui_context.keyboard->input_text);
+			global_ui_context.keyboard->selection_length = utf8len(global_ui_context.keyboard->input_text);
 			global_ui_context.keyboard->has_selection = true;
 			state->selection_start_index = 0;
 			
@@ -633,8 +633,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	
 	if (state->state)
 	{
-		s32 len = strlen(global_ui_context.keyboard->input_text);
-		s32 old_len = strlen(state->buffer);
+		s32 len = utf8len(global_ui_context.keyboard->input_text);
+		s32 old_len = utf8len(state->buffer);
 		
 		// check if text changes, add to history if true
 		bool is_lctrl_down = global_ui_context.keyboard->keys[KEY_LEFT_CONTROL];
@@ -642,6 +642,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		// go to previous state
 		if (is_lctrl_down && keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Z) && state->history.length)
 		{
+			global_ui_context.keyboard->text_changed = true;
+			
 			textbox_history_entry *old_text = array_at(&state->history, state->history.length-1);
 			strncpy(state->buffer, old_text->text, MAX_INPUT_LENGTH);
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
@@ -651,20 +653,23 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		else
 		{
-			if (old_len != len || (last_cursor_pos != global_ui_context.keyboard->cursor && last_cursor_pos != -1))
+			if (global_ui_context.keyboard->text_changed || old_len != len)
 			{
-				textbox_history_entry history_entry;
-				history_entry.text = mem_alloc(old_len+1);
-				history_entry.cursor_offset = last_cursor_pos;
-				strcpy(history_entry.text, state->buffer);
-				array_push(&state->history, &history_entry);
+				if (last_cursor_pos != -1)
+				{
+					textbox_history_entry history_entry;
+					history_entry.text = mem_alloc(old_len+1);
+					history_entry.cursor_offset = last_cursor_pos;
+					strcpy(history_entry.text, state->buffer);
+					array_push(&state->history, &history_entry);
+				}
 			}
 			
 			strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
 			if (global_ui_context.keyboard->cursor > state->max_len)
 			{
 				global_ui_context.keyboard->cursor = state->max_len;
-				global_ui_context.keyboard->input_text[global_ui_context.keyboard->cursor] = 0;
+				utf8_str_replace_at(global_ui_context.keyboard->input_text,global_ui_context.keyboard->cursor, 0);
 			}
 		}
 		
@@ -740,8 +745,6 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	// render selection area
 	if (global_ui_context.keyboard->has_selection && state->state)
 	{
-		strncpy(state->buffer, global_ui_context.keyboard->input_text, state->max_len);
-		
 		char tmp_buffer[MAX_INPUT_LENGTH];
 		utf8_str_copy_upto(state->buffer,
 						   global_ui_context.keyboard->selection_begin_offset,
@@ -782,7 +785,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	else
 		global_ui_context.layout.offset_y += TEXTBOX_HEIGHT + WIDGET_PADDING;
 	
-	return result;
+	return result || state->state;
 }
 
 bool ui_push_hypertext_link(char *text)

@@ -86,6 +86,7 @@ s32 string_get_json_ulong_number(char **buffer);
 
 utf8_int32_t utf8_str_at(char *str, s32 index);
 void utf8_str_remove_at(char *str, s32 at);
+void utf8_str_remove_range(char *str, s32 from, s32 to);
 void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval);
 void utf8_str_insert_utf8str(char *str, s32 at, char *toinsert);
 void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval);

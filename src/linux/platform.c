@@ -918,6 +918,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->move_x = 0;
 	mouse->move_y = 0;
 	mouse->scroll_state = 0;
+	keyboard->text_changed = false;
 	
 	XClientMessageEvent m;
 	

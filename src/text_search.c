@@ -95,7 +95,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): text editing of selected area
 // TODO(Aldrik): redo (ctrl+y)
 // TODO(Aldrik): capture mouse position outside of window on windows so that we can drag scrollbar outside of window
 // TODO(Aldrik): name of application in taskbar on linux
@@ -584,7 +583,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
 						}
 						
-						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->size/2) + 1, open_file_error, ERROR_TEXT_COLOR);
+						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->size/2) + 1, open_file_error, global_ui_context.style.error_foreground);
 					}
 				}
 				y += h-1;
@@ -696,7 +695,7 @@ static void render_info(platform_window *window, font *font_small)
 				char *message = array_at(&current_search_result->errors, e);
 				
 				render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
-				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, ERROR_TEXT_COLOR);
+				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, global_ui_context.style.error_foreground);
 				yy += font_small->size + 4;
 			}
 			
@@ -1196,13 +1195,11 @@ int main(int argc, char **argv)
 			
 			ui_block_begin(LAYOUT_HORIZONTAL);
 			{
-				s32 len1 = strlen(textbox_search_text.buffer);
 				if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
 				{
 					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+					if (keyboard.text_changed) do_search();
 				}
-				s32 len2 = strlen(textbox_search_text.buffer);
-				if (len1 != len2) do_search();
 				
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
 				if (ui_push_button_image(&button_find_text, "", search_img))
@@ -1238,6 +1235,12 @@ int main(int argc, char **argv)
 			{
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
+		}
+		
+		{
+			char buf[10];
+			sprintf(buf, "%d", textbox_path.history.length);
+			render_text(font_medium, 0, 500, buf, rgb(255,0,0));
 		}
 		
 		assets_do_post_process();

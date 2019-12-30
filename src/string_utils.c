@@ -336,6 +336,30 @@ s32 string_get_json_number(char **buffer)
 	return 0;
 }
 
+void utf8_str_remove_range(char *str, s32 from, s32 to)
+{
+	char *orig_str = str;
+	s32 i = 0;
+	utf8_int32_t ch = 0;
+	s32 total_len = strlen(str)+1+4;
+	char *replacement = calloc(total_len,1);
+	char *rep_off = replacement;
+	replacement[0] = 0;
+	
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+		if (i < from || i >= to)
+		{
+			rep_off = utf8catcodepoint(rep_off, ch, 5);
+		}
+		
+		++i;
+	}
+	*rep_off = 0;
+	
+	strcpy(orig_str, replacement);
+}
+
 void utf8_str_remove_at(char *str, s32 at)
 {
 	char *orig_str = str;

@@ -120,21 +120,28 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 		
 		if (keyboard->has_selection)
 		{
-			//
+			keyboard->cursor = keyboard->selection_begin_offset;
+			utf8_str_remove_range(keyboard->input_text, keyboard->selection_begin_offset,
+								  keyboard->selection_begin_offset + keyboard->selection_length);
+			keyboard->has_selection = false;
+			keyboard->text_changed = true;
 		}
 		
 		if (result)
 		{
 			s32 len = utf8len(buf);
-			
+			//printf("%s -> ", keyboard->input_text);
 			utf8_str_insert_utf8str(keyboard->input_text, keyboard->cursor, buf);
+			//printf("%s -- %d -- %s\n", keyboard->input_text, keyboard->cursor, buf);
 			
 			keyboard->cursor += len;
 			keyboard->input_text_len += len;
+			keyboard->text_changed = true;
 		}
 	}
 	else if (is_lctrl_down && keyboard_is_key_pressed(keyboard, KEY_C))
 	{
+		// TODO(Aldrik): this is wrong with utf8
 		char buffer[MAX_INPUT_LENGTH];
 		sprintf(buffer, "%.*s", keyboard->selection_length, keyboard->input_text+keyboard->selection_begin_offset);
 		
@@ -155,20 +162,26 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		{
 			if (keyboard->has_selection)
 			{
-				///
+				keyboard->cursor = keyboard->selection_begin_offset;
+				utf8_str_remove_range(keyboard->input_text, keyboard->selection_begin_offset,
+									  keyboard->selection_begin_offset + keyboard->selection_length);
+				keyboard->has_selection = false;
+				keyboard->text_changed = true;
 			}
 			
 			if (keyboard->input_text_len)
 			{
 				utf8_str_insert_at(keyboard->input_text, keyboard->cursor, *ch);
+				keyboard->text_changed = true;
 			}
 			else
 			{
 				strcat(keyboard->input_text, ch);
+				keyboard->text_changed = true;
 			}
 			
 			keyboard->cursor++;
-			keyboard->input_text_len++;
+			keyboard->input_text_len = utf8len(keyboard->input_text);
 		}
 	}
 	else
@@ -182,6 +195,8 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				keyboard->cursor = 0;
 			else
 				keyboard->cursor--;
+			
+			keyboard->text_changed = true;
 		}
 		if (keyboard_is_key_down(keyboard, KEY_RIGHT) && keyboard->cursor < keyboard->input_text_len)
 		{
@@ -189,6 +204,8 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				keyboard->cursor = utf8len(keyboard->input_text);
 			else
 				keyboard->cursor++;
+			
+			keyboard->text_changed = true;
 		}
 	}
 	
@@ -198,7 +215,10 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 		
 		if (keyboard->has_selection)
 		{
-			///
+			utf8_str_remove_range(keyboard->input_text, keyboard->selection_begin_offset,
+								  keyboard->selection_begin_offset + keyboard->selection_length);
+			keyboard->has_selection = false;
+			keyboard->text_changed = true;
 		}
 		else if (is_lctrl_down)
 		{
@@ -206,15 +226,17 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			{
 				utf8_str_remove_at(keyboard->input_text, 0);
 			}
-			keyboard->input_text_len -= keyboard->cursor;
 			keyboard->cursor = 0;
+			keyboard->text_changed = true;
 		}
 		else if (keyboard->cursor > 0)
 		{
 			utf8_str_remove_at(keyboard->input_text, keyboard->cursor-1);
 			
 			keyboard->cursor--;
-			keyboard->input_text_len--;
+			keyboard->text_changed = true;
 		}
+		
+		keyboard->input_text_len = utf8len(keyboard->input_text);
 	}
 }

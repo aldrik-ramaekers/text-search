@@ -709,6 +709,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->move_x = 0;
 	mouse->move_y = 0;
 	mouse->scroll_state = 0;
+	keyboard->text_changed = false;
 	
 	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))

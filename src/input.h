@@ -198,6 +198,7 @@ typedef struct t_keyboard_input
 	u32 cursor;
 	
 	// input
+	bool text_changed; // is set when text is pasted in, incase the new text is the same length as the old text so we know to store a new undo entry
 	bool has_selection;
 	s32 selection_begin_offset;
 	s32 selection_length;
