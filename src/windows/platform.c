@@ -85,34 +85,28 @@ bool platform_get_clipboard(platform_window *window, char *buffer)
 
 bool platform_set_clipboard(platform_window *window, char *buffer)
 {
-	HGLOBAL clipboard_data;
-	s32 buffer_len = strlen(buffer)+1;
+	HANDLE clipboard_data;
 	
+	wchar_t convstr[MAX_INPUT_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1,
+								convstr, MAX_INPUT_LENGTH);
+	size_t len = wcslen(convstr);
+	size_t size = (len+1) * sizeof(wchar_t);
+	LPSTR dst;
+								
 	if (!OpenClipboard(NULL))
 		return false;
 	
-	clipboard_data = GlobalAlloc(GMEM_MOVEABLE, buffer_len);
+	clipboard_data = GlobalAlloc(GMEM_MOVEABLE, size);
 	if (clipboard_data)
 	{
-		void *addr = GlobalLock(clipboard_data);
-		memcpy(addr, buffer, buffer_len);
+		dst = GlobalLock(clipboard_data);
+		memmove(dst, convstr, size);
+		dst[len] = 0;
 		GlobalUnlock(clipboard_data);
 		
-		if (!EmptyClipboard())
-		{
-			CloseClipboard();
-			return false;
-		}
-		else
-		{	
-			SetClipboardData(CF_TEXT, addr);
-			
-			wchar_t tmp8to16buf[MAX_INPUT_LENGTH];
-			
-			MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, buffer, strlen(buffer),
-								tmp8to16buf, MAX_INPUT_LENGTH);
-			SetClipboardData(CF_UNICODETEXT, tmp8to16buf);
-		}
+		SetClipboardData(CF_UNICODETEXT, clipboard_data);
+		
 	}
 	{
 		CloseClipboard();
@@ -514,7 +508,7 @@ void platform_window_set_title(platform_window *window, char *name)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
-	ShowWindow(GetConsoleWindow(), SW_HIDE);
+	//ShowWindow(GetConsoleWindow(), SW_HIDE);
 	platform_window window;
 	window.has_focus = true;
 	window.window_handle = 0;
