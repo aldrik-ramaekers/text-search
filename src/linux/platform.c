@@ -751,17 +751,27 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	// window name
 	{
-		XTextProperty window_title_property;
-		XTextProperty window_icon_property;
-		char* window_title = name;
-		XStringListToTextProperty(&window_title,
-								  1,
-								  &window_title_property);
-		XStringListToTextProperty(&window_title,
-								  1,
-								  &window_icon_property);
-		XSetWMName(window.display, window.window, &window_title_property);
-		XSetWMIconName(window.display, window.window, &window_icon_property);
+		Atom WM_NAME = XInternAtom(window.display, "WM_NAME", False);
+		Atom _NET_WM_NAME = XInternAtom(window.display, "_NET_WM_NAME", False);
+		Atom _NET_WM_ICON_NAME = XInternAtom(window.display, "_NET_WM_ICON_NAME", False);
+		
+		char *list[1] = { (char *) name };
+		XTextProperty property;
+		
+		XStoreName(window.display, window.window, name);
+		
+		Xutf8TextListToTextProperty(window.display, list, 1, XUTF8StringStyle,
+									&property);
+		XSetTextProperty(window.display, window.window, &property, WM_NAME);
+		XSetTextProperty(window.display, window.window, &property, _NET_WM_NAME);
+		XSetTextProperty(window.display, window.window, &property, XA_WM_NAME);
+		XSetTextProperty(window.display, window.window, &property, _NET_WM_ICON_NAME);
+		XFree(property.value);
+		
+		XClassHint class_hint;
+		class_hint.res_name = name;
+		class_hint.res_class = name;
+		XSetClassHint(window.display, window.window, &class_hint);
 	}
 	
 	{
