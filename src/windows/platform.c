@@ -462,11 +462,13 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-		s32 x = lparam&0xFFFF;
-		s32 y = lparam>>16;
-		
-		current_mouse_to_handle->x = x;
-		current_mouse_to_handle->y = y;
+		/*
+  s32 x = lparam&0xFFFF;
+  s32 y = lparam>>16;
+  
+  current_mouse_to_handle->x = x;
+  current_mouse_to_handle->y = y;
+  */
 		
 		TRACKMOUSEEVENT track;
 		track.cbSize = sizeof(track);
@@ -705,6 +707,23 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	mouse->move_y = 0;
 	mouse->scroll_state = 0;
 	keyboard->text_changed = false;
+	
+	// mouse position (including outside of window)
+	{
+		POINT pp;
+		BOOL r = GetCursorPos(&pp);
+		if (r)
+		{
+			RECT rec;
+			LONG client_height;
+			GetClientRect(current_window_to_handle->window_handle, &rec);
+			client_height = rec.bottom;
+			
+			GetWindowRect(current_window_to_handle->window_handle, &rec);
+			mouse->x = pp.x - rec.left;
+			mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top));
+		}
+	}
 	
 	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
