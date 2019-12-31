@@ -48,8 +48,11 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.state = false;
 	state.text_offset_x = 0;
 	state.history = array_create(sizeof(textbox_history_entry));
+	state.future = array_create(sizeof(textbox_history_entry));
 	array_reserve(&state.history, 100);
 	state.history.reserve_jump = 100;
+	array_reserve(&state.future, 100);
+	state.future.reserve_jump = 100;
 	state.selection_start_index = 0;
 	state.double_clicked_to_select = false;
 	state.double_clicked_to_select_cursor_index = 0;
@@ -65,6 +68,7 @@ void ui_destroy_textbox(textbox_state *state)
 		mem_free(*history_entry);
 	}
 	array_destroy(&state->history);
+	array_destroy(&state->future);
 	
 	mem_free(state->buffer);
 }
@@ -642,13 +646,41 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		// go to previous state
 		if (is_lctrl_down && keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Z) && state->history.length)
 		{
+			textbox_history_entry history_entry;
+			history_entry.text = mem_alloc(old_len+1);
+			history_entry.cursor_offset = last_cursor_pos;
+			strcpy(history_entry.text, state->buffer);
+			array_push(&state->future, &history_entry);
+			
 			global_ui_context.keyboard->text_changed = true;
 			
 			textbox_history_entry *old_text = array_at(&state->history, state->history.length-1);
 			strncpy(state->buffer, old_text->text, MAX_INPUT_LENGTH);
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
+			
 			mem_free(old_text->text);
 			array_remove_at(&state->history, state->history.length-1);
+			
+			global_ui_context.keyboard->cursor = old_text->cursor_offset;
+		}
+		else if (is_lctrl_down && 
+				 keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Y) && state->future.length)
+		{
+			textbox_history_entry history_entry;
+			history_entry.text = mem_alloc(old_len+1);
+			history_entry.cursor_offset = last_cursor_pos;
+			strcpy(history_entry.text, state->buffer);
+			array_push(&state->history, &history_entry);
+			
+			global_ui_context.keyboard->text_changed = true;
+			
+			textbox_history_entry *old_text = array_at(&state->future, state->future.length-1);
+			strncpy(state->buffer, old_text->text, MAX_INPUT_LENGTH);
+			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
+			
+			mem_free(old_text->text);
+			array_remove_at(&state->future, state->future.length-1);
+			
 			global_ui_context.keyboard->cursor = old_text->cursor_offset;
 		}
 		else

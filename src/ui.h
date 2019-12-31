@@ -110,6 +110,7 @@ typedef struct t_textbox_state
 	s32 max_len;
 	s32 text_offset_x;
 	array history;
+	array future;
 } textbox_state;
 
 typedef struct t_checkbox_state
