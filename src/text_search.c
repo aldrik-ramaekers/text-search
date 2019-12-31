@@ -95,6 +95,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): setting the maximum thread count option to 0 will block the search, set default to 10
+// TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
 // TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
@@ -990,6 +992,14 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
+	bool is_command_line_run = (argc > 1);
+	
+	if (is_command_line_run)
+	{
+		handle_command_line_arguments(argc, argv);
+		return 0;
+	}
+	
 	platform_init(argc, argv);
 	
 #ifdef MODE_DEVELOPER

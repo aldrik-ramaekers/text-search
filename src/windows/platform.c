@@ -1117,7 +1117,7 @@ void platform_init(int argc, char **argv)
 	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
-	string_copyn(binary_path, buf, MAX_INPUT_LENGTH-1);
+	string_copyn(binary_path, buf, MAX_INPUT_LENGTH);
 	
 	assets_create();
 }

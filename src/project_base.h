@@ -94,6 +94,7 @@
 #include "string_utils.h"
 #include "settings_config.h"
 #include "localization.h"
+#include "command_line.h"
 
 #include "platform_shared.c"
 
@@ -119,6 +120,7 @@
 #include "settings_config.c"
 #include "localization.c"
 #include "memory_bucket.c"
+#include "command_line.c"
 
 #ifdef MODE_DEVELOPER
 #include "memory.c"

@@ -74,12 +74,12 @@ char* locale_get_id()
 	return global_localization.active_localization->locale_id;
 }
 
-void set_locale(char *country_id)
+bool set_locale(char *country_id)
 {
-	if (country_id == 0)
+	if (country_id == 0 && global_localization.mo_files.length)
 	{
 		global_localization.active_localization = array_at(&global_localization.mo_files, 0);
-		return;
+		return true;
 	}
 	
 	for (s32 i = 0; i < global_localization.mo_files.length; i++)
@@ -88,12 +88,16 @@ void set_locale(char *country_id)
 		if (strcmp(file->locale_id, country_id) == 0)
 		{
 			global_localization.active_localization = file;
-			return;
+			return true;
 		}
 	}
 	
+	// if localization is not found, default to first in list (english), return false to report error
+	if (global_localization.mo_files.length)
+		global_localization.active_localization = array_at(&global_localization.mo_files, 0);
+	
 	global_localization.active_localization = 0;
-	return;
+	return false;
 }
 
 char* localize(const char *identifier)

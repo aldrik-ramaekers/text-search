@@ -64,7 +64,7 @@ localization global_localization;
 char* locale_get_id();
 char* locale_get_name();
 char* localize(const char *identifier);
-void set_locale(char *country_id);
+bool set_locale(char *country_id);
 void load_available_localizations();
 
 #endif
