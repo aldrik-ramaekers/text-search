@@ -24,10 +24,10 @@ mo_file load_localization_file(u8 *start_addr, u8 *end_addr, u8 *img_start, u8 *
 	{
 		mo.header = *(mo_header*)start_addr;
 		mo.locale_id = mem_alloc(strlen(locale_id)+1);
-		strcpy(mo.locale_id, locale_id);
+		string_copyn(mo.locale_id, locale_id, strlen(locale_id)+1);
 		
 		mo.locale_full = mem_alloc(strlen(locale_name)+1);
-		strcpy(mo.locale_full, locale_name);
+		string_copyn(mo.locale_full, locale_name, strlen(locale_name)+1);
 		
 		mo.icon = assets_load_image(img_start, img_end, false);
 		

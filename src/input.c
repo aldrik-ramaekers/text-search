@@ -62,7 +62,7 @@ inline bool keyboard_is_key_pressed(keyboard_input *keyboard, s16 key)
 
 inline void keyboard_set_input_text(keyboard_input *keyboard, char *text)
 {
-	strncpy(keyboard->input_text, text, MAX_INPUT_LENGTH);
+	string_copyn(keyboard->input_text, text, MAX_INPUT_LENGTH);
 	u32 len = utf8len(keyboard->input_text);
 	keyboard->cursor = len;
 	keyboard->input_text_len = len;
@@ -176,7 +176,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 			}
 			else
 			{
-				strcat(keyboard->input_text, ch);
+				string_appendn(keyboard->input_text, ch, MAX_INPUT_LENGTH);
 				keyboard->text_changed = true;
 			}
 			

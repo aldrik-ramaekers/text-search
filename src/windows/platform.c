@@ -295,7 +295,7 @@ void platform_create_config_directory()
 	char tmp[PATH_MAX];
 	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, tmp)))
 	{
-		strcat(tmp, "/text-search");
+		string_appendn(tmp, "/text-search", PATH_MAX);
 	}
 	
 	
@@ -309,7 +309,7 @@ char* get_config_save_location(char *buffer)
 {
 	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer)))
 	{
-		strcat(buffer, "\\text-search\\config.txt");
+		string_appendn(buffer, "\\text-search\\config.txt", MAX_INPUT_LENGTH);
 		return buffer;
 	}
 	
@@ -351,13 +351,13 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 				}
 				else
 				{
-					sprintf(buf, "%c", val);
+					snprintf(buf, 2,  "%c", val);
 					ch = buf;
 				}
 			}
 			else if (val >= 32 && val <= 126)
 			{
-				sprintf(buf, "%c", val);
+				snprintf(buf, 2, "%c", val);
 				ch = buf;
 			}
 			
@@ -886,14 +886,14 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 		start_dir_fix = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
 	else
 		start_dir_fix = mem_alloc(MAX_INPUT_LENGTH);
-	sprintf(start_dir_fix, "%s*", start_dir);
+	snprintf(start_dir_fix, MAX_INPUT_LENGTH, "%s*", start_dir);
 	
 	char *start_dir_clean;
 	if (bucket)
 		start_dir_clean = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
 	else
 		start_dir_clean = mem_alloc(MAX_INPUT_LENGTH);
-	strncpy(start_dir_clean, start_dir, MAX_INPUT_LENGTH);
+	string_copyn(start_dir_clean, start_dir, MAX_INPUT_LENGTH);
 	
 	WIN32_FIND_DATAA file_info;
 	HWND handle = FindFirstFileA(start_dir_fix, &file_info);
@@ -932,7 +932,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 						buf = memory_bucket_reserve(bucket, MAX_INPUT_LENGTH);
 					else
 						buf = mem_alloc(MAX_INPUT_LENGTH);
-					sprintf(buf, "%s%s",start_dir, name);
+					snprintf(buf, MAX_INPUT_LENGTH, "%s%s",start_dir, name);
 					
 					found_file f;
 					f.path = buf;
@@ -942,7 +942,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					else
 						f.matched_filter= mem_alloc(len+1);
 					
-					strncpy(f.matched_filter, matched_filter, len+1);
+					string_copyn(f.matched_filter, matched_filter, len+1);
 					
 					mutex_lock(&list->mutex);
 					array_push_size(list, &f, sizeof(found_file));
@@ -952,9 +952,9 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 			
 			if (recursive)
 			{
-				strncpy(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
-				strcat(subdirname_buf, name);
-				strcat(subdirname_buf, "\\");
+				string_copyn(subdirname_buf, start_dir_clean, MAX_INPUT_LENGTH);
+				string_appendn(subdirname_buf, name, MAX_INPUT_LENGTH);
+				string_appendn(subdirname_buf, "\\", MAX_INPUT_LENGTH);
 				
 				// is directory
 				platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories, is_cancelled);
@@ -977,7 +977,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 				else
 					buf = mem_alloc(MAX_INPUT_LENGTH);
 				
-				sprintf(buf, "%s%s",start_dir, name);
+				snprintf(buf, MAX_INPUT_LENGTH, "%s%s",start_dir, name);
 				
 				found_file f;
 				f.path = buf;
@@ -987,7 +987,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 				else
 					f.matched_filter = mem_alloc(len+1);
 				
-				strncpy(f.matched_filter, matched_filter, len+1);
+				string_copyn(f.matched_filter, matched_filter, len+1);
 				
 				mutex_lock(&list->mutex);
 				array_push_size(list, &f, sizeof(found_file));
@@ -1015,7 +1015,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	if (args->file_filter)
 	{
 		char filter[50];
-		strncpy(filter, args->file_filter, 50);
+		string_copyn(filter, args->file_filter, 50);
 		filter[strlen(filter)+1] = 0;
 		info.lpstrFilter = filter;
 	}
@@ -1042,7 +1042,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	{
 		info.Flags = OFN_PATHMUSTEXIST;
 		GetSaveFileNameA(&info);
-		strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
+		string_copyn(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
 	else if (args->type == OPEN_DIRECTORY)
 	{
@@ -1058,7 +1058,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	{
 		info.Flags = OFN_FILEMUSTEXIST;
 		GetOpenFileNameA(&info);
-		strncpy(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
+		string_copyn(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
 	
 	
@@ -1115,15 +1115,9 @@ void platform_init(int argc, char **argv)
 	
 	platform_create_config_directory();
 	
-	// if program is run from a folder included in PATH
-	//if (string_equals(binary_path, ""))
-	//{
-	//sprintf(binary_path, "%s", INSTALL_DIRECTORY);
-	//}
-	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
-	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
+	string_copyn(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
 	assets_create();
 }
@@ -1216,15 +1210,6 @@ s32 platform_get_cpu_count()
 	GetSystemInfo(&info);
 	
 	return info.dwNumberOfProcessors;
-}
-
-cpu_info platform_get_cpu_info()
-{
-	// https://docs.microsoft.com/en-us/windows/desktop/api/sysinfoapi/ns-sysinfoapi-_system_info same as above
-	cpu_info info;
-	info.model = 1;
-	
-	return info;
 }
 
 u64 string_to_u64(char *str)

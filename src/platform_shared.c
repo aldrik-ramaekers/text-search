@@ -39,7 +39,7 @@ static void get_name_from_path(char *buffer, char *path)
 	}
 #endif
 	
-	strncpy(buffer, path_end+1, MAX_INPUT_LENGTH);
+	string_copyn(buffer, path_end+1, MAX_INPUT_LENGTH);
 }
 
 static void get_directory_from_path(char *buffer, char *path)
@@ -69,7 +69,7 @@ static void get_directory_from_path(char *buffer, char *path)
 	s32 offset = path_end - path;
 	char ch = path[offset+1];
 	path[offset+1] = 0;
-	strncpy(buffer, path, MAX_INPUT_LENGTH);
+	string_copyn(buffer, path, MAX_INPUT_LENGTH);
 	path[offset+1] = ch;
 }
 
@@ -87,7 +87,7 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 	}
 	
 	// create filter
-	strncat(name, "*", MAX_INPUT_LENGTH);
+	string_appendn(name, "*", MAX_INPUT_LENGTH);
 	
 	// TODO(Aldrik): use memory bucket here..
 	array files = array_create(sizeof(found_file));
@@ -119,7 +119,7 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 	if (files.length > 0 && index_to_take != -1)
 	{
 		found_file *file = array_at(&files, index_to_take);
-		strncpy(buffer, file->path, MAX_INPUT_LENGTH);
+		string_copyn(buffer, file->path, MAX_INPUT_LENGTH);
 	}
 	
 	for (s32 i = 0; i < files.length; i++)

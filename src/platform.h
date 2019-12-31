@@ -146,7 +146,6 @@ char *get_file_extension(char *path);
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();
 s32 platform_get_cpu_count();
-cpu_info platform_get_cpu_info();
 
 u64 string_to_u64(char *str);
 u32 string_to_u32(char *str);

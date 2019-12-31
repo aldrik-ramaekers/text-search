@@ -122,7 +122,7 @@ static void *export_result_d(void *arg)
 	path_buf[0] = 0;
 	
 	char start_path[MAX_INPUT_LENGTH];
-	sprintf(start_path, "%s%s", binary_path, "");
+	snprintf(start_path, MAX_INPUT_LENGTH, "%s%s", binary_path, "");
 	
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
@@ -154,7 +154,7 @@ static void *export_result_d(void *arg)
 	
 	if (string_equals(file_extension, ""))
 	{
-		strcat(path_buf, ".json");
+		string_appendn(path_buf, ".json", MAX_INPUT_LENGTH);
 	}
 	
 	platform_write_file_content(path_buf, "w", buffer, size);
@@ -180,13 +180,13 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	if (!result) return false;
 	
 	cJSON *search_directory = cJSON_GetObjectItemCaseSensitive(result, "search_directory");
-	strcpy(search_result->search_directory_buffer, search_directory->valuestring);
+	string_copyn(search_result->search_directory_buffer, search_directory->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *filter = cJSON_GetObjectItemCaseSensitive(result, "filter");
-	strcpy(search_result->filter_buffer, filter->valuestring);
+	string_copyn(search_result->filter_buffer, filter->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *search_query = cJSON_GetObjectItemCaseSensitive(result, "search_query");
-	strcpy(search_result->text_to_find_buffer, search_query->valuestring);
+	string_copyn(search_result->text_to_find_buffer, search_query->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *duration_us = cJSON_GetObjectItemCaseSensitive(result, "duration_us");
 	search_result->find_duration_us = duration_us->valueint;
@@ -221,12 +221,12 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		////
 		cJSON *path = cJSON_GetObjectItem(file, "path");
 		new_match.file.path = memory_bucket_reserve(&search_result->mem_bucket, strlen(path->valuestring)+1);
-		strcpy(new_match.file.path, path->valuestring);
+		string_copyn(new_match.file.path, path->valuestring, strlen(path->valuestring)+1);
 		
 		////
         cJSON *matched_filter = cJSON_GetObjectItem(file, "matched_filter");
 		new_match.file.matched_filter = memory_bucket_reserve(&search_result->mem_bucket, strlen(matched_filter->valuestring)+1);
-		strcpy(new_match.file.matched_filter, matched_filter->valuestring);
+		string_copyn(new_match.file.matched_filter, matched_filter->valuestring, strlen(matched_filter->valuestring)+1);
 		
 		////
 		cJSON *file_error = cJSON_GetObjectItem(file, "file_error");
@@ -245,7 +245,7 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		if (cJSON_IsString(line_info))
 		{
 			new_match.line_info = memory_bucket_reserve(&search_result->mem_bucket, strlen(line_info->valuestring)+1);
-			strcpy(new_match.line_info, line_info->valuestring);
+			string_copyn(new_match.line_info, line_info->valuestring, strlen(line_info->valuestring)+1);
 			search_result->match_found = true;
 		}
 		else
@@ -299,7 +299,7 @@ void import_results_from_file(char *path_buf)
 	new_result->done_finding_matches = true;
 	new_result->done_finding_files = true;
 	
-	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), current_search_result->files_matched, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
+	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), current_search_result->files_matched, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
 	
 	array_destroy(&new_result->files);
 	platform_destroy_file_content(&content);
@@ -316,7 +316,7 @@ static void* import_results_d(void *arg)
 	path_buf[0] = 0;
 	
 	char start_path[MAX_INPUT_LENGTH];
-	sprintf(start_path, "%s%s", binary_path, "");
+	snprintf(start_path, MAX_INPUT_LENGTH, "%s%s", binary_path, "");
 	
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;

@@ -138,11 +138,11 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 		
 		window->clipboard_strlen = strlen(buffer);
 		if(!window->clipboard_str) {
-			window->clipboard_str = mem_alloc(window->clipboard_strlen);
+			window->clipboard_str = mem_alloc(window->clipboard_strlen+1);
 		} else {
-			window->clipboard_str = mem_realloc(window->clipboard_str, window->clipboard_strlen);
+			window->clipboard_str = mem_realloc(window->clipboard_str, window->clipboard_strlen+1);
 		}
-		strcpy(window->clipboard_str, buffer);
+		string_copyn(window->clipboard_str, buffer, window->clipboard_strlen+1);
 		
 		return true;
 	}
@@ -154,7 +154,7 @@ void platform_create_config_directory()
 {
 	char *env = getenv("HOME");
 	char tmp[PATH_MAX];
-	sprintf(tmp, "%s%s", env, "/.config/text-search");
+	snprintf(tmp, PATH_MAX, "%s%s", env, "/.config/text-search");
 	
 	if (!platform_directory_exists(tmp))
 	{
@@ -165,7 +165,7 @@ void platform_create_config_directory()
 char* get_config_save_location(char *buffer)
 {
 	char *env = getenv("HOME");
-	sprintf(buffer, "%s%s", env, "/.config/text-search/config.txt");
+	snprintf(buffer, PATH_MAX, "%s%s", env, "/.config/text-search/config.txt");
 	return buffer;
 }
 
@@ -186,7 +186,7 @@ bool get_active_directory(char *buffer)
 {
 	char cwd[PATH_MAX];
 	if (getcwd(cwd, sizeof(cwd)) != NULL) {
-		strncpy(buffer, cwd, PATH_MAX);
+		string_copyn(buffer, cwd, PATH_MAX);
 	} else {
 		return false;
 	}
@@ -210,7 +210,7 @@ bool platform_write_file_content(char *path, const char *mode, char *buffer, s32
 	}
 	else
 	{
-		fprintf(file, "%s", buffer);
+		fwrite(buffer, 1, len, file);
 	}
 	
 	//done:
@@ -594,7 +594,6 @@ inline void platform_init(int argc, char **argv)
 	
 	setlocale(LC_ALL, "en_US.UTF-8");
 	
-	//global_platform_memory_bucket = memory_bucket_init(megabytes(1));
 	XInitThreads();
 	
 	// get fullpath of the directory the binary is residing in
@@ -602,15 +601,9 @@ inline void platform_init(int argc, char **argv)
 	
 	platform_create_config_directory();
 	
-	// if program is run from a folder included in PATH
-	//if (string_equals(binary_path, ""))
-	//{
-	//sprintf(binary_path, "%s", INSTALL_DIRECTORY);
-	//}
-	
 	char buf[MAX_INPUT_LENGTH];
 	get_directory_from_path(buf, binary_path);
-	strncpy(binary_path, buf, MAX_INPUT_LENGTH-1);
+	string_copyn(binary_path, buf, MAX_INPUT_LENGTH-1);
 	
 	assets_create();
 }
@@ -618,7 +611,6 @@ inline void platform_init(int argc, char **argv)
 inline void platform_destroy()
 {
 	assets_destroy();
-	//memory_bucket_destroy(&global_platform_memory_bucket);
 	
 #if defined(MODE_DEVELOPER)
 	memory_print_leaks();
@@ -1191,7 +1183,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 inline void platform_show_alert(char *title, char *message)
 {
 	char command[MAX_INPUT_LENGTH];
-	sprintf(command, "notify-send \"%s\" \"%s\"", title, message);
+	snprintf(command, MAX_INPUT_LENGTH, "notify-send \"%s\" \"%s\"", title, message);
 	platform_run_command(command);
 }
 
@@ -1280,77 +1272,10 @@ inline s32 platform_get_memory_size()
 	return (int)(aid);
 }
 
-cpu_info platform_get_cpu_info()
-{
-	cpu_info result;
-	
-	file_content content = platform_read_file_content("/proc/cpuinfo", "r");
-	char *file_buffer = content.content;
-	
-	// 3 = model, 4 = model name, 7 = frequency, 8 = cache size, 22  = cache alignment
-	
-	char tmp_buffer[1000];
-	int tmp_buffer_len = 0;
-	bool collect_string = false;
-	int line_nr = 0;
-	for (int i = 0; i < 5000; i++)
-	{
-		char ch = file_buffer[i];
-		
-		if (ch == ':')
-		{
-			collect_string = true;
-			tmp_buffer_len = 0;
-			tmp_buffer[0] = 0;
-			i++;
-			continue;
-		}
-		
-		if (ch == '\n')
-		{
-			collect_string = false;
-			tmp_buffer[tmp_buffer_len] = 0;
-			
-			if (line_nr == 3)
-			{
-				result.model = atoi(tmp_buffer);
-			}
-			else if (line_nr == 4)
-			{
-				sprintf(result.model_name, "%s", tmp_buffer);
-			}
-			else if (line_nr == 7)
-			{
-				result.frequency = atof(tmp_buffer);
-			}
-			else if (line_nr == 8)
-			{
-				result.cache_size = atoi(tmp_buffer);
-			}
-			else if (line_nr == 22)
-			{
-				result.cache_alignment = atoi(tmp_buffer);
-				goto done;
-			}
-			line_nr++;
-		}
-		
-		if (collect_string)
-		{
-			tmp_buffer[tmp_buffer_len++] = ch;
-		}
-	}
-	
-	done:
-	platform_destroy_file_content(&content);
-	
-	return result;
-}
-
 void platform_show_message(platform_window *window, char *message, char *title)
 {
 	char command[MAX_INPUT_LENGTH];
-	sprintf(command, "zenity --info --text=\"%s\" --title=\"%s\" --width=240", message, title);
+	snprintf(command, MAX_INPUT_LENGTH, "zenity --info --text=\"%s\" --title=\"%s\" --width=240", message, title);
 	FILE *f = popen(command, "r");
 }
 
@@ -1361,32 +1286,32 @@ static void* platform_open_file_dialog_thread(void *data)
 	FILE *f;
 	
 	char current_val[MAX_INPUT_LENGTH];
-	strncpy(current_val, args->buffer, MAX_INPUT_LENGTH);
+	string_copyn(current_val, args->buffer, MAX_INPUT_LENGTH);
 	
 	char file_filter[MAX_INPUT_LENGTH];
 	file_filter[0] = 0;
 	if (args->file_filter)
-		sprintf(file_filter, "--file-filter=\"%s\"", args->file_filter);
+		snprintf(file_filter, MAX_INPUT_LENGTH, "--file-filter=\"%s\"", args->file_filter);
 	
 	char start_path[MAX_INPUT_LENGTH];
 	start_path[0] = 0;
 	if (args->start_path)
-		sprintf(start_path, "--filename=\"%s\"", args->start_path);
+		snprintf(start_path, MAX_INPUT_LENGTH, "--filename=\"%s\"", args->start_path);
 	
 	
 	char command[MAX_INPUT_LENGTH];
 	
 	if (args->type == OPEN_FILE)
 	{
-		sprintf(command, "zenity --file-selection %s %s", file_filter, start_path);
+		snprintf(command, MAX_INPUT_LENGTH, "zenity --file-selection %s %s", file_filter, start_path);
 	}
 	else if (args->type == OPEN_DIRECTORY)
 	{
-		sprintf(command, "zenity --file-selection --directory %s %s", file_filter, start_path);
+		snprintf(command, MAX_INPUT_LENGTH, "zenity --file-selection --directory %s %s", file_filter, start_path);
 	}
 	else if (args->type == SAVE_FILE)
 	{
-		sprintf(command, "zenity --file-selection --save --confirm-overwrite %s %s", file_filter, start_path);
+		snprintf(command, MAX_INPUT_LENGTH, "zenity --file-selection --save --confirm-overwrite %s %s", file_filter, start_path);
 	}
 	
 	f = popen(command, "r");
@@ -1406,7 +1331,7 @@ static void* platform_open_file_dialog_thread(void *data)
 	
 	if (strcmp(buffer, current_val) != 0 && strcmp(buffer, "") != 0)
 	{
-		strncpy(args->buffer, buffer, MAX_INPUT_LENGTH);
+		string_copyn(args->buffer, buffer, MAX_INPUT_LENGTH);
 		s32 len = strlen(args->buffer);
 		args->buffer[len] = 0;
 	}
@@ -1475,7 +1400,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 							buf = mem_alloc(MAX_INPUT_LENGTH);
 						
 						//realpath(dir->d_name, buf);
-						sprintf(buf, "%s%s",start_dir, dir->d_name);
+						snprintf(buf, MAX_INPUT_LENGTH, "%s%s",start_dir, dir->d_name);
 						
 						found_file f;
 						f.path = buf;
@@ -1485,7 +1410,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 						else
 							f.matched_filter = mem_alloc(len+1);
 						
-						strncpy(f.matched_filter, matched_filter, len+1);
+						string_copyn(f.matched_filter, matched_filter, len+1);
 						
 						mutex_lock(&list->mutex);
 						array_push_size(list, &f, sizeof(found_file));
@@ -1495,9 +1420,9 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 				
 				if (recursive)
 				{
-					strncpy(subdirname_buf, start_dir, MAX_INPUT_LENGTH);
-					strcat(subdirname_buf, dir->d_name);
-					strcat(subdirname_buf, "/");
+					string_copyn(subdirname_buf, start_dir, MAX_INPUT_LENGTH);
+					string_appendn(subdirname_buf, dir->d_name, MAX_INPUT_LENGTH);
+					string_appendn(subdirname_buf, "/", MAX_INPUT_LENGTH);
 					
 					// do recursive search
 					platform_list_files_block(list, subdirname_buf, filters, recursive, bucket, include_directories, is_cancelled);
@@ -1517,7 +1442,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 						buf = mem_alloc(MAX_INPUT_LENGTH);
 					
 					//realpath(dir->d_name, buf);
-					sprintf(buf, "%s%s",start_dir, dir->d_name);
+					snprintf(buf, MAX_INPUT_LENGTH, "%s%s",start_dir, dir->d_name);
 					
 					found_file f;
 					f.path = buf;
@@ -1527,7 +1452,7 @@ void platform_list_files_block(array *list, char *start_dir, array filters, bool
 					else
 						f.matched_filter = mem_alloc(len+1);
 					
-					strncpy(f.matched_filter, matched_filter, len+1);
+					string_copyn(f.matched_filter, matched_filter, len+1);
 					
 					mutex_lock(&list->mutex);
 					array_push_size(list, &f, sizeof(found_file));
@@ -1602,7 +1527,7 @@ inline s8 string_to_s8(char *str)
 inline void platform_open_url(char *url)
 {
 	char buffer[MAX_INPUT_LENGTH];
-	sprintf(buffer, "xdg-open %s", url);
+	snprintf(buffer, MAX_INPUT_LENGTH, "xdg-open %s", url);
 	platform_run_command(buffer);
 }
 

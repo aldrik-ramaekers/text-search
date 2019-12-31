@@ -188,28 +188,6 @@ inline bool string_equals(char *first, char *second)
 	return (strcmp(first, second) == 0);
 }
 
-char *u64_to_string(u64 val, char *buffer)
-{
-#ifdef OS_LINUX
-	sprintf(buffer, "%lu", val);
-#endif
-#ifdef IS_WIN
-	sprintf(buffer, "%I64u", val);
-#endif
-	return buffer;
-}
-
-char *s32_to_string(s32 val, char *buffer)
-{
-#ifdef OS_LINUX
-	sprintf(buffer, "%d", val);
-#endif
-#ifdef IS_WIN
-	sprintf(buffer, "%I32s", val);
-#endif
-	return buffer;
-}
-
 // replaces " with \" for file formats
 void string_appendf(char *buffer, char *text)
 {
@@ -241,6 +219,30 @@ void string_appendf(char *buffer, char *text)
 	}
 }
 
+void string_copyn(char *buffer, char *text, s32 bufferlen)
+{
+	u32 len = 0;
+	while(*text && len < bufferlen)
+	{
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+	buffer[len] = 0;
+}
+
+void string_appendn(char *buffer, char *text, s32 bufferlen)
+{
+	u32 len = strlen(buffer);
+	while(*text && len < bufferlen)
+	{
+		buffer[len] = *text;
+		len++;
+		text++;
+	}
+	buffer[len] = 0;
+}
+
 void string_append(char *buffer, char *text)
 {
 	u32 len = strlen(buffer);
@@ -250,6 +252,7 @@ void string_append(char *buffer, char *text)
 		len++;
 		text++;
 	}
+	buffer[len] = 0;
 }
 
 bool string_remove(char **buffer, char *text)
@@ -357,7 +360,7 @@ void utf8_str_remove_range(char *str, s32 from, s32 to)
 	}
 	*rep_off = 0;
 	
-	strcpy(orig_str, replacement);
+	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
 }
 
 void utf8_str_remove_at(char *str, s32 at)
@@ -381,7 +384,7 @@ void utf8_str_remove_at(char *str, s32 at)
 	}
 	*rep_off = 0;
 	
-	strcpy(orig_str, replacement);
+	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
 }
 
 void utf8_str_insert_utf8str(char *str, s32 at, char *toinsert)
@@ -420,7 +423,7 @@ void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval)
 	}
 	*rep_off = 0;
 	
-	strcpy(orig_str, replacement);
+	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
 }
 
 char *utf8_str_copy_upto(char *str, s32 roof, char *buffer)
@@ -480,7 +483,7 @@ void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval)
 	}
 	*rep_off = 0;
 	
-	strcpy(orig_str, replacement);
+	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
 }
 
 char* utf8_str_upto(char *str, s32 index)

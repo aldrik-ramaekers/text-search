@@ -27,12 +27,12 @@ void settings_config_write_to_file(settings_config *config, char *path)
 		config_setting *setting = array_at(&config->settings, i);
 		
 		char entry_buf[MAX_INPUT_LENGTH];
-		sprintf(entry_buf, "%s = \"%s\"\n", setting->name, setting->value);
-		strcat(buffer, entry_buf);
+		snprintf(entry_buf, MAX_INPUT_LENGTH, "%s = \"%s\"\n", setting->name, setting->value);
+		string_appendn(buffer, entry_buf, MAX_INPUT_LENGTH);
 	}
 	
 	set_active_directory(binary_path);
-	platform_write_file_content(path, "w", buffer, len);
+	platform_write_file_content(path, "w+", buffer, strlen(buffer));
 	mem_free(buffer);
 }
 
@@ -53,7 +53,7 @@ static void get_config_from_string(settings_config *config, char *string)
 		if (*string == ' ' && !current_entry.name)
 		{
 			current_entry.name = mem_alloc(len+1);
-			strncpy(current_entry.name, string-len, len);
+			string_copyn(current_entry.name, string-len, len);
 			current_entry.name[len] = 0;
 			string_trim(current_entry.name);
 		}
@@ -70,7 +70,7 @@ static void get_config_from_string(settings_config *config, char *string)
 			else
 			{
 				current_entry.value = mem_alloc(len+1);
-				strncpy(current_entry.value, string-len, len);
+				string_copyn(current_entry.value, string-len, len);
 				current_entry.value[len] = 0;
 				string_trim(current_entry.value);
 			}
@@ -132,7 +132,7 @@ settings_config settings_config_load_from_file(char *path)
 			char line[MAX_INPUT_LENGTH];
 			
 			s32 line_len = i - token_offset;
-			sprintf(line, "%.*s", line_len, (char*)content.content+token_offset);
+			snprintf(line, MAX_INPUT_LENGTH, "%.*s", line_len, (char*)content.content+token_offset);
 			token_offset = i + 1;
 			
 			get_config_from_string(&config, line);
@@ -183,7 +183,7 @@ void settings_config_set_string(settings_config *config, char *name, char *value
 		s32 len = strlen(value);
 		mem_free(setting->value);
 		setting->value = mem_alloc(len+1);
-		strcpy(setting->value, value);
+		string_copyn(setting->value, value, len+1);
 	}
 	else
 	{
@@ -193,12 +193,12 @@ void settings_config_set_string(settings_config *config, char *name, char *value
 		// name
 		s32 len = strlen(name);
 		new_entry.name = mem_alloc(len+1);
-		strcpy(new_entry.name, name);
+		string_copyn(new_entry.name, name, len+1);
 		
 		// value
 		len = strlen(value);
 		new_entry.value = mem_alloc(len+1);
-		strcpy(new_entry.value, value);
+		string_copyn(new_entry.value, value, len+1);
 		
 		array_push(&config->settings, &new_entry);
 	}
@@ -210,12 +210,12 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 	if (setting)
 	{
 		char num_buf[20];
-		sprintf(num_buf, "%"PRId64"", value);
+		snprintf(num_buf, MAX_INPUT_LENGTH, "%"PRId64"", value);
 		
 		s32 len = strlen(num_buf);
 		mem_free(setting->value);
 		setting->value = mem_alloc(len+1);
-		strcpy(setting->value, num_buf);
+		string_copyn(setting->value, num_buf, len+1);
 	}
 	else
 	{
@@ -224,15 +224,15 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 		// name
 		s32 len = strlen(name);
 		new_entry.name = mem_alloc(len+1);
-		strcpy(new_entry.name, name);
+		string_copyn(new_entry.name, name, len+1);
 		
 		// value
 		char num_buf[20];
-		sprintf(num_buf, "%"PRId64"", value);
+		snprintf(num_buf, MAX_INPUT_LENGTH, "%"PRId64"", value);
 		
 		len = strlen(num_buf);
 		new_entry.value = mem_alloc(len+1);
-		strcpy(new_entry.value, num_buf);
+		string_copyn(new_entry.value, num_buf, len+1);
 		array_push(&config->settings, &new_entry);
 	}
 }

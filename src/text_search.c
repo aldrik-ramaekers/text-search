@@ -95,8 +95,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): should a change of cursor position really be saved in textbox history?
+// TODO(Aldrik): get rid of printf's
 // TODO(Aldrik): clipboard on windows kinda buggy
-// TODO(Aldrik): save as dialog on windows not showing available file types
 // TODO(Aldrik): command line usage
 
 checkbox_state checkbox_recursive;
@@ -189,7 +190,7 @@ static void* find_text_in_file_worker(void *arg)
 						
 						char *str_to_copy = utf8_str_upto(m->line_start, overflow);
 						
-						sprintf(file_match.line_info, "%.40s", str_to_copy);
+						snprintf(file_match.line_info, 170, "%.40s", str_to_copy);
 						char *tmp = file_match.line_info;
 						while(*tmp)
 						{
@@ -232,7 +233,7 @@ static void* find_text_in_file_worker(void *arg)
 					args.file.file_error = FILE_ERROR_GENERIC;
 				
 				mutex_lock(&args.search_result_buffer->mutex);
-				strncpy(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
+				string_copyn(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
 				mutex_unlock(&args.search_result_buffer->mutex);
 			}
 			
@@ -251,7 +252,7 @@ static void* find_text_in_file_worker(void *arg)
 	if (!result_buffer->cancel_search)
 	{
 		mutex_lock(&result_buffer->mutex);
-		sprintf(global_status_bar.result_status_text, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
+		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
 		mutex_unlock(&result_buffer->mutex);
 	}
 	
@@ -267,7 +268,7 @@ static void* find_text_in_files_t(void *arg)
 	array threads = array_create(sizeof(thread));
 	array_reserve(&threads, result_buffer->max_thread_count);
 	
-	strncpy(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
+	string_copyn(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
 	char *text_to_find = result_buffer->text_to_find;
 	
 	// create worker threads
@@ -363,7 +364,7 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	sprintf(global_status_bar.result_status_text, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
+	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
 	
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
@@ -414,19 +415,19 @@ static void set_status_text_to_active()
 	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
 	s32 dot_count = (dot_count_t % 1000) / 250;
 	
-	sprintf(text, "%.*s%s", dot_count, "...", localize("finding_files"));
+	snprintf(text, MAX_INPUT_LENGTH, "%.*s%s", dot_count, "...", localize("finding_files"));
 	
-	strncpy(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
+	string_copyn(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
 }
 
 static void set_status_text_to_cancelled()
 {
-	strncpy(global_status_bar.result_status_text, localize("cancelling_search"), MAX_STATUS_TEXT_LENGTH);
+	string_copyn(global_status_bar.result_status_text, localize("cancelling_search"), MAX_STATUS_TEXT_LENGTH);
 }
 
 void reset_status_text()
 {
-	strncpy(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
+	string_copyn(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
 static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
@@ -503,7 +504,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 								case OPTION_PATH_LINE:
 								{
 									char *clipboard_tmp_buffer = malloc(200);
-									sprintf(clipboard_tmp_buffer, "%s:%d", match->file.path, match->line_nr);
+									snprintf(clipboard_tmp_buffer, 200, "%s:%d", match->file.path, match->line_nr);
 									platform_set_clipboard(main_window, clipboard_tmp_buffer);
 									mem_free(clipboard_tmp_buffer);
 								}
@@ -512,7 +513,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 								case OPTION_PATH_LINE_FILTER:
 								{
 									char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
-									sprintf(clipboard_tmp_buffer, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
+									snprintf(clipboard_tmp_buffer, 200 + MAX_INPUT_LENGTH, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
 									platform_set_clipboard(main_window, clipboard_tmp_buffer);
 									mem_free(clipboard_tmp_buffer);
 								}
@@ -548,7 +549,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 						s32 text_sy = rec_y + (h/2)-(font_small->size/2) + 1;
 						
 						char tmp[80];
-						sprintf(tmp, "line %d: ", match->line_nr);
+						snprintf(tmp, 80, "line %d: ", match->line_nr);
 						
 						text_sx += render_text(font_small, text_sx, text_sy, 
 											   tmp, global_ui_context.style.foreground);
@@ -836,7 +837,6 @@ static bool start_file_search(search_result *new_result)
 			{
 				set_error(localize("no_search_text_specified"));
 				continue_search = false;
-				//strcpy(textbox_search_text.buffer, "*");
 			}
 			
 			if (!platform_directory_exists(textbox_path.buffer))
@@ -876,7 +876,7 @@ static void start_text_search(search_result *new_result)
 {
 	// start search for text
 	char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
-	strncpy(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
+	string_copyn(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
 	new_result->text_to_find = text_to_find_buf;
 	find_text_in_files(new_result);
 }
@@ -919,7 +919,6 @@ void load_config(settings_config *config)
 {
 	char *path = settings_config_get_string(config, "SEARCH_DIRECTORY");
 	bool recursive = settings_config_get_number(config, "SEARCH_DIRECTORIES");
-	//bool parallelize = settings_config_get_number(config, "PARALLELIZE_SEARCH");
 	char *search_text = settings_config_get_string(config, "SEARCH_TEXT");
 	char *search_filter = settings_config_get_string(config, "FILE_FILTER");
 	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");
@@ -931,14 +930,14 @@ void load_config(settings_config *config)
 	u32 double_click_action = settings_config_get_number(config, "DOUBLE_CLICK_ACTION");
 	
 	if (search_filter)
-		strncpy(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
+		string_copyn(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
 	else
-		strncpy(textbox_file_filter.buffer, "*.txt,*.c", MAX_INPUT_LENGTH);
+		string_copyn(textbox_file_filter.buffer, "*.txt,*.c", MAX_INPUT_LENGTH);
 	
 	if (search_text)
-		strncpy(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
+		string_copyn(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
 	else
-		strncpy(textbox_search_text.buffer, "*hello world*", MAX_INPUT_LENGTH);
+		string_copyn(textbox_search_text.buffer, "*hello world*", MAX_INPUT_LENGTH);
 	
 	if (locale_id)
 		set_locale(locale_id);
@@ -952,7 +951,7 @@ void load_config(settings_config *config)
 	
 	if (path)
 	{
-		strncpy(textbox_path.buffer, path, MAX_INPUT_LENGTH);
+		string_copyn(textbox_path.buffer, path, MAX_INPUT_LENGTH);
 		
 		checkbox_recursive.state = recursive;
 		global_settings_page.max_thread_count = max_thread_count;
@@ -981,7 +980,7 @@ void load_config(settings_config *config)
 		}
 #endif
 		
-		strncpy(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
+		string_copyn(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
 	
 	if (window_w >= 800 && window_h >= 600)
@@ -991,19 +990,6 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
-#if 0
-	char *tmp = mem_alloc(100);
-	strcpy(tmp, u8"test1ʀ34");
-	
-	printf("-- %s\n", tmp);
-	utf8_str_insert_at(tmp, 1, 52);
-	printf("-- %s\n", tmp);
-	utf8_str_replace_at(tmp, 2, 40);
-	printf("-- %s\n", tmp);
-	utf8_str_remove_at(tmp, 3, 40);
-	printf("-- %s\n", tmp);
-#endif
-	
 	platform_init(argc, argv);
 	
 #ifdef MODE_DEVELOPER
@@ -1097,6 +1083,7 @@ int main(int argc, char **argv)
 		
 		global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 		// begin ui
+		
 		ui_begin(1);
 		{
 			render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
@@ -1230,12 +1217,6 @@ int main(int argc, char **argv)
 			{
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
-		}
-		
-		{
-			char buf[10];
-			sprintf(buf, "%d %d", mouse.x, mouse.y);
-			//render_text(font_medium, 0, 500, buf, rgb(255,0,0));
 		}
 		
 		assets_do_post_process();

@@ -46,10 +46,10 @@ void settings_page_create()
 static void load_current_settings_into_ui()
 {
 	if (global_settings_page.max_thread_count != 0)
-		sprintf(global_settings_page.textbox_max_thread_count.buffer, "%d",global_settings_page.max_thread_count);
+		snprintf(global_settings_page.textbox_max_thread_count.buffer, global_settings_page.textbox_max_thread_count.max_len, "%d",global_settings_page.max_thread_count);
 	
 	if (global_settings_page.max_file_size != 0)
-		sprintf(global_settings_page.textbox_max_file_size.buffer, "%d", global_settings_page.max_file_size);
+		snprintf(global_settings_page.textbox_max_file_size.buffer, global_settings_page.textbox_max_file_size.max_len, "%d", global_settings_page.max_file_size);
 }
 
 void settings_page_update_render()
