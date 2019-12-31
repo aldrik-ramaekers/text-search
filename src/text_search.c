@@ -1235,7 +1235,7 @@ int main(int argc, char **argv)
 		{
 			char buf[10];
 			sprintf(buf, "%d %d", mouse.x, mouse.y);
-			render_text(font_medium, 0, 500, buf, rgb(255,0,0));
+			//render_text(font_medium, 0, 500, buf, rgb(255,0,0));
 		}
 		
 		assets_do_post_process();

@@ -18,7 +18,7 @@
 void settings_config_write_to_file(settings_config *config, char *path)
 {
 	// @hardcoded
-	s32 len = config->settings.length*500;
+	s32 len = kilobytes(10);
 	char *buffer = mem_alloc(len);
 	buffer[0] = 0;
 	
@@ -26,7 +26,7 @@ void settings_config_write_to_file(settings_config *config, char *path)
 	{
 		config_setting *setting = array_at(&config->settings, i);
 		
-		char entry_buf[200];
+		char entry_buf[MAX_INPUT_LENGTH];
 		sprintf(entry_buf, "%s = \"%s\"\n", setting->name, setting->value);
 		strcat(buffer, entry_buf);
 	}
