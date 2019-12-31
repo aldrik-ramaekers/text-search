@@ -149,11 +149,8 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		glEnd();
 		
 		/* add kerning */
-		int kern = 0;
-		kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
-		{
-			if (kern != 0) printf("%d\n", kern);
-		}
+		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		if (kern != 0) x_ += kern * font->scale;
 		
 		x_ += add_char_width(ch,width,font);
 	}
@@ -178,7 +175,13 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		if (ch == 9) ch = 32;
-		char ch_next = *(text+1);
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
 		s32 offsetx = (font->size*2)*(ch%GLYPHS_PER_BITMAP);
 		
 		if (ch == '\n')
@@ -221,15 +224,8 @@ s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cut
 		
 		glEnd();
 		
-		/* add kerning */
-        //int kern = 0;
-		
-		//if (ch_next != 0)
-		//{
-		//kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
-		
-		//if (kern != 0) printf("%d\n", kern);
-		//}
+		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		if (kern != 0) x_ += kern * font->scale;
 		
 		x_ += add_char_width(ch,width,font);
 		
@@ -258,12 +254,17 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		if (ch == 9) ch = 32;
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
 		s32 width = font->glyph_widths[ch];
+		
+		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		if (kern != 0) x += kern * font->scale;
 		
 		x += add_char_width(ch,width,font);
 		
@@ -291,6 +292,8 @@ s32 calculate_text_width_from_upto(font *font, char *text, s32 from, s32 index)
 		if (index == i) return x;
 		
 		if (ch == 9) ch = 32;
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
@@ -299,7 +302,12 @@ s32 calculate_text_width_from_upto(font *font, char *text, s32 from, s32 index)
 		s32 width = font->glyph_widths[ch];
 		
 		if (i >= from)
+		{
+			int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+			if (kern != 0) x += kern * font->scale;
+			
 			x += add_char_width(ch,width,font);
+		}
 		
 		i++;
 	}
@@ -320,12 +328,17 @@ s32 calculate_text_width_upto(font *font, char *text, s32 index)
 		if (index == i) return x;
 		
 		if (ch == 9) ch = 32;
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
 		s32 width = font->glyph_widths[ch];
+		
+		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		if (kern != 0) x += kern * font->scale;
 		
 		x += add_char_width(ch,width,font);
 		
@@ -345,12 +358,17 @@ s32 calculate_text_width(font *font, char *text)
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		if (ch == 9) ch = 32;
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
 		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
 		{
 			ch = 0x3f;
 		}
 		
 		s32 width = font->glyph_widths[ch];
+		
+		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
+		if (kern != 0) x += kern * font->scale;
 		
 		x += add_char_width(ch,width,font);
 	}
@@ -369,7 +387,13 @@ s32 calculate_text_height(font *font, s32 cutoff_width, char *text)
 	while((text = utf8codepoint(text, &ch)) && ch)
 	{
 		if (ch == 9) ch = 32;
-		char ch_next = *(text+1);
+		utf8_int32_t ch_next;
+		utf8codepoint(text, &ch_next);
+		if (ch < TEXT_CHARSET_START || ch > TEXT_CHARSET_END) 
+		{
+			ch = 0x3f;
+		}
+		
 		s32 width = font->glyph_widths[ch];
 		
 		x_ += width / 2;

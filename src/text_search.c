@@ -96,7 +96,7 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
-// TODO(Aldrik): get rid of printf's
+// TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
 // TODO(Aldrik): command line usage
 
