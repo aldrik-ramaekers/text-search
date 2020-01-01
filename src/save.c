@@ -124,13 +124,20 @@ static void *export_result_d(void *arg)
 	char start_path[MAX_INPUT_LENGTH];
 	snprintf(start_path, MAX_INPUT_LENGTH, "%s%s", binary_path, "");
 	
-	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
-	args->buffer = path_buf;
-	args->type = SAVE_FILE;
-	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
-	args->start_path = start_path;
-	
-	platform_open_file_dialog_block(args);
+	if (!search_result->is_command_line_search)
+	{
+		struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
+		args->buffer = path_buf;
+		args->type = SAVE_FILE;
+		args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
+		args->start_path = start_path;
+		
+		platform_open_file_dialog_block(args);
+	}
+	else
+	{
+		string_copyn(path_buf, search_result->export_path, MAX_INPUT_LENGTH);
+	}
 	
 	char tmp_dir_buffer[MAX_INPUT_LENGTH];
 	get_directory_from_path(tmp_dir_buffer, path_buf);
@@ -147,8 +154,10 @@ static void *export_result_d(void *arg)
 	memset(buffer, 0, size);
 	
 	char *file_extension = get_file_extension(path_buf);
+	printf("%s\n", file_extension);
 	if (string_equals(file_extension, ".json") || string_equals(file_extension, ""))
 	{
+		printf("WOHOOO!\n");
 		write_json_file(buffer, size, search_result);
 	}
 	
@@ -169,7 +178,11 @@ bool export_results(search_result *search_result)
 	
 	while (!thr.valid)
 		thr = thread_start(export_result_d, search_result);
-	thread_detach(&thr);
+	
+	if (!search_result->is_command_line_search)
+		thread_detach(&thr);
+	else
+		thread_join(&thr);
 	
 	return true;
 }
@@ -257,7 +270,6 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		}
 		
 		array_push(&search_result->matches, &new_match);
-		array_push(&search_result->files, &new_match);
 	}
 	
 	return true;
@@ -302,7 +314,7 @@ void import_results_from_file(char *path_buf)
 	new_result->done_finding_matches = true;
 	new_result->done_finding_files = true;
 	
-	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), current_search_result->files_matched, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
+	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), current_search_result->matches.length, current_search_result->files_searched, current_search_result->find_duration_us/1000.0);
 	
 	array_destroy(&new_result->files);
 	platform_destroy_file_content(&content);

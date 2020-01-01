@@ -63,7 +63,9 @@ typedef struct t_search_result
 	bool done_finding_files;
 	memory_bucket mem_bucket;
 	bool is_command_line_search;
+	bool threads_closed;
 	
+	char *export_path;
 	char *file_filter;
 	char *directory_to_search;
 	char *text_to_find;

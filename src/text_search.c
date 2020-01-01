@@ -48,7 +48,6 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): offset of matched word is not saved to file
-// TODO(Aldrik): search completion percentage goes above 100% sometimes
 // TODO(Aldrik): filter that excludes files would be nice..
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
@@ -96,14 +95,14 @@ static void* find_text_in_file_worker(void *arg)
 			content = platform_read_file_content(args.file.file.path, "r");
 			args.file.file_size = content.content_length;
 			
+			mutex_lock(&result_buffer->mutex);
+			result_buffer->files_searched++;
+			mutex_unlock(&result_buffer->mutex);
+			
 			// check if file is not too big for set filter
 			s32 kb_to_b = result_buffer->max_file_size * 1000;
 			if (result_buffer->max_file_size && content.content_length > kb_to_b)
 			{
-				mutex_lock(&result_buffer->mutex);
-				result_buffer->files_searched++;
-				mutex_unlock(&result_buffer->mutex);
-				
 				platform_destroy_file_content(&content);
 				continue;
 			}
@@ -150,19 +149,22 @@ static void* find_text_in_file_worker(void *arg)
 							++tmp;
 						}
 						
-						file_match.word_match_offset_x = 
-							calculate_text_width_upto(font_mini, file_match.line_info, offset_to_render);
-						
-						file_match.word_match_width =
-							calculate_text_width_from_upto(font_mini, file_match.line_info, offset_to_render, offset_to_render + m->word_match_len);
+						if (!result_buffer->is_command_line_search)
+						{
+							file_match.word_match_offset_x = 
+								calculate_text_width_upto(font_mini, file_match.line_info, offset_to_render);
+							
+							file_match.word_match_width =
+								calculate_text_width_from_upto(font_mini, file_match.line_info, offset_to_render, offset_to_render + m->word_match_len);
+						}
+						else
+						{
+							printf("%s:%d:%s\n", file_match.file.path,
+								   file_match.line_nr, file_match.file.matched_filter);
+						}
 						
 						array_push(&result_buffer->matches, &file_match);
 					}
-					
-					
-					mutex_lock(&result_buffer->mutex);
-					result_buffer->files_matched++;
-					mutex_unlock(&result_buffer->mutex);
 				}
 				
 				array_destroy(&text_matches);
@@ -185,10 +187,6 @@ static void* find_text_in_file_worker(void *arg)
 				mutex_unlock(&args.search_result_buffer->mutex);
 			}
 			
-			mutex_lock(&result_buffer->mutex);
-			result_buffer->files_searched++;
-			mutex_unlock(&result_buffer->mutex);
-			
 			platform_destroy_file_content(&content);
 		}
 		else
@@ -197,7 +195,7 @@ static void* find_text_in_file_worker(void *arg)
 		}
 	}
 	
-	if (!result_buffer->cancel_search)
+	if (!result_buffer->cancel_search && !result_buffer->is_command_line_search)
 	{
 		mutex_lock(&result_buffer->mutex);
 		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("percentage_files_processed"),  (result_buffer->files_searched/(float)result_buffer->files.length)*100);
@@ -215,7 +213,8 @@ static void* find_text_in_files_t(void *arg)
 	array threads = array_create(sizeof(thread));
 	array_reserve(&threads, result_buffer->max_thread_count);
 	
-	string_copyn(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
+	if (!result_buffer->is_command_line_search)
+		string_copyn(global_status_bar.error_status_text, "", MAX_ERROR_MESSAGE_LENGTH);
 	char *text_to_find = result_buffer->text_to_find;
 	
 	// create worker threads
@@ -296,7 +295,7 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->walking_file_system = false;
 		result_buffer->files_searched = result_buffer->files.length;
 		
-		if (!main_window->has_focus)
+		if (!result_buffer->is_command_line_search && !main_window->has_focus)
 			platform_show_alert("Text-search", localize("search_result_completed"));
 		
 	}
@@ -307,7 +306,12 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files.length, result_buffer->find_duration_us/1000.0);
+	result_buffer->threads_closed = true;
+	
+	if (!result_buffer->is_command_line_search)
+	{
+		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files_searched, result_buffer->find_duration_us/1000.0);
+	}
 	
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
@@ -715,6 +719,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->done_finding_files = false;
 	new_result_buffer->walking_file_system = false;
 	new_result_buffer->is_command_line_search = false;
+	new_result_buffer->threads_closed = false;
 	
 	new_result_buffer->mem_bucket = memory_bucket_init(megabytes(5));
 	
@@ -739,6 +744,8 @@ search_result *create_empty_search_result()
 	new_result_buffer->text_to_find = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
 	new_result_buffer->directory_to_search = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
 	new_result_buffer->file_filter = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
+	new_result_buffer->export_path = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
+	new_result_buffer->export_path[0] = 0;
 	
 	return new_result_buffer;
 }
@@ -766,20 +773,19 @@ static bool start_file_search(search_result *new_result)
 		
 		// validate input
 		{
-			// TODO(Aldrik): replace with string_compare
-			if (strcmp(textbox_path.buffer, "") == 0)
+			if (string_equals(textbox_path.buffer, ""))
 			{
 				set_error(localize("no_search_directory_specified"));
 				continue_search = false;
 			}
 			
-			if (strcmp(textbox_file_filter.buffer, "") == 0)
+			if (string_equals(textbox_file_filter.buffer, ""))
 			{
 				set_error(localize("no_file_filter_specified"));
 				continue_search = false;
 			}
 			
-			if (strcmp(textbox_search_text.buffer, "") == 0)
+			if (string_equals(textbox_search_text.buffer, ""))
 			{
 				set_error(localize("no_search_text_specified"));
 				continue_search = false;

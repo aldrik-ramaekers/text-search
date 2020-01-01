@@ -19,6 +19,7 @@ void find_text_in_files(search_result *search_result);
 s32 prepare_search_directory_path(char *path, s32 len);
 search_result *create_empty_search_result();
 void do_search();
+bool export_results(search_result *result);
 
 static void print_license_message()
 {
@@ -207,14 +208,15 @@ void handle_command_line_arguments(int argc, char **argv)
 			// TODO(Aldrik): localize
 			printf("ERROR: '--export' invalid path. Directory to save "
 				   "file to does not exist: '%s'\n", dir_buffer);
+			return;
 		}
-		return;
 	}
 	
 	search_result *result = create_empty_search_result();
 	string_copyn(result->directory_to_search, directory, MAX_INPUT_LENGTH);
 	string_copyn(result->file_filter, filter, MAX_INPUT_LENGTH);
 	string_copyn(result->text_to_find, text, MAX_INPUT_LENGTH);
+	string_copyn(result->export_path, export_path, MAX_INPUT_LENGTH);
 	result->max_thread_count = threads;
 	result->max_file_size = max_file_size;
 	result->is_recursive = recursive;
@@ -235,5 +237,10 @@ void handle_command_line_arguments(int argc, char **argv)
 						&result->done_finding_files);
 	find_text_in_files(result);
 	
-	while(!result->done_finding_matches) { thread_sleep(1000); }
+	while(!result->threads_closed) { thread_sleep(1000); }
+	
+	if (!string_equals(export_path, ""))
+	{
+		export_results(result);
+	}
 }
