@@ -493,7 +493,6 @@ static void ui_set_active_textbox(textbox_state *state)
 		global_ui_context.current_active_textbox->state = false;
 	}
 	global_ui_context.current_active_textbox = state;
-	
 }
 
 bool ui_push_textbox(textbox_state *state, char *placeholder)

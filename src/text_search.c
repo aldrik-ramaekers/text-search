@@ -47,6 +47,7 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): offset of matched word is not saved to file
 // TODO(Aldrik): search completion percentage goes above 100% sometimes
 // TODO(Aldrik): filter that excludes files would be nice..
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
@@ -315,7 +316,7 @@ static void* find_text_in_files_t(void *arg)
 	return 0;
 }
 
-static void find_text_in_files(search_result *search_result)
+void find_text_in_files(search_result *search_result)
 {
 	search_result->files_matched = 0;
 	search_result->files_searched = 0;
@@ -660,7 +661,7 @@ static void render_info(platform_window *window, font *font_small)
 	}
 }
 
-static s32 prepare_search_directory_path(char *path, s32 len)
+s32 prepare_search_directory_path(char *path, s32 len)
 {
 #ifdef OS_LINUX
 	if (path[len-1] != '/' && len < MAX_INPUT_LENGTH)
@@ -713,6 +714,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->search_id = next_search_id++;
 	new_result_buffer->done_finding_files = false;
 	new_result_buffer->walking_file_system = false;
+	new_result_buffer->is_command_line_search = false;
 	
 	new_result_buffer->mem_bucket = memory_bucket_init(megabytes(5));
 	
@@ -754,11 +756,7 @@ static bool start_file_search(search_result *new_result)
 		thread cleanup_thread = thread_start(destroy_search_result_thread, old_result);
 		thread_detach(&cleanup_thread);
 		
-		new_result->files_searched = 0;
-		new_result->cancel_search = false;
 		scroll_y = 0;
-		new_result->found_file_matches = false;
-		new_result->done_finding_files = false;
 		
 		new_result->max_thread_count = global_settings_page.max_thread_count;
 		new_result->max_file_size = global_settings_page.max_file_size;
@@ -768,6 +766,7 @@ static bool start_file_search(search_result *new_result)
 		
 		// validate input
 		{
+			// TODO(Aldrik): replace with string_compare
 			if (strcmp(textbox_path.buffer, "") == 0)
 			{
 				set_error(localize("no_search_directory_specified"));
@@ -795,19 +794,22 @@ static bool start_file_search(search_result *new_result)
 		
 		if (continue_search)
 		{
+			string_copyn(new_result->directory_to_search, textbox_path.buffer, MAX_INPUT_LENGTH);
+			string_copyn(new_result->file_filter, textbox_file_filter.buffer, MAX_INPUT_LENGTH);
+			
 			new_result->is_recursive = checkbox_recursive.state;
 			new_result->walking_file_system = true;
 			new_result->done_finding_matches = false;
 			
-			new_result->search_result_source_dir_len = strlen(textbox_path.buffer);
-			new_result->search_result_source_dir_len = prepare_search_directory_path(textbox_path.buffer, 
+			new_result->search_result_source_dir_len = strlen(new_result->directory_to_search);
+			new_result->search_result_source_dir_len = prepare_search_directory_path(new_result->directory_to_search, 
 																					 new_result->search_result_source_dir_len);
 			
 			new_result->start_time = platform_get_time(TIME_FULL, TIME_US);
 			
 			// start search for files
 			{
-				platform_list_files(&new_result->files, textbox_path.buffer, textbox_file_filter.buffer, checkbox_recursive.state, &new_result->mem_bucket,
+				platform_list_files(&new_result->files, new_result->directory_to_search, new_result->file_filter, new_result->is_recursive, &new_result->mem_bucket,
 									&new_result->cancel_search,
 									&new_result->done_finding_files);
 			}

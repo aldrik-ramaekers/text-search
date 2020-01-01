@@ -15,6 +15,8 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+void find_text_in_files(search_result *search_result);
+s32 prepare_search_directory_path(char *path, s32 len);
 search_result *create_empty_search_result();
 void do_search();
 
@@ -210,4 +212,28 @@ void handle_command_line_arguments(int argc, char **argv)
 	}
 	
 	search_result *result = create_empty_search_result();
+	string_copyn(result->directory_to_search, directory, MAX_INPUT_LENGTH);
+	string_copyn(result->file_filter, filter, MAX_INPUT_LENGTH);
+	string_copyn(result->text_to_find, text, MAX_INPUT_LENGTH);
+	result->max_thread_count = threads;
+	result->max_file_size = max_file_size;
+	result->is_recursive = recursive;
+	result->is_command_line_search = true;
+	
+	
+	// begin search (code below is equal to code in text_search.c)
+	result->walking_file_system = true;
+	result->done_finding_matches = false;
+	
+	result->search_result_source_dir_len = strlen(result->directory_to_search);
+	result->search_result_source_dir_len = prepare_search_directory_path(result->directory_to_search, 
+																		 result->search_result_source_dir_len);
+	result->start_time = platform_get_time(TIME_FULL, TIME_US);
+	
+	platform_list_files(&result->files, result->directory_to_search, result->file_filter, result->is_recursive, &result->mem_bucket,
+						&result->cancel_search,
+						&result->done_finding_files);
+	find_text_in_files(result);
+	
+	while(!result->done_finding_matches) { thread_sleep(1000); }
 }

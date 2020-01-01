@@ -62,6 +62,7 @@ typedef struct t_search_result
 	u64 start_time;
 	bool done_finding_files;
 	memory_bucket mem_bucket;
+	bool is_command_line_search;
 	
 	char *file_filter;
 	char *directory_to_search;

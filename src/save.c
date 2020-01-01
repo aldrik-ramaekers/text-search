@@ -185,11 +185,11 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	
 	cJSON *filter = cJSON_GetObjectItemCaseSensitive(result, "filter");
 	string_copyn(textbox_file_filter.buffer, filter->valuestring, MAX_INPUT_LENGTH);
-	string_copyn(search_result->file_filter, search_directory->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(search_result->file_filter, filter->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *search_query = cJSON_GetObjectItemCaseSensitive(result, "search_query");
 	string_copyn(textbox_search_text.buffer, search_query->valuestring, MAX_INPUT_LENGTH);
-	string_copyn(search_result->text_to_find, search_directory->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(search_result->text_to_find, search_query->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *duration_us = cJSON_GetObjectItemCaseSensitive(result, "duration_us");
 	search_result->find_duration_us = duration_us->valueint;
