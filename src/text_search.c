@@ -37,7 +37,6 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
 
 void* destroy_search_result_thread(void *arg)
@@ -1168,6 +1167,14 @@ int main(int argc, char **argv)
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
 		}
+		
+#if 0
+		{
+			char buf[100];
+			sprintf(buf, "%d %d", global_ui_context.keyboard->selection_begin_offset, global_ui_context.keyboard->selection_length);
+			render_text(font_medium, 0, 500, buf, rgb(255,0,0));
+		}
+#endif
 		
 		assets_do_post_process();
 		platform_window_swap_buffers(&window);

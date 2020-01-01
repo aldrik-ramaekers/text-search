@@ -45,6 +45,7 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.selection_start_index = 0;
 	state.double_clicked_to_select = false;
 	state.double_clicked_to_select_cursor_index = 0;
+	state.diff = 0;
 	
 	return state;
 }
@@ -575,7 +576,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			
 			global_ui_context.keyboard->take_input = state->state;
 		}
-		if (is_left_down(global_ui_context.mouse))
+		if (is_left_down(global_ui_context.mouse) && state->state)
 		{
 			is_selecting = true;
 		}
@@ -589,6 +590,9 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		state->state = false;
 	}
+	
+	if (state->state && global_ui_context.keyboard->has_selection && is_left_down(global_ui_context.mouse))
+		is_selecting = true;
 	
 	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
 	{
@@ -621,7 +625,9 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	
 	s32 cursor_text_w;
 	s32 cursor_x;
-	s32 diff = 0;
+	
+	if (!global_ui_context.keyboard->has_selection)
+		state->diff = 0;
 	
 	if (state->state)
 	{
@@ -711,7 +717,10 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		if (cursor_text_w > TEXTBOX_WIDTH - 10)
 		{
-			diff = cursor_text_w - TEXTBOX_WIDTH + 10;
+			if (clicked_to_select && !global_ui_context.keyboard->has_selection)
+				state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
+			else if (!clicked_to_select && !global_ui_context.keyboard->has_selection)
+				state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
 		}
 		
 		s32 cursor_y = text_y - 2;
@@ -727,9 +736,29 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		global_ui_context.keyboard->has_selection = true;
 		global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
-																					   state->buffer, mouse_x + diff - text_x);
+																					   state->buffer, mouse_x + state->diff - text_x);
 		global_ui_context.keyboard->selection_length = 1;
 		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
+	}
+	
+	if (is_selecting)
+	{
+		// move text offset x when selecting so we can select more text than available on screen.
+		if (global_ui_context.mouse->x < x + 10)
+		{
+			state->diff -= TEXTBOX_SCROLL_X_SPEED;
+			if (state->diff < 0) state->diff = 0;
+		}
+		if (global_ui_context.mouse->x > x + TEXTBOX_WIDTH - 10)
+		{
+			s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
+			s32 diff = text_w - TEXTBOX_WIDTH + 10;
+			state->diff += TEXTBOX_SCROLL_X_SPEED;
+			
+			if (state->diff > diff)
+				state->diff = diff;
+		}
+		///////////////////////////////////////////////////////////
 	}
 	
 	// change selection area based on cursor position.
@@ -739,7 +768,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	if (is_selecting)
 	{
 		s32 index = calculate_cursor_position(global_ui_context.font_small, 
-											  state->buffer, mouse_x + diff - text_x)+1;
+											  state->buffer, mouse_x + state->diff - text_x)+1;
 		
 		if (double_clicked_to_select_first) 
 			state->double_clicked_to_select_cursor_index = index;
@@ -783,18 +812,18 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		s32 selection_width = calculate_text_width(global_ui_context.font_small, 
 												   tmp_buffer);
 		
-		render_rectangle(text_x - diff + selection_start_x, y+4, selection_width, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
+		render_rectangle(text_x - state->diff + selection_start_x, y+4, selection_width, TEXTBOX_HEIGHT-8, global_ui_context.style.textbox_active_border);
 	}
 #endif
 	
 	if (!has_text)
 	{
-		render_text(global_ui_context.font_small, text_x - diff, text_y, 
+		render_text(global_ui_context.font_small, text_x - state->diff, text_y, 
 					placeholder, global_ui_context.style.textbox_placeholder_foreground);
 	}
 	else
 	{
-		render_text(global_ui_context.font_small, text_x - diff, text_y, 
+		render_text(global_ui_context.font_small, text_x - state->diff, text_y, 
 					state->buffer, global_ui_context.style.foreground);
 	}
 	

@@ -19,6 +19,7 @@
 #define BUTTON_HEIGHT BLOCK_HEIGHT
 #define BUTTON_IMAGE_PADDING 5
 #define BUTTON_IMAGE_SPACING 8
+#define TEXTBOX_SCROLL_X_SPEED 17
 
 typedef enum t_ui_style_type
 {
@@ -94,6 +95,7 @@ typedef struct t_textbox_state
 	char *buffer;
 	s32 selection_start_index;
 	bool state;
+	s32 diff;
 	bool double_clicked_to_select;
 	s32 double_clicked_to_select_cursor_index;
 	s32 max_len;
