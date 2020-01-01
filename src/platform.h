@@ -25,8 +25,10 @@ typedef struct t_file_match
 	s32 file_size;
 	
 	u32 line_nr;
-	s32 word_match_offset_x;
-	s32 word_match_width;
+	s32 word_match_offset;
+	s32 word_match_length;
+	s32 word_match_offset_x; // highlight render offset
+	s32 word_match_width; // highlight render width
 	char *line_info; // will be null when no match is found
 } file_match;
 

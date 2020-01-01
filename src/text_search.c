@@ -36,11 +36,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): offset of matched word is not saved to file
 // TODO(Aldrik): filter that excludes files would be nice..
 // TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
-// TODO(Aldrik): command line usage
 
 void* destroy_search_result_thread(void *arg)
 {
@@ -135,6 +133,9 @@ static void* find_text_in_file_worker(void *arg)
 							}
 							++tmp;
 						}
+						
+						file_match.word_match_offset = offset_to_render;
+						file_match.word_match_length = m->word_match_len;
 						
 						if (!result_buffer->is_command_line_search)
 						{

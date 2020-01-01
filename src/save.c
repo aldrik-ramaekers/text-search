@@ -70,6 +70,14 @@ static void write_json_file(char *buffer, s32 length, search_result *search_resu
 									m->file.matched_filter) == NULL)
 			return;
 		
+		if (cJSON_AddNumberToObject(item, "word_offset", 
+									m->word_match_offset) == NULL)
+			return;
+		
+		if (cJSON_AddNumberToObject(item, "word_length", 
+									m->word_match_length) == NULL)
+			return;
+		
 		if (cJSON_AddNumberToObject(item, "file_error", 
 									m->file_error) == NULL)
 			return;
@@ -143,10 +151,8 @@ static void *export_result_d(void *arg)
 	memset(buffer, 0, size);
 	
 	char *file_extension = get_file_extension(path_buf);
-	printf("%s\n", file_extension);
 	if (string_equals(file_extension, ".json") || string_equals(file_extension, ""))
 	{
-		printf("WOHOOO!\n");
 		write_json_file(buffer, size, search_result);
 	}
 	
@@ -234,6 +240,14 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		string_copyn(new_match.file.matched_filter, matched_filter->valuestring, strlen(matched_filter->valuestring)+1);
 		
 		////
+		cJSON *word_offset = cJSON_GetObjectItem(file, "word_offset");
+		new_match.word_match_offset = word_offset->valueint;
+		
+		////
+		cJSON *word_length = cJSON_GetObjectItem(file, "word_length");
+		new_match.word_match_length = word_length->valueint;
+		
+		////
 		cJSON *file_error = cJSON_GetObjectItem(file, "file_error");
 		new_match.file_error = file_error->valueint;
 		
@@ -256,6 +270,16 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 		else
 		{
 			new_match.line_info = 0;
+		}
+		
+		// calculate highlight offsets
+		if (new_match.line_info)
+		{
+			new_match.word_match_offset_x = 
+				calculate_text_width_upto(font_mini, new_match.line_info, new_match.word_match_offset);
+			
+			new_match.word_match_width =
+				calculate_text_width_from_upto(font_mini, new_match.line_info, new_match.word_match_offset, new_match.word_match_offset + new_match.word_match_length);
 		}
 		
 		array_push(&search_result->matches, &new_match);
