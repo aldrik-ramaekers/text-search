@@ -15,38 +15,55 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
+search_result *create_empty_search_result();
+void do_search();
+
 static void print_license_message()
 {
+	// TODO(Aldrik): license
 	printf("License: XD!\n");
 }
 
 static void print_help_message()
 {
-#define explain_required_command(c,e) printf("   %-18s%-18s%s\n", c, "REQUIRED", e);
-#define explain_other_command(c,e) printf("   %-18s%-18s%s\n", c, " ", e);
-#define explain_optional_command(c,d,e) printf("   %-18s%-18s%s\n", c, d, e);
+#define explain_required_argument(c,e) printf("   %-18s%-18s%s\n", c, "REQUIRED", e);
+#define explain_other_argument(c,e) printf("   %-18s%-18s%s\n", c, " ", e);
+#define explain_optional_argument(c,d,e) printf("   %-18s%-18s%s\n", c, d, e);
 #define DEFAULT(d) "default=\""d"\""
 	
 	printf("Usage: text-search [OPTION] ... [OPTION] ...\n");
 	printf("Example: text-search "
-		   "--directory \"/home/john/Documents\" --text \"homework\"\n");
+		   "--directory \"/home/john/Documents\" --text \"homework\" --recursive 0\n");
 	printf("Text-search, search for files and text within files.\n");
 	printf("Matches will be printed to console in format: [path]:[line]:[filter]\n\n");
 	
-	printf("Available options:\n");
-	explain_required_command("--directory", "The directory to search");
-	explain_optional_command("--text", DEFAULT("*"), "The text to search for within files, supports wildcards '*' and '?'");
-	explain_optional_command("--filter", DEFAULT("*"), "Used to filter on specific files,  supports wildcards '*' and '?'");
-	explain_optional_command("--recursive", DEFAULT("1"), "Recursively search through directories");
-	explain_optional_command("--max-file-size", DEFAULT("0"), "The maximum size, in kb, a file will be searched through for matching text. 0 for no limit");
-	explain_optional_command("--threads", DEFAULT("10"), "The number of threads used for searching");
-	explain_optional_command("--locale", DEFAULT("en"), "The language errors will be reported in. Available locales are: 'en', 'nl'");
-	explain_optional_command("--export", DEFAULT(""), "Export the results to a file in json format");
-	explain_optional_command("--export", DEFAULT(""), "Export the results to a file in json format");
+	printf("Available arguments:\n");
+	explain_required_argument("--directory", "The directory to search");
+	explain_optional_argument("--text", DEFAULT("*"), "The text to search for within files, supports wildcards '*' and '?'");
+	explain_optional_argument("--filter", DEFAULT("*"), "Used to filter on specific files,  supports wildcards '*' and '?'");
+	explain_optional_argument("--recursive", DEFAULT("1"), "Recursively search through directories");
+	explain_optional_argument("--max-file-size", DEFAULT("0"), "The maximum size, in kb, a file will be searched through for matching text. 0 for no limit");
+	explain_optional_argument("--threads", DEFAULT("10"), "The number of threads used for searching, minimum of 1 thread.");
+	explain_optional_argument("--locale", DEFAULT("en"), "The language errors will be reported in. Available locales are: 'en', 'nl'");
+	explain_optional_argument("--export", DEFAULT(""), "Export the results to a file in json format");
 	
-	printf("\nOther commands:\n");
-	explain_other_command("--help", "Display this help message");
-	explain_other_command("--license", "Display the license");
+	printf("\nOther arguments:\n");
+	explain_other_argument("--help", "Display this help message");
+	explain_other_argument("--license", "Display the license");
+}
+
+static bool is_valid_argument(char *arg)
+{
+	if (string_equals(arg, "--directory")) return true;
+	if (string_equals(arg, "--text")) return true;
+	if (string_equals(arg, "--filter")) return true;
+	if (string_equals(arg, "--recursive")) return true;
+	if (string_equals(arg, "--max-file-size")) return true;
+	if (string_equals(arg, "--threads")) return true;
+	if (string_equals(arg, "--locale")) return true;
+	if (string_equals(arg, "--export")) return true;
+	
+	return false;
 }
 
 void handle_command_line_arguments(int argc, char **argv)
@@ -65,4 +82,132 @@ void handle_command_line_arguments(int argc, char **argv)
 		print_license_message();
 		return;
 	}
+	
+	char directory[MAX_INPUT_LENGTH];
+	string_copyn(directory, "", MAX_INPUT_LENGTH);
+	
+	char text[MAX_INPUT_LENGTH];
+	string_copyn(text, "*", MAX_INPUT_LENGTH);
+	
+	char filter[MAX_INPUT_LENGTH];
+	string_copyn(filter, "*", MAX_INPUT_LENGTH);
+	
+	bool recursive = true;
+	s32 max_file_size = 0;
+	s32 threads = 10;
+	
+	char locale[MAX_INPUT_LENGTH];
+	string_copyn(locale, "en", MAX_INPUT_LENGTH);
+	
+	char export_path[MAX_INPUT_LENGTH];
+	string_copyn(export_path, "", MAX_INPUT_LENGTH);
+	
+	bool expect_argument_name = true;
+	for (s32 i = current_arg_index; i < argc; i++)
+	{
+		if (expect_argument_name && !is_valid_argument(argv[i]))
+		{
+			// TODO(Aldrik): localize
+			printf("Invalid argument: %s\n", argv[i]);
+		}
+		
+		if (!expect_argument_name)
+		{
+			if (string_equals(argv[i-1], "--directory"))
+			{
+				string_copyn(directory, argv[i], MAX_INPUT_LENGTH);
+			}
+			if (string_equals(argv[i-1], "--text"))
+			{
+				string_copyn(text, argv[i], MAX_INPUT_LENGTH);
+			}
+			if (string_equals(argv[i-1], "--filter"))
+			{
+				string_copyn(filter, argv[i], MAX_INPUT_LENGTH);
+			}
+			if (string_equals(argv[i-1], "--recursive"))
+			{
+				recursive = string_to_u32(argv[i]);
+			}
+			if (string_equals(argv[i-1], "--max-file-size"))
+			{
+				max_file_size = string_to_u32(argv[i]);
+			}
+			if (string_equals(argv[i-1], "--threads"))
+			{
+				threads = string_to_u32(argv[i]);
+			}
+			if (string_equals(argv[i-1], "--locale"))
+			{
+				string_copyn(locale, argv[i], MAX_INPUT_LENGTH);
+			}
+			if (string_equals(argv[i-1], "--export"))
+			{
+				string_copyn(export_path, argv[i], MAX_INPUT_LENGTH);
+			}
+		}
+		
+		expect_argument_name = !expect_argument_name;
+	}
+	
+	// input validation
+	load_available_localizations();
+	if (!set_locale(locale))
+	{
+		// TODO(Aldrik): localize
+		printf("WARNING: '--locale' argument invalid: locale '%s' not available, "
+			   "defaulting to english\n", locale);
+	}
+	
+	if (string_equals(directory, ""))
+	{
+		// TODO(Aldrik): localize
+		printf("ERROR: '--directory' option is a required argument\n");
+		return;
+	}
+	
+	if (!platform_directory_exists(directory))
+	{
+		// TODO(Aldrik): localize
+		printf("ERROR: Directory provided in option '--directory' "
+			   "does not exist: '%s'\n", directory);
+		return;
+	}
+	
+	if (string_equals(text, ""))
+	{
+		// TODO(Aldrik): localize
+		printf("ERROR: '--text' argument cannot be empty\n");
+		return;
+	}
+	
+	if (string_equals(filter, ""))
+	{
+		// TODO(Aldrik): localize
+		printf("ERROR: '--filter' argument cannot be empty\n");
+		return;
+	}
+	
+	if (threads < 1)
+	{
+		// TODO(Aldrik): localize
+		printf("ERROR: '--threads' needs to be greater than 0\n");
+		return;
+	}
+	
+	if (!string_equals(export_path, ""))
+	{
+		char dir_buffer[MAX_INPUT_LENGTH];
+		get_directory_from_path(dir_buffer, export_path);
+		
+		if (!platform_directory_exists(dir_buffer))
+		{
+			// TODO(Aldrik): localize
+			printf("ERROR: '--export' invalid path. Directory to save "
+				   "file to does not exist: '%s'\n", dir_buffer);
+		}
+		return;
+	}
+	
+	search_result *result = create_empty_search_result();
 }

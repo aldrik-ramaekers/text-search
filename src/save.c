@@ -24,15 +24,15 @@ static void write_json_file(char *buffer, s32 length, search_result *search_resu
 	
 	cJSON *result = cJSON_CreateObject();
 	if (cJSON_AddStringToObject(result, "search_directory", 
-								search_result->search_directory_buffer) == NULL)
+								search_result->directory_to_search) == NULL)
 		return;
 	
 	if (cJSON_AddStringToObject(result, "filter", 
-								search_result->filter_buffer) == NULL)
+								search_result->file_filter) == NULL)
 		return;
 	
 	if (cJSON_AddStringToObject(result, "search_query", 
-								search_result->text_to_find_buffer) == NULL)
+								search_result->text_to_find) == NULL)
 		return;
 	
 	if (cJSON_AddNumberToObject(result, "duration_us", 
@@ -180,13 +180,16 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	if (!result) return false;
 	
 	cJSON *search_directory = cJSON_GetObjectItemCaseSensitive(result, "search_directory");
-	string_copyn(search_result->search_directory_buffer, search_directory->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(textbox_path.buffer, search_directory->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(search_result->directory_to_search, search_directory->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *filter = cJSON_GetObjectItemCaseSensitive(result, "filter");
-	string_copyn(search_result->filter_buffer, filter->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(textbox_file_filter.buffer, filter->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(search_result->file_filter, search_directory->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *search_query = cJSON_GetObjectItemCaseSensitive(result, "search_query");
-	string_copyn(search_result->text_to_find_buffer, search_query->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(textbox_search_text.buffer, search_query->valuestring, MAX_INPUT_LENGTH);
+	string_copyn(search_result->text_to_find, search_directory->valuestring, MAX_INPUT_LENGTH);
 	
 	cJSON *duration_us = cJSON_GetObjectItemCaseSensitive(result, "duration_us");
 	search_result->find_duration_us = duration_us->valueint;
@@ -208,9 +211,9 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	
 	cJSON *recursive = cJSON_GetObjectItemCaseSensitive(result, "recursive_search");
 	search_result->is_recursive = recursive->valueint;
-	*search_result->recursive_buffer = search_result->is_recursive;
+	checkbox_recursive.state = search_result->is_recursive;
 	
-	search_result->search_result_source_dir_len = strlen(search_result->search_directory_buffer);
+	search_result->search_result_source_dir_len = strlen(search_result->directory_to_search);
 	
 	cJSON *file_list = cJSON_GetObjectItem(result, "match_list");
 	cJSON *file;

@@ -20,6 +20,66 @@
 
 typedef struct t_platform_window platform_window;
 
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+typedef struct t_found_file
+{
+	char *matched_filter;
+	char *path;
+} found_file;
+
+typedef struct t_file_match
+{
+	found_file file;
+	s16 file_error;
+	s32 file_size;
+	
+	u32 line_nr;
+	s32 word_match_offset_x;
+	s32 word_match_width;
+	char *line_info; // will be null when no match is found
+} file_match;
+
+typedef struct t_search_result
+{
+	array work_queue;
+	array files;
+	array matches;
+	u64 find_duration_us;
+	array errors;
+	bool show_error_message; // error occured
+	bool found_file_matches; // found/finding file matches
+	s32 files_searched;
+	s32 files_matched;
+	s32 search_result_source_dir_len;
+	bool match_found; // found text match
+	mutex mutex;
+	bool walking_file_system;
+	bool cancel_search;
+	bool done_finding_matches;
+	s32 search_id;
+	u64 start_time;
+	bool done_finding_files;
+	memory_bucket mem_bucket;
+	
+	char *file_filter;
+	char *directory_to_search;
+	char *text_to_find;
+	s32 max_thread_count;
+	s32 max_file_size;
+	bool is_recursive;
+} search_result;
+
+typedef struct t_find_text_args
+{
+	file_match file;
+	search_result *search_result_buffer;
+} find_text_args;
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
 typedef struct t_file_content
 {
 	s64 content_length;
@@ -57,12 +117,6 @@ typedef enum t_file_dialog_type
 	OPEN_DIRECTORY,
 	SAVE_FILE,
 } file_dialog_type;
-
-typedef struct t_found_file
-{
-	char *matched_filter;
-	char *path;
-} found_file;
 
 typedef enum t_file_open_error
 {
@@ -142,6 +196,8 @@ void platform_show_alert(char *title, char *message);
 void destroy_found_file_array(array *found_files);
 char *get_config_save_location(char *buffer);
 char *get_file_extension(char *path);
+void get_name_from_path(char *buffer, char *path);
+void get_directory_from_path(char *buffer, char *path);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

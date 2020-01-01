@@ -144,6 +144,16 @@ typedef struct t_ui_context
 	bool item_hovered;
 } ui_context;
 
+///// our global ui states ////
+checkbox_state checkbox_recursive;
+textbox_state textbox_search_text;
+textbox_state textbox_path;
+textbox_state textbox_file_filter;
+button_state button_select_directory;
+button_state button_find_text;
+button_state button_cancel;
+///////////////////////////////
+
 ui_context global_ui_context;
 
 u32 ui_get_id();

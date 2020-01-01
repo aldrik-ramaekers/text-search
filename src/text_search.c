@@ -18,60 +18,11 @@
 #include "config.h"
 #include "project_base.h"
 
-typedef struct t_file_match
-{
-	found_file file;
-	s16 file_error;
-	s32 file_size;
-	
-	u32 line_nr;
-	s32 word_match_offset_x;
-	s32 word_match_width;
-	char *line_info; // will be null when no match is found
-} file_match;
-
 typedef struct t_status_bar
 {
 	char *result_status_text;
 	char *error_status_text;
 } status_bar;
-
-typedef struct t_search_result
-{
-	array work_queue;
-	array files;
-	array matches;
-	u64 find_duration_us;
-	array errors;
-	bool show_error_message; // error occured
-	bool found_file_matches; // found/finding file matches
-	s32 files_searched;
-	s32 files_matched;
-	s32 search_result_source_dir_len;
-	bool match_found; // found text match
-	mutex mutex;
-	bool walking_file_system;
-	bool cancel_search;
-	bool done_finding_matches;
-	char *filter_buffer;
-	char *text_to_find_buffer;
-	char *search_directory_buffer;
-	bool *recursive_buffer;
-	s32 search_id;
-	u64 start_time;
-	bool done_finding_files;
-	char *text_to_find;
-	memory_bucket mem_bucket;
-	s32 max_thread_count;
-	s32 max_file_size;
-	bool is_recursive;
-} search_result;
-
-typedef struct t_find_text_args
-{
-	file_match file;
-	search_result *search_result_buffer;
-} find_text_args;
 
 status_bar global_status_bar;
 search_result *current_search_result;
@@ -95,20 +46,17 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): filter that excludes files would be nice..
+// TODO(Aldrik): if search text is "*" we should return only 1 result per file
+// TODO(Aldrik): replace MAX_INPUT_LENGTH-1 to MAX_INPUT_LENGTH
+// TODO(Aldrik): copy filters to search so they cant be changed during search
+// TODO(Aldrik): status text is reset when locale is changed, this is annoying when a search has been completed and you cant see the resulting status
 // TODO(Aldrik): setting the maximum thread count option to 0 will block the search, set default to 10
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
 // TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
 // TODO(Aldrik): command line usage
-
-checkbox_state checkbox_recursive;
-textbox_state textbox_search_text;
-textbox_state textbox_path;
-textbox_state textbox_file_filter;
-button_state button_select_directory;
-button_state button_find_text;
-button_state button_cancel;
 
 void* destroy_search_result_thread(void *arg)
 {
@@ -788,10 +736,10 @@ search_result *create_empty_search_result()
 	new_result_buffer->work_queue.reserve_jump = 5000;
 	array_reserve(&new_result_buffer->work_queue, FILE_RESERVE_COUNT);
 	
-	new_result_buffer->filter_buffer = textbox_file_filter.buffer;
-	new_result_buffer->text_to_find_buffer = textbox_search_text.buffer;
-	new_result_buffer->search_directory_buffer = textbox_path.buffer;
-	new_result_buffer->recursive_buffer = &checkbox_recursive.state;
+	// filter buffers
+	new_result_buffer->text_to_find = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
+	new_result_buffer->directory_to_search = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
+	new_result_buffer->file_filter = memory_bucket_reserve(&new_result_buffer->mem_bucket, MAX_INPUT_LENGTH);
 	
 	return new_result_buffer;
 }
@@ -877,13 +825,11 @@ static bool start_file_search(search_result *new_result)
 static void start_text_search(search_result *new_result)
 {
 	// start search for text
-	char *text_to_find_buf = memory_bucket_reserve(&new_result->mem_bucket, MAX_INPUT_LENGTH);
-	string_copyn(text_to_find_buf, textbox_search_text.buffer, MAX_INPUT_LENGTH-1);
-	new_result->text_to_find = text_to_find_buf;
+	string_copyn(new_result->text_to_find, textbox_search_text.buffer, MAX_INPUT_LENGTH);
 	find_text_in_files(new_result);
 }
 
-static void do_search()
+void do_search()
 {
 	search_result *new_result = create_empty_search_result();
 	
@@ -992,15 +938,15 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
-	bool is_command_line_run = (argc > 1);
+	platform_init(argc, argv);
 	
+	bool is_command_line_run = (argc > 1);
 	if (is_command_line_run)
 	{
 		handle_command_line_arguments(argc, argv);
 		return 0;
 	}
 	
-	platform_init(argc, argv);
 	
 #ifdef MODE_DEVELOPER
 	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);

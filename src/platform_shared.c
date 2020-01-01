@@ -15,7 +15,7 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 
-static void get_name_from_path(char *buffer, char *path)
+void get_name_from_path(char *buffer, char *path)
 {
 	buffer[0] = 0;
 	
@@ -42,7 +42,7 @@ static void get_name_from_path(char *buffer, char *path)
 	string_copyn(buffer, path_end+1, MAX_INPUT_LENGTH);
 }
 
-static void get_directory_from_path(char *buffer, char *path)
+void get_directory_from_path(char *buffer, char *path)
 {
 	buffer[0] = 0;
 	
