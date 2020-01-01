@@ -684,7 +684,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		else
 		{
-			if (global_ui_context.keyboard->text_changed || old_len != len)
+			if (global_ui_context.keyboard->text_changed)
 			{
 				if (last_cursor_pos != -1)
 				{

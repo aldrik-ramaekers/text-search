@@ -195,8 +195,6 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				keyboard->cursor = 0;
 			else
 				keyboard->cursor--;
-			
-			keyboard->text_changed = true;
 		}
 		if (keyboard_is_key_down(keyboard, KEY_RIGHT) && keyboard->cursor < keyboard->input_text_len)
 		{
@@ -204,8 +202,6 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 				keyboard->cursor = utf8len(keyboard->input_text);
 			else
 				keyboard->cursor++;
-			
-			keyboard->text_changed = true;
 		}
 	}
 	

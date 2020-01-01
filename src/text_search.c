@@ -50,7 +50,6 @@ platform_window *main_window;
 // TODO(Aldrik): offset of matched word is not saved to file
 // TODO(Aldrik): filter that excludes files would be nice..
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
-// TODO(Aldrik): should a change of cursor position really be saved in textbox history?
 // TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
 // TODO(Aldrik): command line usage
