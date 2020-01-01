@@ -118,7 +118,8 @@ void settings_page_update_render()
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
 					ui_push_text(localize("max_threads"));
-					ui_push_text(localize("zero_for_no_limit"));
+					// TODO(Aldrik): localize
+					ui_push_text("(Minimum of 1)");
 				}
 				ui_block_end();
 				ui_block_begin(LAYOUT_HORIZONTAL);
@@ -240,6 +241,9 @@ void settings_page_update_render()
 				{
 					global_settings_page.current_style = global_ui_context.style.id;
 					global_settings_page.max_thread_count = string_to_s32(global_settings_page.textbox_max_thread_count.buffer);
+					if (global_settings_page.max_thread_count < 1)
+						global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
+					
 					global_settings_page.max_file_size = string_to_s32(global_settings_page.textbox_max_file_size.buffer);
 					
 					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 

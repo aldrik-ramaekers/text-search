@@ -54,6 +54,11 @@ typedef struct t_settings_page
 	u16 current_double_click_selection_option; // unsaved state 
 } settings_page;
 
+#define DEFAULT_THREAD_COUNT 10
+#define DEFAULT_MAX_FILE_SIZE 0
+#define DEFAULT_RECURSIVE_STATE 1
+#define DEFAULT_STYLE 1
+
 settings_page global_settings_page;
 
 void settings_page_create();

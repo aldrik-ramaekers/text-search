@@ -46,11 +46,9 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): search completion percentage goes above 100% sometimes
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): replace MAX_INPUT_LENGTH-1 to MAX_INPUT_LENGTH
-// TODO(Aldrik): copy filters to search so they cant be changed during search
 // TODO(Aldrik): status text is reset when locale is changed, this is annoying when a search has been completed and you cant see the resulting status
-// TODO(Aldrik): setting the maximum thread count option to 0 will block the search, set default to 10
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
 // TODO(Aldrik): move textbox camera when dragging near borders
@@ -879,7 +877,7 @@ void load_config(settings_config *config)
 	if (search_filter)
 		string_copyn(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
 	else
-		string_copyn(textbox_file_filter.buffer, "*.txt,*.c", MAX_INPUT_LENGTH);
+		string_copyn(textbox_file_filter.buffer, "*.txt", MAX_INPUT_LENGTH);
 	
 	if (search_text)
 		string_copyn(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
@@ -908,11 +906,11 @@ void load_config(settings_config *config)
 	}
 	else
 	{
-		checkbox_recursive.state = 1;
-		global_settings_page.max_thread_count = 20;
-		global_settings_page.max_file_size = 200;
-		global_settings_page.current_style = 1;
-		global_settings_page.selected_double_click_selection_option = 0;
+		checkbox_recursive.state = DEFAULT_RECURSIVE_STATE;
+		global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
+		global_settings_page.max_file_size = DEFAULT_MAX_FILE_SIZE;
+		global_settings_page.current_style = DEFAULT_STYLE;
+		global_settings_page.selected_double_click_selection_option = OPTION_PATH;
 		
 #if 0
 		if (is_platform_in_darkmode())
@@ -929,6 +927,9 @@ void load_config(settings_config *config)
 		
 		string_copyn(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
+	
+	if (global_settings_page.max_thread_count <= 0)
+		global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
 	
 	if (window_w >= 800 && window_h >= 600)
         platform_window_set_size(main_window, window_w, window_h);
