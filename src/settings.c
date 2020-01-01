@@ -16,6 +16,7 @@
 */
 
 void reset_status_text();
+void set_status_text_to_finished_search();
 
 void settings_page_create()
 {
@@ -163,7 +164,11 @@ void settings_page_update_render()
 								set_locale(file->locale_id);
 								platform_window_set_title(&global_settings_page.window,
 														  localize("text_search_settings"));
-								reset_status_text();
+								
+								if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
+									set_status_text_to_finished_search();
+								else
+									reset_status_text();
 							}
 						}
 					}
@@ -234,7 +239,11 @@ void settings_page_update_render()
 					global_settings_page.active = false;
 					set_locale(global_settings_page.current_locale_id);
 					settings_page_hide();
-					reset_status_text();
+					
+					if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
+						set_status_text_to_finished_search();
+					else
+						reset_status_text();
 					return;
 				}
 				if (ui_push_button(&global_settings_page.btn_close, localize("save")))

@@ -26,6 +26,7 @@ typedef struct t_status_bar
 
 status_bar global_status_bar;
 search_result *current_search_result;
+s32 next_search_id = 0;
 
 image *search_img;
 image *error_img;
@@ -48,7 +49,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): search completion percentage goes above 100% sometimes
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): status text is reset when locale is changed, this is annoying when a search has been completed and you cant see the resulting status
 // TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): should a change of cursor position really be saved in textbox history?
 // TODO(Aldrik): move textbox camera when dragging near borders
@@ -210,7 +210,6 @@ static void* find_text_in_file_worker(void *arg)
 static void* find_text_in_files_t(void *arg)
 {
 	search_result *result_buffer = arg;
-	s32 current_search_id = result_buffer->search_id;
 	
 	array threads = array_create(sizeof(thread));
 	array_reserve(&threads, result_buffer->max_thread_count);
@@ -276,8 +275,6 @@ static void* find_text_in_files_t(void *arg)
 		}
 	}
 	
-	//thread_sleep(15000);
-	
 	// wait untill queue is cleared
 	while(result_buffer->work_queue.length) 
 	{
@@ -288,8 +285,6 @@ static void* find_text_in_files_t(void *arg)
 		}
 		thread_sleep(100);
 	}
-	
-	//thread_sleep(15000);
 	
 	finish_early:
 	{
@@ -355,6 +350,11 @@ static void render_status_bar(platform_window *window, font *font_small)
 	}
 }
 
+void set_status_text_to_finished_search()
+{
+	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), current_search_result->matches.length, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
+}
+
 static void set_status_text_to_active()
 {
 	char text[40];
@@ -362,7 +362,7 @@ static void set_status_text_to_active()
 	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
 	s32 dot_count = (dot_count_t % 1000) / 250;
 	
-	snprintf(text, MAX_INPUT_LENGTH, "%.*s%s", dot_count, "...", localize("finding_files"));
+	snprintf(text, 40, "%.*s%s", dot_count, "...", localize("finding_files"));
 	
 	string_copyn(global_status_bar.result_status_text, text, MAX_STATUS_TEXT_LENGTH);
 }
@@ -710,7 +710,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->match_found = false;
 	new_result_buffer->cancel_search = false;
 	new_result_buffer->mutex = mutex_create();
-	new_result_buffer->search_id = 0;
+	new_result_buffer->search_id = next_search_id++;
 	new_result_buffer->done_finding_files = false;
 	new_result_buffer->walking_file_system = false;
 	
@@ -795,8 +795,6 @@ static bool start_file_search(search_result *new_result)
 		
 		if (continue_search)
 		{
-			new_result->search_id++;
-			
 			new_result->is_recursive = checkbox_recursive.state;
 			new_result->walking_file_system = true;
 			new_result->done_finding_matches = false;
