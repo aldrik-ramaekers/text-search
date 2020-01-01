@@ -1,18 +1,7 @@
 /* 
-*  Copyright 2019 Aldrik Ramaekers
-*
-*  This program is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-
-*  You should have received a copy of the GNU General Public License
-*  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*  BSD 2-Clause “Simplified” License
+*  Copyright (c) 2019, Aldrik Ramaekers, aldrik.ramaekers@protonmail.com
+*  All rights reserved.
 */
 
 void settings_config_write_to_file(settings_config *config, char *path)
@@ -210,7 +199,7 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 	if (setting)
 	{
 		char num_buf[20];
-		snprintf(num_buf, MAX_INPUT_LENGTH, "%"PRId64"", value);
+		snprintf(num_buf, 20, "%"PRId64"", value);
 		
 		s32 len = strlen(num_buf);
 		mem_free(setting->value);
@@ -228,7 +217,7 @@ void settings_config_set_number(settings_config *config, char *name, s64 value)
 		
 		// value
 		char num_buf[20];
-		snprintf(num_buf, MAX_INPUT_LENGTH, "%"PRId64"", value);
+		snprintf(num_buf, 20, "%"PRId64"", value);
 		
 		len = strlen(num_buf);
 		new_entry.value = mem_alloc(len+1);

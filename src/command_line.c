@@ -1,18 +1,7 @@
 /* 
-*  Copyright 2019 Aldrik Ramaekers
-*
-*  This program is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-
-*  You should have received a copy of the GNU General Public License
-*  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*  BSD 2-Clause “Simplified” License
+*  Copyright (c) 2019, Aldrik Ramaekers, aldrik.ramaekers@protonmail.com
+*  All rights reserved.
 */
 
 void find_text_in_files(search_result *search_result);
@@ -23,8 +12,37 @@ bool export_results(search_result *result);
 
 static void print_license_message()
 {
-	// TODO(Aldrik): license
-	printf("License: XD!\n");
+	time_t t = time(0);
+	struct tm *now = localtime(&t);
+	
+	printf("BSD 2-Clause License\n"
+		   "\n"
+		   "Copyright (c) %d, Aldrik Ramaekers, aldrik.ramaekers@protonmail.com\n"
+		   "All rights reserved.\n"
+		   "\n"
+		   "Redistribution and use in source and binary forms, with or without\n"
+		   "modification, are permitted provided that the following conditions are met:\n"
+		   "\n"
+		   "1. Redistributions of source code must retain the above copyright notice, this\n"
+		   "list of conditions and the following disclaimer.\n"
+		   "\n"
+		   "2. Redistributions in binary form must reproduce the above copyright notice,\n"
+		   "this list of conditions and the following disclaimer in the documentation\n"
+		   "and/or other materials provided with the distribution.\n"
+		   "\n"
+		   "THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\"\n"
+		   "AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE\n"
+		   "IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE\n"
+		   "DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE\n"
+		   "FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL\n"
+		   "DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR\n"
+		   "SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER\n"
+		   "CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,\n"
+		   "OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE\n"
+		   "OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.\n\n", now->tm_year+1900);
+	
+	printf("The following parts of the Software are separately licensed:\n"
+		   "- The Liberation font family is licensed under the SIL Open Font License" "(version 2 onwards)\n\n");
 }
 
 static void print_help_message()

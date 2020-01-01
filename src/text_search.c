@@ -1,18 +1,7 @@
 /* 
-*  Copyright 2019 Aldrik Ramaekers
-*
-*  This program is free software: you can redistribute it and/or modify
-*  it under the terms of the GNU General Public License as published by
-*  the Free Software Foundation, either version 3 of the License, or
-*  (at your option) any later version.
-
-*  This program is distributed in the hope that it will be useful,
-*  but WITHOUT ANY WARRANTY; without even the implied warranty of
-*  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-*  GNU General Public License for more details.
-
-*  You should have received a copy of the GNU General Public License
-*  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+*  BSD 2-Clause “Simplified” License
+*  Copyright (c) 2019, Aldrik Ramaekers, aldrik.ramaekers@protonmail.com
+*  All rights reserved.
 */
 
 #include "config.h"
@@ -49,7 +38,6 @@ platform_window *main_window;
 
 // TODO(Aldrik): offset of matched word is not saved to file
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): decide on license, https://choosealicense.com/licenses/bsd-2-clause/ 
 // TODO(Aldrik): move textbox camera when dragging near borders
 // TODO(Aldrik): clipboard on windows kinda buggy
 // TODO(Aldrik): command line usage
