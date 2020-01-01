@@ -40,12 +40,27 @@ bool string_match(char *first, char *second)
     return false; 
 }
 
+bool string_is_asteriks(char *text)
+{
+	utf8_int32_t ch;
+	while((text = utf8codepoint(text, &ch)) && ch)
+	{
+		if (ch != '*') return false;
+	}
+	return true;
+}
+
 bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_matches, bool *cancel_search)
 {
 	bool final_result = false;
+	bool is_asteriks_only = false;
 	
 	// * wildcard at the start of text to find is not needed
-	if (*text_to_find == '*') text_to_find++;
+	if (string_is_asteriks(text_to_find))
+	{
+		is_asteriks_only = true;
+		text_to_find += strlen(text_to_find);
+	}
 	
 	char *text_to_find_original = text_to_find;
 	bool save_info = (text_matches != 0);
@@ -117,6 +132,12 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 				}
 				
 				final_result = true;
+				
+				if (is_asteriks_only)
+				{
+					return final_result;
+				}
+				
 				break;
 			}
 			

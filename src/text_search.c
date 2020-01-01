@@ -47,7 +47,6 @@ platform_window *main_window;
 #include "settings.c"
 
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): if search text is "*" we should return only 1 result per file
 // TODO(Aldrik): replace MAX_INPUT_LENGTH-1 to MAX_INPUT_LENGTH
 // TODO(Aldrik): copy filters to search so they cant be changed during search
 // TODO(Aldrik): status text is reset when locale is changed, this is annoying when a search has been completed and you cant see the resulting status
