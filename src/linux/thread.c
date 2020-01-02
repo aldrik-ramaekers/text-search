@@ -50,8 +50,6 @@ inline void thread_join(thread *thread)
 
 bool thread_tryjoin(thread *thread)
 {
-	// windows: https://docs.microsoft.com/en-us/windows/desktop/api/synchapi/nf-synchapi-waitforsingleobject
-	
 	if (thread->valid)
 	{
 		void *retval;

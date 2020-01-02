@@ -764,6 +764,7 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		
 		/* pass the hints to the window manager. */
 		XSetWMHints(window.display, window.window, win_hints);
+		XFree(win_hints);
 	}
 	
 	static GLXContext share_list = 0;

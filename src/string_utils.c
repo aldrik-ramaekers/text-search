@@ -371,6 +371,7 @@ void utf8_str_remove_range(char *str, s32 from, s32 to)
 	*rep_off = 0;
 	
 	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
+	mem_free(replacement);
 }
 
 void utf8_str_remove_at(char *str, s32 at)
@@ -395,6 +396,7 @@ void utf8_str_remove_at(char *str, s32 at)
 	*rep_off = 0;
 	
 	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
+	mem_free(replacement);
 }
 
 void utf8_str_insert_utf8str(char *str, s32 at, char *toinsert)
@@ -434,6 +436,7 @@ void utf8_str_insert_at(char *str, s32 at, utf8_int32_t newval)
 	*rep_off = 0;
 	
 	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
+	mem_free(replacement);
 }
 
 char *utf8_str_copy_upto(char *str, s32 roof, char *buffer)
@@ -494,6 +497,7 @@ void utf8_str_replace_at(char *str, s32 at, utf8_int32_t newval)
 	*rep_off = 0;
 	
 	string_copyn(orig_str, replacement, MAX_INPUT_LENGTH);
+	mem_free(replacement);
 }
 
 char* utf8_str_upto(char *str, s32 index)

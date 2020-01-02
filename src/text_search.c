@@ -22,8 +22,6 @@ image *error_img;
 image *directory_img;
 image *logo_small_img;
 
-font *font_big;
-font *font_medium;
 font *font_small;
 font *font_mini;
 s32 scroll_y = 0;
@@ -43,13 +41,14 @@ void* destroy_search_result_thread(void *arg)
 {
 	search_result *buffer = arg;
 	
-	while(!buffer->threads_closed && buffer->done_finding_files)
+	while(!buffer->threads_closed || !buffer->done_finding_files)
 	{
 		thread_sleep(1000); // 1ms
 	}
 	
 	array_destroy(&buffer->matches);
 	array_destroy(&buffer->errors);
+	array_destroy(&buffer->files);
 	
 	memory_bucket_destroy(&buffer->mem_bucket);
 	
@@ -302,7 +301,6 @@ static void* find_text_in_files_t(void *arg)
 	
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
-	array_destroy(&result_buffer->files);
 	
 	result_buffer->threads_closed = true;
 	
@@ -607,6 +605,27 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	}
 	else
 	{
+#if 1
+		y -= 9;
+		
+		s32 path_width = window->width / 2.0;
+		s32 pattern_width = window->width / 8.0;
+		
+		/// header /////////////
+		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+		
+		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
+		
+		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
+		
+		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, localize("file_pattern"), global_ui_context.style.foreground);
+		
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, localize("information"), global_ui_context.style.foreground);
+		/////////////////////////
+		
+		y += 30;
+#endif
+		
 		char *message = localize("no_matches_found");
 		s32 w = calculate_text_width(font_small, message);
 		s32 x = (window->width / 2) - (w / 2);
@@ -843,16 +862,12 @@ static void load_assets()
 	error_img = assets_load_image(_binary____data_imgs_error_png_start,
 								  _binary____data_imgs_error_png_end, false);
 	
-	font_medium = assets_load_font(_binary____data_fonts_mono_ttf_start,
-								   _binary____data_fonts_mono_ttf_end, 24);
+	//font_medium = assets_load_font(_binary____data_fonts_mono_ttf_start,
+	//_binary____data_fonts_mono_ttf_end, 24);
 	font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
 								  _binary____data_fonts_mono_ttf_end, 16);
 	font_mini = assets_load_font(_binary____data_fonts_mono_ttf_start,
 								 _binary____data_fonts_mono_ttf_end, 12);
-	
-	// assets used in other window
-	font_big = assets_load_font(_binary____data_fonts_mono_ttf_start,
-								_binary____data_fonts_mono_ttf_end, 32);
 }
 
 void load_config(settings_config *config)
@@ -1174,7 +1189,7 @@ int main(int argc, char **argv)
 		{
 			char buf[100];
 			sprintf(buf, "%d %d", global_ui_context.keyboard->selection_begin_offset, global_ui_context.keyboard->selection_length);
-			render_text(font_medium, 0, 500, buf, rgb(255,0,0));
+			render_text(font_small, 0, 500, buf, rgb(255,0,0));
 		}
 #endif
 		
@@ -1239,8 +1254,6 @@ int main(int argc, char **argv)
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);
-	assets_destroy_font(font_medium);
-	assets_destroy_font(font_big);
 	
 	keyboard_input_destroy(&keyboard);
 	platform_destroy_window(&window);
