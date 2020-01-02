@@ -451,13 +451,13 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-		/*
+	#if 0	
   s32 x = lparam&0xFFFF;
   s32 y = lparam>>16;
   
   current_mouse_to_handle->x = x;
   current_mouse_to_handle->y = y;
-  */
+	#endif
 		
 		TRACKMOUSEEVENT track;
 		track.cbSize = sizeof(track);
@@ -500,7 +500,10 @@ void platform_window_set_title(platform_window *window, char *name)
 
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
 {
-	//ShowWindow(GetConsoleWindow(), SW_HIDE);
+	height += 27;
+	width += 14;
+	
+	ShowWindow(GetConsoleWindow(), SW_HIDE);
 	platform_window window;
 	window.has_focus = true;
 	window.window_handle = 0;
@@ -698,21 +701,31 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	keyboard->text_changed = false;
 	
 	// mouse position (including outside of window)
-	{
-		POINT pp;
-		BOOL r = GetCursorPos(&pp);
-		if (r)
+	#if 1
+	{	
+		if (current_window_to_handle->has_focus)
 		{
-			RECT rec;
-			LONG client_height;
-			GetClientRect(current_window_to_handle->window_handle, &rec);
-			client_height = rec.bottom;
-			
-			GetWindowRect(current_window_to_handle->window_handle, &rec);
-			mouse->x = pp.x - rec.left;
-			mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top));
+			POINT pp;
+			BOOL r = GetCursorPos(&pp);
+			if (r)
+			{
+				RECT rec;
+				LONG client_height;
+				GetClientRect(current_window_to_handle->window_handle, &rec);
+				client_height = rec.bottom;
+				
+				GetWindowRect(current_window_to_handle->window_handle, &rec);
+				mouse->x = pp.x - rec.left - 8;
+				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top)) + 8; // very weird that I need to add 8px
+			}
+		}
+		else
+		{
+			current_mouse_to_handle->x = MOUSE_OFFSCREEN;
+			current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 		}
 	}
+	#endif
 	
 	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
