@@ -43,10 +43,10 @@ void* destroy_search_result_thread(void *arg)
 {
 	search_result *buffer = arg;
 	
-	// TODO(Aldrik): close after threads_closed and done_finding_files
-	
-	// wait 3 sec for all threads writing to memory bucket to finish
-	thread_sleep(1000*1000*3);
+	while(!buffer->threads_closed && buffer->done_finding_files)
+	{
+		thread_sleep(1000); // 1ms
+	}
 	
 	array_destroy(&buffer->matches);
 	array_destroy(&buffer->errors);
@@ -295,8 +295,6 @@ static void* find_text_in_files_t(void *arg)
 		thread_join(thr);
 	}
 	
-	result_buffer->threads_closed = true;
-	
 	if (!result_buffer->is_command_line_search)
 	{
 		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files_searched, result_buffer->find_duration_us/1000.0);
@@ -305,6 +303,8 @@ static void* find_text_in_files_t(void *arg)
 	array_destroy(&threads);
 	array_destroy(&result_buffer->work_queue);
 	array_destroy(&result_buffer->files);
+	
+	result_buffer->threads_closed = true;
 	
 	return 0;
 }

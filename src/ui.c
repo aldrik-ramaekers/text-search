@@ -706,26 +706,28 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		// cursor ticking after text change
 		if (last_cursor_pos != global_ui_context.keyboard->cursor)
 			cursor_tick = 0;
-		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
 		// draw cursor
 		cursor_text_w = calculate_text_width_upto(global_ui_context.font_small, 
 												  state->buffer, global_ui_context.keyboard->cursor);
 		
-		cursor_x = text_x + cursor_text_w;
+		cursor_x = text_x + cursor_text_w - state->diff;
 		
-		if (cursor_x > text_x + TEXTBOX_WIDTH-10)
+		//if (cursor_x > text_x + TEXTBOX_WIDTH-10)
+		//{
+		//cursor_x = text_x + TEXTBOX_WIDTH-10;
+		//}
+		
+		if ((cursor_text_w > TEXTBOX_WIDTH -10) && (first_click || global_ui_context.keyboard->text_changed || global_ui_context.keyboard->cursor != last_cursor_pos))
 		{
-			cursor_x = text_x + TEXTBOX_WIDTH-10;
+			state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
+		}
+		else if ((cursor_text_w <= TEXTBOX_WIDTH -10))
+		{
+			state->diff = 0;
 		}
 		
-		if ((cursor_text_w > TEXTBOX_WIDTH - 10 && global_ui_context.keyboard->text_changed) || first_click)
-		{
-			if (clicked_to_select && !global_ui_context.keyboard->has_selection)
-				state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
-			else if (!clicked_to_select && !global_ui_context.keyboard->has_selection)
-				state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
-		}
+		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
 		s32 cursor_y = text_y - 2;
 		s32 cursor_h = global_ui_context.font_small->size + 1;
