@@ -1016,9 +1016,10 @@ static void* platform_open_file_dialog_implementation(void *data)
 	
 	if (args->file_filter)
 	{
-		char filter[50];
-		string_copyn(filter, args->file_filter, 50);
+		char filter[MAX_INPUT_LENGTH];
+		string_copyn(filter, args->file_filter, MAX_INPUT_LENGTH);
 		filter[strlen(filter)+1] = 0;
+		filter[strlen(filter)+2] = 0;
 		info.lpstrFilter = filter;
 	}
 	else
@@ -1030,11 +1031,15 @@ static void* platform_open_file_dialog_implementation(void *data)
 	char szPath[MAX_PATH];
 	
 	info.lpstrCustomFilter = NULL;
-	info.nMaxCustFilter = 50;
+	info.nMaxCustFilter = MAX_INPUT_LENGTH;
 	info.nFilterIndex = 0;
 	info.lpstrFile = (char*)szFile;
 	info.lpstrFile[0] = 0;
 	info.nMaxFile = sizeof(szFile);
+	
+	char extension[50];
+	string_copyn(extension, "json", 50); // TODO(Aldrik): make this a parameter in open_dialog_args
+	info.lpstrDefExt = extension;
 	
 	info.lpstrFileTitle = NULL;
 	info.lpstrInitialDir = args->start_path;
@@ -1042,7 +1047,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	
 	if (args->type == SAVE_FILE)
 	{
-		info.Flags = OFN_PATHMUSTEXIST;
+	info.Flags = OFN_EXTENSIONDIFFERENT | OFN_OVERWRITEPROMPT;
 		GetSaveFileNameA(&info);
 		string_copyn(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
