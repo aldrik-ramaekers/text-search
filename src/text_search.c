@@ -76,13 +76,15 @@ static void* find_text_in_file_worker(void *arg)
 			array_remove_at(&result_buffer->work_queue, 0);
 			mutex_unlock(&result_buffer->work_queue.mutex);
 			
-			// read file
-			content = platform_read_file_content(args.file.file.path, "r");
-			args.file.file_size = content.content_length;
-			
 			mutex_lock(&result_buffer->mutex);
 			result_buffer->files_searched++;
 			mutex_unlock(&result_buffer->mutex);
+			
+			retry_search:;
+			
+			// read file
+			content = platform_read_file_content(args.file.file.path, "r");
+			args.file.file_size = content.content_length;
 			
 			// check if file is not too big for set filter
 			s32 kb_to_b = result_buffer->max_file_size * 1000;
@@ -162,7 +164,8 @@ static void* find_text_in_file_worker(void *arg)
 				if (content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS ||
 					content.file_error == FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM)
 				{
-					// TODO(Aldrik): maybe retry here
+					thread_sleep(1000);
+					goto retry_search;
 				}
 				
 				if (content.file_error)
@@ -666,10 +669,6 @@ static void render_info(platform_window *window, font *font_small)
 		
 		render_text_cutoff(font_small, 10, y, 
 						   info, global_ui_context.style.foreground, window->width - 20);
-	}
-	else
-	{
-		// TODO(Aldrik): loading animation here?
 	}
 }
 

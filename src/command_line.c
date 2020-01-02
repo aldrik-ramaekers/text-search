@@ -89,6 +89,9 @@ static bool is_valid_argument(char *arg)
 
 void handle_command_line_arguments(int argc, char **argv)
 {
+	load_available_localizations();
+	set_locale("en");
+	
 	s32 current_arg_index = 1;
 	bool is_help_request = string_equals(argv[current_arg_index], "--help");
 	bool is_license_request = string_equals(argv[current_arg_index], "--license");
@@ -128,8 +131,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		if (expect_argument_name && !is_valid_argument(argv[i]))
 		{
-			// TODO(Aldrik): localize
-			printf("Invalid argument: %s\n", argv[i]);
+			printf("%s: %s\n", localize("invalid_argument"), argv[i]);
 		}
 		
 		if (!expect_argument_name)
@@ -172,47 +174,44 @@ void handle_command_line_arguments(int argc, char **argv)
 	}
 	
 	// input validation
-	load_available_localizations();
 	if (!set_locale(locale))
 	{
-		// TODO(Aldrik): localize
-		printf("WARNING: '--locale' argument invalid: locale '%s' not available, "
-			   "defaulting to english\n", locale);
+		printf(localize("warning_locale_not_available"), locale);
+		printf("\n");
 	}
 	
 	if (string_equals(directory, ""))
 	{
-		// TODO(Aldrik): localize
-		printf("ERROR: '--directory' option is a required argument\n");
+		printf("%s", localize("error_directory_not_specified"));
+		printf("\n");
 		return;
 	}
 	
 	if (!platform_directory_exists(directory))
 	{
-		// TODO(Aldrik): localize
-		printf("ERROR: Directory provided in option '--directory' "
-			   "does not exist: '%s'\n", directory);
+		printf(localize("error_directory_not_found"), directory);
+		printf("\n");
 		return;
 	}
 	
 	if (string_equals(text, ""))
 	{
-		// TODO(Aldrik): localize
-		printf("ERROR: '--text' argument cannot be empty\n");
+		printf("%s", localize("error_text_argument_empty"));
+		printf("\n");
 		return;
 	}
 	
 	if (string_equals(filter, ""))
 	{
-		// TODO(Aldrik): localize
-		printf("ERROR: '--filter' argument cannot be empty\n");
+		printf("%s", localize("error_filter_argument_empty"));
+		printf("\n");
 		return;
 	}
 	
 	if (threads < 1)
 	{
-		// TODO(Aldrik): localize
-		printf("ERROR: '--threads' needs to be greater than 0\n");
+		printf("%s", localize("error_threads_too_low"));
+		printf("\n");
 		return;
 	}
 	
@@ -223,9 +222,8 @@ void handle_command_line_arguments(int argc, char **argv)
 		
 		if (!platform_directory_exists(dir_buffer))
 		{
-			// TODO(Aldrik): localize
-			printf("ERROR: '--export' invalid path. Directory to save "
-				   "file to does not exist: '%s'\n", dir_buffer);
+			printf(localize("error_invalid_export_path"), dir_buffer);
+			printf("\n");
 			return;
 		}
 	}

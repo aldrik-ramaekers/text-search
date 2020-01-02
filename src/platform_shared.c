@@ -78,7 +78,6 @@ void platform_autocomplete_path(char *buffer, bool want_dir)
 	// create filter
 	string_appendn(name, "*", MAX_INPUT_LENGTH);
 	
-	// TODO(Aldrik): use memory bucket here..
 	array files = array_create(sizeof(found_file));
 	array filters = get_filters(name);
 	bool is_cancelled = false;
@@ -138,10 +137,14 @@ array get_filters(char *pattern)
 		}
 		else
 		{
-			// TODO(Aldrik): show error and dont continue search
-			assert(filter_len < MAX_INPUT_LENGTH);
-			
-			current_filter[filter_len++] = ch;
+			if(filter_len < MAX_INPUT_LENGTH-1)
+			{
+				current_filter[filter_len++] = ch;
+			}
+			else
+			{
+				current_filter[filter_len] = ch;
+			}
 		}
 		
 		pattern++;

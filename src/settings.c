@@ -108,8 +108,7 @@ void settings_page_update_render()
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
 					ui_push_text(localize("max_threads"));
-					// TODO(Aldrik): localize
-					ui_push_text("(Minimum of 1)");
+					ui_push_text(localize("minimum_of_1"));
 				}
 				ui_block_end();
 				ui_block_begin(LAYOUT_HORIZONTAL);

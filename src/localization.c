@@ -84,8 +84,9 @@ bool set_locale(char *country_id)
 	// if localization is not found, default to first in list (english), return false to report error
 	if (global_localization.mo_files.length)
 		global_localization.active_localization = array_at(&global_localization.mo_files, 0);
+	else
+		global_localization.active_localization = 0;
 	
-	global_localization.active_localization = 0;
 	return false;
 }
 

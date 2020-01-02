@@ -49,6 +49,6 @@ cd ../
 if [ "$1" == "-r" ]; then
 	cd bin
 	./text-search
-#   ./text-search --directory "/home/aldrik/Projects/text-search" --filter "*.c,*.h" --text "TODO" --export "/home/aldrik/Projects/text-search/test.json" --max-file-size 200
+#   ./text-search --directory "/home/aldrik/Projects/text-search" --filter "*.c,*.h" --text "TODO(Aldrik)" --max-file-size 200 --locale "nl" --threads 5 --export "/memes/test.json"
 	cd ..
 fi
