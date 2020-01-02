@@ -77,7 +77,7 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 	HANDLE clipboard_data;
 	
 	int char_num = MultiByteToWideChar(CP_UTF8, 0, buffer, -1, 0, 0);
-	wchar_t *convstr = mem_alloc(char_num);
+	wchar_t *convstr = mem_alloc(char_num*2);
 	int result = MultiByteToWideChar(CP_UTF8, 0, buffer, -1, convstr, char_num);
 	
 	size_t len = result;
@@ -92,7 +92,7 @@ bool platform_set_clipboard(platform_window *window, char *buffer)
 	{
 		dst = GlobalLock(clipboard_data);
 		memmove(dst, convstr, size);
-		dst[len] = 0;
+		dst[len*2] = 0;
 		GlobalUnlock(clipboard_data);
 		
 		SetClipboardData(CF_UNICODETEXT, clipboard_data);
