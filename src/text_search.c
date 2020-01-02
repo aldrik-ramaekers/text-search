@@ -43,6 +43,8 @@ void* destroy_search_result_thread(void *arg)
 {
 	search_result *buffer = arg;
 	
+	// TODO(Aldrik): close after threads_closed and done_finding_files
+	
 	// wait 3 sec for all threads writing to memory bucket to finish
 	thread_sleep(1000*1000*3);
 	

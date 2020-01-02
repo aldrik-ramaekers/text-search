@@ -537,6 +537,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	bool is_selecting = false;
 	bool clicked_to_select = false;
 	bool double_clicked_to_select_first = false;
+	bool first_click = false;
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
@@ -560,6 +561,9 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
+			
+			if (!state->state)
+				first_click = true;
 			
 			if (global_ui_context.keyboard->has_selection)
 			{
@@ -626,8 +630,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	s32 cursor_text_w;
 	s32 cursor_x;
 	
-	if (!global_ui_context.keyboard->has_selection)
-		state->diff = 0;
+	//if (!global_ui_context.keyboard->has_selection)
+	//state->diff = 0;
 	
 	if (state->state)
 	{
@@ -715,7 +719,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			cursor_x = text_x + TEXTBOX_WIDTH-10;
 		}
 		
-		if (cursor_text_w > TEXTBOX_WIDTH - 10)
+		if ((cursor_text_w > TEXTBOX_WIDTH - 10 && global_ui_context.keyboard->text_changed) || first_click)
 		{
 			if (clicked_to_select && !global_ui_context.keyboard->has_selection)
 				state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
@@ -734,11 +738,13 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	// select first character on click
 	if (clicked_to_select)
 	{
+#if 1
 		global_ui_context.keyboard->has_selection = true;
 		global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
 																					   state->buffer, mouse_x + state->diff - text_x);
 		global_ui_context.keyboard->selection_length = 1;
 		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
+#endif
 	}
 	
 	if (is_selecting)
