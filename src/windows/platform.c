@@ -451,7 +451,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-	#if 0	
+	#if 0
   s32 x = lparam&0xFFFF;
   s32 y = lparam>>16;
   
@@ -701,6 +701,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	keyboard->text_changed = false;
 	
 	// mouse position (including outside of window)
+	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
 	#if 1
 	{	
 		if (current_window_to_handle->has_focus)
