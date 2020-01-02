@@ -34,8 +34,8 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
+// TODO(Aldrik): textbox bug when clicking on the side
 // TODO(Aldrik): filter that excludes files would be nice..
-// TODO(Aldrik): clipboard on windows kinda buggy
 
 void* destroy_search_result_thread(void *arg)
 {
@@ -110,7 +110,7 @@ static void* find_text_in_file_worker(void *arg)
 						
 						// match info
 						file_match.line_nr = m->line_nr;
-						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 170);
+						file_match.line_info = memory_bucket_reserve(&result_buffer->mem_bucket, 80*4+10);
 						
 						s32 offset_to_render = m->word_offset;
 						
@@ -124,7 +124,7 @@ static void* find_text_in_file_worker(void *arg)
 						
 						char *str_to_copy = utf8_str_upto(m->line_start, overflow);
 						
-						snprintf(file_match.line_info, 170, "%.40s", str_to_copy);
+						snprintf(file_match.line_info, 80*4+10, "%.80s", str_to_copy);
 						char *tmp = file_match.line_info;
 						while(*tmp)
 						{
@@ -735,16 +735,16 @@ search_result *create_empty_search_result()
 	
 	// list of files found in current search
 	new_result_buffer->files = array_create(sizeof(file_match));
-	new_result_buffer->files.reserve_jump = 5000;
+	new_result_buffer->files.reserve_jump = FILE_RESERVE_COUNT;
 	array_reserve(&new_result_buffer->files, FILE_RESERVE_COUNT);
 	
 	new_result_buffer->matches = array_create(sizeof(file_match));
-	new_result_buffer->matches.reserve_jump = 5000;
+	new_result_buffer->matches.reserve_jump = FILE_RESERVE_COUNT;
 	array_reserve(&new_result_buffer->matches, FILE_RESERVE_COUNT);
 	
 	// work queue when searching for matches
 	new_result_buffer->work_queue = array_create(sizeof(find_text_args));
-	new_result_buffer->work_queue.reserve_jump = 5000;
+	new_result_buffer->work_queue.reserve_jump = FILE_RESERVE_COUNT;
 	array_reserve(&new_result_buffer->work_queue, FILE_RESERVE_COUNT);
 	
 	// filter buffers
