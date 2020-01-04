@@ -34,9 +34,6 @@ platform_window *main_window;
 #include "save.c"
 #include "settings.c"
 
-// TODO(Aldrik): textbox bug when clicking on the side
-// TODO(Aldrik): filter that excludes files would be nice..
-
 void* destroy_search_result_thread(void *arg)
 {
 	search_result *buffer = arg;

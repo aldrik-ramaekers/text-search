@@ -327,27 +327,34 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		if (current_keyboard_to_handle->take_input)
 		{
-			char buf[2];
+			char buf[5];
 			char *ch = 0;
 			
-			char val = (char)wparam;
+			wchar_t codep = wparam;
 			
-			if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
+			WideCharToMultiByte(CP_UTF8, 0, &codep, 1, buf, 5 ,0,0);
+			
+			if (utf8len(buf) == 1)
 			{
-				if (!(val >= 48 && val <= 57))
+				char val = buf[0];
+				
+				if (current_keyboard_to_handle->input_mode == INPUT_NUMERIC)
 				{
-					ch = 0;
+					if (!(val >= 48 && val <= 57))
+					{
+						ch = 0;
+					}
+					else
+					{
+						snprintf(buf, 2,  "%c", val);
+						ch = buf;
+					}
 				}
-				else
+				else if (val >= 32 && val <= 126)
 				{
-					snprintf(buf, 2,  "%c", val);
+					snprintf(buf, 5, "%c", val);
 					ch = buf;
 				}
-			}
-			else if (val >= 32 && val <= 126)
-			{
-				snprintf(buf, 2, "%c", val);
-				ch = buf;
 			}
 			
 			if (ch != 0)
@@ -451,13 +458,13 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-	#if 0
-  s32 x = lparam&0xFFFF;
-  s32 y = lparam>>16;
-  
-  current_mouse_to_handle->x = x;
-  current_mouse_to_handle->y = y;
-	#endif
+#if 0
+		s32 x = lparam&0xFFFF;
+		s32 y = lparam>>16;
+		
+		current_mouse_to_handle->x = x;
+		current_mouse_to_handle->y = y;
+#endif
 		
 		TRACKMOUSEEVENT track;
 		track.cbSize = sizeof(track);
@@ -702,7 +709,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	
 	// mouse position (including outside of window)
 	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
-	#if 1
+#if 1
 	{	
 		if (current_window_to_handle->has_focus)
 		{
@@ -717,7 +724,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				
 				GetWindowRect(current_window_to_handle->window_handle, &rec);
 				mouse->x = pp.x - rec.left - 8;
-				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top)) + 8; // very weird that I need to add 8px
+				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top)) + 8;// very weird that I need to add 8px
 			}
 		}
 		else
@@ -726,7 +733,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 			current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 		}
 	}
-	#endif
+#endif
 	
 	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
@@ -1038,9 +1045,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	info.lpstrFile[0] = 0;
 	info.nMaxFile = sizeof(szFile);
 	
-	char extension[50];
-	string_copyn(extension, "json", 50); // TODO(Aldrik): make this a parameter in open_dialog_args
-	info.lpstrDefExt = extension;
+	info.lpstrDefExt = args->default_save_file_extension;
 	
 	info.lpstrFileTitle = NULL;
 	info.lpstrInitialDir = args->start_path;
@@ -1048,7 +1053,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	
 	if (args->type == SAVE_FILE)
 	{
-	info.Flags = OFN_EXTENSIONDIFFERENT | OFN_OVERWRITEPROMPT;
+		info.Flags = OFN_EXTENSIONDIFFERENT | OFN_OVERWRITEPROMPT;
 		GetSaveFileNameA(&info);
 		string_copyn(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}

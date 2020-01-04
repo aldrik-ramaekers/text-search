@@ -131,6 +131,7 @@ struct open_dialog_args
 	char *buffer;
 	char *file_filter;
 	char *start_path;
+	char *default_save_file_extension;
 	file_dialog_type type;
 };
 

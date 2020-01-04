@@ -754,17 +754,24 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		// move text offset x when selecting so we can select more text than available on screen.
 		if (global_ui_context.mouse->x < x + 10)
 		{
-			state->diff -= TEXTBOX_SCROLL_X_SPEED;
-			if (state->diff < 0) state->diff = 0;
+			s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
+			if (text_w > TEXTBOX_WIDTH-10)
+			{
+				state->diff -= TEXTBOX_SCROLL_X_SPEED;
+				if (state->diff < 0) state->diff = 0;
+			}
 		}
 		if (global_ui_context.mouse->x > x + TEXTBOX_WIDTH - 10)
 		{
 			s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
 			s32 diff = text_w - TEXTBOX_WIDTH + 10;
-			state->diff += TEXTBOX_SCROLL_X_SPEED;
 			
-			if (state->diff > diff)
-				state->diff = diff;
+			if (text_w > TEXTBOX_WIDTH-10)
+			{
+				state->diff += TEXTBOX_SCROLL_X_SPEED;
+				if (state->diff > diff)
+					state->diff = diff;
+			}
 		}
 		///////////////////////////////////////////////////////////
 	}
