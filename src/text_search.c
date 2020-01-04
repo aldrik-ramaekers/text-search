@@ -1184,7 +1184,7 @@ int main(int argc, char **argv)
 #if 0
 		{
 			char buf[100];
-			sprintf(buf, "%d %d", global_ui_context.keyboard->selection_begin_offset, global_ui_context.keyboard->selection_length);
+			sprintf(buf, "%d", global_ui_context.keyboard->cursor);
 			render_text(font_small, 0, 500, buf, rgb(255,0,0));
 		}
 #endif

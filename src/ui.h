@@ -14,12 +14,14 @@
 #define BUTTON_HORIZONTAL_TEXT_PADDING 15
 #define MENU_ITEM_WIDTH 190
 #define CHECKBOX_SIZE BLOCK_HEIGHT - 8
-#define TEXTBOX_WIDTH 270
+#define TEXTBOX_WIDTH 300
 #define TEXTBOX_HEIGHT BLOCK_HEIGHT
 #define BUTTON_HEIGHT BLOCK_HEIGHT
 #define BUTTON_IMAGE_PADDING 5
 #define BUTTON_IMAGE_SPACING 8
-#define TEXTBOX_SCROLL_X_SPEED 17
+#define DROPDOWN_WIDTH 225
+#define DROPDOWN_ITEM_WIDTH 225
+#define TEXTBOX_SCROLL_X_SPEED 32
 
 typedef enum t_ui_style_type
 {
@@ -100,8 +102,10 @@ typedef struct t_textbox_state
 	s32 double_clicked_to_select_cursor_index;
 	s32 max_len;
 	s32 text_offset_x;
+	bool attempting_to_select;
 	array history;
 	array future;
+	s32 last_click_cursor_index;
 } textbox_state;
 
 typedef struct t_checkbox_state

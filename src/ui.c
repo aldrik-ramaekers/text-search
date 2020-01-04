@@ -46,6 +46,8 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.double_clicked_to_select = false;
 	state.double_clicked_to_select_cursor_index = 0;
 	state.diff = 0;
+	state.last_click_cursor_index = -1;
+	state.attempting_to_select = false;
 	
 	return state;
 }
@@ -327,7 +329,8 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() + ((global_ui_context.layout.dropdown_item_count)*h-(1*global_ui_context.layout.dropdown_item_count));
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
-	s32 total_w = 200 + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 total_w = DROPDOWN_ITEM_WIDTH 
+		+ BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	
@@ -377,7 +380,7 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
-	s32 total_w = 200 + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
+	s32 total_w = DROPDOWN_WIDTH + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	s32 h = BUTTON_HEIGHT;
@@ -537,6 +540,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	bool is_selecting = false;
 	bool clicked_to_select = false;
 	bool double_clicked_to_select_first = false;
+	bool clicked_to_set_cursor = false;
 	bool first_click = false;
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
@@ -569,10 +573,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			{
 				global_ui_context.keyboard->has_selection = false;
 			}
-			else if (state->state)
-			{
-				clicked_to_select = true;
-			}
+			
+			clicked_to_set_cursor = true;
 			
 			state->state = true;
 			global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
@@ -582,7 +584,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		if (is_left_down(global_ui_context.mouse) && state->state)
 		{
-			is_selecting = true;
+			//is_selecting = true;
 		}
 	}
 	else if (is_left_clicked(global_ui_context.mouse))
@@ -593,6 +595,11 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		
 		state->state = false;
+	}
+	
+	if (is_left_released(global_ui_context.mouse))
+	{
+		state->attempting_to_select = false;
 	}
 	
 	if (state->state && global_ui_context.keyboard->has_selection && is_left_down(global_ui_context.mouse))
@@ -632,6 +639,26 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	
 	//if (!global_ui_context.keyboard->has_selection)
 	//state->diff = 0;
+	
+	// select first character on click
+	if (clicked_to_set_cursor)
+	{
+		global_ui_context.keyboard->cursor = calculate_cursor_position(global_ui_context.font_small, 
+																	   state->buffer, mouse_x + state->diff - text_x);
+		
+		state->last_click_cursor_index = global_ui_context.keyboard->cursor;
+		state->attempting_to_select = true;
+		
+		global_ui_context.keyboard->selection_begin_offset = global_ui_context.keyboard->cursor;
+		
+#if 0
+		global_ui_context.keyboard->has_selection = true;
+		global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
+																					   state->buffer, mouse_x + state->diff - text_x);
+		global_ui_context.keyboard->selection_length = 1;
+		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
+#endif
+	}
 	
 	if (state->state)
 	{
@@ -704,50 +731,68 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		}
 		
 		// cursor ticking after text change
-		if (last_cursor_pos != global_ui_context.keyboard->cursor)
+		if (last_cursor_pos != global_ui_context.keyboard->cursor || global_ui_context.keyboard->text_changed)
 			cursor_tick = 0;
 		
 		// draw cursor
 		cursor_text_w = calculate_text_width_upto(global_ui_context.font_small, 
 												  state->buffer, global_ui_context.keyboard->cursor);
 		
+		s32 text_w = calculate_text_width(global_ui_context.font_small, state->buffer);
+		
 		cursor_x = text_x + cursor_text_w - state->diff;
 		
-		//if (cursor_x > text_x + TEXTBOX_WIDTH-10)
-		//{
-		//cursor_x = text_x + TEXTBOX_WIDTH-10;
-		//}
-		
-		if ((cursor_text_w > TEXTBOX_WIDTH -10) && (first_click || global_ui_context.keyboard->text_changed || global_ui_context.keyboard->cursor != last_cursor_pos))
+		if (!is_selecting)
 		{
-			state->diff = cursor_text_w - TEXTBOX_WIDTH + 10;
-		}
-		else if ((cursor_text_w <= TEXTBOX_WIDTH -10))
-		{
-			state->diff = 0;
+			if (cursor_text_w < state->diff)
+			{
+				state->diff = cursor_text_w;
+			}
+			if (cursor_text_w - state->diff > TEXTBOX_WIDTH - 10)
+			{
+				state->diff = (cursor_text_w) - (TEXTBOX_WIDTH - 10);
+			}
 		}
 		
-		last_cursor_pos = global_ui_context.keyboard->cursor;
-		
-		s32 cursor_y = text_y - 2;
-		s32 cursor_h = global_ui_context.font_small->size + 1;
-		s32 cursor_w = 2;
-		
-		if (cursor_tick % 50 < 25 && !global_ui_context.keyboard->has_selection)
-			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
+#if 1
+		if (!clicked_to_select && !clicked_to_set_cursor && !is_selecting && !global_ui_context.keyboard->has_selection && global_ui_context.keyboard->text_changed)
+		{
+			if ((text_w > TEXTBOX_WIDTH -10) && (global_ui_context.keyboard->text_changed || global_ui_context.keyboard->cursor != last_cursor_pos))
+			{
+				state->diff = text_w - TEXTBOX_WIDTH + 10;
+			}
+			else if ((text_w <= TEXTBOX_WIDTH -10))
+			{
+				state->diff = 0;
+			}
+		}
+#endif
 	}
+	
+	//////////////////////////////////
+	{
+		s32 curr_index = calculate_cursor_position(global_ui_context.font_small, 
+												   state->buffer, mouse_x + state->diff - text_x);
+		if (curr_index != state->last_click_cursor_index && state->attempting_to_select)
+		{
+			clicked_to_select = true;
+			state->attempting_to_select = false;
+		}
+	}
+	
 	
 	// select first character on click
 	if (clicked_to_select)
 	{
 #if 1
 		global_ui_context.keyboard->has_selection = true;
-		global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
-																					   state->buffer, mouse_x + state->diff - text_x);
+		//global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
+		//state->buffer, mouse_x + state->diff - text_x);
 		global_ui_context.keyboard->selection_length = 1;
 		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
 #endif
 	}
+	
 	
 	if (is_selecting)
 	{
@@ -803,6 +848,19 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			
 			state->double_clicked_to_select = false;
 		}
+	}
+	
+	// render cursor
+	if (state->state)
+	{
+		last_cursor_pos = global_ui_context.keyboard->cursor;
+		
+		s32 cursor_y = text_y - 2;
+		s32 cursor_h = global_ui_context.font_small->size + 1;
+		s32 cursor_w = 2;
+		
+		if (cursor_tick % 40 < 20 && !global_ui_context.keyboard->has_selection)
+			render_rectangle(cursor_x, cursor_y, cursor_w, cursor_h, global_ui_context.style.textbox_foreground);
 	}
 	
 	

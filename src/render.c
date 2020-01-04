@@ -265,7 +265,7 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		++index;
 	}
 	
-	return x;
+	return index;
 }
 
 s32 calculate_text_width_from_upto(font *font, char *text, s32 from, s32 index)

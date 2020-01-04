@@ -204,6 +204,11 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 								  keyboard->selection_begin_offset + keyboard->selection_length);
 			keyboard->has_selection = false;
 			keyboard->text_changed = true;
+			
+			if (keyboard->selection_begin_offset < keyboard->cursor)
+			{
+				keyboard->cursor -= keyboard->selection_length-1;
+			}
 		}
 		else if (is_lctrl_down)
 		{
