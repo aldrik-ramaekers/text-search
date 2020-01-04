@@ -275,6 +275,9 @@ void settings_page_show()
 	
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
 													   450, 280, 450, 280);
+	
+	settings_window = &global_settings_page.window;
+	
 	global_settings_page.active = true;
 	global_settings_page.selected_tab_index = 0;
 	global_settings_page.current_locale_id = locale_get_id();
@@ -287,6 +290,8 @@ void settings_page_hide()
 {
 	if (platform_window_is_valid(&global_settings_page.window))
 	{
+		settings_window = 0;
+		
 		platform_destroy_window(&global_settings_page.window);
 		
 		global_settings_page.btn_close.state = false;

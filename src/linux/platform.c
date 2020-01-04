@@ -66,19 +66,6 @@ struct t_platform_window
 	cursor_type next_cursor_type;
 };
 
-// --- libX11.so
-// XLookupKeysym
-
-// --- libXrandr.so
-// XRRGetScreenResources
-// XRRGetCrtcInfo
-// XRRFreeCrtcInfo
-// XRRFreeScreenResources
-
-//typedef int t_XResizeWindow(Display *display, Window window, unsigned int w, unsigned int h);
-//static t_XResizeWindow *XResizeWindow_;
-//#define XResizeWindow XResizeWindow_
-
 bool platform_get_clipboard(platform_window *window, char *buffer)
 {
 	char *result;
@@ -90,9 +77,19 @@ bool platform_get_clipboard(platform_window *window, char *buffer)
 	incrid = XInternAtom(window->display, "INCR", False);
 	XEvent event;
 	
-	if(window->CLIPBOARD != None && XGetSelectionOwner(window->display, window->CLIPBOARD) == window->window) {
-		snprintf(buffer, MAX_INPUT_LENGTH, "%s", window->clipboard_str);
-		return true;
+	if(window->CLIPBOARD != None) {
+		
+		if (settings_window && XGetSelectionOwner(window->display, window->CLIPBOARD) == settings_window->window)
+		{
+			snprintf(buffer, MAX_INPUT_LENGTH, "%s", settings_window->clipboard_str);
+			return true;
+		}
+		else if (XGetSelectionOwner(window->display, window->CLIPBOARD) == 
+				 main_window->window)
+		{
+			snprintf(buffer, MAX_INPUT_LENGTH, "%s", main_window->clipboard_str);
+			return true;
+		}
 	}
 	
 	XConvertSelection(window->display, bufid, fmtid, propid, window->window, CurrentTime);
@@ -210,7 +207,22 @@ bool platform_write_file_content(char *path, const char *mode, char *buffer, s32
 
 void platform_window_set_title(platform_window *window, char *name)
 {
+	Atom WM_NAME = XInternAtom(window->display, "WM_NAME", False);
+	Atom _NET_WM_NAME = XInternAtom(window->display, "_NET_WM_NAME", False);
+	Atom _NET_WM_ICON_NAME = XInternAtom(window->display, "_NET_WM_ICON_NAME", False);
+	
+	char *list[1] = { (char *) name };
+	XTextProperty property;
+	
 	XStoreName(window->display, window->window, name);
+	
+	Xutf8TextListToTextProperty(window->display, list, 1, XUTF8StringStyle,
+								&property);
+	XSetTextProperty(window->display, window->window, &property, WM_NAME);
+	XSetTextProperty(window->display, window->window, &property, _NET_WM_NAME);
+	XSetTextProperty(window->display, window->window, &property, XA_WM_NAME);
+	XSetTextProperty(window->display, window->window, &property, _NET_WM_ICON_NAME);
+	XFree(property.value);
 }
 
 bool platform_file_exists(char *path)
@@ -754,6 +766,23 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		class_hint.res_class = name;
 		XSetClassHint(window.display, window.window, &class_hint);
 	}
+	
+	
+	// hide taskbar icon and stay on top
+#if 0
+	{
+		Atom wm_state = XInternAtom(window.display, 
+									"_NET_WM_STATE", False);
+		Atom taskbar_atom = XInternAtom(window.display, 
+										"_NET_WM_STATE_SKIP_TASKBAR", False);
+		Atom above_atom = XInternAtom(window.display, 
+									  "_NET_WM_STATE_ABOVE", False);
+		
+		Atom atom_list[2] = {taskbar_atom, above_atom};
+		XChangeProperty(window.display, window.window, wm_state, XA_ATOM, 32,
+						PropModeReplace, (const unsigned char*)&atom_list, 2);
+	}
+#endif
 	
 	{
 		XWMHints* win_hints = XAllocWMHints();

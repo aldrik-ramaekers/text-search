@@ -528,3 +528,17 @@ utf8_int32_t utf8_str_at(char *str, s32 index)
 	
 	return 0;
 }
+
+bool is_string_numeric(char *str)
+{
+	utf8_int32_t ch;
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+		if (!(ch >= 48 && ch <= 57))
+		{
+			return false;
+		}
+	}
+	
+	return true;
+}

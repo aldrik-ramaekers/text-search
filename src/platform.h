@@ -153,6 +153,9 @@ typedef enum t_cursor_type
 	CURSOR_POINTER,
 } cursor_type;
 
+platform_window *main_window = 0;
+platform_window *settings_window = 0;
+
 bool platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h);
 bool platform_set_clipboard(platform_window *window, char *buffer);

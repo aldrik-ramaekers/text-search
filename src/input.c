@@ -98,7 +98,7 @@ inline void keyboard_input_destroy(keyboard_input *keyboard)
 	mem_free(keyboard->input_text);
 }
 
-inline static void keyboard_handle_input_copy_and_paste(platform_window *window, keyboard_input *keyboard)
+static void keyboard_handle_input_copy_and_paste(platform_window *window, keyboard_input *keyboard)
 {
 	bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 	
@@ -106,6 +106,11 @@ inline static void keyboard_handle_input_copy_and_paste(platform_window *window,
 	{
 		char buf[MAX_INPUT_LENGTH];
 		bool result = platform_get_clipboard(window, buf);
+		
+		if (keyboard->input_mode == INPUT_NUMERIC && !is_string_numeric(buf))
+		{
+			return;
+		}
 		
 		if (keyboard->has_selection)
 		{

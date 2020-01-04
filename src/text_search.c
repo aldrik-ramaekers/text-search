@@ -8,8 +8,6 @@
 #include "project_base.h"
 
 // TODO(Aldrik): textbox undo/redo in chunks, not per letter
-// TODO(Aldrik): make settings page topmost
-// TODO(Aldrik): dont show settings page in taskbar? (_NET_WM_STATE_SKIP_TASKBAR). if we do this, an open settings page has to be brought to front when main window is brought to front so it isnt behind anything.
 
 typedef struct t_status_bar
 {
@@ -29,8 +27,6 @@ image *logo_small_img;
 font *font_small;
 font *font_mini;
 s32 scroll_y = 0;
-
-platform_window *main_window;
 
 #include "save.h"
 #include "settings.h"
