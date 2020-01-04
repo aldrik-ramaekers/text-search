@@ -933,11 +933,16 @@ bool ui_push_hypertext_link(char *text)
 	if (mouse_x >= text_x && mouse_x < text_x + total_w && mouse_y >= text_y && mouse_y < text_y+text_h && !global_ui_context.item_hovered)
 	{
 		if (is_left_clicked(global_ui_context.mouse))
+		{
 			result = true;
+		}
 		bg_color = global_ui_context.style.hypertext_hover_foreground;
 	}
 	
-	render_text(global_ui_context.font_small, text_x, text_y, text, bg_color);
+	s32 text_width = render_text(global_ui_context.font_small, text_x, text_y, text, bg_color);
+	
+	if (result)
+		render_rectangle(text_x, text_y + text_h-1, text_width, 1, bg_color);
 	
 	if (global_ui_context.layout.layout_direction == LAYOUT_HORIZONTAL)
 		global_ui_context.layout.offset_x += total_w;

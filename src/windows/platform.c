@@ -1172,12 +1172,15 @@ void platform_set_icon(platform_window *window, image *img)
 		}
 	}
 	
-	HICON icon = CreateIconFromResource(bmp, total_len, TRUE, 0x00030000);
+	HICON icon = CreateIconFromResourceEx(bmp, total_len, TRUE, 0x00030000, img->width, img->height, LR_DEFAULTCOLOR);
 	
 	SendMessage(window->window_handle, WM_SETICON, ICON_SMALL, (LPARAM)icon);
 	SendMessage(window->window_handle, WM_SETICON, ICON_BIG, (LPARAM)icon);
 	
 	mem_free(bmp);
+	
+	if (!icon)
+		printf("Failed to load icon, error code: %ld.\n", GetLastError());
 }
 
 u64 platform_get_time(time_type time_type, time_precision precision)
