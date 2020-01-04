@@ -1022,12 +1022,13 @@ static void* platform_open_file_dialog_implementation(void *data)
 	info.hwndOwner = NULL;
 	info.hInstance = NULL;
 	
+	char filter[MAX_INPUT_LENGTH];
 	if (args->file_filter)
 	{
-		char filter[MAX_INPUT_LENGTH];
+		memset(filter, 0, MAX_INPUT_LENGTH);
 		string_copyn(filter, args->file_filter, MAX_INPUT_LENGTH);
+		filter[strlen(filter)] = 0;
 		filter[strlen(filter)+1] = 0;
-		filter[strlen(filter)+2] = 0;
 		info.lpstrFilter = filter;
 	}
 	else
@@ -1035,8 +1036,8 @@ static void* platform_open_file_dialog_implementation(void *data)
 		info.lpstrFilter = NULL;
 	}
 	
-	char szFile[256 * MAX_PATH];
-	char szPath[MAX_PATH];
+	char szFile[MAX_INPUT_LENGTH];
+	char szPath[MAX_INPUT_LENGTH];
 	
 	info.lpstrCustomFilter = NULL;
 	info.nMaxCustFilter = MAX_INPUT_LENGTH;
@@ -1073,7 +1074,6 @@ static void* platform_open_file_dialog_implementation(void *data)
 		GetOpenFileNameA(&info);
 		string_copyn(args->buffer, info.lpstrFile, MAX_INPUT_LENGTH);
 	}
-	
 	
 	return 0;
 }
