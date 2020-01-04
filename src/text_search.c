@@ -7,6 +7,12 @@
 #include "config.h"
 #include "project_base.h"
 
+// TODO(Aldrik): textbox undo/redo in chunks, not per letter
+// TODO(Aldrik): icon on windows not working?
+// TODO(Aldrik): hyperlink button click feedback, maybe move a bit up-right on click?
+// TODO(Aldrik): make settings page topmost
+// TODO(Aldrik): dont show settings page in taskbar? (_NET_WM_STATE_SKIP_TASKBAR). if we do this, an open settings page has to be brought to front when main window is brought to front so it isnt behind anything.
+
 typedef struct t_status_bar
 {
 	char *result_status_text;

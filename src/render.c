@@ -251,16 +251,26 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x)
 		}
 		
 		s32 width = font->glyph_widths[ch];
+		s32 width_next = font->glyph_widths[ch_next];
 		
 		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
 		if (kern != 0) x += kern * font->scale;
 		
 		x += add_char_width(ch,width,font);
 		
+#if 1
+		if (x - (width_next/5) > click_x)
+		{
+			return index;
+		}
+#endif
+		
+#if 0
 		if (x > click_x)
 		{
 			return index;
 		}
+#endif
 		
 		++index;
 	}

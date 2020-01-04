@@ -541,7 +541,6 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	bool clicked_to_select = false;
 	bool double_clicked_to_select_first = false;
 	bool clicked_to_set_cursor = false;
-	bool first_click = false;
 	if (mouse_x >= x && mouse_x < x + TEXTBOX_WIDTH && mouse_y >= virt_top && mouse_y < virt_bottom)
 	{
 		if (is_left_double_clicked(global_ui_context.mouse) && has_text)
@@ -565,9 +564,6 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			
 			keyboard_set_input_text(global_ui_context.keyboard, state->buffer);
 			cursor_tick = 0;
-			
-			if (!state->state)
-				first_click = true;
 			
 			if (global_ui_context.keyboard->has_selection)
 			{
@@ -625,9 +621,9 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	}
 	else
 	{
-		s32 scissor_x = x - global_ui_context.camera->x + 5;
+		s32 scissor_x = x - global_ui_context.camera->x+3;
 		s32 scissor_y = y - global_ui_context.camera->y;
-		s32 scissor_w = TEXTBOX_WIDTH - 6;
+		s32 scissor_w = TEXTBOX_WIDTH - 5;
 		s32 scissor_h = TEXTBOX_HEIGHT;
 		
 		render_set_scissor(global_ui_context.layout.active_window, 
@@ -635,7 +631,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	}
 	
 	s32 cursor_text_w;
-	s32 cursor_x;
+	s32 cursor_x = 0;
 	
 	//if (!global_ui_context.keyboard->has_selection)
 	//state->diff = 0;
@@ -742,7 +738,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		cursor_x = text_x + cursor_text_w - state->diff;
 		
-		if (!is_selecting)
+		// change offset after cursor position change
+		if (!is_selecting && !global_ui_context.keyboard->has_selection)
 		{
 			if (cursor_text_w < state->diff)
 			{
@@ -754,6 +751,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			}
 		}
 		
+		// make sure offset is recalculated when text changes or a portion of text is changed so the textbox doesnt end up half empty
 #if 1
 		if (!clicked_to_select && !clicked_to_set_cursor && !is_selecting && !global_ui_context.keyboard->has_selection && global_ui_context.keyboard->text_changed)
 		{
@@ -769,10 +767,11 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 #endif
 	}
 	
+	s32 curr_index = calculate_cursor_position(global_ui_context.font_small, 
+											   state->buffer, mouse_x + state->diff - text_x);
+	
 	//////////////////////////////////
 	{
-		s32 curr_index = calculate_cursor_position(global_ui_context.font_small, 
-												   state->buffer, mouse_x + state->diff - text_x);
 		if (curr_index != state->last_click_cursor_index && state->attempting_to_select)
 		{
 			clicked_to_select = true;
@@ -788,8 +787,10 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		global_ui_context.keyboard->has_selection = true;
 		//global_ui_context.keyboard->selection_begin_offset = calculate_cursor_position(global_ui_context.font_small, 
 		//state->buffer, mouse_x + state->diff - text_x);
-		global_ui_context.keyboard->selection_length = 1;
+		global_ui_context.keyboard->selection_length = 0;
 		state->selection_start_index = global_ui_context.keyboard->selection_begin_offset;
+		
+		state->selection_start_index--;
 #endif
 	}
 	
@@ -835,15 +836,15 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		
 		if (!state->double_clicked_to_select || (state->double_clicked_to_select && index != state->double_clicked_to_select_cursor_index))
 		{
-			if (index <= state->selection_start_index)
+			if (index <= state->selection_start_index+1)
 			{
 				global_ui_context.keyboard->selection_begin_offset = index - 1;
 				global_ui_context.keyboard->selection_length = state->selection_start_index - index + 2;
 			}
 			else if (index > state->selection_start_index)
 			{
-				global_ui_context.keyboard->selection_begin_offset = state->selection_start_index;
-				global_ui_context.keyboard->selection_length = index - state->selection_start_index;
+				global_ui_context.keyboard->selection_begin_offset = state->selection_start_index+1;
+				global_ui_context.keyboard->selection_length = index - state->selection_start_index-2;
 			}
 			
 			state->double_clicked_to_select = false;
