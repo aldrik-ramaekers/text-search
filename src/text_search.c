@@ -7,6 +7,10 @@
 #include "config.h"
 #include "project_base.h"
 
+// TODO(Aldrik): mouse release outside of window on windows
+// TODO(Aldrik): bug found using windows build: sometimes a result is duplicated but with the wrong path, eg. '--text "TODO(Aldrik)"' that was found in build-linux.sh shows up as a result with the path .git\objects\bb\whatever, which is obviously wrong, this invalid result is always on top of the list. usually doesnt happen for the first 50 searches or so...
+// TODO(Aldrik): put filter_matches() function in shared_platform.c
+
 typedef struct t_status_bar
 {
 	char *result_status_text;
