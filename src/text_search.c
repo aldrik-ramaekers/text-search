@@ -941,6 +941,8 @@ void load_config(settings_config *config)
 	
 	if (window_w >= 800 && window_h >= 600)
         platform_window_set_size(main_window, window_w, window_h);
+	else
+		platform_window_set_size(main_window, 800, 600);
 }
 
 #if defined(OS_LINUX) || defined(OS_WIN)

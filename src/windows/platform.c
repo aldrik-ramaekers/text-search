@@ -662,6 +662,10 @@ void platform_window_set_size(platform_window *window, u16 width, u16 height)
 	RECT rec;
 	GetWindowRect(window->window_handle, &rec);
 	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
+	
+	GetClientRect(window->window_handle, &rec);
+	window->width = rec.right;
+	window->height = rec.bottom;
 }
 
 void platform_window_set_position(platform_window *window, u16 x, u16 y)
