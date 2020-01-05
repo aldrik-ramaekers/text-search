@@ -7,8 +7,6 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): textbox undo/redo in chunks, not per letter
-
 typedef struct t_status_bar
 {
 	char *result_status_text;
@@ -1184,7 +1182,7 @@ int main(int argc, char **argv)
 #if 0
 		{
 			char buf[100];
-			sprintf(buf, "%d", global_ui_context.keyboard->cursor);
+			sprintf(buf, "%d", textbox_file_filter.history.length);
 			render_text(font_small, 0, 500, buf, rgb(255,0,0));
 		}
 #endif
