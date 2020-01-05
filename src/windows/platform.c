@@ -810,6 +810,7 @@ file_content platform_read_file_content(char *path, const char *mode)
 	result.content = mem_alloc(length_to_alloc);
 	if (!result.content) goto done;
 	
+	memset(result.content, 0, length);
 	s32 read_result = fread(result.content, 1, length, file);
 	if (read_result == 0 && length != 0)
 	{
