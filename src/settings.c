@@ -60,12 +60,8 @@ void settings_page_update_render()
 		
 		ui_begin(3);
 		{
-			render_rectangle(0, 0, global_settings_page.window.width, global_settings_page.window.height, global_ui_context.style.background);
-			
 			ui_begin_menu_bar();
 			{
-				render_rectangle(0, 0, global_settings_page.window.width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
-				
 				if (ui_push_menu(localize("general")))
 				{
 					global_settings_page.selected_tab_index = 0;
@@ -273,7 +269,7 @@ void settings_page_show()
 	load_current_settings_into_ui();
 	
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
-													   450, 280, 450, 280);
+													   450, 280, 450, 280, 450, 280);
 	
 	settings_window = &global_settings_page.window;
 	

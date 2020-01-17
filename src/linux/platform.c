@@ -634,7 +634,7 @@ void platform_window_set_position(platform_window *window, u16 x, u16 y)
 	XMoveWindow(window->display, window->window, x, y);
 }
 
-platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
+platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h, u16 min_w, u16 min_h)
 {
 	bool has_max_size = max_w || max_h;
 	
@@ -738,8 +738,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	hints.y = center_y;
 	hints.max_width = width;
 	hints.max_height = height;
-	hints.min_width = width;
-	hints.min_height = height;
+	hints.min_width = min_w;
+	hints.min_height = min_h;
 	
 	XSetWMNormalHints(window.display, window.window, &hints);
 	

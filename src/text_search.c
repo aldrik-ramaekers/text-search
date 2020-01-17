@@ -7,9 +7,10 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): mouse release outside of window on windows
-// TODO(Aldrik): bug found using windows build: sometimes a result is duplicated but with the wrong path, eg. '--text "TODO(Aldrik)"' that was found in build-linux.sh shows up as a result with the path .git\objects\bb\whatever, which is obviously wrong, this invalid result is always on top of the list. usually doesnt happen for the first 50 searches or so...
+// TODO(Aldrik): bug found using windows build: sometimes a result is duplicated but with the wrong path, eg. '--text "TODO(Aldrik)"' that was found in build-linux.sh shows up as a result with the path .git\objects\bb\whatever, which is obviously wrong, this invalid result is always on top of the list. usually doesnt happen for the first 50 searches or so... (maybe fixed?)
 // TODO(Aldrik): put filter_matches() function in shared_platform.c
+// TODO(Aldrik): put event loop in seperate thread
+// TODO(Aldrik): make executable smaller
 
 typedef struct t_status_bar
 {
@@ -877,8 +878,6 @@ void load_config(settings_config *config)
 	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");
 	s32 max_file_size = settings_config_get_number(config, "MAX_FILE_SIZE");
 	char *locale_id = settings_config_get_string(config, "LOCALE");
-	s32 window_w = settings_config_get_number(config, "WINDOW_WIDTH");
-	s32 window_h = settings_config_get_number(config, "WINDOW_HEIGHT");
 	u32 style = settings_config_get_number(config, "STYLE");
 	u32 double_click_action = settings_config_get_number(config, "DOUBLE_CLICK_ACTION");
 	
@@ -935,14 +934,6 @@ void load_config(settings_config *config)
 		
 		string_copyn(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
-	
-	if (global_settings_page.max_thread_count <= 0)
-		global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
-	
-	if (window_w >= 800 && window_h >= 600)
-        platform_window_set_size(main_window, window_w, window_h);
-	else
-		platform_window_set_size(main_window, 800, 600);
 }
 
 #if defined(OS_LINUX) || defined(OS_WIN)
@@ -957,13 +948,21 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	
+	char config_path_buffer[PATH_MAX];
+	get_config_save_location(config_path_buffer);
 	
-#ifdef MODE_DEVELOPER
-	platform_window window = platform_open_window("Text-search [developer]", 800, 600, 0, 0);
-#else
-	platform_window window = platform_open_window("Text-search", 800, 600, 0, 0);
-#endif
+	// load config
+	settings_config config = settings_config_load_from_file(config_path_buffer);
 	
+	s32 window_w = settings_config_get_number(&config, "WINDOW_WIDTH");
+	s32 window_h = settings_config_get_number(&config, "WINDOW_HEIGHT");
+	if (window_w <= 800 || window_h <= 600)
+	{
+		window_w = 800;
+		window_h = 600;
+	}
+	
+	platform_window window = platform_open_window("Text-search", window_w, window_h, 0, 0, 800, 600);
 	main_window = &window;
 	
 	settings_page_create();
@@ -1004,11 +1003,6 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	
-	char config_path_buffer[PATH_MAX];
-	get_config_save_location(config_path_buffer);
-	
-	// load config
-	settings_config config = settings_config_load_from_file(config_path_buffer);
 	load_config(&config);
 	
 	reset_status_text();
@@ -1085,7 +1079,6 @@ int main(int argc, char **argv)
 				}
 				// shortcuts end
 				
-				render_rectangle(0, 0, main_window->width, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
 				if (ui_push_menu(localize("file")))
 				{
 					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 

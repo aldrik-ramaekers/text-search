@@ -105,10 +105,6 @@
 #include "memory_bucket.c"
 #include "command_line.c"
 
-#ifdef MODE_DEVELOPER
-#include "memory.c"
-#endif
-
 #include "external/cJSON.h"
 #include "external/cJSON.c"
 

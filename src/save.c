@@ -350,11 +350,15 @@ static void* import_results_d(void *arg)
 	char start_path[MAX_INPUT_LENGTH];
 	snprintf(start_path, MAX_INPUT_LENGTH, "%s%s", binary_path, "");
 	
+	char default_save_file_extension[50];
+	string_copyn(default_save_file_extension, "json", 50);
+	
 	struct open_dialog_args *args = mem_alloc(sizeof(struct open_dialog_args));
 	args->buffer = path_buf;
 	args->type = OPEN_FILE;
 	args->file_filter = SEARCH_RESULT_FILE_EXTENSION;
 	args->start_path = start_path;
+	args->default_save_file_extension = default_save_file_extension;
 	
 	platform_open_file_dialog_block(args);
 	

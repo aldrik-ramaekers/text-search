@@ -103,9 +103,9 @@ void ui_set_style(u16 style)
 		global_ui_context.style.item_hover_background = rgb(240,220,220);
 		global_ui_context.style.scrollbar_background = rgb(255,255,255);
 		global_ui_context.style.background = rgb(255,255,255);
-		global_ui_context.style.menu_hover_background = rgb(190,190,190);
+		global_ui_context.style.menu_hover_background = rgb(200,200,200);
 		global_ui_context.style.menu_background = rgb(225,225,225);
-		global_ui_context.style.widget_hover_background = rgb(190,190,190);
+		global_ui_context.style.widget_hover_background = rgb(200,200,200);
 		global_ui_context.style.widget_background = rgb(225,225,225);
 		global_ui_context.style.border = rgb(180,180,180);
 		global_ui_context.style.foreground = rgb(10, 10, 10);
@@ -208,7 +208,8 @@ inline void ui_begin_menu_bar()
 	global_ui_context.layout.offset_x = 0;
 	global_ui_context.layout.layout_direction = LAYOUT_HORIZONTAL;
 	
-	render_rectangle(0, y, w, MENU_BAR_HEIGHT, global_ui_context.style.background);
+	render_rectangle(0, y, w, MENU_BAR_HEIGHT, global_ui_context.style.menu_background);
+	render_rectangle(0, y, w, 1, global_ui_context.style.border);
 	global_ui_context.layout.menu_offset_y = 0;
 }
 
@@ -434,8 +435,8 @@ bool ui_push_menu(char *title)
 	s32 w = calculate_text_width(global_ui_context.font_small, title) +
 		(MENU_HORIZONTAL_PADDING*2);
 	s32 text_h = global_ui_context.font_small->size;
-	s32 h = MENU_BAR_HEIGHT;
-	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y;
+	s32 h = MENU_BAR_HEIGHT-1;
+	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y+1;
 	s32 text_y = global_ui_context.layout.offset_y - (text_h / 2) + (h / 2) + global_ui_context.camera->y;
 	s32 text_x = x + MENU_HORIZONTAL_PADDING;
 	

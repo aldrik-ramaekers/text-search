@@ -458,7 +458,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-#if 0
+#if 1
 		s32 x = lparam&0xFFFF;
 		s32 y = lparam>>16;
 		
@@ -505,20 +505,23 @@ void platform_window_set_title(platform_window *window, char *name)
 	SetWindowTextA(window->window_handle, name);
 }
 
-platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h)
+platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h, u16 min_w, u16 min_h)
 {
-	height += 27;
-	width += 14;
+	width += 16;
+	height += 39;
 	
+#ifndef MODE_GDBDEBUG
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
+#endif
+	
 	platform_window window;
 	window.has_focus = true;
 	window.window_handle = 0;
 	window.hdc = 0;
 	window.width = width;
 	window.height = height;
-	window.min_width = width;
-	window.min_height = height;
+	window.min_width = min_w;
+	window.min_height = min_h;
 	window.max_width = max_w;
 	window.max_height = max_h;
 	window.curr_cursor_type = -1;
@@ -536,22 +539,15 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 	
 	if (RegisterClass(&window.window_class))
 	{
-		s32 ex_style = 0;
-		s32 style = 0;
+		int style = WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX;
 		
-		if (max_w == 0 && max_h == 0)
-		{
-			style = WS_SIZEBOX;
-		}
-		else
-		{
-			style = WS_THICKFRAME;
-		}
+		if (min_w != max_w && min_h != max_h)
+			style |= WS_SIZEBOX;
 		
-		window.window_handle = CreateWindowEx(ex_style,
+		window.window_handle = CreateWindowEx(0,
 											  window.window_class.lpszClassName,
 											  name,
-											  WS_VISIBLE|WS_SYSMENU|WS_CAPTION|WS_MINIMIZEBOX|style,
+											  style,
 											  CW_USEDEFAULT,
 											  CW_USEDEFAULT,
 											  width,
@@ -659,13 +655,16 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 
 void platform_window_set_size(platform_window *window, u16 width, u16 height)
 {
-	RECT rec;
-	GetWindowRect(window->window_handle, &rec);
-	MoveWindow(window->window_handle, rec.left, rec.top, width, height, FALSE);
+	s32 style = GetWindowLong(window->window_handle, GWL_STYLE);
+	BOOL menu = FALSE;
 	
-	GetClientRect(window->window_handle, &rec);
-	window->width = rec.right;
-	window->height = rec.bottom;
+	RECT rec;
+	rec.left = 0;
+	rec.top = 0;
+	rec.right = width;
+	rec.bottom = height;
+	AdjustWindowRectEx(&rec, style, menu, 0);
+	SetWindowPos(window->window_handle,NULL,rec.left,rec.top,rec.right,rec.bottom,SWP_NOMOVE|SWP_NOZORDER);
 }
 
 void platform_window_set_position(platform_window *window, u16 x, u16 y)
@@ -713,7 +712,7 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	
 	// mouse position (including outside of window)
 	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
-#if 1
+#if 0
 	{	
 		if (current_window_to_handle->has_focus)
 		{
@@ -727,8 +726,8 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 				client_height = rec.bottom;
 				
 				GetWindowRect(current_window_to_handle->window_handle, &rec);
-				mouse->x = pp.x - rec.left - 8;
-				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top)) + 8;// very weird that I need to add 8px
+				mouse->x = pp.x - rec.left;
+				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top));// very weird that I need to add 8px
 			}
 		}
 		else
@@ -1028,9 +1027,10 @@ static void* platform_open_file_dialog_implementation(void *data)
 	info.hInstance = NULL;
 	
 	char filter[MAX_INPUT_LENGTH];
+	memset(filter, 0, MAX_INPUT_LENGTH);
+	
 	if (args->file_filter)
 	{
-		memset(filter, 0, MAX_INPUT_LENGTH);
 		string_copyn(filter, args->file_filter, MAX_INPUT_LENGTH);
 		filter[strlen(filter)] = 0;
 		filter[strlen(filter)+1] = 0;
@@ -1042,14 +1042,13 @@ static void* platform_open_file_dialog_implementation(void *data)
 	}
 	
 	char szFile[MAX_INPUT_LENGTH];
-	char szPath[MAX_INPUT_LENGTH];
+	memset(szFile, 0, MAX_INPUT_LENGTH);
 	
 	info.lpstrCustomFilter = NULL;
 	info.nMaxCustFilter = MAX_INPUT_LENGTH;
 	info.nFilterIndex = 0;
 	info.lpstrFile = (char*)szFile;
-	info.lpstrFile[0] = 0;
-	info.nMaxFile = sizeof(szFile);
+	info.nMaxFile = MAX_INPUT_LENGTH;
 	
 	info.lpstrDefExt = args->default_save_file_extension;
 	
@@ -1066,9 +1065,7 @@ static void* platform_open_file_dialog_implementation(void *data)
 	else if (args->type == OPEN_DIRECTORY)
 	{
 		BROWSEINFOA inf;
-		
 		PIDLIST_ABSOLUTE result = SHBrowseForFolderA(&inf);
-		
 		if (!result) return 0;
 		
 		SHGetPathFromIDListA(result, args->buffer);
