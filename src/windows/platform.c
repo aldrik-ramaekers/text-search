@@ -16,7 +16,6 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <shlobj.h>
-#include "../external/LooplessSizeMove.c"
 
 struct t_platform_window
 {
@@ -495,7 +494,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else
 	{
-		result = LSMProc(window, message, wparam, lparam);
+		result = DefWindowProc(window, message, wparam, lparam);
 	}
 	
 	return result;
@@ -735,7 +734,6 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
 	{
 		TranslateMessage(&message); 
-		SizingCheck(&message);
 		DispatchMessage(&message); 
 	}
 	
