@@ -110,6 +110,7 @@ typedef struct t_assets {
 	asset_queue queue;
 	array post_process_queue;
 	bool valid;
+	bool done_loading_assets;
 } assets;
 
 char *binary_path;

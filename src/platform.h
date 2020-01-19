@@ -153,11 +153,18 @@ typedef enum t_cursor_type
 	CURSOR_POINTER,
 } cursor_type;
 
+typedef struct t_vec2
+{
+	s32 x;
+	s32 y;
+} vec2;
+
 platform_window *main_window = 0;
 platform_window *settings_window = 0;
 
 bool platform_window_is_valid(platform_window *window);
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h, u16 min_w, u16 min_h);
+void platform_get_focus(platform_window *window);
 bool platform_set_clipboard(platform_window *window, char *buffer);
 bool platform_get_clipboard(platform_window *window, char *buffer);
 void platform_window_set_size(platform_window *window, u16 width, u16 height);
@@ -196,6 +203,7 @@ char *get_config_save_location(char *buffer);
 char *get_file_extension(char *path);
 void get_name_from_path(char *buffer, char *path);
 void get_directory_from_path(char *buffer, char *path);
+vec2 platform_get_window_size(platform_window *window);
 
 u64 platform_get_time(time_type time_type, time_precision precision);
 s32 platform_get_memory_size();

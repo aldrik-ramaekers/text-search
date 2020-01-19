@@ -16,6 +16,7 @@
 #include <shellapi.h>
 #include <gdiplus.h>
 #include <shlobj.h>
+#include "../external/LooplessSizeMove.c"
 
 struct t_platform_window
 {
@@ -494,7 +495,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else
 	{
-		result = DefWindowProc(window, message, wparam, lparam);
+		result = LSMProc(window, message, wparam, lparam);
 	}
 	
 	return result;
@@ -505,12 +506,24 @@ void platform_window_set_title(platform_window *window, char *name)
 	SetWindowTextA(window->window_handle, name);
 }
 
+vec2 platform_get_window_size(platform_window *window)
+{
+	RECT rec;
+	GetWindowRect(window->window_handle, &rec);
+	vec2 res;
+	res.x = rec.right - rec.left;
+	res.y = rec.bottom - rec.top;
+	return res;
+}
+
+void platform_get_focus(platform_window *window)
+{
+	SetFocus(window->window_handle);
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h, u16 min_w, u16 min_h)
 {
-	width += 16;
-	height += 39;
-	
-#ifndef MODE_GDBDEBUG
+#if !defined(MODE_GDBDEBUG) && !defined(MODE_DEVELOPER)
 	ShowWindow(GetConsoleWindow(), SW_HIDE);
 #endif
 	
@@ -543,6 +556,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		
 		if (min_w != max_w && min_h != max_h)
 			style |= WS_SIZEBOX;
+		else
+			style |= WS_THICKFRAME;
 		
 		window.window_handle = CreateWindowEx(0,
 											  window.window_class.lpszClassName,
@@ -650,6 +665,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		abort();
 	}
 	
+	platform_get_focus(&window);
+	
 	return window;
 }
 
@@ -712,36 +729,13 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	
 	// mouse position (including outside of window)
 	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
-#if 0
-	{	
-		if (current_window_to_handle->has_focus)
-		{
-			POINT pp;
-			BOOL r = GetCursorPos(&pp);
-			if (r)
-			{
-				RECT rec;
-				LONG client_height;
-				GetClientRect(current_window_to_handle->window_handle, &rec);
-				client_height = rec.bottom;
-				
-				GetWindowRect(current_window_to_handle->window_handle, &rec);
-				mouse->x = pp.x - rec.left;
-				mouse->y = pp.y - rec.top + (client_height - (rec.bottom-rec.top));// very weird that I need to add 8px
-			}
-		}
-		else
-		{
-			current_mouse_to_handle->x = MOUSE_OFFSCREEN;
-			current_mouse_to_handle->y = MOUSE_OFFSCREEN;
-		}
-	}
-#endif
 	
 	MSG message;
+	
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
 	{
 		TranslateMessage(&message); 
+		SizingCheck(&message);
 		DispatchMessage(&message); 
 	}
 	

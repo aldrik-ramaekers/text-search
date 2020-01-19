@@ -21,6 +21,7 @@ void assets_create()
 	
 	asset_mutex = mutex_create();
 	asset_collection.valid = true;
+	asset_collection.done_loading_assets = false;
 	
 	global_asset_collection = asset_collection;
 }
@@ -174,7 +175,7 @@ bool assets_queue_worker_load_font(font *font)
 
 void *assets_queue_worker()
 {
-	while (global_asset_collection.valid)
+	while (global_asset_collection.valid && !global_asset_collection.done_loading_assets)
 	{
 		if (mutex_trylock(&asset_mutex))
 		{
@@ -297,8 +298,6 @@ font *assets_load_font(u8 *start_addr, u8 *end_addr, s16 size)
 	new_font.size = size;
 	new_font.references = 1;
 	
-	//new_font.loaded = true;
-	
 	// NOTE(Aldrik): we should never realloc the font array because pointers will be 
 	// invalidated.
 	assert(global_asset_collection.fonts.reserved_length > global_asset_collection.fonts.length);
@@ -332,6 +331,7 @@ void assets_destroy_font(font *font_to_destroy)
 void assets_destroy()
 {
 	global_asset_collection.valid = false;
+	global_asset_collection.done_loading_assets = false;
 	
 	array_destroy(&global_asset_collection.images);
 	array_destroy(&global_asset_collection.fonts);

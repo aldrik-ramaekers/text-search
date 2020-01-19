@@ -7,10 +7,9 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): bug found using windows build: sometimes a result is duplicated but with the wrong path, eg. '--text "TODO(Aldrik)"' that was found in build-linux.sh shows up as a result with the path .git\objects\bb\whatever, which is obviously wrong, this invalid result is always on top of the list. usually doesnt happen for the first 50 searches or so... (maybe fixed?)
 // TODO(Aldrik): put filter_matches() function in shared_platform.c
-// TODO(Aldrik): put event loop in seperate thread
 // TODO(Aldrik): make executable smaller
+// TODO(Aldrik): do search on enter press and dont deselect text textbox
 
 typedef struct t_status_bar
 {
@@ -1004,6 +1003,7 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text[0] = 0;
 	
 	load_config(&config);
+	//set_active_textbox(&textbox_search_text);
 	
 	reset_status_text();
 	
@@ -1025,13 +1025,9 @@ int main(int argc, char **argv)
 			platform_set_icon(&window, logo_small_img);
 		}
 		
-		static bool assets_loaded = false;
-		if (global_asset_collection.queue.queue.length == 0 && !assets_loaded)
+		if (global_asset_collection.queue.queue.length == 0 && !global_asset_collection.done_loading_assets)
 		{
-			thread_stop(&asset_queue_worker1);
-			thread_stop(&asset_queue_worker2);
-			
-			assets_loaded = true;
+			global_asset_collection.done_loading_assets = true;
 		}
 		
 		global_ui_context.layout.active_window = &window;
@@ -1178,14 +1174,6 @@ int main(int argc, char **argv)
 			}
 		}
 		
-#if 0
-		{
-			char buf[100];
-			sprintf(buf, "%d", textbox_file_filter.history.length);
-			render_text(font_small, 0, 500, buf, rgb(255,0,0));
-		}
-#endif
-		
 		assets_do_post_process();
 		platform_window_swap_buffers(&window);
 		
@@ -1210,8 +1198,11 @@ int main(int argc, char **argv)
 	settings_config_set_string(&config, "FILE_FILTER", textbox_file_filter.buffer);
 	settings_config_set_number(&config, "MAX_THEAD_COUNT", global_settings_page.max_thread_count);
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
-	settings_config_set_number(&config, "WINDOW_WIDTH", window.width);
-	settings_config_set_number(&config, "WINDOW_HEIGHT", window.height);
+	
+	vec2 win_size = platform_get_window_size(&window);
+	settings_config_set_number(&config, "WINDOW_WIDTH", win_size.x);
+	settings_config_set_number(&config, "WINDOW_HEIGHT", win_size.y);
+	
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	settings_config_set_number(&config, "DOUBLE_CLICK_ACTION", global_settings_page.selected_double_click_selection_option);
 	

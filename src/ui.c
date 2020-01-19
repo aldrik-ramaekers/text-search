@@ -470,6 +470,11 @@ bool ui_push_menu(char *title)
 			array_remove_by(&global_ui_context.active_menus, &id);
 		is_open = false;
 	}
+	if (!global_ui_context.layout.active_window->has_focus && is_open)
+	{
+		array_remove_by(&global_ui_context.active_menus, &id);
+		is_open = false;
+	}
 	
 	render_rectangle(x, y, w, h, bg_color);
 	render_text(global_ui_context.font_small, text_x, text_y, title, global_ui_context.style.foreground);
@@ -487,6 +492,15 @@ static void ui_set_active_textbox(textbox_state *state)
 		global_ui_context.current_active_textbox->state = false;
 	}
 	global_ui_context.current_active_textbox = state;
+}
+
+void set_active_textbox(textbox_state *textbox)
+{
+	ui_set_active_textbox(textbox);
+	keyboard_set_input_text(global_ui_context.keyboard, textbox->buffer);
+	textbox->state = true;
+	global_ui_context.mouse->left_state &= ~MOUSE_CLICK;
+	global_ui_context.keyboard->take_input = textbox->state;
 }
 
 bool ui_push_textbox(textbox_state *state, char *placeholder)

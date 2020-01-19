@@ -13,6 +13,9 @@ x86_64-w64-mingw32-gcc -m64 -Wall -g %defs% -Wno-unused-label -Wno-unused-variab
 
 DEL /Q "../bin/data.o"
 
+FOR %%A IN ("../bin/text-search.exe") DO set size=%%~zA
+echo size = %size%
+
 cd ../
 
 if "%1"=="-r" start bin/text-search.exe

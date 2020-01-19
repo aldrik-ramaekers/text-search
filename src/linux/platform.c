@@ -634,6 +634,15 @@ void platform_window_set_position(platform_window *window, u16 x, u16 y)
 	XMoveWindow(window->display, window->window, x, y);
 }
 
+
+vec2 platform_get_window_size(platform_window *window)
+{
+	vec2 res;
+	res.x = window->width;
+	res.y = window->heigth;
+	return res;
+}
+
 platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_w, u16 max_h, u16 min_w, u16 min_h)
 {
 	bool has_max_size = max_w || max_h;

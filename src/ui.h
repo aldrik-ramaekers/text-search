@@ -161,6 +161,7 @@ bool ui_is_menu_active(u32 id);
 char* name_of_day(s32 day);
 char* name_of_month(s32 month);
 void ui_set_style(u16 style);
+void set_active_textbox(textbox_state *textbox);
 
 // widget initialization
 checkbox_state ui_create_checkbox(bool selected);
