@@ -70,9 +70,9 @@ x86_64-w64-mingw32-gcc -Wall -m64 -O3 -Wno-unused-label -Wno-unused-variable tex
 
 rm -f ../bin/data.o
 
-echo "Done compiling program, text-search.exe is located on your desktop"
+echo "Done compiling program, text-search.exe is located in 'C:\Manually installed'"
 
-cp --remove-destination ../bin/text-search.exe ~/Desktop/text-search.exe
+cp --remove-destination "../bin/text-search.exe" "C:\Manually installed programs\text-search.exe"
 
 cd ../
 

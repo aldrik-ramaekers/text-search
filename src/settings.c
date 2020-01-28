@@ -28,7 +28,7 @@ void settings_page_create()
 	global_settings_page.btn_save = ui_create_button();
 	global_settings_page.dropdown_language = ui_create_dropdown();
 	global_settings_page.dropdown_doubleclick = ui_create_dropdown();
-	global_settings_page.textbox_max_file_size = ui_create_textbox(11);
+	global_settings_page.textbox_max_file_size = ui_create_textbox(9);
 	global_settings_page.textbox_max_thread_count = ui_create_textbox(5);
 	global_settings_page.checkbox_parallelize_search = ui_create_checkbox(false);
 }
