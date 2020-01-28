@@ -334,7 +334,7 @@ LRESULT CALLBACK LSMProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case HTBOTTOM:
 				return SendMessageAW(hwnd, WM_SYSCOMMAND, SC_SIZE | LSM_BOTTOM, lParam);
                 case HTCAPTION:
-				return SendMessageAW(hwnd, WM_SYSCOMMAND, SC_MOVE | LSM_CAPTION, lParam);
+				//return SendMessageAW(hwnd, WM_SYSCOMMAND, SC_MOVE | LSM_CAPTION, lParam);
                 default:
 				break;
             }
