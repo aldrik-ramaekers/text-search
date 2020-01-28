@@ -296,7 +296,7 @@ LRESULT PrepareSizeMove(HWND hwnd, WPARAM action, DWORD dwPos)
 	
     sm->ptCapture.x = (short)LOWORD(dwPos);
     sm->ptCapture.y = (short)HIWORD(dwPos);
-    ClipCursor(&rcClipCursor);
+    //ClipCursor(&rcClipCursor);
 	
 	
     /* notify WinProc we're beginning, but return instead of looping */
