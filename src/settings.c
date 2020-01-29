@@ -146,8 +146,8 @@ void settings_page_update_render()
 							if (ui_push_dropdown_item(file->icon, file->locale_full))
 							{
 								set_locale(file->locale_id);
-								platform_window_set_title(&global_settings_page.window,
-														  localize("text_search_settings"));
+								//platform_window_set_title(&global_settings_page.window,
+								//localize("text_search_settings"));
 								
 								if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
 									set_status_text_to_finished_search();

@@ -7,7 +7,7 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): make executable smaller
+// TODO(Aldrik): settings page title when language is changed
 
 typedef struct t_status_bar
 {
@@ -652,10 +652,10 @@ static void render_info(platform_window *window, font *font_small)
 				
 				render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
 				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->px_h/2), message, global_ui_context.style.error_foreground);
-				yy += font_small->px_h;
+				yy += 20;
 			}
 			
-			yy += font_small->px_h;
+			yy += 20;
 			
 			global_ui_context.layout.offset_y = yy;
 		}

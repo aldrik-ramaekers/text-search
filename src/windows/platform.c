@@ -504,7 +504,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 
 void platform_window_set_title(platform_window *window, char *name)
 {
-	SetWindowTextA(window->window_handle, name);
+	SetWindowText(window->window_handle, name);
 }
 
 vec2 platform_get_window_size(platform_window *window)

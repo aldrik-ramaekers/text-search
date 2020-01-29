@@ -976,7 +976,7 @@ void ui_push_text(char *text)
 		WIDGET_PADDING + WIDGET_PADDING;
 	
 	if (global_ui_context.layout.block_height < global_ui_context.font_small->px_h)
-		global_ui_context.layout.block_height = global_ui_context.font_small->px_h;
+		global_ui_context.layout.block_height = global_ui_context.font_small->px_h+5;
 	
 	render_text(global_ui_context.font_small, text_x, text_y, text, global_ui_context.style.foreground);
 	
