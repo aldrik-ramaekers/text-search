@@ -262,7 +262,7 @@ bool ui_push_color_button(char *text, bool selected, color c)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
-	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->px_h/2);
 	s32 total_w =
 		BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
@@ -331,7 +331,7 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	s32 x = global_ui_context.layout.dropdown_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() + ((global_ui_context.layout.dropdown_item_count)*h-(1*global_ui_context.layout.dropdown_item_count));
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
-	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->px_h / 2);
 	s32 total_w = DROPDOWN_ITEM_WIDTH 
 		+ BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
@@ -382,7 +382,7 @@ bool ui_push_dropdown(dropdown_state *state, char *title)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
-	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->px_h/2);
 	s32 total_w = DROPDOWN_WIDTH + BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
@@ -436,7 +436,7 @@ bool ui_push_menu(char *title)
 	s32 x = global_ui_context.layout.offset_x + global_ui_context.camera->x;
 	s32 w = calculate_text_width(global_ui_context.font_small, title) +
 		(MENU_HORIZONTAL_PADDING*2);
-	s32 text_h = global_ui_context.font_small->size;
+	s32 text_h = global_ui_context.font_small->px_h;
 	s32 h = MENU_BAR_HEIGHT-1;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y+1;
 	s32 text_y = global_ui_context.layout.offset_y - (text_h / 2) + (h / 2) + global_ui_context.camera->y;
@@ -517,7 +517,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + 5;
-	s32 text_y = y + (TEXTBOX_HEIGHT/2) - (global_ui_context.font_small->size/2)+2;
+	s32 text_y = y + (TEXTBOX_HEIGHT/2) - (global_ui_context.font_small->px_h/2);
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	
@@ -681,7 +681,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 		if (is_lctrl_down && keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Z) && state->history.length)
 		{
 			textbox_history_entry history_entry;
-			history_entry.text = mem_alloc(old_len+1);
+			history_entry.text = mem_alloc(strlen(state->buffer)+1);
 			history_entry.cursor_offset = last_cursor_pos;
 			string_copyn(history_entry.text, state->buffer, MAX_INPUT_LENGTH);
 			array_push(&state->future, &history_entry);
@@ -701,7 +701,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 				 keyboard_is_key_pressed(global_ui_context.keyboard, KEY_Y) && state->future.length)
 		{
 			textbox_history_entry history_entry;
-			history_entry.text = mem_alloc(old_len+1);
+			history_entry.text = mem_alloc(strlen(state->buffer)+1);
 			history_entry.cursor_offset = last_cursor_pos;
 			string_copyn(history_entry.text, state->buffer, MAX_INPUT_LENGTH);
 			array_push(&state->history, &history_entry);
@@ -724,7 +724,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 				if (last_cursor_pos != -1)
 				{
 					textbox_history_entry history_entry;
-					history_entry.text = mem_alloc(old_len+1);
+					history_entry.text = mem_alloc(strlen(state->buffer)+1);
 					history_entry.cursor_offset = last_cursor_pos;
 					string_copyn(history_entry.text, state->buffer, MAX_INPUT_LENGTH);
 					array_push(&state->history, &history_entry);
@@ -933,7 +933,7 @@ bool ui_push_hypertext_link(char *text)
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
 	s32 text_x = x + WIDGET_PADDING;
 	s32 text_h = global_ui_context.font_small->size;
-	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->px_h/2) + spacing_y;
 	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
 		WIDGET_PADDING + WIDGET_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
@@ -971,7 +971,7 @@ void ui_push_text(char *text)
 	s32 x = global_ui_context.layout.offset_x + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
 	s32 text_x = x + WIDGET_PADDING;
-	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->px_h/2) + spacing_y;
 	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
 		WIDGET_PADDING + WIDGET_PADDING;
 	
@@ -994,7 +994,7 @@ bool ui_push_checkbox(checkbox_state *state, char *title)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
 	s32 text_x = x + CHECKBOX_SIZE + WIDGET_PADDING;
-	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->size/2) + spacing_y + 2;
+	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->px_h/2) + spacing_y;
 	s32 total_w = calculate_text_width(global_ui_context.font_small, title) +
 		CHECKBOX_SIZE + WIDGET_PADDING + WIDGET_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
@@ -1059,7 +1059,7 @@ bool ui_push_menu_item(char *title, char *shortcut)
 	
 	s32 x = global_ui_context.layout.prev_offset_x + global_ui_context.camera->x;
 	s32 w = MENU_ITEM_WIDTH;
-	s32 text_h = global_ui_context.font_small->size;
+	s32 text_h = global_ui_context.font_small->px_h;
 	s32 h = MENU_BAR_HEIGHT;
 	s32 y = global_ui_context.layout.offset_y + (global_ui_context.menu_item_count * h)+1 +
 		global_ui_context.layout.menu_offset_y + global_ui_context.camera->y;
@@ -1164,7 +1164,7 @@ bool ui_push_button(button_state *state, char *title)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
-	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->px_h/2);
 	s32 total_w = calculate_text_width(global_ui_context.font_small, title) +
 		BUTTON_HORIZONTAL_TEXT_PADDING + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
@@ -1229,7 +1229,7 @@ bool ui_push_button_image(button_state *state, char *title, image *img)
 	s32 x = global_ui_context.layout.offset_x + WIDGET_PADDING + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll();
 	s32 text_x = x + BUTTON_HORIZONTAL_TEXT_PADDING;
-	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->size/2) + 2;
+	s32 text_y = y + (BUTTON_HEIGHT/2) - (global_ui_context.font_small->px_h/2);
 	s32 text_w = calculate_text_width(global_ui_context.font_small, title);
 	s32 total_w = text_w + BUTTON_HORIZONTAL_TEXT_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;

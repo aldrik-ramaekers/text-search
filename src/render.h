@@ -35,7 +35,6 @@ void render_image(image *image, s32 x, s32 y, s32 width, s32 height);
 void render_image_tint(image *image, s32 x, s32 y, s32 width, s32 height, color tint);
 
 // text
-void render_font_palette(font *font, s32 x, s32 y, s32 w, s32 h, color tint);
 s32 render_text(font *font, s32 x, s32 y, char *text, color tint);
 s32 render_text_cutoff(font *font, s32 x, s32 y, char *text, color tint, u16 cutoff_width);
 s32 render_text_vertical(font *font, s32 x, s32 y, char *text, color tint);
@@ -44,7 +43,6 @@ s32 calculate_cursor_position(font *font, char *text, s32 click_x);
 s32 calculate_text_width(font *font, char *text);
 s32 calculate_text_width_upto(font *font, char *text, s32 index);
 s32 calculate_text_width_from_upto(font *font, char *text, s32 from, s32 index);
-s32 calculate_text_height(font *font, s32 cutoff_width, char *text);
 
 // primitives
 void render_rectangle(s32 x, s32 y, s32 width, s32 height, color tint);

@@ -365,8 +365,8 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	}
 	else if (message == WM_MOUSELEAVE)
 	{
-		current_mouse_to_handle->x = MOUSE_OFFSCREEN;
-		current_mouse_to_handle->y = MOUSE_OFFSCREEN;
+		//current_mouse_to_handle->x = MOUSE_OFFSCREEN;
+		//current_mouse_to_handle->y = MOUSE_OFFSCREEN;
 	}
 	else if (message == WM_KILLFOCUS)
 	{
@@ -731,7 +731,13 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	// mouse position (including outside of window)
 	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
 	
+	if (current_window_to_handle->has_focus)
 	{
+		if((GetKeyState(VK_LBUTTON) & 0x100) == 0)
+		{
+			current_mouse_to_handle->left_state = MOUSE_RELEASE;
+		}
+		
 		RECT rec;
 		GetWindowRect(window->window_handle, &rec);
 		POINT p;

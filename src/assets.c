@@ -65,17 +65,22 @@ void assets_do_post_process()
 		{
 			if (task->valid)
 			{
-				glGenTextures(TOTAL_GLYPH_BITMAPS, task->font->textureIDs);
-				
-				for (s32 i = 0; i < TOTAL_GLYPH_BITMAPS; i++)
+				for (s32 i = TEXT_CHARSET_START; i < TEXT_CHARSET_END; i++)
 				{
-					GLint texid = task->font->textureIDs[i];
-					glBindTexture(GL_TEXTURE_2D, texid);
+					glyph *g = &task->font->glyphs[i];
 					
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_ALPHA, task->font->palette_width,task->font->palette_height, 0, GL_ALPHA, GL_UNSIGNED_BYTE, task->font->bitmaps[i]);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+					glGenTextures(1, &g->textureID);
+					glBindTexture(GL_TEXTURE_2D, g->textureID);
 					
-					mem_free(task->font->bitmaps[i]);
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
+					glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
+                    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE );
+                    glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE );
+					glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+					glTexImage2D( GL_TEXTURE_2D, 0, GL_ALPHA, g->width,g->height,
+								 0, GL_ALPHA, GL_UNSIGNED_BYTE, g->bitmap );
+					
+					mem_free(g->bitmap);
 				}
 				
 				task->font->loaded = true;
@@ -106,65 +111,29 @@ bool assets_queue_worker_load_font(font *font)
 {
 	unsigned char *ttf_buffer = (unsigned char*)font->start_addr;
 	
-	/* prepare font */
     stbtt_fontinfo info;
     if (!stbtt_InitFont(&info, ttf_buffer, stbtt_GetFontOffsetForIndex(ttf_buffer,0)))
     {
 		return false;
 	}
+	float scale = stbtt_ScaleForPixelHeight(&info, font->size);
 	
-	int l_h = font->size*2; /* line height */
-	int b_h = l_h; /* bitmap height */
-	int b_w = GLYPHS_PER_BITMAP*font->size*2; /* bitmap width */
-    
-	font->palette_width = b_w;
-	font->palette_height = b_h;
-	
-	/* calculate font scaling */
-	float scale = stbtt_ScaleForPixelHeight(&info, l_h);
-	int x = 0;
-	
-    int ascent, descent, lineGap;
-	stbtt_GetFontVMetrics(&info, &ascent, &descent, &lineGap);
-	
-	ascent *= scale;
-	descent *= scale;
-	
-	s32 total_bitmaps_to_load = TOTAL_GLYPH_BITMAPS;
-	for (s32 b = 0; b < total_bitmaps_to_load; b++)
+	for (s32 i = TEXT_CHARSET_START; i < TEXT_CHARSET_END; i++)
 	{
-		/* create a bitmap for the phrase */
-		unsigned char* bitmap = mem_alloc(b_w * b_h);
-		memset(bitmap, 0, b_w * b_h);
+		s32 w, h, xoff, yoff;
 		
-		for (s32 i = 0; i <= GLYPHS_PER_BITMAP; ++i)
-		{
-			utf8_int32_t codepoint = i + (b*GLYPHS_PER_BITMAP);
-			//if (!stbtt_FindGlyphIndex(&info, codepoint)) continue;
-			
-			/* get bounding box for character (may be offset to account for chars that dip above or below the line */
-			int c_x1, c_y1, c_x2, c_y2;
-			stbtt_GetCodepointBitmapBox(&info, codepoint, scale, scale, &c_x1, &c_y1, &c_x2, &c_y2);
-			
-			/* compute y (different characters have different heights */
-			int y = ascent + c_y1;
-			
-			/* render character (stride and offset is important here) */
-			int byteOffset = ((i) * font->size*2) + (y  * b_w);
-			
-			if (y > 0)
-				stbtt_MakeCodepointBitmap(&info, bitmap + byteOffset, c_x2 - c_x1, c_y2 - c_y1, b_w, scale, scale, codepoint);
-			
-			/* how wide is this character */
-			int ax;
-			stbtt_GetCodepointHMetrics(&info, i, &ax, 0);
-			x += font->size*2;
-			
-			float ch_width = (ax*scale);
-			font->glyph_widths[codepoint] = ch_width;
-		}
+		glyph new_glyph;
+		new_glyph.bitmap = stbtt_GetCodepointBitmap(&info, 0, scale, i, &w, &h, &xoff, &yoff);
+		new_glyph.width = w;
+		new_glyph.height = h;
+		new_glyph.xoff = xoff;
+		new_glyph.yoff = yoff;
 		
-		font->bitmaps[b] = bitmap;
+		
+		if (i == 'M') font->px_h = -yoff;
+		if (i == ' ') new_glyph.xoff = font->size/4;
+		
+		font->glyphs[i-TEXT_CHARSET_START] = new_glyph;
 	}
 	
 	font->info = info;
@@ -319,8 +288,8 @@ void assets_destroy_font(font *font_to_destroy)
 {
 	if (font_to_destroy->references == 1)
 	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glDeleteTextures(1, font_to_destroy->textureIDs);
+		//glBindTexture(GL_TEXTURE_2D, 0);
+		//glDeleteTextures(1, font_to_destroy->textureIDs);
 	}
 	else
 	{

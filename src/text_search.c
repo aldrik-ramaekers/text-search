@@ -8,7 +8,6 @@
 #include "project_base.h"
 
 // TODO(Aldrik): make executable smaller
-// TODO(Aldrik): redo text rendering
 
 typedef struct t_status_bar
 {
