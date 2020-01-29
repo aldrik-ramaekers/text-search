@@ -667,8 +667,8 @@ platform_window platform_open_window(char *name, u16 width, u16 height, u16 max_
 		GLX_DEPTH_SIZE      , 24,
 		GLX_STENCIL_SIZE    , 8,
 		GLX_DOUBLEBUFFER    , True,
-		GLX_SAMPLE_BUFFERS  , 1,
-		GLX_SAMPLES         , 4,
+		//GLX_SAMPLE_BUFFERS  , 1,
+		//GLX_SAMPLES         , 4,
 		None
 	};
 	
