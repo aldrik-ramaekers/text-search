@@ -639,7 +639,7 @@ vec2 platform_get_window_size(platform_window *window)
 {
 	vec2 res;
 	res.x = window->width;
-	res.y = window->heigth;
+	res.y = window->height;
 	return res;
 }
 

@@ -20,6 +20,16 @@ then
 	fi
 fi
 
+if [ $(dpkg-query -W -f='${Status}' libxrandr-dev 2>/dev/null | grep -c "ok installed") -eq 0 ];
+then
+	if [ "$EUID" -ne 0 ]
+	then
+	  echo "Missing dependency: libxrandr-dev, install this package or run this script as root"
+	else
+	  apt-get install libxrandr-dev;
+	fi
+fi
+
 rm -rf bin
 mkdir bin
 cd src
