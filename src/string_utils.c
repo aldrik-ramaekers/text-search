@@ -51,6 +51,13 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 		text_to_find += strlen(text_to_find);
 	}
 	
+	// remove all asteriks from start
+	utf8_int32_t br;
+	while(utf8codepoint(text_to_find, &br) && br == '*')
+	{
+		text_to_find = utf8codepoint(text_to_find, &br);
+	}
+	
 	char *text_to_find_original = text_to_find;
 	bool save_info = (text_matches != 0);
 	
@@ -157,35 +164,35 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 
 static char *ltrim(char *str, const char *seps)
 {
-    size_t totrim;
-    if (seps == NULL) {
-        seps = "\t\n\v\f\r ";
-    }
-    totrim = strspn(str, seps);
-    if (totrim > 0) {
-        size_t len = strlen(str);
-        if (totrim == len) {
-            str[0] = '\0';
-        }
-        else {
-            memmove(str, str + totrim, len + 1 - totrim);
-        }
-    }
-    return str;
+	size_t totrim;
+	if (seps == NULL) {
+		seps = "\t\n\v\f\r ";
+	}
+	totrim = strspn(str, seps);
+	if (totrim > 0) {
+		size_t len = strlen(str);
+		if (totrim == len) {
+			str[0] = '\0';
+		}
+		else {
+			memmove(str, str + totrim, len + 1 - totrim);
+		}
+	}
+	return str;
 }
 
 static char *rtrim(char *str, const char *seps)
 {
-    int i;
-    if (seps == NULL) {
-        seps = "\t\n\v\f\r ";
-    }
-    i = strlen(str) - 1;
-    while (i >= 0 && strchr(seps, str[i]) != NULL) {
-        str[i] = '\0';
-        i--;
-    }
-    return str;
+	int i;
+	if (seps == NULL) {
+		seps = "\t\n\v\f\r ";
+	}
+	i = strlen(str) - 1;
+	while (i >= 0 && strchr(seps, str[i]) != NULL) {
+		str[i] = '\0';
+		i--;
+	}
+	return str;
 }
 
 inline void string_trim(char *string)

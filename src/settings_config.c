@@ -7,7 +7,7 @@
 void settings_config_write_to_file(settings_config *config, char *path)
 {
 	// @hardcoded
-	s32 len = kilobytes(10);
+	s32 len = kilobytes(20);
 	char *buffer = mem_alloc(len);
 	buffer[0] = 0;
 	
