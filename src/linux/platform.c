@@ -1376,20 +1376,6 @@ void *platform_open_file_dialog_block(void *arg)
 	return 0;
 }
 
-s32 filter_matches(array *filters, char *string, char **matched_filter)
-{
-	for (s32 i = 0; i < filters->length; i++)
-	{
-		char *filter = array_at(filters, i);
-		if (string_match(filter, string))
-		{
-			*matched_filter = filter;
-			return strlen(filter);
-		}
-	}
-	return -1;
-}
-
 void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket, bool include_directories, bool *is_cancelled)
 {
 	assert(list);

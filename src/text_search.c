@@ -7,9 +7,8 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): put filter_matches() function in shared_platform.c
 // TODO(Aldrik): make executable smaller
-// TODO(Aldrik): do search on enter press and dont deselect text textbox
+// TODO(Aldrik): redo text rendering
 
 typedef struct t_status_bar
 {
@@ -990,6 +989,7 @@ int main(int argc, char **argv)
 	// ui widgets
 	checkbox_recursive = ui_create_checkbox(false);
 	textbox_search_text = ui_create_textbox(MAX_INPUT_LENGTH);
+	textbox_search_text.deselect_on_enter = false;
 	textbox_path = ui_create_textbox(MAX_INPUT_LENGTH);
 	textbox_file_filter = ui_create_textbox(MAX_INPUT_LENGTH);
 	button_select_directory = ui_create_button();
@@ -1064,7 +1064,7 @@ int main(int argc, char **argv)
 				{
 					window.is_open = false;
 				}
-				if (keyboard_is_key_pressed(&keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state && !textbox_search_text.state)
+				if (keyboard_is_key_pressed(&keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state)
 				{
 					do_search();
 				}

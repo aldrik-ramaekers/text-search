@@ -48,6 +48,7 @@ inline textbox_state ui_create_textbox(u16 max_len)
 	state.diff = 0;
 	state.last_click_cursor_index = -1;
 	state.attempting_to_select = false;
+	state.deselect_on_enter = true;
 	
 	return state;
 }
@@ -616,7 +617,7 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	if (state->state && global_ui_context.keyboard->has_selection && is_left_down(global_ui_context.mouse))
 		is_selecting = true;
 	
-	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER))
+	if (keyboard_is_key_pressed(global_ui_context.keyboard, KEY_ENTER) && state->deselect_on_enter)
 	{
 		global_ui_context.keyboard->has_selection = false;
 		state->state = false;

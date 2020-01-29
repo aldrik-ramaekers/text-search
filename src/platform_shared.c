@@ -228,3 +228,17 @@ char *get_file_extension(char *path)
 	}
 	return path;
 }
+
+s32 filter_matches(array *filters, char *string, char **matched_filter)
+{
+	for (s32 i = 0; i < filters->length; i++)
+	{
+		char *filter = array_at(filters, i);
+		if (string_match(filter, string))
+		{
+			*matched_filter = filter;
+			return strlen(filter);
+		}
+	}
+	return -1;
+}

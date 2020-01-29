@@ -329,6 +329,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 		if (current_keyboard_to_handle->take_input)
 		{
 			char buf[5];
+			memset(buf, 0, 5);
 			char *ch = 0;
 			
 			wchar_t codep = wparam;
@@ -861,20 +862,6 @@ bool get_active_directory(char *buffer)
 bool set_active_directory(char *path)
 {
 	return SetCurrentDirectory(path);
-}
-
-static s32 filter_matches(array *filters, char *string, char **matched_filter)
-{
-	for (s32 i = 0; i < filters->length; i++)
-	{
-		char *filter = array_at(filters, i);
-		if (string_match(filter, string))
-		{
-			*matched_filter = filter;
-			return strlen(filter);
-		}
-	}
-	return -1;
 }
 
 void platform_list_files_block(array *list, char *start_dir, array filters, bool recursive, memory_bucket *bucket,  bool include_directories, bool *is_cancelled)
