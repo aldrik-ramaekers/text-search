@@ -97,7 +97,6 @@ s32 render_text(font *font, s32 x, s32 y, char *text, color tint)
 		/* add kerning */
 		int kern = stbtt_GetCodepointKernAdvance(&font->info, ch, ch_next);
 		if (kern != 0) x_ += kern * font->scale;
-		
 		x_ += g.width+g.xoff;
 	}
 	

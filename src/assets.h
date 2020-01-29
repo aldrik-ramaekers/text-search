@@ -8,15 +8,15 @@
 #define INCLUDE_ASSETS
 
 #ifndef ASSET_IMAGE_COUNT
-#define ASSET_IMAGE_COUNT 40
+#define ASSET_IMAGE_COUNT 10
 #endif
 
 #ifndef ASSET_FONT_COUNT
-#define ASSET_FONT_COUNT 20
+#define ASSET_FONT_COUNT 10
 #endif
 
 #ifndef ASSET_QUEUE_COUNT
-#define ASSET_QUEUE_COUNT 100
+#define ASSET_QUEUE_COUNT 10
 #endif
 
 // binary blobs

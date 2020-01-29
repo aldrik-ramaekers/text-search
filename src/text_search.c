@@ -329,7 +329,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	render_rectangle(-1, y, window->width+2, h, global_ui_context.style.info_bar_background);
 	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
 	render_set_scissor(main_window, main_window->width/2, y, main_window->width/2, h);
-	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->size/2) + 1, global_status_bar.result_status_text, global_ui_context.style.foreground);
+	render_text(font_small, window->width - text_size - 8, y + (h/2)-(font_small->px_h/2), global_status_bar.result_status_text, global_ui_context.style.foreground);
 	render_reset_scissor(main_window);
 	
 	// error status
@@ -337,7 +337,7 @@ static void render_status_bar(platform_window *window, font *font_small)
 	{
 		render_set_scissor(main_window, 0, y, main_window->width/2, h);
 		render_image(error_img, 6, y + (h/2) - (img_size/2), img_size, img_size);
-		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->size/2) + 1, global_status_bar.error_status_text, global_ui_context.style.error_foreground);
+		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->px_h/2), global_status_bar.error_status_text, global_ui_context.style.error_foreground);
 		render_reset_scissor(main_window);
 	}
 }
@@ -400,11 +400,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
 		
-		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
+		render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, localize("file_pattern"), global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, localize("information"), global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
 		/////////////////////////
 		
 		y += h-1;
@@ -473,19 +473,19 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					
 					// path
 					render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
-					render_text(font_small, 10, rec_y + (h/2)-(font_small->size/2) + 1, match->file.path + current_search_result->search_result_source_dir_len, global_ui_context.style.foreground);
+					render_text(font_small, 10, rec_y + (h/2)-(font_small->px_h/2), match->file.path + current_search_result->search_result_source_dir_len, global_ui_context.style.foreground);
 					
 					// pattern
 					render_set_scissor(window, 0, start_y, 
 									   path_width+pattern_width-10, render_h - 43);
-					render_text(font_small, 10 + path_width, rec_y + (h/2)-(font_small->size/2) + 1, match->file.matched_filter, global_ui_context.style.foreground);
+					render_text(font_small, 10 + path_width, rec_y + (h/2)-(font_small->px_h/2), match->file.matched_filter, global_ui_context.style.foreground);
 					
 					// state
 					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
 					if (!match->file_error && match->line_info)
 					{
 						s32 text_sx = 10 + path_width + pattern_width;
-						s32 text_sy = rec_y + (h/2)-(font_small->size/2) + 1;
+						s32 text_sy = rec_y + (h/2)-(font_small->px_h/2);
 						
 						char tmp[80];
 						snprintf(tmp, 80, "line %d: ", match->line_nr);
@@ -494,7 +494,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 											   tmp, global_ui_context.style.foreground);
 						
 						// highlight matched text
-						render_rectangle(text_sx+match->word_match_offset_x, text_sy, match->word_match_width, 10, rgba(255,0,0,80));
+						render_rectangle(text_sx+match->word_match_offset_x, text_sy-1, match->word_match_width, font_small->px_h+2, rgba(255,0,0,80));
 						
 						render_text(font_small, text_sx, text_sy, 
 									match->line_info, global_ui_context.style.foreground);
@@ -518,7 +518,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
 						}
 						
-						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->size/2) + 1, open_file_error, global_ui_context.style.error_foreground);
+						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->px_h/2), open_file_error, global_ui_context.style.error_foreground);
 					}
 				}
 				y += h-1;
@@ -616,11 +616,11 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		
 		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
 		
-		render_text(font_small, 10, y + (h/2)-(font_small->size/2) + 1, localize("file_path"), global_ui_context.style.foreground);
+		render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->size/2) + 1, localize("file_pattern"), global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
 		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->size/2) + 1, localize("information"), global_ui_context.style.foreground);
+		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
 		/////////////////////////
 		
 		y += 30;
@@ -651,11 +651,11 @@ static void render_info(platform_window *window, font *font_small)
 				char *message = array_at(&current_search_result->errors, e);
 				
 				render_image(error_img, 6, yy + (h/2) - (img_size/2), img_size, img_size);
-				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->size/2) + 1, message, global_ui_context.style.error_foreground);
-				yy += font_small->size + 4;
+				render_text(font_small, 12 + img_size, yy + (h/2)-(font_small->px_h/2), message, global_ui_context.style.error_foreground);
+				yy += font_small->px_h;
 			}
 			
-			yy += font_small->size + 4;
+			yy += font_small->px_h;
 			
 			global_ui_context.layout.offset_y = yy;
 		}
@@ -858,10 +858,8 @@ static void load_assets()
 	error_img = assets_load_image(_binary____data_imgs_error_png_start,
 								  _binary____data_imgs_error_png_end, false);
 	
-	//font_medium = assets_load_font(_binary____data_fonts_mono_ttf_start,
-	//_binary____data_fonts_mono_ttf_end, 24);
 	font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
-								  _binary____data_fonts_mono_ttf_end, 16);
+								  _binary____data_fonts_mono_ttf_end, 15);
 	font_mini = assets_load_font(_binary____data_fonts_mono_ttf_start,
 								 _binary____data_fonts_mono_ttf_end, 12);
 }

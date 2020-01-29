@@ -869,8 +869,8 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 	{
 		last_cursor_pos = global_ui_context.keyboard->cursor;
 		
-		s32 cursor_y = text_y - 2;
-		s32 cursor_h = global_ui_context.font_small->size + 1;
+		s32 cursor_y = y + 4;
+		s32 cursor_h = TEXTBOX_HEIGHT - 8;
 		s32 cursor_w = 2;
 		
 		if (cursor_tick % 40 < 20 && !global_ui_context.keyboard->has_selection)
@@ -932,15 +932,15 @@ bool ui_push_hypertext_link(char *text)
 	s32 x = global_ui_context.layout.offset_x + global_ui_context.camera->x;
 	s32 y = global_ui_context.layout.offset_y + global_ui_context.camera->y + ui_get_scroll() - spacing_y;
 	s32 text_x = x + WIDGET_PADDING;
-	s32 text_h = global_ui_context.font_small->size;
+	s32 text_h = global_ui_context.font_small->px_h;
 	s32 text_y = y + (BLOCK_HEIGHT/2) - (global_ui_context.font_small->px_h/2) + spacing_y;
 	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
 		WIDGET_PADDING + WIDGET_PADDING;
 	s32 mouse_x = global_ui_context.mouse->x + global_ui_context.camera->x;
 	s32 mouse_y = global_ui_context.mouse->y + global_ui_context.camera->y;
 	
-	if (global_ui_context.layout.block_height < global_ui_context.font_small->size)
-		global_ui_context.layout.block_height = global_ui_context.font_small->size;
+	if (global_ui_context.layout.block_height < global_ui_context.font_small->px_h)
+		global_ui_context.layout.block_height = global_ui_context.font_small->px_h;
 	
 	color bg_color = global_ui_context.style.hypertext_foreground;
 	if (mouse_x >= text_x && mouse_x < text_x + total_w && mouse_y >= text_y && mouse_y < text_y+text_h && !global_ui_context.item_hovered)
@@ -975,8 +975,8 @@ void ui_push_text(char *text)
 	s32 total_w = calculate_text_width(global_ui_context.font_small, text) +
 		WIDGET_PADDING + WIDGET_PADDING;
 	
-	if (global_ui_context.layout.block_height < global_ui_context.font_small->size)
-		global_ui_context.layout.block_height = global_ui_context.font_small->size;
+	if (global_ui_context.layout.block_height < global_ui_context.font_small->px_h)
+		global_ui_context.layout.block_height = global_ui_context.font_small->px_h;
 	
 	render_text(global_ui_context.font_small, text_x, text_y, text, global_ui_context.style.foreground);
 	
