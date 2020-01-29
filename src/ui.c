@@ -10,6 +10,7 @@ inline void ui_begin(s32 id)
 	global_ui_context.next_id = id * 100;
 	global_ui_context.layout.offset_x = 0;
 	global_ui_context.layout.offset_y = 0;
+	global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 }
 
 inline void ui_end()
@@ -593,10 +594,6 @@ bool ui_push_textbox(textbox_state *state, char *placeholder)
 			result = true;
 			
 			global_ui_context.keyboard->take_input = state->state;
-		}
-		if (is_left_down(global_ui_context.mouse) && state->state)
-		{
-			//is_selecting = true;
 		}
 	}
 	else if (is_left_clicked(global_ui_context.mouse))

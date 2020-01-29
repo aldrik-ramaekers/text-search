@@ -460,7 +460,7 @@ LRESULT CALLBACK main_window_callback(HWND window, UINT message, WPARAM wparam, 
 	{
 		current_window_to_handle->curr_cursor_type = -999;
 		
-#if 1
+#if 0
 		s32 x = lparam&0xFFFF;
 		s32 y = lparam>>16;
 		
@@ -731,8 +731,17 @@ void platform_handle_events(platform_window *window, mouse_input *mouse, keyboar
 	// mouse position (including outside of window)
 	current_window_to_handle->has_focus = GetFocus() == current_window_to_handle->window_handle;
 	
-	MSG message;
+	{
+		RECT rec;
+		GetWindowRect(window->window_handle, &rec);
+		POINT p;
+		GetCursorPos(&p);
+		mouse->x = p.x - rec.left - GetSystemMetrics(SM_CYSIZEFRAME);
+		mouse->y = p.y - rec.top - GetSystemMetrics(SM_CYSIZE) - GetSystemMetrics(SM_CYFRAME);
+		//printf("%d %d\n",GetSystemMetrics(SM_CYSIZE), GetSystemMetrics(SM_CYFRAME));
+	}
 	
+	MSG message;
 	while(PeekMessageA(&message, window->window_handle, 0, 0, TRUE))
 	{
 		TranslateMessage(&message); 
