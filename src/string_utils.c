@@ -70,8 +70,10 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 	s32 word_match_len_val = 0;
 	char* line_start_ptr = text_to_search;
 	
+	//printf("%s %s\n", text_to_search, text_to_find);
 	s32 index = 0;
-	while((text_to_search = utf8codepoint(text_to_search, &text_to_search_ch)) 
+	char *text_to_ss = text_to_search;
+	while((text_to_ss = utf8codepoint(text_to_search, &text_to_search_ch)) 
 		  && text_to_search_ch)
 	{
 		if (cancel_search && *cancel_search) goto set_info_and_return_failure;
@@ -93,6 +95,7 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 		text_to_search_current_attempt = utf8codepoint(text_to_search_current_attempt,
 													   &text_to_search_current_attempt_ch);
 		
+		text_to_search = text_to_ss;
 		word_match_len_val = 0;
 		while(text_to_search_current_attempt_ch)
 		{
@@ -116,6 +119,7 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 			// text to find has reached 0byte, word has been found
 			if (text_to_find_ch == 0)
 			{
+				done:
 				if (save_info)
 				{
 					text_match new_match;
@@ -148,6 +152,8 @@ bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_ma
 			text_to_search_current_attempt = utf8codepoint(
 				text_to_search_current_attempt,
 				&text_to_search_current_attempt_ch);
+			
+			if (!text_to_search_current_attempt_ch && !text_to_find_ch) goto done;
 			
 			word_match_len_val++;
 		}
