@@ -8,6 +8,7 @@
 #include "project_base.h"
 
 // TODO(Aldrik): settings page title when language is changed
+// TODO(Aldrik): only accept .json file format when importing
 
 typedef struct t_status_bar
 {
@@ -951,7 +952,7 @@ int main(int argc, char **argv)
 	
 	s32 window_w = settings_config_get_number(&config, "WINDOW_WIDTH");
 	s32 window_h = settings_config_get_number(&config, "WINDOW_HEIGHT");
-	if (window_w <= 800 || window_h <= 600)
+	if (window_w < 800 || window_h < 600)
 	{
 		window_w = 800;
 		window_h = 600;
