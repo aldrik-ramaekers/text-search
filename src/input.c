@@ -201,7 +201,7 @@ void keyboard_handle_input_string(platform_window *window, keyboard_input *keybo
 	
 	if (keyboard_is_key_down(keyboard, KEY_BACKSPACE))
 	{
-		current_keyboard_to_handle->keys[KEY_BACKSPACE] = false;
+		keyboard->keys[KEY_BACKSPACE] = false;
 
 		bool is_lctrl_down = keyboard->keys[KEY_LEFT_CONTROL];
 		
