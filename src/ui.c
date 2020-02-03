@@ -358,7 +358,7 @@ bool ui_push_dropdown_item(image *icon, char *title)
 	if (icon)
 	{
 		render_image(icon, x+(BUTTON_HORIZONTAL_TEXT_PADDING/2), 
-					 y + (h - (h-10))/2, h-10, h-10);
+					 y + (h - (h-5))/2, h-5, h-5);
 		text_x += h-10;
 	}
 	render_text(global_ui_context.font_small, text_x+(BUTTON_HORIZONTAL_TEXT_PADDING/2)-5, text_y, title, global_ui_context.style.foreground);

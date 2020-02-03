@@ -295,7 +295,7 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 void import_results_from_file(char *path_buf)
 {
 	char *file_extension = get_file_extension(path_buf);
-	if (!string_equals(file_extension, ".json") && !string_equals(file_extension, ".xml") && !string_equals(file_extension, ".yaml"))
+	if (!string_equals(file_extension, ".json"))
 	{
 		platform_show_message(main_window, localize("invalid_search_result_file"), localize("error_importing_results"));
 		return;
