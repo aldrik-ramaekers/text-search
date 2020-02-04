@@ -9,7 +9,9 @@
 
 // TODO(Aldrik): settings page title when language is changed
 // TODO(Aldrik): reset textbox horizontal scroll when file is imported
-// TODO(Aldrik): textbox cursor is behind character..
+// TODO(Aldrik): reset textbox vertical scroll on text set
+// TODO(Aldrik): ctrl+x to select+delete selection
+// TODO(Aldrik): ctrl+del to delete up to space char
 
 typedef struct t_status_bar
 {
