@@ -56,6 +56,8 @@
 #define true 1
 #define false 0
 
+#include "asset_definitions.h"
+
 #include "project-base/src/thread.h"
 #include "project-base/src/array.h"
 #include "project-base/src/memory.h"
@@ -82,12 +84,16 @@
 
 #ifdef OS_LINUX
 #define DEFAULT_DIRECTORY "/home/"
+#define CONFIG_DIRECTORY "/.config/moedit"
+
 #include "project-base/src/linux/thread.c"
 #include "project-base/src/linux/platform.c"
 #endif
 
 #ifdef OS_WIN
 #define DEFAULT_DIRECTORY "C:/"
+#define CONFIG_DIRECTORY "\\moedit"
+
 #include "project-base/src/windows/thread.c"
 #include "project-base/src/windows/platform.c"
 #endif
