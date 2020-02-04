@@ -30,11 +30,23 @@ font *font_small;
 font *font_mini;
 s32 scroll_y = 0;
 
+///// our global ui states ////
+checkbox_state checkbox_recursive;
+textbox_state textbox_search_text;
+textbox_state textbox_path;
+textbox_state textbox_file_filter;
+button_state button_select_directory;
+button_state button_find_text;
+button_state button_cancel;
+///////////////////////////////
+
 #include "save.h"
 #include "settings.h"
+#include "command_line.h"
 
 #include "save.c"
 #include "settings.c"
+#include "command_line.c"
 
 void* destroy_search_result_thread(void *arg)
 {

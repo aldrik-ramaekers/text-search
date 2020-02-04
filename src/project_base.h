@@ -56,56 +56,54 @@
 #define true 1
 #define false 0
 
-#include "thread.h"
-#include "array.h"
-#include "memory.h"
+#include "project-base/src/thread.h"
+#include "project-base/src/array.h"
+#include "project-base/src/memory.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "external/stb_image.h"
+#include "project-base/src/external/stb_image.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION
-#include "external/stb_truetype.h"
+#include "project-base/src/external/stb_truetype.h"
 
-#include "external/utf8.h"
-#include "input.h"
-#include "assets.h"
-#include "memory_bucket.h"
-#include "platform.h"
-#include "render.h"
-#include "camera.h"
-#include "ui.h"
-#include "string_utils.h"
-#include "settings_config.h"
-#include "localization.h"
-#include "command_line.h"
+#include "project-base/src/external/utf8.h"
+#include "project-base/src/input.h"
+#include "project-base/src/assets.h"
+#include "project-base/src/memory_bucket.h"
+#include "project-base/src/platform.h"
+#include "project-base/src/render.h"
+#include "project-base/src/camera.h"
+#include "project-base/src/ui.h"
+#include "project-base/src/string_utils.h"
+#include "project-base/src/settings_config.h"
+#include "project-base/src/localization.h"
 
-#include "platform_shared.c"
+#include "project-base/src/platform_shared.c"
 
 #ifdef OS_LINUX
 #define DEFAULT_DIRECTORY "/home/"
-#include "linux/thread.c"
-#include "linux/platform.c"
+#include "project-base/src/linux/thread.c"
+#include "project-base/src/linux/platform.c"
 #endif
 
 #ifdef OS_WIN
 #define DEFAULT_DIRECTORY "C:/"
-#include "windows/thread.c"
-#include "windows/platform.c"
+#include "project-base/src/windows/thread.c"
+#include "project-base/src/windows/platform.c"
 #endif
 
-#include "input.c"
-#include "array.c"
-#include "assets.c"
-#include "render.c"
-#include "camera.c"
-#include "ui.c"
-#include "string_utils.c"
-#include "settings_config.c"
-#include "localization.c"
-#include "memory_bucket.c"
-#include "command_line.c"
+#include "project-base/src/input.c"
+#include "project-base/src/array.c"
+#include "project-base/src/assets.c"
+#include "project-base/src/render.c"
+#include "project-base/src/camera.c"
+#include "project-base/src/ui.c"
+#include "project-base/src/string_utils.c"
+#include "project-base/src/settings_config.c"
+#include "project-base/src/localization.c"
+#include "project-base/src/memory_bucket.c"
 
-#include "external/cJSON.h"
-#include "external/cJSON.c"
+#include "project-base/src/external/cJSON.h"
+#include "project-base/src/external/cJSON.c"
 
 #endif
