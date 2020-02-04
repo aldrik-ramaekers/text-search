@@ -8,7 +8,8 @@
 #include "project_base.h"
 
 // TODO(Aldrik): settings page title when language is changed
-// TODO(Aldrik): only accept .json file format when importing
+// TODO(Aldrik): reset textbox horizontal scroll when file is imported
+// TODO(Aldrik): textbox cursor is behind character..
 
 typedef struct t_status_bar
 {
