@@ -8,10 +8,6 @@
 #include "project_base.h"
 
 // TODO(Aldrik): settings page title when language is changed
-// TODO(Aldrik): reset textbox horizontal scroll when file is imported
-// TODO(Aldrik): reset textbox vertical scroll on text set
-// TODO(Aldrik): ctrl+x to select+delete selection
-// TODO(Aldrik): ctrl+del to delete up to space char
 
 typedef struct t_status_bar
 {
@@ -1084,7 +1080,7 @@ int main(int argc, char **argv)
 				if (keyboard_is_key_pressed(&keyboard, KEY_TAB) && textbox_path.state)
 				{
 					platform_autocomplete_path(textbox_path.buffer, true);
-					keyboard_set_input_text(&keyboard, textbox_path.buffer);
+					ui_set_textbox_text(&textbox_path, textbox_path.buffer);
 				}
 				// shortcuts end
 				
@@ -1132,6 +1128,7 @@ int main(int argc, char **argv)
 				if (ui_push_button_image(&button_select_directory, "", directory_img))
 				{
 					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0, 0);
+					ui_set_textbox_text(&textbox_path, textbox_path.buffer);
 				}
 				
 				if (ui_push_textbox(&textbox_file_filter, localize("file_filter")))
