@@ -143,7 +143,7 @@ void settings_page_update_render()
 						{
 							mo_file *file = array_at(&global_localization.mo_files, i);
 							
-							if (ui_push_dropdown_item(file->icon, file->locale_full))
+							if (ui_push_dropdown_item(file->icon, file->locale_full, i))
 							{
 								set_locale(file->locale_id);
 								//platform_window_set_title(&global_settings_page.window,
@@ -178,7 +178,7 @@ void settings_page_update_render()
 					{
 						for (s32 i = 0; i < OPTION_RESULT+1; i++)
 						{
-							if (ui_push_dropdown_item(0, available_options[i]))
+							if (ui_push_dropdown_item(0, available_options[i], i))
 							{
 								global_settings_page.current_double_click_selection_option = i;
 							}
