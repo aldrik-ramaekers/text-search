@@ -84,7 +84,7 @@
 
 #ifdef OS_LINUX
 #define DEFAULT_DIRECTORY "/home/"
-#define CONFIG_DIRECTORY "/.config/moedit"
+#define CONFIG_DIRECTORY "/.config/text-search"
 
 #include "project-base/src/linux/thread.c"
 #include "project-base/src/linux/platform.c"
@@ -92,7 +92,7 @@
 
 #ifdef OS_WIN
 #define DEFAULT_DIRECTORY "C:/"
-#define CONFIG_DIRECTORY "\\moedit"
+#define CONFIG_DIRECTORY "\\text-search"
 
 #include "project-base/src/windows/thread.c"
 #include "project-base/src/windows/platform.c"
