@@ -1,6 +1,11 @@
 rm -rf release
 mkdir release
-
+rm -rf release/linux
+mkdir release/linux
+rm -rf release/windows
+mkdir release/windows
+rm -rf bin
+mkdir bin
 
 ###################################
 # linux
