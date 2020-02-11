@@ -293,7 +293,6 @@ static void* find_text_in_files_t(void *arg)
 		result_buffer->find_duration_us = end_f - result_buffer->start_time;
 		result_buffer->done_finding_matches = true;
 		result_buffer->walking_file_system = false;
-		result_buffer->files_searched = result_buffer->files.length;
 		
 		if (!result_buffer->is_command_line_search && !main_window->has_focus)
 			platform_show_alert("Text-search", localize("search_result_completed"));
@@ -305,6 +304,7 @@ static void* find_text_in_files_t(void *arg)
 		thread *thr = array_at(&threads, i);
 		thread_join(thr);
 	}
+	result_buffer->files_searched = result_buffer->files.length;
 	
 	if (!result_buffer->is_command_line_search)
 	{
