@@ -24,7 +24,7 @@ ld -r -b binary -o ../bin/data.o \
 ../data/translations/en-English.mo \
 ../data/translations/nl-Dutch.mo \
 
-gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
+gcc -Wall -O3 -m64 -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl -lcurl
 
 rm -f ../bin/data.o
 cp --remove-destination ../bin/text-search ../release/linux/text-search
