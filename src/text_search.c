@@ -7,7 +7,7 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): settings page title when language is changed
+// TODO(Aldrik): set clipboard not working
 
 typedef struct t_status_bar
 {
@@ -972,6 +972,8 @@ int main(int argc, char **argv)
 	platform_window window = platform_open_window("Text-search", window_w, window_h, 0, 0, 800, 600);
 	main_window = &window;
 	
+	validate_license();
+	
 	settings_page_create();
 	
 	load_available_localizations();
@@ -1026,6 +1028,12 @@ int main(int argc, char **argv)
 		settings_page_update_render();
 		
 		platform_window_make_current(&window);
+		
+		if (!license_is_valid)
+		{
+			platform_show_message(main_window, localize("invalid_license"), localize("license_error"));
+			window.is_open = false;
+		}
 		
 		static bool icon_loaded = false;
 		if (!icon_loaded && logo_small_img->loaded)
