@@ -1031,7 +1031,9 @@ int main(int argc, char **argv)
 		
 		if (!license_is_valid)
 		{
-			platform_show_message(main_window, localize("invalid_license"), localize("license_error"));
+			char message[200];
+			sprintf(message, localize("invalid_license"), license_key);
+			platform_show_message(main_window, message, localize("license_error"));
 			window.is_open = false;
 		}
 		
