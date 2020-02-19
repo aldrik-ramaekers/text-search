@@ -58,59 +58,59 @@
 
 #include "asset_definitions.h"
 
-#include "project-base/src/thread.h"
-#include "project-base/src/array.h"
-#include "project-base/src/memory.h"
-#include "project-base/src/licensing.h"
-#include "project-base/src/external/cJSON.h"
+#include "../../project-base/src/thread.h"
+#include "../../project-base/src/array.h"
+#include "../../project-base/src/memory.h"
+#include "../../project-base/src/licensing.h"
+#include "../../project-base/src/external/cJSON.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include "project-base/src/external/stb_image.h"
+#include "../../project-base/src/external/stb_image.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION
-#include "project-base/src/external/stb_truetype.h"
+#include "../../project-base/src/external/stb_truetype.h"
 
-#include "project-base/src/external/utf8.h"
-#include "project-base/src/input.h"
-#include "project-base/src/assets.h"
-#include "project-base/src/memory_bucket.h"
-#include "project-base/src/platform.h"
-#include "project-base/src/render.h"
-#include "project-base/src/camera.h"
-#include "project-base/src/ui.h"
-#include "project-base/src/string_utils.h"
-#include "project-base/src/settings_config.h"
-#include "project-base/src/localization.h"
+#include "../../project-base/src/external/utf8.h"
+#include "../../project-base/src/input.h"
+#include "../../project-base/src/assets.h"
+#include "../../project-base/src/memory_bucket.h"
+#include "../../project-base/src/platform.h"
+#include "../../project-base/src/render.h"
+#include "../../project-base/src/camera.h"
+#include "../../project-base/src/ui.h"
+#include "../../project-base/src/string_utils.h"
+#include "../../project-base/src/settings_config.h"
+#include "../../project-base/src/localization.h"
 
-#include "project-base/src/platform_shared.c"
+#include "../../project-base/src/platform_shared.c"
 
 #ifdef OS_LINUX
 #define DEFAULT_DIRECTORY "/home/"
 #define CONFIG_DIRECTORY "/.config/text-search"
 
-#include "project-base/src/linux/thread.c"
-#include "project-base/src/linux/platform.c"
+#include "../../project-base/src/linux/thread.c"
+#include "../../project-base/src/linux/platform.c"
 #endif
 
 #ifdef OS_WIN
 #define DEFAULT_DIRECTORY "C:/"
 #define CONFIG_DIRECTORY "\\text-search"
 
-#include "project-base/src/windows/thread.c"
-#include "project-base/src/windows/platform.c"
+#include "../../project-base/src/windows/thread.c"
+#include "../../project-base/src/windows/platform.c"
 #endif
 
-#include "project-base/src/input.c"
-#include "project-base/src/array.c"
-#include "project-base/src/licensing.c"
-#include "project-base/src/assets.c"
-#include "project-base/src/render.c"
-#include "project-base/src/camera.c"
-#include "project-base/src/ui.c"
-#include "project-base/src/string_utils.c"
-#include "project-base/src/settings_config.c"
-#include "project-base/src/localization.c"
-#include "project-base/src/memory_bucket.c"
-#include "project-base/src/external/cJSON.c"
+#include "../../project-base/src/input.c"
+#include "../../project-base/src/array.c"
+#include "../../project-base/src/licensing.c"
+#include "../../project-base/src/assets.c"
+#include "../../project-base/src/render.c"
+#include "../../project-base/src/camera.c"
+#include "../../project-base/src/ui.c"
+#include "../../project-base/src/string_utils.c"
+#include "../../project-base/src/settings_config.c"
+#include "../../project-base/src/localization.c"
+#include "../../project-base/src/memory_bucket.c"
+#include "../../project-base/src/external/cJSON.c"
 
 #endif
