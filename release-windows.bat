@@ -1,10 +1,9 @@
-#!/bin/bash
-
 windres misc/icon.rc -O coff -o misc/icon.res
 
-if not exist "release" mkdir release
-if not exist "release" mkdir release/windows
-DEL /S /Q release/windows
+DEL /S /Q "bin"
+if not exist "release" mkdir "release"
+if not exist "release" mkdir "release/windows"
+DEL /S /Q "release/windows"
 
 cd src 
 
@@ -14,4 +13,6 @@ x86_64-w64-mingw32-gcc -Wall -m64 -O3 -Wno-unused-label -Wno-unused-variable tex
 
 DEL /Q "../bin/data.o"
 
-xcopy /s /y ../bin/text-search.exe ../release/windows/text-search.exe
+move /y "../bin/text-search.exe" "../release/windows"
+
+cd ..
