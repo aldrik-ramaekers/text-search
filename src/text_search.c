@@ -7,8 +7,6 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): set clipboard not working
-
 typedef struct t_status_bar
 {
 	char *result_status_text;
