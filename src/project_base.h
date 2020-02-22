@@ -9,6 +9,7 @@
 
 #ifdef _WIN32
 #define OS_WIN
+#include <winsock2.h>
 #include <windows.h>
 #include <time.h>
 #endif

@@ -1027,13 +1027,7 @@ int main(int argc, char **argv)
 		
 		platform_window_make_current(&window);
 		
-		if (!license_is_valid)
-		{
-			char message[200];
-			sprintf(message, localize("invalid_license"), license_key);
-			platform_show_message(main_window, message, localize("license_error"));
-			window.is_open = false;
-		}
+		if (!license_check_status()) break;
 		
 		static bool icon_loaded = false;
 		if (!icon_loaded && logo_small_img->loaded)
