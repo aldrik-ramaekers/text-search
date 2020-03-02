@@ -970,7 +970,7 @@ int main(int argc, char **argv)
 	platform_window window = platform_open_window("Text-search", window_w, window_h, 0, 0, 800, 600);
 	main_window = &window;
 	
-	validate_license();
+	//validate_license();
 	
 	settings_page_create();
 	
@@ -1027,7 +1027,7 @@ int main(int argc, char **argv)
 		
 		platform_window_make_current(&window);
 		
-		if (!license_check_status()) break;
+		//if (!license_check_status()) break;
 		
 		static bool icon_loaded = false;
 		if (!icon_loaded && logo_small_img->loaded)

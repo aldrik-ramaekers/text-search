@@ -62,7 +62,7 @@
 #include "../../project-base/src/thread.h"
 #include "../../project-base/src/array.h"
 #include "../../project-base/src/memory.h"
-#include "../../project-base/src/licensing.h"
+//#include "../../project-base/src/licensing.h"
 #include "../../project-base/src/external/cJSON.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -103,7 +103,7 @@
 
 #include "../../project-base/src/input.c"
 #include "../../project-base/src/array.c"
-#include "../../project-base/src/licensing.c"
+//#include "../../project-base/src/licensing.c"
 #include "../../project-base/src/assets.c"
 #include "../../project-base/src/render.c"
 #include "../../project-base/src/camera.c"
