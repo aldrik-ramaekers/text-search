@@ -89,17 +89,20 @@ static void* find_text_in_file_worker(void *arg)
 			
 			retry_search:;
 			
-			// read file
-			content = platform_read_file_content(args.file.file.path, "r");
-			args.file.file_size = content.content_length;
+			// read file size
+			s32 file_size = platform_get_file_size(args.file.file.path);
+			s32 kb_to_b = result_buffer->max_file_size * 1000;
 			
 			// check if file is not too big for set filter
-			s32 kb_to_b = result_buffer->max_file_size * 1000;
-			if (result_buffer->max_file_size && content.content_length > kb_to_b)
+			if (result_buffer->max_file_size > 0 && file_size > kb_to_b)
 			{
-				platform_destroy_file_content(&content);
+				args.file.file_size = file_size;
 				continue;
 			}
+			
+			// read file
+			content = platform_read_file_content(args.file.file.path, "rb");
+			args.file.file_size = content.content_length;
 			
 			// check if file has opened correctly
 			if (content.content && !content.file_error)
@@ -179,7 +182,7 @@ static void* find_text_in_file_worker(void *arg)
 					args.file.file_error = content.file_error;
 				else
 					args.file.file_error = FILE_ERROR_GENERIC;
-				
+				printf("%d %d %p\n", args.file.file_error, content.file_error, content.content);
 				mutex_lock(&args.search_result_buffer->mutex);
 				string_copyn(global_status_bar.error_status_text, localize("generic_file_open_error"), MAX_ERROR_MESSAGE_LENGTH);
 				mutex_unlock(&args.search_result_buffer->mutex);

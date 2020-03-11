@@ -45,7 +45,7 @@ ld -r -b binary -o ../bin/data.o \
 ../data/translations/en-English.mo \
 ../data/translations/nl-Dutch.mo \
 
-gcc -Wall -g -m64 -DMODE_DEVELOPER -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl -lcurl
+gcc -Wall -g -m64 -DMODE_DEVELOPER -Wno-unused-label -rdynamic -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search -lX11 -lGL -lGLU -lXrandr -lm -lpthread -ldl
 
 rm -f ../bin/data.o
 
