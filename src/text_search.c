@@ -94,9 +94,20 @@ static void* find_text_in_file_worker(void *arg)
 			s32 kb_to_b = result_buffer->max_file_size * 1000;
 			
 			// check if file is not too big for set filter
-			if (result_buffer->max_file_size > 0 && file_size > kb_to_b)
+			if (result_buffer->max_file_size > 0 && (file_size > kb_to_b || file_size == -1))
 			{
 				args.file.file_size = file_size;
+				file_match file_match = args.file;
+				file_match.file_error = FILE_ERROR_TOO_BIG;
+				file_match.line_nr = 0;
+				file_match.line_info = 0;
+				file_match.word_match_offset = 0;
+				file_match.word_match_length = 0;
+				file_match.word_match_offset_x = 0;
+				file_match.word_match_width = 0;
+				args.search_result_buffer->match_found = true;
+				array_push(&result_buffer->matches, &file_match);
+				
 				continue;
 			}
 			
@@ -447,33 +458,40 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					{
 						if (is_left_double_clicked(mouse))
 						{
-							switch(global_settings_page.selected_double_click_selection_option)
+							if (match->file_error)
 							{
-								case OPTION_PATH: 
 								platform_set_clipboard(main_window, match->file.path);
-								break;
-								
-								case OPTION_PATH_LINE:
+							}
+							else
+							{
+								switch(global_settings_page.selected_double_click_selection_option)
 								{
-									char *clipboard_tmp_buffer = malloc(200);
-									snprintf(clipboard_tmp_buffer, 200, "%s:%d", match->file.path, match->line_nr);
-									platform_set_clipboard(main_window, clipboard_tmp_buffer);
-									mem_free(clipboard_tmp_buffer);
+									case OPTION_PATH: 
+									platform_set_clipboard(main_window, match->file.path);
+									break;
+									
+									case OPTION_PATH_LINE:
+									{
+										char *clipboard_tmp_buffer = malloc(200);
+										snprintf(clipboard_tmp_buffer, 200, "%s:%d", match->file.path, match->line_nr);
+										platform_set_clipboard(main_window, clipboard_tmp_buffer);
+										mem_free(clipboard_tmp_buffer);
+									}
+									break;
+									
+									case OPTION_PATH_LINE_FILTER:
+									{
+										char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
+										snprintf(clipboard_tmp_buffer, 200 + MAX_INPUT_LENGTH, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
+										platform_set_clipboard(main_window, clipboard_tmp_buffer);
+										mem_free(clipboard_tmp_buffer);
+									}
+									break;
+									
+									case OPTION_RESULT: 
+									platform_set_clipboard(main_window, match->line_info);
+									break;
 								}
-								break;
-								
-								case OPTION_PATH_LINE_FILTER:
-								{
-									char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
-									snprintf(clipboard_tmp_buffer, 200 + MAX_INPUT_LENGTH, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
-									platform_set_clipboard(main_window, clipboard_tmp_buffer);
-									mem_free(clipboard_tmp_buffer);
-								}
-								break;
-								
-								case OPTION_RESULT: 
-								platform_set_clipboard(main_window, match->line_info);
-								break;
 							}
 						}
 						
@@ -529,6 +547,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 							case FILE_ERROR_STALE: open_file_error = localize("remotely_removed"); break;
 							default:
 							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
+							case FILE_ERROR_TOO_BIG: open_file_error = localize("file_too_big"); break;
 						}
 						
 						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->px_h/2), open_file_error, global_ui_context.style.error_foreground);
