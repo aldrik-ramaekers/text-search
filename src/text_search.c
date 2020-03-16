@@ -458,6 +458,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 					{
 						if (is_left_double_clicked(mouse))
 						{
+							push_notification(localize("copied_to_clipboard"));
 							if (match->file_error)
 							{
 								platform_set_clipboard(main_window, match->file.path);
@@ -1207,6 +1208,8 @@ int main(int argc, char **argv)
 				render_update_result(&window, font_mini, &mouse, &keyboard);
 			}
 		}
+		
+		update_render_notifications();
 		
 		assets_do_post_process();
 		platform_window_swap_buffers(&window);
