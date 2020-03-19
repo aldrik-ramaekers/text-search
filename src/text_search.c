@@ -1155,6 +1155,7 @@ int main(int argc, char **argv)
 					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0, 0);
 					ui_set_textbox_text(&textbox_path, textbox_path.buffer);
 				}
+				ui_push_tooltip(localize("tooltip_browse_directories"));
 				
 				if (ui_push_textbox(&textbox_file_filter, localize("file_filter")))
 				{
@@ -1178,7 +1179,10 @@ int main(int argc, char **argv)
 				{
 					do_search();
 				}
+				ui_push_tooltip(localize("tooltip_start_searching"));
+				
 				ui_push_checkbox(&checkbox_recursive, localize("folders"));
+				ui_push_tooltip(localize("tooltip_search_folders_recursively"));
 				
 				if (!current_search_result->done_finding_matches)
 				{

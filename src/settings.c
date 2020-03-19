@@ -123,6 +123,7 @@ void settings_page_update_render()
 					{
 						char buffer[PATH_MAX];
 						platform_set_clipboard(main_window, get_config_save_location(buffer));
+						push_notification(localize("copied_to_clipboard"));
 					}
 				}
 				ui_block_end();
