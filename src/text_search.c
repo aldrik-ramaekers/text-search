@@ -530,6 +530,17 @@ static void render_update_result(platform_window *window, font *font_small, mous
 						
 						render_text(font_small, text_sx, text_sy, 
 									match->line_info, global_ui_context.style.foreground);
+						
+						/*static bool yes = false;
+   if (!yes) {
+	yes = true;
+	char *str = match->line_info;
+	utf8_int32_t ch = 0;
+	while((str = utf8codepoint(str, &ch)) && ch)
+	{
+  printf("%d\n", ch);
+	}
+   }*/
 					}
 					else
 					{
@@ -967,7 +978,15 @@ void load_config(settings_config *config)
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
+	debug_print_elapsed_title("program setup");
+	debug_print_elapsed_indent();
+	
 	platform_init(argc, argv);
+	
+#ifdef MODE_DEVELOPER
+	u64 startup_stamp = platform_get_time(TIME_FULL, TIME_US);
+	u64 _startup_stamp = startup_stamp;
+#endif
 	
 	bool is_command_line_run = (argc > 1);
 	if (is_command_line_run)
@@ -990,17 +1009,40 @@ int main(int argc, char **argv)
 		window_h = 600;
 	}
 	
+	debug_print_elapsed(startup_stamp, "config");
+	
 	platform_window window = platform_open_window("Text-search", window_w, window_h, 0, 0, 800, 600);
 	main_window = &window;
+	
+#ifdef MODE_DEVELOPER
+	startup_stamp = platform_get_time(TIME_FULL, TIME_US);
+#endif
 	
 	//validate_license();
 	
 	settings_page_create();
 	
+	debug_print_elapsed(startup_stamp, "settings page");
+	
+	// asset worker
+	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
+	thread asset_queue_worker2 = thread_start(assets_queue_worker, NULL);
+	thread_detach(&asset_queue_worker1);
+	thread_detach(&asset_queue_worker2);
+	
+	debug_print_elapsed(startup_stamp, "asset workers");
+	
 	load_available_localizations();
 	set_locale("en");
 	
+	debug_print_elapsed(startup_stamp, "locale");
+	
+#ifdef MODE_DEVELOPER
+	u64 assets_stamp = platform_get_time(TIME_FULL, TIME_US);
+#endif
+	
 	load_assets();
+	debug_print_elapsed(startup_stamp, "assets");
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
@@ -1012,11 +1054,7 @@ int main(int argc, char **argv)
 	
 	ui_create(&window, &keyboard, &mouse, &camera, font_small);
 	
-	// asset worker
-	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
-	thread asset_queue_worker2 = thread_start(assets_queue_worker, NULL);
-	thread_detach(&asset_queue_worker1);
-	thread_detach(&asset_queue_worker2);
+	debug_print_elapsed(startup_stamp, "ui");
 	
 	// ui widgets
 	checkbox_recursive = ui_create_checkbox(false);
@@ -1028,18 +1066,32 @@ int main(int argc, char **argv)
 	button_find_text = ui_create_button();
 	button_cancel = ui_create_button();
 	
+	debug_print_elapsed(startup_stamp, "ui widgets");
+	
 	// status bar
 	global_status_bar.result_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
 	global_status_bar.result_status_text[0] = 0;
 	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
+	reset_status_text();
+	
+	debug_print_elapsed(startup_stamp, "status bar");
 	
 	load_config(&config);
 	//set_active_textbox(&textbox_search_text);
 	
-	reset_status_text();
+	debug_print_elapsed(startup_stamp, "apply config");
 	
 	current_search_result = create_empty_search_result();
+	
+	debug_print_elapsed(startup_stamp, "setup");
+	
+	debug_print_elapsed_undent();
+	debug_print_elapsed(_startup_stamp, "total startup time");
+	
+#ifdef MODE_DEVELOPER
+	s32 frames_drawn_with_missing_assets = 0;
+#endif
 	
 	while(window.is_open) {
         u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
@@ -1062,7 +1114,19 @@ int main(int argc, char **argv)
 		if (global_asset_collection.queue.queue.length == 0 && !global_asset_collection.done_loading_assets)
 		{
 			global_asset_collection.done_loading_assets = true;
+			debug_print_elapsed(assets_stamp, "assets done loading");
+			
+#ifdef MODE_DEVELOPER
+			printf("frames drawn with missing assets: %d\n", frames_drawn_with_missing_assets);
+#endif
 		}
+		
+#ifdef MODE_DEVELOPER
+		if (global_asset_collection.queue.queue.length != 0 && !global_asset_collection.done_loading_assets)
+		{
+			frames_drawn_with_missing_assets++;
+		}
+#endif
 		
 		global_ui_context.layout.active_window = &window;
 		global_ui_context.keyboard = &keyboard;
@@ -1073,6 +1137,8 @@ int main(int argc, char **argv)
 		
 		global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 		// begin ui
+		
+		assets_do_post_process();
 		
 		ui_begin(1);
 		{
@@ -1215,7 +1281,6 @@ int main(int argc, char **argv)
 		
 		update_render_notifications();
 		
-		assets_do_post_process();
 		platform_window_swap_buffers(&window);
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);

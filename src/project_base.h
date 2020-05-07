@@ -73,6 +73,7 @@
 
 #include "../../project-base/src/external/utf8.h"
 #include "../../project-base/src/input.h"
+#include "../../project-base/src/timer.h"
 #include "../../project-base/src/assets.h"
 #include "../../project-base/src/memory_bucket.h"
 #include "../../project-base/src/platform.h"
@@ -103,6 +104,7 @@
 #endif
 
 #include "../../project-base/src/input.c"
+#include "../../project-base/src/timer.c"
 #include "../../project-base/src/array.c"
 //#include "../../project-base/src/licensing.c"
 #include "../../project-base/src/assets.c"
