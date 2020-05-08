@@ -7,7 +7,9 @@ cd src
 
 ld -r -b binary -o ../bin/data.o ../data/imgs/en.png ../data/imgs/error.png ../data/imgs/folder.png ../data/imgs/nl.png ../data/imgs/search.png ../data/imgs/logo_64.png ../data/fonts/mono.ttf ../data/translations/en-English.mo ../data/translations/nl-Dutch.mo
 
-if "%1"=="-w" (SET defs=-DMODE_DEVELOPER -DMODE_GDBDEBUG) else (SET defs=-DMODE_DEVELOPER)
+SET defs=-DMODE_DEVELOPER
+if "%1"=="-w" (SET defs=-DMODE_DEVELOPER -DMODE_GDBDEBUG)
+if "%2"=="-t" (SET defs=-DMODE_DEVELOPER -DMODE_TEST)
 
 x86_64-w64-mingw32-gcc -m64 -Wall -g %defs% -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi 
 

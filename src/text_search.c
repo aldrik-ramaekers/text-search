@@ -533,13 +533,13 @@ static void render_update_result(platform_window *window, font *font_small, mous
 						
 						/*static bool yes = false;
    if (!yes) {
-	yes = true;
-	char *str = match->line_info;
-	utf8_int32_t ch = 0;
-	while((str = utf8codepoint(str, &ch)) && ch)
-	{
+ yes = true;
+ char *str = match->line_info;
+ utf8_int32_t ch = 0;
+ while((str = utf8codepoint(str, &ch)) && ch)
+ {
   printf("%d\n", ch);
-	}
+ }
    }*/
 					}
 					else
@@ -975,6 +975,10 @@ void load_config(settings_config *config)
 	}
 }
 
+#ifdef MODE_TEST
+#include "tests.c"
+#endif
+
 #if defined(OS_LINUX) || defined(OS_WIN)
 int main(int argc, char **argv)
 {
@@ -1011,6 +1015,11 @@ int main(int argc, char **argv)
 	
 	debug_print_elapsed(startup_stamp, "config");
 	
+#ifdef MODE_TEST
+	window_w = 800;
+	window_h = 600;
+#endif
+	
 	platform_window window = platform_open_window("Text-search", window_w, window_h, 0, 0, 800, 600);
 	main_window = &window;
 	
@@ -1046,6 +1055,10 @@ int main(int argc, char **argv)
 	
 	keyboard_input keyboard = keyboard_input_create();
 	mouse_input mouse = mouse_input_create();
+	
+#ifdef MODE_TEST
+	run_tests(&window, &keyboard, &mouse);
+#endif
 	
 	camera camera;
 	camera.x = 0;
@@ -1116,7 +1129,7 @@ int main(int argc, char **argv)
 			global_asset_collection.done_loading_assets = true;
 			debug_print_elapsed(assets_stamp, "assets done loading");
 			
-#ifdef MODE_DEVELOPER
+#if defined(MODE_DEVELOPER) && !defined(MODE_TEST)
 			printf("frames drawn with missing assets: %d\n", frames_drawn_with_missing_assets);
 #endif
 		}
@@ -1237,7 +1250,7 @@ int main(int argc, char **argv)
 				if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
 				{
 					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
-					if (keyboard.text_changed) do_search();
+					if (keyboard.text_changed && string_length(textbox_search_text.buffer) >= 3) do_search();
 				}
 				
 				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
@@ -1321,7 +1334,9 @@ int main(int argc, char **argv)
 		}
 	}
 	
+#ifndef MODE_TEST
 	settings_config_write_to_file(&config, config_path_buffer);
+#endif
 	settings_config_destroy(&config);
 	
 	settings_page_destroy();
