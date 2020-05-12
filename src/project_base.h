@@ -66,6 +66,7 @@
 #include "../../project-base/src/external/cJSON.h"
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STBI_ONLY_PNG
 #include "../../project-base/src/external/stb_image.h"
 
 #define STB_TRUETYPE_IMPLEMENTATION

@@ -44,232 +44,242 @@ static void load_current_settings_into_ui()
 
 void settings_page_update_render()
 {
+	if (global_settings_page.window.has_focus)
+		global_settings_page.window.do_draw = true;
+	
 	if (global_settings_page.active)
 	{
 		platform_window_make_current(&global_settings_page.window);
 		platform_handle_events(&global_settings_page.window, &global_settings_page.mouse, &global_settings_page.keyboard);
 		platform_set_cursor(&global_settings_page.window, CURSOR_DEFAULT);
 		
-		render_clear();
-		
-        camera_apply_transformations(&global_settings_page.window, &global_settings_page.camera);
-        
-		global_ui_context.layout.active_window = &global_settings_page.window;
-		global_ui_context.keyboard = &global_settings_page.keyboard;
-		global_ui_context.mouse = &global_settings_page.mouse;
-		
-		ui_begin(3);
+		if (global_settings_page.window.do_draw)
 		{
-			ui_begin_menu_bar();
-			{
-				if (ui_push_menu(localize("general")))
-				{
-					global_settings_page.selected_tab_index = 0;
-				}
-				if (ui_push_menu(localize("interface")))
-				{
-					global_settings_page.selected_tab_index = 1;
-				}
-			}
-			ui_end_menu_bar();
+			global_settings_page.window.do_draw = false;
 			
-			ui_push_separator();
+			render_clear();
 			
-			if (global_settings_page.selected_tab_index == 0)
+			camera_apply_transformations(&global_settings_page.window, &global_settings_page.camera);
+			
+			global_ui_context.layout.active_window = &global_settings_page.window;
+			global_ui_context.keyboard = &global_settings_page.keyboard;
+			global_ui_context.mouse = &global_settings_page.mouse;
+			
+			ui_begin(3);
 			{
-				/////////////////////////////////////
-				// max file size
-				/////////////////////////////////////
-				ui_block_begin(LAYOUT_HORIZONTAL);
+				ui_begin_menu_bar();
 				{
-					ui_push_text(localize("max_file_size"));
-					ui_push_text(localize("zero_for_no_limit"));
-				}
-				ui_block_end();
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					if (ui_push_textbox(&global_settings_page.textbox_max_file_size, "0"))
+					if (ui_push_menu(localize("general")))
 					{
-						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
+						global_settings_page.selected_tab_index = 0;
 					}
-					ui_push_text("KB");
-				}
-				ui_block_end();
-				
-				/////////////////////////////////////
-				// max threads
-				/////////////////////////////////////
-				global_ui_context.layout.offset_y += 10;
-				
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					ui_push_text(localize("max_threads"));
-					ui_push_text(localize("minimum_of_1"));
-				}
-				ui_block_end();
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					if (ui_push_textbox(&global_settings_page.textbox_max_thread_count, "0"))
+					if (ui_push_menu(localize("interface")))
 					{
-						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
-					}
-					ui_push_text("Threads");
-					
-				}
-				ui_block_end();
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					if (ui_push_hypertext_link(localize("copy_config_path")))
-					{
-						char buffer[PATH_MAX];
-						platform_set_clipboard(main_window, get_config_save_location(buffer));
-						push_notification(localize("copied_to_clipboard"));
+						global_settings_page.selected_tab_index = 1;
 					}
 				}
-				ui_block_end();
+				ui_end_menu_bar();
 				
-#if 0
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					char license_text[30];
-					sprintf(license_text, "License: %s", license_key);
-					ui_push_text(license_text);
-				}
-				ui_block_end();
-#endif
-			}
-			else if (global_settings_page.selected_tab_index == 1)
-			{
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					ui_push_text(localize("language"));
-				}
-				ui_block_end();
+				ui_push_separator();
 				
-				ui_block_begin(LAYOUT_HORIZONTAL);
+				if (global_settings_page.selected_tab_index == 0)
 				{
-					if (ui_push_dropdown(&global_settings_page.dropdown_language, locale_get_name()))
+					/////////////////////////////////////
+					// max file size
+					/////////////////////////////////////
+					ui_block_begin(LAYOUT_HORIZONTAL);
 					{
-						for (s32 i = 0; i < global_localization.mo_files.length; i++)
+						ui_push_text(localize("max_file_size"));
+						ui_push_text(localize("zero_for_no_limit"));
+					}
+					ui_block_end();
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						if (ui_push_textbox(&global_settings_page.textbox_max_file_size, "0"))
 						{
-							mo_file *file = array_at(&global_localization.mo_files, i);
-							
-							if (ui_push_dropdown_item(file->icon, file->locale_full, i))
+							keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
+						}
+						ui_push_text("KB");
+					}
+					ui_block_end();
+					
+					/////////////////////////////////////
+					// max threads
+					/////////////////////////////////////
+					global_ui_context.layout.offset_y += 10;
+					
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						ui_push_text(localize("max_threads"));
+						ui_push_text(localize("minimum_of_1"));
+					}
+					ui_block_end();
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						if (ui_push_textbox(&global_settings_page.textbox_max_thread_count, "0"))
+						{
+							keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_NUMERIC);
+						}
+						ui_push_text("Threads");
+						
+					}
+					ui_block_end();
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						if (ui_push_hypertext_link(localize("copy_config_path")))
+						{
+							char buffer[PATH_MAX];
+							platform_set_clipboard(main_window, get_config_save_location(buffer));
+							push_notification(localize("copied_to_clipboard"));
+						}
+					}
+					ui_block_end();
+					
+#if 0
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						char license_text[30];
+						sprintf(license_text, "License: %s", license_key);
+						ui_push_text(license_text);
+					}
+					ui_block_end();
+#endif
+				}
+				else if (global_settings_page.selected_tab_index == 1)
+				{
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						ui_push_text(localize("language"));
+					}
+					ui_block_end();
+					
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						if (ui_push_dropdown(&global_settings_page.dropdown_language, locale_get_name()))
+						{
+							for (s32 i = 0; i < global_localization.mo_files.length; i++)
 							{
-								set_locale(file->locale_id);
-								//platform_window_set_title(&global_settings_page.window,
-								//localize("text_search_settings"));
+								mo_file *file = array_at(&global_localization.mo_files, i);
 								
-								if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
-									set_status_text_to_finished_search();
-								else
-									reset_status_text();
+								if (ui_push_dropdown_item(file->icon, file->locale_full, i))
+								{
+									set_locale(file->locale_id);
+									//platform_window_set_title(&global_settings_page.window,
+									//localize("text_search_settings"));
+									
+									if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
+										set_status_text_to_finished_search();
+									else
+										reset_status_text();
+								}
 							}
 						}
 					}
-				}
-				ui_block_end();
-				
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					ui_push_text(localize("double_click_action"));
-				}
-				ui_block_end();
-				
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					char* available_options[OPTION_RESULT+1] = {
-						localize("double_click_action_1"),
-						localize("double_click_action_2"),
-						localize("double_click_action_3"),
-						localize("double_click_action_4"),
-					};
+					ui_block_end();
 					
-					if (ui_push_dropdown(&global_settings_page.dropdown_doubleclick, available_options[global_settings_page.current_double_click_selection_option]))
+					ui_block_begin(LAYOUT_HORIZONTAL);
 					{
-						for (s32 i = 0; i < OPTION_RESULT+1; i++)
+						ui_push_text(localize("double_click_action"));
+					}
+					ui_block_end();
+					
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						char* available_options[OPTION_RESULT+1] = {
+							localize("double_click_action_1"),
+							localize("double_click_action_2"),
+							localize("double_click_action_3"),
+							localize("double_click_action_4"),
+						};
+						
+						if (ui_push_dropdown(&global_settings_page.dropdown_doubleclick, available_options[global_settings_page.current_double_click_selection_option]))
 						{
-							if (ui_push_dropdown_item(0, available_options[i], i))
+							for (s32 i = 0; i < OPTION_RESULT+1; i++)
 							{
-								global_settings_page.current_double_click_selection_option = i;
+								if (ui_push_dropdown_item(0, available_options[i], i))
+								{
+									global_settings_page.current_double_click_selection_option = i;
+								}
 							}
 						}
 					}
-				}
-				ui_block_end();
-				
+					ui_block_end();
+					
 #if 0
-				ui_block_begin(LAYOUT_HORIZONTAL);
-				{
-					ui_push_text("Style");
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						ui_push_text("Style");
+					}
+					ui_block_end();
+					
+					ui_block_begin(LAYOUT_HORIZONTAL);
+					{
+						if (ui_push_color_button("Light", global_ui_context.style.id == UI_STYLE_LIGHT, rgb(250, 250, 250)))
+						{
+							ui_set_style(UI_STYLE_LIGHT);
+						}
+						if (ui_push_color_button("Dark", global_ui_context.style.id == UI_STYLE_DARK, rgb(50, 50, 50)))
+						{
+							ui_set_style(UI_STYLE_DARK);
+						}
+					}
+					ui_block_end();
+#endif
 				}
-				ui_block_end();
+				
+				global_ui_context.layout.offset_y = global_settings_page.window.height - 33;
 				
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
-					if (ui_push_color_button("Light", global_ui_context.style.id == UI_STYLE_LIGHT, rgb(250, 250, 250)))
+					if (ui_push_button(&global_settings_page.btn_close, localize("close")))
 					{
-						ui_set_style(UI_STYLE_LIGHT);
+						global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
+						global_settings_page.textbox_max_file_size.buffer[0] = 0; 
+						ui_set_style(global_settings_page.current_style);
+						global_settings_page.current_double_click_selection_option = global_settings_page.selected_double_click_selection_option;
+						global_settings_page.active = false;
+						set_locale(global_settings_page.current_locale_id);
+						settings_page_hide();
+						
+						if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
+							set_status_text_to_finished_search();
+						else
+							reset_status_text();
+						
+						main_window->do_draw = true;
+						return;
 					}
-					if (ui_push_color_button("Dark", global_ui_context.style.id == UI_STYLE_DARK, rgb(50, 50, 50)))
+					if (ui_push_button(&global_settings_page.btn_close, localize("save")))
 					{
-						ui_set_style(UI_STYLE_DARK);
+						global_settings_page.current_style = global_ui_context.style.id;
+						global_settings_page.max_thread_count = string_to_s32(global_settings_page.textbox_max_thread_count.buffer);
+						if (global_settings_page.max_thread_count < 1)
+							global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
+						
+						global_settings_page.max_file_size = string_to_s32(global_settings_page.textbox_max_file_size.buffer);
+						
+						global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
+						global_settings_page.textbox_max_file_size.buffer[0] = 0;
+						global_settings_page.selected_double_click_selection_option = global_settings_page.current_double_click_selection_option;
+						
+						global_settings_page.active = false;
+						settings_page_hide();
+						return;
 					}
 				}
 				ui_block_end();
-#endif
 			}
+			ui_end();
 			
-			global_ui_context.layout.offset_y = global_settings_page.window.height - 33;
-			
-			ui_block_begin(LAYOUT_HORIZONTAL);
+			if (!global_settings_page.window.is_open)
 			{
-				if (ui_push_button(&global_settings_page.btn_close, localize("close")))
-				{
-					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
-					global_settings_page.textbox_max_file_size.buffer[0] = 0; 
-					ui_set_style(global_settings_page.current_style);
-					global_settings_page.current_double_click_selection_option = global_settings_page.selected_double_click_selection_option;
-					global_settings_page.active = false;
-					set_locale(global_settings_page.current_locale_id);
-					settings_page_hide();
-					
-					if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
-						set_status_text_to_finished_search();
-					else
-						reset_status_text();
-					return;
-				}
-				if (ui_push_button(&global_settings_page.btn_close, localize("save")))
-				{
-					global_settings_page.current_style = global_ui_context.style.id;
-					global_settings_page.max_thread_count = string_to_s32(global_settings_page.textbox_max_thread_count.buffer);
-					if (global_settings_page.max_thread_count < 1)
-						global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
-					
-					global_settings_page.max_file_size = string_to_s32(global_settings_page.textbox_max_file_size.buffer);
-					
-					global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
-					global_settings_page.textbox_max_file_size.buffer[0] = 0;
-					global_settings_page.selected_double_click_selection_option = global_settings_page.current_double_click_selection_option;
-					
-					global_settings_page.active = false;
-					settings_page_hide();
-					return;
-				}
+				global_settings_page.active = false;
+				settings_page_hide();
+				return;
 			}
-			ui_block_end();
+			
+			platform_window_swap_buffers(&global_settings_page.window);
 		}
-		ui_end();
-		
-		if (!global_settings_page.window.is_open)
-		{
-			global_settings_page.active = false;
-			settings_page_hide();
-			return;
-		}
-		
-		platform_window_swap_buffers(&global_settings_page.window);
 	}
 }
 

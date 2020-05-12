@@ -7,6 +7,8 @@
 #include "config.h"
 #include "project_base.h"
 
+// TODO(Aldrik): convert png to bmp + time changes
+
 typedef struct t_status_bar
 {
 	char *result_status_text;
@@ -175,6 +177,7 @@ static void* find_text_in_file_worker(void *arg)
 						}
 						
 						array_push(&result_buffer->matches, &file_match);
+						main_window->do_draw = true;
 					}
 				}
 				
@@ -368,11 +371,15 @@ static void render_status_bar(platform_window *window, font *font_small)
 
 void set_status_text_to_finished_search()
 {
+	main_window->do_draw = true;
+	
 	snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), current_search_result->matches.length, current_search_result->files.length, current_search_result->find_duration_us/1000.0);
 }
 
 static void set_status_text_to_active()
 {
+	main_window->do_draw = true;
+	
 	char text[40];
 	
 	u64 dot_count_t = platform_get_time(TIME_FULL, TIME_MILI_S);
@@ -385,11 +392,15 @@ static void set_status_text_to_active()
 
 static void set_status_text_to_cancelled()
 {
+	main_window->do_draw = true;
+	
 	string_copyn(global_status_bar.result_status_text, localize("cancelling_search"), MAX_STATUS_TEXT_LENGTH);
 }
 
 void reset_status_text()
 {
+	main_window->do_draw = true;
+	
 	string_copyn(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
@@ -1027,8 +1038,6 @@ int main(int argc, char **argv)
 	startup_stamp = platform_get_time(TIME_FULL, TIME_US);
 #endif
 	
-	//validate_license();
-	
 	settings_page_create();
 	
 	debug_print_elapsed(startup_stamp, "settings page");
@@ -1115,8 +1124,6 @@ int main(int argc, char **argv)
 		
 		platform_window_make_current(&window);
 		
-		//if (!license_check_status()) break;
-		
 		static bool icon_loaded = false;
 		if (!icon_loaded && logo_small_img->loaded)
 		{
@@ -1145,57 +1152,35 @@ int main(int argc, char **argv)
 		global_ui_context.keyboard = &keyboard;
 		global_ui_context.mouse = &mouse;
 		
-		render_clear();
-		camera_apply_transformations(&window, &camera);
+		if (assets_do_post_process())
+			window.do_draw = true;
 		
-		global_ui_context.layout.width = global_ui_context.layout.active_window->width;
-		// begin ui
+		if (window.has_focus)
+			window.do_draw = true;
 		
-		assets_do_post_process();
-		
-		ui_begin(1);
+		if (window.do_draw)
 		{
-			render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
+			window.do_draw = false;
 			
-			ui_begin_menu_bar();
+			render_clear();
+			camera_apply_transformations(&window, &camera);
+			
+			global_ui_context.layout.width = global_ui_context.layout.active_window->width;
+			// begin ui
+			
+			ui_begin(1);
 			{
-				// shortcuts begin
-				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
-				{
-					import_results();
-				}
-				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
-				{
-					if (!current_search_result->done_finding_matches)
-						platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
-					else if (current_search_result->found_file_matches)
-						export_results(current_search_result);
-					else
-						platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
-				}
-				if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_Q}))
-				{
-					window.is_open = false;
-				}
-				if (keyboard_is_key_pressed(&keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state)
-				{
-					do_search();
-				}
-				if (keyboard_is_key_pressed(&keyboard, KEY_TAB) && textbox_path.state)
-				{
-					platform_autocomplete_path(textbox_path.buffer, true);
-					ui_set_textbox_text(&textbox_path, textbox_path.buffer);
-				}
-				// shortcuts end
+				render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
 				
-				if (ui_push_menu(localize("file")))
+				ui_begin_menu_bar();
 				{
-					if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
-					{ 
-						import_results(); 
+					// shortcuts begin
+					if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_O}))
+					{
+						import_results();
 					}
-					if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
-					{ 
+					if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_S}))
+					{
 						if (!current_search_result->done_finding_matches)
 							platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
 						else if (current_search_result->found_file_matches)
@@ -1203,98 +1188,129 @@ int main(int argc, char **argv)
 						else
 							platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
 					}
-					ui_push_menu_item_separator();
-					if (ui_push_menu_item(localize("quit"), "Ctrl + Q")) 
-					{ 
-						window.is_open = false; 
-					}
-				}
-				if (ui_push_menu(localize("options")))
-				{
-					if (ui_push_menu_item(localize("settings"), "")) 
+					if (is_shortcut_down((s32[2]){KEY_LEFT_CONTROL,KEY_Q}))
 					{
-						settings_page_show();
+						window.is_open = false;
 					}
-				}
-			}
-			ui_end_menu_bar();
-			
-			ui_push_separator();
-			
-			ui_block_begin(LAYOUT_HORIZONTAL);
-			{
-				if (ui_push_textbox(&textbox_path, localize("search_directory")))
-				{
-					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
-				}
-				
-				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
-				if (ui_push_button_image(&button_select_directory, "", directory_img))
-				{
-					platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0, 0);
-					ui_set_textbox_text(&textbox_path, textbox_path.buffer);
-				}
-				ui_push_tooltip(localize("tooltip_browse_directories"));
-				
-				if (ui_push_textbox(&textbox_file_filter, localize("file_filter")))
-				{
-					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
-				}
-			}
-			ui_block_end();
-			
-			global_ui_context.layout.offset_y -= 5;
-			
-			ui_block_begin(LAYOUT_HORIZONTAL);
-			{
-				if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
-				{
-					keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
-					if (keyboard.text_changed && string_length(textbox_search_text.buffer) >= 3) do_search();
-				}
-				
-				global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
-				if (ui_push_button_image(&button_find_text, "", search_img))
-				{
-					do_search();
-				}
-				ui_push_tooltip(localize("tooltip_start_searching"));
-				
-				ui_push_checkbox(&checkbox_recursive, localize("folders"));
-				ui_push_tooltip(localize("tooltip_search_folders_recursively"));
-				
-				if (!current_search_result->done_finding_matches)
-				{
-					if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
+					if (keyboard_is_key_pressed(&keyboard, KEY_ENTER) && !textbox_path.state && !textbox_file_filter.state)
 					{
-						current_search_result->cancel_search = true;
+						do_search();
+					}
+					if (keyboard_is_key_pressed(&keyboard, KEY_TAB) && textbox_path.state)
+					{
+						platform_autocomplete_path(textbox_path.buffer, true);
+						ui_set_textbox_text(&textbox_path, textbox_path.buffer);
+					}
+					// shortcuts end
+					
+					if (ui_push_menu(localize("file")))
+					{
+						if (ui_push_menu_item(localize("import"), "Ctrl + O")) 
+						{ 
+							import_results(); 
+						}
+						if (ui_push_menu_item(localize("export"), "Ctrl + S")) 
+						{ 
+							if (!current_search_result->done_finding_matches)
+								platform_show_message(&window, localize("cant_export_when_active"), localize("failed_to_export_results"));
+							else if (current_search_result->found_file_matches)
+								export_results(current_search_result);
+							else
+								platform_show_message(&window, localize("no_results_to_export"), localize("failed_to_export_results"));
+						}
+						ui_push_menu_item_separator();
+						if (ui_push_menu_item(localize("quit"), "Ctrl + Q")) 
+						{ 
+							window.is_open = false; 
+						}
+					}
+					if (ui_push_menu(localize("options")))
+					{
+						if (ui_push_menu_item(localize("settings"), "")) 
+						{
+							settings_page_show();
+						}
 					}
 				}
+				ui_end_menu_bar();
+				
+				ui_push_separator();
+				
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					if (ui_push_textbox(&textbox_path, localize("search_directory")))
+					{
+						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+					}
+					
+					global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
+					if (ui_push_button_image(&button_select_directory, "", directory_img))
+					{
+						platform_open_file_dialog(OPEN_DIRECTORY, textbox_path.buffer, 0, 0);
+						ui_set_textbox_text(&textbox_path, textbox_path.buffer);
+					}
+					ui_push_tooltip(localize("tooltip_browse_directories"));
+					
+					if (ui_push_textbox(&textbox_file_filter, localize("file_filter")))
+					{
+						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+					}
+				}
+				ui_block_end();
+				
+				global_ui_context.layout.offset_y -= 5;
+				
+				ui_block_begin(LAYOUT_HORIZONTAL);
+				{
+					if (ui_push_textbox(&textbox_search_text, localize("text_to_find")))
+					{
+						keyboard_set_input_mode(&global_settings_page.keyboard, INPUT_FULL);
+						if (keyboard.text_changed && string_length(textbox_search_text.buffer) >= 3) do_search();
+					}
+					
+					global_ui_context.layout.offset_x -= WIDGET_PADDING - 1;
+					if (ui_push_button_image(&button_find_text, "", search_img))
+					{
+						do_search();
+					}
+					ui_push_tooltip(localize("tooltip_start_searching"));
+					
+					ui_push_checkbox(&checkbox_recursive, localize("folders"));
+					ui_push_tooltip(localize("tooltip_search_folders_recursively"));
+					
+					if (!current_search_result->done_finding_matches)
+					{
+						if (ui_push_button_image(&button_cancel, localize("cancel"), directory_img))
+						{
+							current_search_result->cancel_search = true;
+						}
+					}
+				}
+				ui_block_end();
+				
+				ui_push_separator();
 			}
-			ui_block_end();
+			ui_end();
+			// end ui
 			
-			ui_push_separator();
-		}
-		ui_end();
-		// end ui
-		
-		// draw info or results
-		{
-			render_status_bar(&window, font_small);
+			// draw info or results
+			{
+				render_status_bar(&window, font_small);
+				
+				if (!current_search_result->found_file_matches)
+				{
+					render_info(&window, font_small);
+				}
+				else
+				{
+					render_update_result(&window, font_mini, &mouse, &keyboard);
+				}
+			}
 			
-			if (!current_search_result->found_file_matches)
-			{
-				render_info(&window, font_small);
-			}
-			else
-			{
-				render_update_result(&window, font_mini, &mouse, &keyboard);
-			}
+			update_render_notifications();
+			
+			platform_window_swap_buffers(&window);
 		}
-		
-		update_render_notifications();
-		
-		platform_window_swap_buffers(&window);
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);
 		u64 diff = current_stamp - last_stamp;
