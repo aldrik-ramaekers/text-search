@@ -7,7 +7,7 @@
 #include "config.h"
 #include "project_base.h"
 
-// TODO(Aldrik): convert png to bmp + time changes
+// TODO(Aldrik): redo input system into a queue to make testing easier
 
 typedef struct t_status_bar
 {
@@ -404,6 +404,85 @@ void reset_status_text()
 	string_copyn(global_status_bar.result_status_text, localize("no_search_completed"), MAX_STATUS_TEXT_LENGTH);
 }
 
+static s32 path_width = 300;
+static s32 pattern_width = 150;
+
+static s32 render_update_result_header(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
+{
+	static bool dragging_path = false;
+	static bool dragging_pattern = false;
+	
+	s32 y = global_ui_context.layout.offset_y;
+	s32 h = 24;
+	y -= 9;
+	
+	// path width
+	if (mouse->x > path_width-5 && mouse->x < path_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_pattern)
+	{
+		platform_set_cursor(window, CURSOR_POINTER);
+		if (is_left_down(mouse))
+		{
+			dragging_path = true;
+		}
+	}
+	if (dragging_path)
+	{
+		platform_set_cursor(window, CURSOR_POINTER);
+		
+		path_width = mouse->x;
+		
+		if (is_left_released(mouse))
+		{
+			dragging_path = false;
+		}
+	}
+	if (path_width + pattern_width > window->width - 100)
+		path_width = window->width - pattern_width - 100;
+	if (path_width < 100)
+		path_width = 100;
+	
+	// pattern width
+	if (mouse->x > path_width+pattern_width-5 && mouse->x < path_width+pattern_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_path)
+	{
+		platform_set_cursor(window, CURSOR_POINTER);
+		if (is_left_down(mouse))
+		{
+			dragging_pattern = true;
+		}
+	}
+	if (dragging_pattern)
+	{
+		platform_set_cursor(window, CURSOR_POINTER);
+		
+		pattern_width = mouse->x - path_width;
+		
+		if (is_left_released(mouse))
+		{
+			dragging_pattern = false;
+		}
+	}
+	if (pattern_width + path_width > window->width - 100)
+		pattern_width = window->width - path_width - 100;
+	if (pattern_width < 105)
+		pattern_width = 105;
+	
+	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
+	
+	render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
+	
+	render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
+	
+	render_rectangle(path_width, y+1, 1, h-2, global_ui_context.style.border);
+	
+	render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
+	
+	render_rectangle(path_width + pattern_width, y+1, 1, h-2, global_ui_context.style.border);
+	
+	render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
+	
+	return y;
+}
+
 static void render_update_result(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
 {
 	if (!current_search_result->done_finding_matches)
@@ -423,25 +502,10 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	render_set_scissor(window, 0, render_y, window->width, render_h);
 	
+	y = render_update_result_header(window, font_small, mouse, keyboard);
+	
 	if (current_search_result->match_found)
 	{
-		y -= 9;
-		
-		s32 path_width = window->width / 2.0;
-		s32 pattern_width = window->width / 8.0;
-		
-		/// header /////////////
-		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
-		
-		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
-		
-		render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
-		
-		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
-		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
-		/////////////////////////
-		
 		y += h-1;
 		
 		s32 scroll_w = 14;
@@ -660,26 +724,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	}
 	else
 	{
-#if 1
-		y -= 9;
-		
-		s32 path_width = window->width / 2.0;
-		s32 pattern_width = window->width / 8.0;
-		
-		/// header /////////////
-		render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
-		
-		render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
-		
-		render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
-		
-		render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
-		
-		render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
-		/////////////////////////
-		
 		y += 30;
-#endif
 		
 		char *message = localize("no_matches_found");
 		s32 w = calculate_text_width(font_small, message);
@@ -930,6 +975,16 @@ void load_config(settings_config *config)
 	char *locale_id = settings_config_get_string(config, "LOCALE");
 	u32 style = settings_config_get_number(config, "STYLE");
 	u32 double_click_action = settings_config_get_number(config, "DOUBLE_CLICK_ACTION");
+	
+	s32 tab1 = settings_config_get_number(config, "TAB_PATH");
+	s32 tab2 = settings_config_get_number(config, "TAB_PATTERN");
+	
+	if (tab1 != 0) path_width = tab1;
+	if (tab2 != 0) pattern_width = tab2;
+	if (path_width < 100)
+		path_width = 100;
+	if (pattern_width < 105)
+		pattern_width = 105;
 	
 	if (search_filter)
 		string_copyn(textbox_file_filter.buffer, search_filter, MAX_INPUT_LENGTH);
@@ -1333,6 +1388,8 @@ int main(int argc, char **argv)
 	settings_config_set_string(&config, "FILE_FILTER", textbox_file_filter.buffer);
 	settings_config_set_number(&config, "MAX_THEAD_COUNT", global_settings_page.max_thread_count);
 	settings_config_set_number(&config, "MAX_FILE_SIZE", global_settings_page.max_file_size);
+	settings_config_set_number(&config, "TAB_PATH", path_width);
+	settings_config_set_number(&config, "TAB_PATTERN", pattern_width);
 	
 	vec2 win_size = platform_get_window_size(&window);
 	settings_config_set_number(&config, "WINDOW_WIDTH", win_size.x);

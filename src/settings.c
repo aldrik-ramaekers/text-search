@@ -164,8 +164,8 @@ void settings_page_update_render()
 								if (ui_push_dropdown_item(file->icon, file->locale_full, i))
 								{
 									set_locale(file->locale_id);
-									//platform_window_set_title(&global_settings_page.window,
-									//localize("text_search_settings"));
+									platform_window_set_title(&global_settings_page.window,
+															  localize("text_search_settings"));
 									
 									if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
 										set_status_text_to_finished_search();
@@ -233,20 +233,7 @@ void settings_page_update_render()
 				{
 					if (ui_push_button(&global_settings_page.btn_close, localize("close")))
 					{
-						global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
-						global_settings_page.textbox_max_file_size.buffer[0] = 0; 
-						ui_set_style(global_settings_page.current_style);
-						global_settings_page.current_double_click_selection_option = global_settings_page.selected_double_click_selection_option;
-						global_settings_page.active = false;
-						set_locale(global_settings_page.current_locale_id);
-						settings_page_hide();
-						
-						if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
-							set_status_text_to_finished_search();
-						else
-							reset_status_text();
-						
-						main_window->do_draw = true;
+						settings_page_hide_without_save();
 						return;
 					}
 					if (ui_push_button(&global_settings_page.btn_close, localize("save")))
@@ -262,7 +249,6 @@ void settings_page_update_render()
 						global_settings_page.textbox_max_file_size.buffer[0] = 0;
 						global_settings_page.selected_double_click_selection_option = global_settings_page.current_double_click_selection_option;
 						
-						global_settings_page.active = false;
 						settings_page_hide();
 						return;
 					}
@@ -274,7 +260,7 @@ void settings_page_update_render()
 			if (!global_settings_page.window.is_open)
 			{
 				global_settings_page.active = false;
-				settings_page_hide();
+				settings_page_hide_without_save();
 				return;
 			}
 			
@@ -316,6 +302,12 @@ void settings_page_hide()
 		
 		global_settings_page.mouse.x = -1;
 		global_settings_page.mouse.y = -1;
+		
+		if (current_search_result->done_finding_matches && current_search_result->search_id != 0)
+			set_status_text_to_finished_search();
+		else
+			reset_status_text();
+		
 	}
 }
 
@@ -323,6 +315,8 @@ void settings_page_hide_without_save()
 {
 	if (platform_window_is_valid(&global_settings_page.window))
 	{
+		global_settings_page.current_double_click_selection_option = global_settings_page.selected_double_click_selection_option;
+		set_locale(global_settings_page.current_locale_id);
 		global_settings_page.textbox_max_thread_count.buffer[0] = 0; 
 		global_settings_page.textbox_max_file_size.buffer[0] = 0; 
 		

@@ -11,7 +11,7 @@ SET defs=-DMODE_DEVELOPER
 if "%1"=="-w" (SET defs=-DMODE_DEVELOPER -DMODE_GDBDEBUG)
 if "%2"=="-t" (SET defs=-DMODE_DEVELOPER -DMODE_TEST)
 
-x86_64-w64-mingw32-gcc -m64 -Wall -g %defs% -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi 
+x86_64-w64-mingw32-gcc -m64 -Wall -g %defs% -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32 -lgdiplus -lole32 -lshlwapi
 
 REM libs used for licensing: -lwininet -liphlpapi
 

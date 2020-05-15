@@ -1,0 +1,10 @@
+
+1.1 (not released)
+- got rid of rugged edges on icons
+- decreased binary size
+- fix bug where settings was being saved without clicking the save button
+- tab width is now manually editable
+- lower cpu usage when idle
+- small ui improvements
+1.0
+- initial release
