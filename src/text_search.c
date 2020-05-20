@@ -341,12 +341,12 @@ void *set_window_title_t(void *arg)
 	
 	while (!result_buffer->done_finding_files)
 	{
-		snprintf(buffer, 100, "Text-search [%I64u dirs, %I64u files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
+		snprintf(buffer, 100, "Text-search [%"PRId64" dirs, %"PRId64" files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
 		platform_window_set_title(main_window, buffer);
 		thread_sleep(1000);
 	}
 	
-	snprintf(buffer, 100, "Text-search [%I64u dirs, %I64u files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
+	snprintf(buffer, 100, "Text-search [%"PRId64" dirs, %"PRId64" files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
 	platform_window_set_title(main_window, buffer);
 	
 	return 0;
