@@ -1,6 +1,7 @@
 
 1.2 (not released)
-- show total files & directories iterated in title
+- config file validation
+- show total files & directories handled in status bar
 - show version number on settings page
 1.1
 - got rid of rugged edges on icons

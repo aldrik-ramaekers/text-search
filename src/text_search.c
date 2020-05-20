@@ -233,6 +233,9 @@ static void* find_text_in_files_t(void *arg)
 	char *text_to_find = result_buffer->text_to_find;
 	
 	// create worker threads
+	if (result_buffer->max_thread_count <= 0)
+		result_buffer->max_thread_count = DEFAULT_THREAD_COUNT;
+	
 	for(s32 i = 0; i < result_buffer->max_thread_count; i++)
 	{
 		thread new_thr = thread_start(find_text_in_file_worker, result_buffer);
@@ -334,24 +337,6 @@ static void* find_text_in_files_t(void *arg)
 	return 0;
 }
 
-void *set_window_title_t(void *arg)
-{
-	search_result *result_buffer = arg;
-	char buffer[100];
-	
-	while (!result_buffer->done_finding_files)
-	{
-		snprintf(buffer, 100, "Text-search [%"PRId64" dirs, %"PRId64" files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
-		platform_window_set_title(main_window, buffer);
-		thread_sleep(1000);
-	}
-	
-	snprintf(buffer, 100, "Text-search [%"PRId64" dirs, %"PRId64" files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
-	platform_window_set_title(main_window, buffer);
-	
-	return 0;
-}
-
 void find_text_in_files(search_result *search_result)
 {
 	search_result->files_matched = 0;
@@ -361,9 +346,6 @@ void find_text_in_files(search_result *search_result)
 	
 	thread thr1 = thread_start(find_text_in_files_t, search_result);
 	thread_detach(&thr1);
-	
-	thread thr2 = thread_start(set_window_title_t, search_result);
-	thread_detach(&thr2);
 }
 
 static void render_status_bar(platform_window *window, font *font_small)
@@ -386,6 +368,21 @@ static void render_status_bar(platform_window *window, font *font_small)
 		render_set_scissor(main_window, 0, y, main_window->width/2, h);
 		render_image(error_img, 6, y + (h/2) - (img_size/2), img_size, img_size);
 		render_text(font_small, 12 + img_size, y + (h/2)-(font_small->px_h/2), global_status_bar.error_status_text, global_ui_context.style.error_foreground);
+		render_reset_scissor(main_window);
+	}
+	else
+	{
+		char buffer[100];
+		
+		render_set_scissor(main_window, 0, y, main_window->width/2, h);
+		snprintf(buffer, 100, "%"PRId64" %s %"PRId64" %s",
+				 current_search_result->search_info.dir_count,
+				 localize("files_handled_1"),
+				 current_search_result->search_info.file_count,
+				 localize("files_handled_2"));
+		
+		render_text(font_small, 5, y + (h/2)-(font_small->px_h/2), buffer, global_ui_context.style.foreground);
+		
 		render_reset_scissor(main_window);
 	}
 }
@@ -1025,11 +1022,6 @@ void load_config(settings_config *config)
 	else
 		set_locale("en");
 	
-	if (style != 0)
-	{
-		ui_set_style(style);
-	}
-	
 	if (path)
 	{
 		string_copyn(textbox_path.buffer, path, MAX_INPUT_LENGTH);
@@ -1039,6 +1031,12 @@ void load_config(settings_config *config)
 		global_settings_page.max_file_size = max_file_size;
 		global_settings_page.current_style = global_ui_context.style.id;
 		global_settings_page.selected_double_click_selection_option = double_click_action;
+		
+		if (global_settings_page.max_thread_count <= 0)
+			global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
+		
+		if (global_settings_page.max_file_size > 999999999)
+			global_settings_page.max_file_size = DEFAULT_MAX_FILE_SIZE;
 	}
 	else
 	{
@@ -1166,8 +1164,10 @@ int main(int argc, char **argv)
 	button_select_directory = ui_create_button();
 	button_find_text = ui_create_button();
 	button_cancel = ui_create_button();
-	
 	debug_print_elapsed(startup_stamp, "ui widgets");
+	
+	load_config(&config);
+	debug_print_elapsed(startup_stamp, "apply config");
 	
 	// status bar
 	global_status_bar.result_status_text = mem_alloc(MAX_STATUS_TEXT_LENGTH);
@@ -1175,16 +1175,9 @@ int main(int argc, char **argv)
 	global_status_bar.error_status_text = mem_alloc(MAX_ERROR_MESSAGE_LENGTH);
 	global_status_bar.error_status_text[0] = 0;
 	reset_status_text();
-	
 	debug_print_elapsed(startup_stamp, "status bar");
 	
-	load_config(&config);
-	//set_active_textbox(&textbox_search_text);
-	
-	debug_print_elapsed(startup_stamp, "apply config");
-	
 	current_search_result = create_empty_search_result();
-	
 	debug_print_elapsed(startup_stamp, "setup");
 	
 	debug_print_elapsed_undent();

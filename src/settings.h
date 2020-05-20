@@ -44,7 +44,7 @@ typedef struct t_settings_page
 } settings_page;
 
 #define DEFAULT_THREAD_COUNT 10
-#define DEFAULT_MAX_FILE_SIZE 100
+#define DEFAULT_MAX_FILE_SIZE 5000
 #define DEFAULT_RECURSIVE_STATE 1
 #define DEFAULT_STYLE 1
 
