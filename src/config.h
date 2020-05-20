@@ -8,6 +8,7 @@
 #define INCLUDE_CONFIG
 
 #define TARGET_FRAMERATE (1000/24.0)
+#define VERSION "1.0.2"
 
 #define SCROLL_SPEED 20
 #define FILE_RESERVE_COUNT 500

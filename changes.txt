@@ -1,8 +1,11 @@
 
-1.1 (not released)
+1.2 (not released)
+- show total files & directories iterated in title
+- show version number on settings page
+1.1
 - got rid of rugged edges on icons
 - decreased binary size
-- fix bug where settings was being saved without clicking the save button
+- fix bug where settings were being saved without clicking the save button
 - tab width is now manually editable
 - lower cpu usage when idle
 - small ui improvements

@@ -250,7 +250,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	
 	platform_list_files(&result->files, result->directory_to_search, result->file_filter, result->is_recursive, &result->mem_bucket,
 						&result->cancel_search,
-						&result->done_finding_files);
+						&result->done_finding_files, 0);
 	find_text_in_files(result);
 	
 	while(!result->threads_closed) { thread_sleep(1000); }

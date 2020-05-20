@@ -334,6 +334,24 @@ static void* find_text_in_files_t(void *arg)
 	return 0;
 }
 
+void *set_window_title_t(void *arg)
+{
+	search_result *result_buffer = arg;
+	char buffer[100];
+	
+	while (!result_buffer->done_finding_files)
+	{
+		snprintf(buffer, 100, "Text-search [%I64u dirs, %I64u files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
+		platform_window_set_title(main_window, buffer);
+		thread_sleep(1000);
+	}
+	
+	snprintf(buffer, 100, "Text-search [%I64u dirs, %I64u files handled]", result_buffer->search_info.dir_count, result_buffer->search_info.file_count);
+	platform_window_set_title(main_window, buffer);
+	
+	return 0;
+}
+
 void find_text_in_files(search_result *search_result)
 {
 	search_result->files_matched = 0;
@@ -341,8 +359,11 @@ void find_text_in_files(search_result *search_result)
 	search_result->found_file_matches = true;
 	search_result->match_found = false;
 	
-	thread thr = thread_start(find_text_in_files_t, search_result);
-	thread_detach(&thr);
+	thread thr1 = thread_start(find_text_in_files_t, search_result);
+	thread_detach(&thr1);
+	
+	thread thr2 = thread_start(set_window_title_t, search_result);
+	thread_detach(&thr2);
 }
 
 static void render_status_bar(platform_window *window, font *font_small)
@@ -824,6 +845,8 @@ search_result *create_empty_search_result()
 	new_result_buffer->walking_file_system = false;
 	new_result_buffer->is_command_line_search = false;
 	new_result_buffer->threads_closed = false;
+	new_result_buffer->search_info.dir_count = 0;
+	new_result_buffer->search_info.file_count = 0;
 	
 	new_result_buffer->mem_bucket = memory_bucket_init(megabytes(5));
 	
@@ -921,7 +944,8 @@ static bool start_file_search(search_result *new_result)
 			{
 				platform_list_files(&new_result->files, new_result->directory_to_search, new_result->file_filter, new_result->is_recursive, &new_result->mem_bucket,
 									&new_result->cancel_search,
-									&new_result->done_finding_files);
+									&new_result->done_finding_files,
+									&new_result->search_info);
 			}
 		}
 	}
