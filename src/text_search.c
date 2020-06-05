@@ -8,6 +8,7 @@
 #include "project_base.h"
 
 // TODO(Aldrik): redo input system into a queue to make testing easier
+// TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
 
 typedef struct t_status_bar
 {

@@ -1,5 +1,5 @@
 
-1.2 (not released)
+1.2
 - config file validation
 - show total files & directories handled in status bar
 - show version number on settings page
