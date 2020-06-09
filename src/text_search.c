@@ -7,8 +7,11 @@
 #include "config.h"
 #include "project_base.h"
 
+// TODO(Aldrik): check if bitmap font is faster to load
 // TODO(Aldrik): redo input system into a queue to make testing easier
 // TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
+// TODO(Aldrik): use GDI in windows build instead of opengl
+// TODO(Aldrik): replace char with custom string struct that resizes when necessary to check if memory usage is fixed
 
 typedef struct t_status_bar
 {
@@ -971,19 +974,13 @@ void do_search()
 
 static void load_assets()
 {
-	search_img = assets_load_image(_binary____data_imgs_search_png_start, 
-								   _binary____data_imgs_search_png_end, false);
-	logo_small_img = assets_load_image(_binary____data_imgs_logo_64_png_start,
-									   _binary____data_imgs_logo_64_png_end, true);
-	directory_img = assets_load_image(_binary____data_imgs_folder_png_start,
-									  _binary____data_imgs_folder_png_end, false);
-	error_img = assets_load_image(_binary____data_imgs_error_png_start,
-								  _binary____data_imgs_error_png_end, false);
+	search_img = load_bitmap(search_bmp);
+	logo_small_img = load_bitmap(logo_64_bmp);
+	directory_img = load_bitmap(folder_bmp);
+	error_img = load_bitmap(error_bmp);
 	
-	font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
-								  _binary____data_fonts_mono_ttf_end, 15);
-	font_mini = assets_load_font(_binary____data_fonts_mono_ttf_start,
-								 _binary____data_fonts_mono_ttf_end, 12);
+	font_small = load_font(mono_ttf, 15);
+	font_mini = load_font(mono_ttf, 12);
 }
 
 void load_config(settings_config *config)
@@ -1123,8 +1120,10 @@ int main(int argc, char **argv)
 	// asset worker
 	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
 	thread asset_queue_worker2 = thread_start(assets_queue_worker, NULL);
+	thread asset_queue_worker3 = thread_start(assets_queue_worker, NULL);
 	thread_detach(&asset_queue_worker1);
 	thread_detach(&asset_queue_worker2);
+	thread_detach(&asset_queue_worker3);
 	
 	debug_print_elapsed(startup_stamp, "asset workers");
 	
@@ -1207,9 +1206,15 @@ int main(int argc, char **argv)
 		if (global_asset_collection.queue.queue.length == 0 && !global_asset_collection.done_loading_assets)
 		{
 			global_asset_collection.done_loading_assets = true;
-			debug_print_elapsed(assets_stamp, "assets done loading");
+			debug_print_elapsed(assets_stamp, "asset queue emptied");
+			
+#ifdef MODE_TIMESTARTUP
+			break;
+#endif
 			
 #if defined(MODE_DEVELOPER) && !defined(MODE_TEST)
+			printf("allocated at startup: %dkb\n", __total_allocated/1000);
+			printf("reallocated at startup: %dkb\n", __total_reallocated/1000);
 			printf("frames drawn with missing assets: %d\n", frames_drawn_with_missing_assets);
 #endif
 		}
@@ -1443,10 +1448,10 @@ int main(int argc, char **argv)
 	mem_free(global_status_bar.error_status_text);
 	
 	// delete assets
-	assets_destroy_image(search_img);
-	assets_destroy_image(logo_small_img);
-	assets_destroy_image(directory_img);
-	assets_destroy_image(error_img);
+	assets_destroy_bitmap(search_img);
+	assets_destroy_bitmap(logo_small_img);
+	assets_destroy_bitmap(directory_img);
+	assets_destroy_bitmap(error_img);
 	
 	assets_destroy_font(font_small);
 	assets_destroy_font(font_mini);

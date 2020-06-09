@@ -10,10 +10,8 @@ void set_status_text_to_finished_search();
 void settings_page_create()
 {
 	global_settings_page.active = false;
-	global_settings_page.font_small = assets_load_font(_binary____data_fonts_mono_ttf_start,
-													   _binary____data_fonts_mono_ttf_end, 16);
-	global_settings_page.logo_img = assets_load_image(_binary____data_imgs_logo_64_png_start,
-													  _binary____data_imgs_logo_64_png_end, true);
+	global_settings_page.font_small = load_font(mono_ttf, 15);
+	global_settings_page.logo_img = load_bitmap(logo_64_bmp);
 	global_settings_page.keyboard = keyboard_input_create();
 	global_settings_page.mouse = mouse_input_create();
     
