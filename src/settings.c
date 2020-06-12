@@ -55,7 +55,7 @@ void settings_page_update_render()
 		{
 			global_settings_page.window.do_draw = false;
 			
-			render_clear();
+			render_clear(&global_settings_page.window);
 			
 			camera_apply_transformations(&global_settings_page.window, &global_settings_page.camera);
 			

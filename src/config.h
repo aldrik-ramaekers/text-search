@@ -8,7 +8,13 @@
 #define INCLUDE_CONFIG
 
 #define TARGET_FRAMERATE (1000/24.0)
-#define VERSION "1.0.2"
+#define VERSION "1.0.3"
+
+#define DEFAULT_WINDOWS_DIRECTORY "C:/"
+#define DEFAULT_LINUX_DIRECTORY "/home/"
+
+#define CONFIG_DIRECTORY_LINUX "/.config/text-search"
+#define CONFIG_DIRECTORY_WINDOWS "\\text-search"
 
 #define SCROLL_SPEED 20
 #define FILE_RESERVE_COUNT 500

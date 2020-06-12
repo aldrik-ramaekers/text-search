@@ -5,8 +5,10 @@
 */
 
 #include "config.h"
-#include "project_base.h"
+#include "asset_definitions.h"
+#include "../../project-base/src/project_base.h"
 
+// TODO(Aldrik): test on linux
 // TODO(Aldrik): check if bitmap font is faster to load
 // TODO(Aldrik): redo input system into a queue to make testing easier
 // TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
@@ -181,6 +183,11 @@ static void* find_text_in_file_worker(void *arg)
 						}
 						
 						array_push(&result_buffer->matches, &file_match);
+						
+						mutex_lock(&result_buffer->mutex);
+						result_buffer->match_count++;
+						mutex_unlock(&result_buffer->mutex);
+						
 						main_window->do_draw = true;
 					}
 				}
@@ -330,7 +337,7 @@ static void* find_text_in_files_t(void *arg)
 	
 	if (!result_buffer->is_command_line_search)
 	{
-		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->matches.length, result_buffer->files_searched, result_buffer->find_duration_us/1000.0);
+		snprintf(global_status_bar.result_status_text, MAX_INPUT_LENGTH, localize("files_matches_comparison"), result_buffer->match_count, result_buffer->files_searched, result_buffer->find_duration_us/1000.0);
 	}
 	
 	array_destroy(&threads);
@@ -848,6 +855,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->threads_closed = false;
 	new_result_buffer->search_info.dir_count = 0;
 	new_result_buffer->search_info.file_count = 0;
+	new_result_buffer->match_count = 0;
 	
 	new_result_buffer->mem_bucket = memory_bucket_init(megabytes(5));
 	
@@ -1044,20 +1052,11 @@ void load_config(settings_config *config)
 		global_settings_page.current_style = DEFAULT_STYLE;
 		global_settings_page.selected_double_click_selection_option = OPTION_PATH;
 		
-#if 0
-		if (is_platform_in_darkmode())
-		{
-			ui_set_style(UI_STYLE_DARK);
-			global_settings_page.current_style = global_ui_context.style.id;
-		}
-		else
-		{
-			ui_set_style(UI_STYLE_LIGHT);
-			global_settings_page.current_style = global_ui_context.style.id;
-		}
+#if defined(OS_WIN)
+		string_copyn(textbox_path.buffer, DEFAULT_WINDOWS_DIRECTORY, MAX_INPUT_LENGTH);
+#elif defined(OS_LINUX)
+		string_copyn(textbox_path.buffer, DEFAULT_LINUX_DIRECTORY, MAX_INPUT_LENGTH);
 #endif
-		
-		string_copyn(textbox_path.buffer, DEFAULT_DIRECTORY, MAX_INPUT_LENGTH);
 	}
 }
 
@@ -1240,7 +1239,7 @@ int main(int argc, char **argv)
 		{
 			window.do_draw = false;
 			
-			render_clear();
+			render_clear(&window);
 			camera_apply_transformations(&window, &camera);
 			
 			global_ui_context.layout.width = global_ui_context.layout.active_window->width;
@@ -1313,7 +1312,6 @@ int main(int argc, char **argv)
 				ui_end_menu_bar();
 				
 				ui_push_separator();
-				
 				ui_block_begin(LAYOUT_HORIZONTAL);
 				{
 					if (ui_push_textbox(&textbox_path, localize("search_directory")))

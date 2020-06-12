@@ -1,6 +1,6 @@
 1.3
 - windows shows *after* loading pixelformat & opengl setup
-- startup time from ~570ms to ...
+- replace png with bmps
 1.2
 - config file validation
 - show total files & directories handled in status bar
