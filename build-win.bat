@@ -10,7 +10,7 @@ ld -r -b binary -o ../bin/data.o ../data/imgs/en.bmp ../data/imgs/error.bmp ../d
 SET defs=-DMODE_DEVELOPER
 if "%1"=="-w" (SET defs=-DMODE_DEVELOPER -DMODE_GDBDEBUG)
 if "%2"=="-t" (SET defs=-DMODE_DEVELOPER -DMODE_TEST)
-if "%2"=="-ti" (SET defs=-DMODE_TIMESTARTUP -DMODE_DEVELOPER)
+if "%1"=="-ti" (SET defs=-DMODE_TIMESTARTUP -DMODE_DEVELOPER)
 
 x86_64-w64-mingw32-gcc -m64 -Wall -g %defs% -Wno-unused-label -Wno-unused-variable text_search.c ../bin/data.o -o ../bin/text-search.exe ../misc/icon.res -lopengl32 -lkernel32 -lglu32 -lgdi32 -lcomdlg32
 

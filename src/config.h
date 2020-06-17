@@ -16,7 +16,6 @@
 #define CONFIG_DIRECTORY_LINUX "/.config/text-search"
 #define CONFIG_DIRECTORY_WINDOWS "\\text-search"
 
-#define SCROLL_SPEED 20
 #define FILE_RESERVE_COUNT 500
 #define ERROR_RESERVE_COUNT 10
 #define MAX_ERROR_MESSAGE_LENGTH 120

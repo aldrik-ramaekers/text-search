@@ -26,6 +26,7 @@ typedef struct t_settings_page
 	font *font_small;
 	image *logo_img;
 	
+	checkbox_state cb_use_gpu;
 	button_state btn_close;
 	button_state btn_save;
 	dropdown_state dropdown_language;
@@ -35,6 +36,7 @@ typedef struct t_settings_page
 	checkbox_state checkbox_parallelize_search;
 	s32 selected_tab_index;
 	
+	bool use_gpu;
 	char *current_locale_id;
 	s32 max_thread_count;
 	s32 max_file_size;

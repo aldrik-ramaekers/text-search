@@ -8,12 +8,13 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
-// TODO(Aldrik): test on linux
-// TODO(Aldrik): check if bitmap font is faster to load
+// TODO(Aldrik): refactor things out of main loop
+// TODO(Aldrik): get rid of unnecessary draw calls 
+// TODO(Aldrik): resize flag icons & error icon
+// TODO(Aldrik): linux icon wrong colors, cpu rendering not implemented
 // TODO(Aldrik): redo input system into a queue to make testing easier
 // TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
-// TODO(Aldrik): use GDI in windows build instead of opengl
-// TODO(Aldrik): replace char with custom string struct that resizes when necessary to check if memory usage is fixed
+// TODO(Aldrik): replace char with custom string struct that resizes when necessary to check if memory usage is fixed (make custom allocator, like a 30kb buffer that gets reset every frame)
 
 typedef struct t_status_bar
 {
@@ -634,17 +635,6 @@ static void render_update_result(platform_window *window, font *font_small, mous
 						
 						render_text(font_small, text_sx, text_sy, 
 									match->line_info, global_ui_context.style.foreground);
-						
-						/*static bool yes = false;
-   if (!yes) {
- yes = true;
- char *str = match->line_info;
- utf8_int32_t ch = 0;
- while((str = utf8codepoint(str, &ch)) && ch)
- {
-  printf("%d\n", ch);
- }
-   }*/
 					}
 					else
 					{
@@ -1097,6 +1087,7 @@ int main(int argc, char **argv)
 		window_w = 800;
 		window_h = 600;
 	}
+	global_use_gpu = settings_config_get_number(&config, "USE_GPU");
 	
 	debug_print_elapsed(startup_stamp, "config");
 	
@@ -1247,8 +1238,6 @@ int main(int argc, char **argv)
 			
 			ui_begin(1);
 			{
-				render_rectangle(0, 0, main_window->width, main_window->height, global_ui_context.style.background);
-				
 				ui_begin_menu_bar();
 				{
 					// shortcuts begin
@@ -1418,6 +1407,7 @@ int main(int argc, char **argv)
 	
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	settings_config_set_number(&config, "DOUBLE_CLICK_ACTION", global_settings_page.selected_double_click_selection_option);
+	settings_config_set_number(&config, "USE_GPU", global_settings_page.use_gpu);
 	
 	if (global_localization.active_localization != 0)
 	{
