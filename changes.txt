@@ -1,7 +1,8 @@
-1.3
+1.3 (unreleased)
 - windows shows *after* loading pixelformat & opengl setup
 - replace png with bmps
 - setting to swap between gpu & cpu rendering
+- directories ending with either / or no / are now both valid
 1.2
 - config file validation
 - show total files & directories handled in status bar

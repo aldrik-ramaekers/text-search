@@ -8,13 +8,10 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
-// TODO(Aldrik): refactor things out of main loop
+// TODO(Aldrik): settings page crash on creation when using gpu
 // TODO(Aldrik): get rid of unnecessary draw calls 
-// TODO(Aldrik): resize flag icons & error icon
-// TODO(Aldrik): linux icon wrong colors, cpu rendering not implemented
 // TODO(Aldrik): redo input system into a queue to make testing easier
 // TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
-// TODO(Aldrik): replace char with custom string struct that resizes when necessary to check if memory usage is fixed (make custom allocator, like a 30kb buffer that gets reset every frame)
 
 typedef struct t_status_bar
 {
@@ -790,6 +787,8 @@ static void render_info(platform_window *window, font *font_small)
 
 s32 prepare_search_directory_path(char *path, s32 len)
 {
+	// add slash to end of path to make make a valid directory path
+	
 #ifdef OS_LINUX
 	if (path[len-1] != '/' && len < MAX_INPUT_LENGTH)
 	{
@@ -1088,7 +1087,7 @@ int main(int argc, char **argv)
 		window_h = 600;
 	}
 	global_use_gpu = settings_config_get_number(&config, "USE_GPU");
-	
+	//global_use_gpu = 0;
 	debug_print_elapsed(startup_stamp, "config");
 	
 #ifdef MODE_TEST
@@ -1121,10 +1120,6 @@ int main(int argc, char **argv)
 	set_locale("en");
 	
 	debug_print_elapsed(startup_stamp, "locale");
-	
-#ifdef MODE_DEVELOPER
-	u64 assets_stamp = platform_get_time(TIME_FULL, TIME_US);
-#endif
 	
 	load_assets();
 	debug_print_elapsed(startup_stamp, "assets");
@@ -1173,48 +1168,14 @@ int main(int argc, char **argv)
 	debug_print_elapsed_undent();
 	debug_print_elapsed(_startup_stamp, "total startup time");
 	
-#ifdef MODE_DEVELOPER
-	s32 frames_drawn_with_missing_assets = 0;
-#endif
-	
 	while(window.is_open) {
         u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
 		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
 		settings_page_update_render();
-		
 		platform_window_make_current(&window);
-		
-		static bool icon_loaded = false;
-		if (!icon_loaded && logo_small_img->loaded)
-		{
-			icon_loaded = true;
-			platform_set_icon(&window, logo_small_img);
-		}
-		
-		if (global_asset_collection.queue.queue.length == 0 && !global_asset_collection.done_loading_assets)
-		{
-			global_asset_collection.done_loading_assets = true;
-			debug_print_elapsed(assets_stamp, "asset queue emptied");
-			
-#ifdef MODE_TIMESTARTUP
-			break;
-#endif
-			
-#if defined(MODE_DEVELOPER) && !defined(MODE_TEST)
-			printf("allocated at startup: %dkb\n", __total_allocated/1000);
-			printf("reallocated at startup: %dkb\n", __total_reallocated/1000);
-			printf("frames drawn with missing assets: %d\n", frames_drawn_with_missing_assets);
-#endif
-		}
-		
-#ifdef MODE_DEVELOPER
-		if (global_asset_collection.queue.queue.length != 0 && !global_asset_collection.done_loading_assets)
-		{
-			frames_drawn_with_missing_assets++;
-		}
-#endif
+		platform_set_icon(&window, logo_small_img);
 		
 		global_ui_context.layout.active_window = &window;
 		global_ui_context.keyboard = &keyboard;
