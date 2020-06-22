@@ -8,11 +8,6 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
-// TODO(Aldrik): settings page crash on creation when using gpu
-// TODO(Aldrik): get rid of unnecessary draw calls 
-// TODO(Aldrik): redo input system into a queue to make testing easier
-// TODO(Aldrik): after redoing input system, remove all &= where leftclick is removed manually
-
 typedef struct t_status_bar
 {
 	char *result_status_text;
@@ -1087,7 +1082,6 @@ int main(int argc, char **argv)
 		window_h = 600;
 	}
 	global_use_gpu = settings_config_get_number(&config, "USE_GPU");
-	//global_use_gpu = 0;
 	debug_print_elapsed(startup_stamp, "config");
 	
 #ifdef MODE_TEST

@@ -292,6 +292,7 @@ void settings_page_show()
 	global_settings_page.window = platform_open_window(localize("text_search_settings"), 
 													   450, 280, 450, 280, 450, 280);
 	
+	global_settings_page.active = true;
 	settings_window = &global_settings_page.window;
 	platform_set_icon(&global_settings_page.window, global_settings_page.logo_img);
 }
