@@ -516,7 +516,8 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	}
 	
 	s32 y = global_ui_context.layout.offset_y;
-	s32 h = 24;
+	s32 draw_h = 24;
+	s32 logical_h = 23;
 	
 	s32 render_y = y - WIDGET_PADDING;
 	s32 render_h;
@@ -528,7 +529,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 	
 	if (current_search_result->match_found)
 	{
-		y += h-1;
+		y += logical_h;
 		
 		s32 scroll_w = 14;
 		s32 total_h = 0;
@@ -536,126 +537,129 @@ static void render_update_result(platform_window *window, font *font_small, mous
 		s32 total_space = window->height - start_y - 30 + 1;
 		render_set_scissor(window, 0, y, window->width, render_h - 43);
 		
+		// calculate what to draw
+		s32 start_iter = -scroll_y / (logical_h);
+		y += (logical_h)*start_iter;
+		s32 max_len = (total_space / draw_h)+2;
+		
 		/// draw entries ////////
-		s32 drawn_entity_count = 0;
-		for (s32 i = 0; i < current_search_result->matches.length; i++)
+		for (s32 i = start_iter; i < start_iter + max_len; i++)
 		{
+			if (i >= current_search_result->matches.length) continue;
+			
 			file_match *match = array_at(&current_search_result->matches, i);
 			
-			if (match->line_info || match->file_error)
+			s32 rec_y = y+scroll_y;
+			
+			if (rec_y > start_y - draw_h && rec_y < start_y + total_space)
 			{
-				drawn_entity_count++;
-				s32 rec_y = y+scroll_y;
-				
-				if (rec_y > start_y - h && rec_y < start_y + total_space)
+				// hover item and click item
+				if (mouse->y > rec_y && mouse->y < rec_y + draw_h && mouse->y < window->height - 30 &&
+					mouse->x >= 0 && mouse->x < window->width - scroll_w)
 				{
-					// hover item and click item
-					if (mouse->y > rec_y && mouse->y < rec_y + h && mouse->y < window->height - 30 &&
-						mouse->x >= 0 && mouse->x < window->width - scroll_w)
+					if (is_left_double_clicked(mouse))
 					{
-						if (is_left_double_clicked(mouse))
+						push_notification(localize("copied_to_clipboard"));
+						if (match->file_error)
 						{
-							push_notification(localize("copied_to_clipboard"));
-							if (match->file_error)
+							platform_set_clipboard(main_window, match->file.path);
+						}
+						else
+						{
+							switch(global_settings_page.selected_double_click_selection_option)
 							{
+								case OPTION_PATH: 
 								platform_set_clipboard(main_window, match->file.path);
-							}
-							else
-							{
-								switch(global_settings_page.selected_double_click_selection_option)
+								break;
+								
+								case OPTION_PATH_LINE:
 								{
-									case OPTION_PATH: 
-									platform_set_clipboard(main_window, match->file.path);
-									break;
-									
-									case OPTION_PATH_LINE:
-									{
-										char *clipboard_tmp_buffer = malloc(200);
-										snprintf(clipboard_tmp_buffer, 200, "%s:%d", match->file.path, match->line_nr);
-										platform_set_clipboard(main_window, clipboard_tmp_buffer);
-										mem_free(clipboard_tmp_buffer);
-									}
-									break;
-									
-									case OPTION_PATH_LINE_FILTER:
-									{
-										char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
-										snprintf(clipboard_tmp_buffer, 200 + MAX_INPUT_LENGTH, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
-										platform_set_clipboard(main_window, clipboard_tmp_buffer);
-										mem_free(clipboard_tmp_buffer);
-									}
-									break;
-									
-									case OPTION_RESULT: 
-									platform_set_clipboard(main_window, match->line_info);
-									break;
+									char *clipboard_tmp_buffer = malloc(200);
+									snprintf(clipboard_tmp_buffer, 200, "%s:%d", match->file.path, match->line_nr);
+									platform_set_clipboard(main_window, clipboard_tmp_buffer);
+									mem_free(clipboard_tmp_buffer);
 								}
+								break;
+								
+								case OPTION_PATH_LINE_FILTER:
+								{
+									char *clipboard_tmp_buffer = malloc(200 + MAX_INPUT_LENGTH);
+									snprintf(clipboard_tmp_buffer, 200 + MAX_INPUT_LENGTH, "%s:%d:%s", match->file.path, match->line_nr, match->file.matched_filter);
+									platform_set_clipboard(main_window, clipboard_tmp_buffer);
+									mem_free(clipboard_tmp_buffer);
+								}
+								break;
+								
+								case OPTION_RESULT: 
+								platform_set_clipboard(main_window, match->line_info);
+								break;
 							}
 						}
-						
-						render_rectangle(-1, rec_y, window->width+2, h, global_ui_context.style.item_hover_background);
-						platform_set_cursor(window, CURSOR_POINTER);
 					}
 					
-					// outline
-					render_rectangle_outline(-1, rec_y, window->width+2, h, 1, global_ui_context.style.border);
-					
-					// path
-					render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
-					render_text(font_small, 10, rec_y + (h/2)-(font_small->px_h/2), match->file.path + current_search_result->search_result_source_dir_len, global_ui_context.style.foreground);
-					
-					// pattern
-					render_set_scissor(window, 0, start_y, 
-									   path_width+pattern_width-10, render_h - 43);
-					render_text(font_small, 10 + path_width, rec_y + (h/2)-(font_small->px_h/2), match->file.matched_filter, global_ui_context.style.foreground);
-					
-					// state
-					render_set_scissor(window, 0, start_y, window->width, render_h - 43);
-					if (!match->file_error && match->line_info)
-					{
-						s32 text_sx = 10 + path_width + pattern_width;
-						s32 text_sy = rec_y + (h/2)-(font_small->px_h/2);
-						
-						char tmp[80];
-						snprintf(tmp, 80, "line %d: ", match->line_nr);
-						
-						text_sx += render_text(font_small, text_sx, text_sy, 
-											   tmp, global_ui_context.style.foreground);
-						
-						// highlight matched text
-						render_rectangle(text_sx+match->word_match_offset_x, text_sy-1, match->word_match_width, font_small->px_h+2, rgba(255,0,0,80));
-						
-						render_text(font_small, text_sx, text_sy, 
-									match->line_info, global_ui_context.style.foreground);
-					}
-					else
-					{
-						s32 img_size = 14;
-						render_image(error_img, 6 + path_width + pattern_width, rec_y + (h/2) - (img_size/2), img_size, img_size);
-						
-						char *open_file_error = 0;
-						switch(match->file_error)
-						{
-							case FILE_ERROR_NO_ACCESS: open_file_error = localize("no_permission"); break;
-							case FILE_ERROR_NOT_FOUND: open_file_error = localize("not_found"); break;
-							case FILE_ERROR_CONNECTION_ABORTED: open_file_error = localize("connection_aborted"); break;
-							case FILE_ERROR_CONNECTION_REFUSED: open_file_error = localize("connection_refused"); break;
-							case FILE_ERROR_NETWORK_DOWN: open_file_error = localize("network_down"); break;
-							case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = localize("remote_error"); break;
-							case FILE_ERROR_STALE: open_file_error = localize("remotely_removed"); break;
-							default:
-							case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
-							case FILE_ERROR_TOO_BIG: open_file_error = localize("file_too_big"); break;
-						}
-						
-						render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (h/2)-(font_small->px_h/2), open_file_error, global_ui_context.style.error_foreground);
-					}
+					render_rectangle(-1, rec_y, window->width+2, draw_h, global_ui_context.style.item_hover_background);
+					platform_set_cursor(window, CURSOR_POINTER);
 				}
-				y += h-1;
-				total_h += h-1;
+				
+				// outline
+				render_rectangle_outline(-1, rec_y, window->width+2, draw_h, 1, global_ui_context.style.border);
+				
+				// path
+				render_set_scissor(window, 0, start_y, path_width-10, render_h - 43);
+				render_text(font_small, 10, rec_y + (draw_h/2)-(font_small->px_h/2), match->file.path + current_search_result->search_result_source_dir_len, global_ui_context.style.foreground);
+				
+				// pattern
+				render_set_scissor(window, 0, start_y, 
+								   path_width+pattern_width-10, render_h - 43);
+				render_text(font_small, 10 + path_width, rec_y + (draw_h/2)-(font_small->px_h/2), match->file.matched_filter, global_ui_context.style.foreground);
+				
+				// state
+				render_set_scissor(window, 0, start_y, window->width, render_h - 43);
+				if (!match->file_error && match->line_info)
+				{
+					s32 text_sx = 10 + path_width + pattern_width;
+					s32 text_sy = rec_y + (draw_h/2)-(font_small->px_h/2);
+					
+					char tmp[80];
+					snprintf(tmp, 80, "line %d: ", match->line_nr);
+					
+					text_sx += render_text(font_small, text_sx, text_sy, 
+										   tmp, global_ui_context.style.foreground);
+					
+					// highlight matched text
+					render_rectangle(text_sx+match->word_match_offset_x, text_sy-1, match->word_match_width, font_small->px_h+2, rgba(255,0,0,80));
+					
+					render_text(font_small, text_sx, text_sy, 
+								match->line_info, global_ui_context.style.foreground);
+				}
+				else
+				{
+					s32 img_size = 14;
+					render_image(error_img, 6 + path_width + pattern_width, rec_y + (draw_h/2) - (img_size/2), img_size, img_size);
+					
+					char *open_file_error = 0;
+					switch(match->file_error)
+					{
+						case FILE_ERROR_NO_ACCESS: open_file_error = localize("no_permission"); break;
+						case FILE_ERROR_NOT_FOUND: open_file_error = localize("not_found"); break;
+						case FILE_ERROR_CONNECTION_ABORTED: open_file_error = localize("connection_aborted"); break;
+						case FILE_ERROR_CONNECTION_REFUSED: open_file_error = localize("connection_refused"); break;
+						case FILE_ERROR_NETWORK_DOWN: open_file_error = localize("network_down"); break;
+						case FILE_ERROR_REMOTE_IO_ERROR: open_file_error = localize("remote_error"); break;
+						case FILE_ERROR_STALE: open_file_error = localize("remotely_removed"); break;
+						default:
+						case FILE_ERROR_GENERIC: open_file_error = localize("failed_to_open_file"); break;
+						case FILE_ERROR_TOO_BIG: open_file_error = localize("file_too_big"); break;
+					}
+					
+					render_text(font_small, 10 + path_width + pattern_width + img_size + 6, rec_y + (draw_h/2)-(font_small->px_h/2), open_file_error, global_ui_context.style.error_foreground);
+				}
 			}
+			y += logical_h;
 		}
 		////////////////////////
+		
+		total_h += ((logical_h)*current_search_result->matches.length);
 		
 		s32 overflow = total_h - total_space;
 		
@@ -667,17 +671,17 @@ static void render_update_result(platform_window *window, font *font_small, mous
 				// scroll with mouse
 				{
 					if (global_ui_context.mouse->scroll_state == SCROLL_UP)
-						scroll_y+=(h*3);
+						scroll_y+=(draw_h*3);
 					if (global_ui_context.mouse->scroll_state == SCROLL_DOWN)
-						scroll_y-=(h*3);
+						scroll_y-=(draw_h*3);
 				}
 				
 				// scroll with arrow keys
 				{
 					if (keyboard_is_key_pressed(keyboard, KEY_UP))
-						scroll_y+=(h*3);
+						scroll_y+=(draw_h*3);
 					if (keyboard_is_key_pressed(keyboard, KEY_DOWN))
-						scroll_y-=(h*3);
+						scroll_y-=(draw_h*3);
 				}
 				
 			}
@@ -1081,7 +1085,7 @@ int main(int argc, char **argv)
 		window_w = 800;
 		window_h = 600;
 	}
-	global_use_gpu = settings_config_get_number(&config, "USE_GPU");
+	global_use_gpu = settings_config_get_number(&config, "USE_GPU") == 2 ? 1 : 0;
 	debug_print_elapsed(startup_stamp, "config");
 	
 #ifdef MODE_TEST
@@ -1163,7 +1167,7 @@ int main(int argc, char **argv)
 	debug_print_elapsed(_startup_stamp, "total startup time");
 	
 	while(window.is_open) {
-        u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
+		u64 last_stamp = platform_get_time(TIME_FULL, TIME_US);
 		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
@@ -1342,7 +1346,7 @@ int main(int argc, char **argv)
 			double time_to_wait = (TARGET_FRAMERATE) - diff_ms;
 			thread_sleep(time_to_wait*1000);
 		}
-    }
+	}
 	
 	settings_page_hide_without_save();
 	
@@ -1362,7 +1366,7 @@ int main(int argc, char **argv)
 	
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	settings_config_set_number(&config, "DOUBLE_CLICK_ACTION", global_settings_page.selected_double_click_selection_option);
-	settings_config_set_number(&config, "USE_GPU", global_settings_page.use_gpu);
+	settings_config_set_number(&config, "USE_GPU", global_use_gpu+1);
 	
 	if (global_localization.active_localization != 0)
 	{

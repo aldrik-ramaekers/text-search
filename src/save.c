@@ -12,6 +12,10 @@ static void write_json_file(char *buffer, s32 length, search_result *search_resu
 	array matches = search_result->matches;
 	
 	cJSON *result = cJSON_CreateObject();
+	if (cJSON_AddStringToObject(result, "version", 
+								VERSION) == NULL)
+		return;
+	
 	if (cJSON_AddStringToObject(result, "search_directory", 
 								search_result->directory_to_search) == NULL)
 		return;
@@ -40,16 +44,19 @@ static void write_json_file(char *buffer, s32 length, search_result *search_resu
 								search_result->files_searched) == NULL)
 		return;
 	
-	if (cJSON_AddNumberToObject(result, "files_matched", 
-								search_result->files_matched) == NULL)
-		return;
-	
 	if (cJSON_AddNumberToObject(result, "query_match_found", 
 								search_result->match_found) == NULL)
 		return;
 	
 	if (cJSON_AddNumberToObject(result, "recursive_search", 
 								search_result->is_recursive) == NULL)
+		return;
+	
+	if (cJSON_AddNumberToObject(result, "files_handled", 
+								current_search_result->search_info.file_count) == NULL)
+		return;
+	if (cJSON_AddNumberToObject(result, "directories_handled", 
+								current_search_result->search_info.dir_count) == NULL)
 		return;
 	
 	cJSON *match_list = cJSON_AddArrayToObject(result, "match_list");
@@ -191,6 +198,10 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	cJSON *result = cJSON_Parse(buffer);
 	if (!result) return false;
 	
+	cJSON *version = cJSON_GetObjectItemCaseSensitive(result, "version");
+	if (!version || !string_equals(version->valuestring, VERSION))
+		return false;
+	
 	cJSON *search_directory = cJSON_GetObjectItemCaseSensitive(result, "search_directory");
 	ui_set_textbox_text(&textbox_path, search_directory->valuestring);
 	string_copyn(search_result->directory_to_search, search_directory->valuestring, MAX_INPUT_LENGTH);
@@ -215,15 +226,18 @@ static bool read_json_file(char *buffer, s32 size, search_result *search_result)
 	cJSON *files_searched = cJSON_GetObjectItemCaseSensitive(result, "files_searched");
 	search_result->files_searched = files_searched->valueint;
 	
-	cJSON *files_matched = cJSON_GetObjectItemCaseSensitive(result, "files_matched");
-	search_result->files_matched = files_matched->valueint;
-	
 	cJSON *query_match_found = cJSON_GetObjectItemCaseSensitive(result, "query_match_found");
 	search_result->match_found = query_match_found->valueint;
 	
 	cJSON *recursive = cJSON_GetObjectItemCaseSensitive(result, "recursive_search");
 	search_result->is_recursive = recursive->valueint;
 	checkbox_recursive.state = search_result->is_recursive;
+	
+	cJSON *f_handled = cJSON_GetObjectItemCaseSensitive(result, "files_handled");
+	current_search_result->search_info.file_count = f_handled->valueint;
+	
+	cJSON *d_handled = cJSON_GetObjectItemCaseSensitive(result, "directories_handled");
+	current_search_result->search_info.dir_count = d_handled->valueint;
 	
 	search_result->search_result_source_dir_len = strlen(search_result->directory_to_search);
 	
