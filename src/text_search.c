@@ -8,6 +8,9 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
+// TODO(Aldrik): sorting by clicking on tab
+// TODO(Aldrik): scrolling a textbox and then making window bigger stops textbox from scrolling back
+
 typedef struct t_status_bar
 {
 	char *result_status_text;
@@ -441,7 +444,7 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	// path width
 	if (mouse->x > path_width-5 && mouse->x < path_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_pattern)
 	{
-		platform_set_cursor(window, CURSOR_POINTER);
+		platform_set_cursor(window, CURSOR_DRAG);
 		if (is_left_down(mouse))
 		{
 			dragging_path = true;
@@ -449,7 +452,7 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	}
 	if (dragging_path)
 	{
-		platform_set_cursor(window, CURSOR_POINTER);
+		platform_set_cursor(window, CURSOR_DRAG);
 		
 		path_width = mouse->x;
 		
@@ -466,7 +469,7 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	// pattern width
 	if (mouse->x > path_width+pattern_width-5 && mouse->x < path_width+pattern_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_path)
 	{
-		platform_set_cursor(window, CURSOR_POINTER);
+		platform_set_cursor(window, CURSOR_DRAG);
 		if (is_left_down(mouse))
 		{
 			dragging_pattern = true;
@@ -474,7 +477,7 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	}
 	if (dragging_pattern)
 	{
-		platform_set_cursor(window, CURSOR_POINTER);
+		platform_set_cursor(window, CURSOR_DRAG);
 		
 		pattern_width = mouse->x - path_width;
 		
@@ -1187,6 +1190,14 @@ int main(int argc, char **argv)
 		
 		if (window.do_draw)
 		{
+#ifdef CHECKFPS
+			u64 tmp1  = platform_get_time(TIME_FULL, TIME_US);
+			static s32 total = 0;
+			static s32 min = 0;
+			static s32 max = 0;
+			static s32 count = 0;
+#endif
+			
 			window.do_draw = false;
 			
 			render_clear(&window);
@@ -1334,6 +1345,20 @@ int main(int argc, char **argv)
 			update_render_notifications();
 			
 			platform_window_swap_buffers(&window);
+			
+#ifdef CHECKFPS
+			{
+				count++;
+				u64 tmp2 = platform_get_time(TIME_FULL, TIME_US);
+				u64 tmp3 = tmp2 - tmp1;
+				if (tmp3 < max || max == 0) max = tmp3;
+				if (tmp3 > min || min == 0) min = tmp3;
+				total += tmp3;
+				
+				if (count % 24 == 0)
+					printf("avg: %.2f, min: %.2f, max: %.2f\n", 1000000.0f/(total/count), 1000000.0f/min, 1000000.0f/max);
+			}
+#endif
 		}
 		
 		u64 current_stamp = platform_get_time(TIME_FULL, TIME_US);

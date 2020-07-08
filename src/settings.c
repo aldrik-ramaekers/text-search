@@ -273,9 +273,9 @@ void settings_page_update_render()
 			// version nr
 			{
 				
-				s32 w = calculate_text_width(global_settings_page.font_small, VERSION);
+				s32 w = calculate_text_width(global_settings_page.font_small, VERSION" @ "PROJECT_BASE_VERSION);
 				render_text(global_settings_page.font_small, global_settings_page.window.width-w - 10,
-							global_settings_page.window.height-global_settings_page.font_small->px_h - 10, VERSION, rgb(120,120,120));
+							global_settings_page.window.height-global_settings_page.font_small->px_h - 10, VERSION" @ "PROJECT_BASE_VERSION, rgb(120,120,120));
 			}
 			
 			platform_window_swap_buffers(&global_settings_page.window);
