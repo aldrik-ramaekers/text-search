@@ -432,14 +432,70 @@ void reset_status_text()
 static s32 path_width = 300;
 static s32 pattern_width = 150;
 
+static bool dragging_path = false;
+static bool dragging_pattern = false;
+
+static bool render_update_result_header_entry(s32 x, s32 y, s32 w, platform_window *window, font *font_small, mouse_input *mouse, bool dragging, bool can_drag, s32 *ww, char *text)
+{
+	s32 h = 24;
+	
+	if (mouse->x > x+w-5 && mouse->x < x+w+5 && mouse->y >= y && mouse->y <= y+h && can_drag)
+	{
+		platform_set_cursor(window, CURSOR_DRAG);
+		if (is_left_down(mouse))
+		{
+			dragging = true;
+		}
+	}
+	if (dragging)
+	{
+		platform_set_cursor(window, CURSOR_DRAG);
+		
+		*ww = mouse->x - x;
+		
+		if (is_left_released(mouse))
+		{
+			dragging = false;
+		}
+	}
+	if (path_width + pattern_width > window->width - 100)
+		path_width = window->width - pattern_width - 100;
+	if (path_width < 100)
+		path_width = 100;
+	if (pattern_width + path_width > window->width - 100)
+		pattern_width = window->width - path_width - 100;
+	if (pattern_width < 105)
+		pattern_width = 105;
+	
+	// bg
+	render_rectangle(x, y+1, *ww+1, h-2, global_ui_context.style.info_bar_background);
+	render_rectangle(x, y+h-1, *ww+1, 1, global_ui_context.style.border);
+	
+	// splitter + text
+	render_rectangle(x, y+1, 1, h-2, global_ui_context.style.border);
+	render_text(font_small, x + 10, y + (h/2)-(font_small->px_h/2), text, global_ui_context.style.foreground);
+	
+	return dragging;
+}
+
 static s32 render_update_result_header(platform_window *window, font *font_small, mouse_input *mouse, keyboard_input *keyboard)
 {
-	static bool dragging_path = false;
-	static bool dragging_pattern = false;
+	s32 y = global_ui_context.layout.offset_y - 9;
 	
-	s32 y = global_ui_context.layout.offset_y;
+#if 1
+	dragging_path = render_update_result_header_entry(-1, y, path_width, window, 
+													  font_small, mouse, dragging_path, !dragging_pattern, &path_width, localize("file_path"));
+	
+	dragging_pattern = render_update_result_header_entry(path_width, y, pattern_width, 
+														 window, font_small, mouse, 
+														 dragging_pattern, !dragging_path, &pattern_width, localize("file_pattern"));
+	
+	s32 information_width = window->width - path_width - pattern_width;
+	render_update_result_header_entry(path_width + pattern_width, y, 
+									  information_width, window, 
+									  font_small, mouse, false, false, &information_width, localize("information"));
+#else
 	s32 h = 24;
-	y -= 9;
 	
 	// path width
 	if (mouse->x > path_width-5 && mouse->x < path_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_pattern)
@@ -504,6 +560,8 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	render_rectangle(path_width + pattern_width, y+1, 1, h-2, global_ui_context.style.border);
 	
 	render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
+	
+#endif
 	
 	return y;
 }
@@ -701,7 +759,7 @@ static void render_update_result(platform_window *window, font *font_small, mous
 			static bool is_scrolling_with_mouse = false;
 			if ((mouse->x >= scroll_x && mouse->x < scroll_x + scroll_w &&
 				 mouse->y >= start_y && mouse->y < start_y + total_space &&
-				 is_left_down(mouse)) || is_scrolling_with_mouse)
+				 is_left_down(mouse) && !dragging_pattern && !dragging_path) || is_scrolling_with_mouse)
 			{
 				is_scrolling_with_mouse = true;
 				
@@ -1088,7 +1146,7 @@ int main(int argc, char **argv)
 		window_w = 800;
 		window_h = 600;
 	}
-	global_use_gpu = settings_config_get_number(&config, "USE_GPU") == 2 ? 1 : 0;
+	global_use_gpu = settings_config_get_number_or_default(&config, "USE_GPU", 1);
 	debug_print_elapsed(startup_stamp, "config");
 	
 #ifdef MODE_TEST
@@ -1107,7 +1165,7 @@ int main(int argc, char **argv)
 	
 	debug_print_elapsed(startup_stamp, "settings page");
 	
-	// asset worker
+	// asset workers
 	thread asset_queue_worker1 = thread_start(assets_queue_worker, NULL);
 	thread asset_queue_worker2 = thread_start(assets_queue_worker, NULL);
 	thread asset_queue_worker3 = thread_start(assets_queue_worker, NULL);
@@ -1391,7 +1449,7 @@ int main(int argc, char **argv)
 	
 	settings_config_set_number(&config, "STYLE", global_ui_context.style.id);
 	settings_config_set_number(&config, "DOUBLE_CLICK_ACTION", global_settings_page.selected_double_click_selection_option);
-	settings_config_set_number(&config, "USE_GPU", global_use_gpu+1);
+	settings_config_set_number(&config, "USE_GPU", global_use_gpu);
 	
 	if (global_localization.active_localization != 0)
 	{
