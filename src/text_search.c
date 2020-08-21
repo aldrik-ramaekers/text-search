@@ -8,7 +8,6 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
-// TODO(Aldrik): sorting by clicking on tab
 // TODO(Aldrik): scrolling a textbox and then making window bigger stops textbox from scrolling back
 
 typedef struct t_status_bar
@@ -458,14 +457,19 @@ static bool render_update_result_header_entry(s32 x, s32 y, s32 w, platform_wind
 			dragging = false;
 		}
 	}
-	if (path_width + pattern_width > window->width - 100)
-		path_width = window->width - pattern_width - 100;
-	if (path_width < 100)
-		path_width = 100;
-	if (pattern_width + path_width > window->width - 100)
-		pattern_width = window->width - path_width - 100;
-	if (pattern_width < 105)
-		pattern_width = 105;
+	
+	if (&path_width == ww) {
+		if (path_width + pattern_width > window->width - 100)
+			path_width = window->width - pattern_width - 100;
+		if (path_width < 100)
+			path_width = 100;
+	}
+	if (&pattern_width == ww) {
+		if (pattern_width + path_width > window->width - 100)
+			pattern_width = window->width - path_width - 100;
+		if (pattern_width < 105)
+			pattern_width = 105;
+	}
 	
 	// bg
 	render_rectangle(x, y+1, *ww+1, h-2, global_ui_context.style.info_bar_background);
@@ -482,7 +486,6 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 {
 	s32 y = global_ui_context.layout.offset_y - 9;
 	
-#if 1
 	dragging_path = render_update_result_header_entry(-1, y, path_width, window, 
 													  font_small, mouse, dragging_path, !dragging_pattern, &path_width, localize("file_path"));
 	
@@ -494,74 +497,6 @@ static s32 render_update_result_header(platform_window *window, font *font_small
 	render_update_result_header_entry(path_width + pattern_width, y, 
 									  information_width, window, 
 									  font_small, mouse, false, false, &information_width, localize("information"));
-#else
-	s32 h = 24;
-	
-	// path width
-	if (mouse->x > path_width-5 && mouse->x < path_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_pattern)
-	{
-		platform_set_cursor(window, CURSOR_DRAG);
-		if (is_left_down(mouse))
-		{
-			dragging_path = true;
-		}
-	}
-	if (dragging_path)
-	{
-		platform_set_cursor(window, CURSOR_DRAG);
-		
-		path_width = mouse->x;
-		
-		if (is_left_released(mouse))
-		{
-			dragging_path = false;
-		}
-	}
-	if (path_width + pattern_width > window->width - 100)
-		path_width = window->width - pattern_width - 100;
-	if (path_width < 100)
-		path_width = 100;
-	
-	// pattern width
-	if (mouse->x > path_width+pattern_width-5 && mouse->x < path_width+pattern_width+5 && mouse->y >= y && mouse->y <= y+h && !dragging_path)
-	{
-		platform_set_cursor(window, CURSOR_DRAG);
-		if (is_left_down(mouse))
-		{
-			dragging_pattern = true;
-		}
-	}
-	if (dragging_pattern)
-	{
-		platform_set_cursor(window, CURSOR_DRAG);
-		
-		pattern_width = mouse->x - path_width;
-		
-		if (is_left_released(mouse))
-		{
-			dragging_pattern = false;
-		}
-	}
-	if (pattern_width + path_width > window->width - 100)
-		pattern_width = window->width - path_width - 100;
-	if (pattern_width < 105)
-		pattern_width = 105;
-	
-	render_rectangle_outline(-1, y, window->width+2, h, 1, global_ui_context.style.border);
-	
-	render_rectangle(-1, y+1, window->width+2, h-2, global_ui_context.style.info_bar_background);
-	
-	render_text(font_small, 10, y + (h/2)-(font_small->px_h/2), localize("file_path"), global_ui_context.style.foreground);
-	
-	render_rectangle(path_width, y+1, 1, h-2, global_ui_context.style.border);
-	
-	render_text(font_small, 10 + path_width, y + (h/2)-(font_small->px_h/2), localize("file_pattern"), global_ui_context.style.foreground);
-	
-	render_rectangle(path_width + pattern_width, y+1, 1, h-2, global_ui_context.style.border);
-	
-	render_text(font_small, 10 + path_width + pattern_width, y + (h/2)-(font_small->px_h/2), localize("information"), global_ui_context.style.foreground);
-	
-#endif
 	
 	return y;
 }
