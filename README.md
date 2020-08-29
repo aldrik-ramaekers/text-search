@@ -11,7 +11,7 @@ https://aldrik.itch.io/text-search
 - libglu1-mesa-dev, libgl1-mesa-dev, libxrandr-dev (automatically installed with build/install script)
 - ld
 
-## Windows (not working)
+## Windows
 - MinGW32
 - Windres
 - ld
