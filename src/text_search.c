@@ -8,8 +8,6 @@
 #include "asset_definitions.h"
 #include "../../project-base/src/project_base.h"
 
-// TODO(Aldrik): scrolling a textbox and then making window bigger stops textbox from scrolling back
-
 typedef struct t_status_bar
 {
 	char *result_status_text;
