@@ -2,6 +2,8 @@
 Text-search is a GUI Program to find files and text within files for Linux. <br>
 text-search is a single and small executable.
 
+https://aldrik.itch.io/text-search
+
 # Requirements
 
 ### Linux
