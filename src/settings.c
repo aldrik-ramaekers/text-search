@@ -151,16 +151,6 @@ void settings_page_update_render()
 						}
 					}
 					ui_block_end();
-					
-#if 0
-					ui_block_begin(LAYOUT_HORIZONTAL);
-					{
-						char license_text[30];
-						sprintf(license_text, "License: %s", license_key);
-						ui_push_text(license_text);
-					}
-					ui_block_end();
-#endif
 				}
 				else if (global_settings_page.selected_tab_index == 1)
 				{
