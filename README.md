@@ -6,6 +6,8 @@ https://aldrik.itch.io/text-search
 
 # Requirements
 
+clone https://github.com/aldrikboy/project-base next to this repo
+
 ### Linux
 - GCC
 - libglu1-mesa-dev, libgl1-mesa-dev, libxrandr-dev (automatically installed with build/install script)
