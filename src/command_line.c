@@ -4,6 +4,11 @@
 *  All rights reserved.
 */
 
+#ifdef OS_WIN
+#include <io.h>
+#include <fcntl.h>
+#endif
+
 void find_text_in_files(search_result *search_result);
 s32 prepare_search_directory_path(char *path, s32 len);
 search_result *create_empty_search_result();
@@ -59,7 +64,7 @@ static void print_help_message()
 	printf("Matches will be printed to console in format: [path]:[line]:[filter]\n\n");
 	
 	printf("Available arguments:\n");
-	explain_required_argument("--directory", "The directory to search");
+	explain_required_argument("--directory", "The directory to search, should end with \\ on Windows or / on Linux");
 	explain_optional_argument("--text", DEFAULT("*"), "The text to search for within files, supports wildcards '*' and '?'");
 	explain_optional_argument("--filter", DEFAULT("*"), "Used to filter on specific files,  supports wildcards '*' and '?'");
 	explain_optional_argument("--recursive", DEFAULT("1"), "Recursively search through directories");
@@ -87,8 +92,38 @@ static bool is_valid_argument(char *arg)
 	return false;
 }
 
+static void open_console()
+{
+	int hConHandle;
+    long lStdHandle;
+    FILE *fp;
+
+    // Allocate a console for this app
+    AllocConsole();
+
+    // Redirect unbuffered STDOUT to the console
+    lStdHandle = (long)GetStdHandle(STD_OUTPUT_HANDLE);
+    hConHandle = _open_osfhandle(lStdHandle, _O_TEXT);
+    fp = _fdopen(hConHandle, "w");
+    *stdout = *fp;
+
+    setvbuf(stdout, NULL, _IONBF, 0);
+}
+
+static void wait_for_user_close()
+{
+	while(true) {
+		thread_sleep(10);
+		getc(stdin);
+	}
+}
+
 void handle_command_line_arguments(int argc, char **argv)
 {
+#ifdef OS_WIN
+	open_console();
+#endif
+
 	load_available_localizations();
 	set_locale("en");
 	
@@ -99,11 +134,13 @@ void handle_command_line_arguments(int argc, char **argv)
 	if (is_help_request)
 	{
 		print_help_message();
+		wait_for_user_close();
 		return;
 	}
 	else if (is_license_request)
 	{
 		print_license_message();
+		wait_for_user_close();
 		return;
 	}
 	
@@ -184,6 +221,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		printf("%s", localize("error_directory_not_specified"));
 		printf("\n");
+		wait_for_user_close();
 		return;
 	}
 	
@@ -191,6 +229,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		printf(localize("error_directory_not_found"), directory);
 		printf("\n");
+		wait_for_user_close();
 		return;
 	}
 	
@@ -198,6 +237,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		printf("%s", localize("error_text_argument_empty"));
 		printf("\n");
+		wait_for_user_close();
 		return;
 	}
 	
@@ -205,6 +245,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		printf("%s", localize("error_filter_argument_empty"));
 		printf("\n");
+		wait_for_user_close();
 		return;
 	}
 	
@@ -212,6 +253,7 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		printf("%s", localize("error_threads_too_low"));
 		printf("\n");
+		wait_for_user_close();
 		return;
 	}
 	
@@ -224,6 +266,7 @@ void handle_command_line_arguments(int argc, char **argv)
 		{
 			printf(localize("error_invalid_export_path"), dir_buffer);
 			printf("\n");
+			wait_for_user_close();
 			return;
 		}
 	}
@@ -259,4 +302,6 @@ void handle_command_line_arguments(int argc, char **argv)
 	{
 		export_results(result);
 	}
+
+	wait_for_user_close();
 }

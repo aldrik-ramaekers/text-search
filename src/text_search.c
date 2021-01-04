@@ -181,7 +181,8 @@ static void* find_text_in_file_worker(void *arg)
 						result_buffer->match_count++;
 						mutex_unlock(&result_buffer->mutex);
 						
-						main_window->do_draw = true;
+						if (!result_buffer->is_command_line_search)
+							main_window->do_draw = true;
 					}
 				}
 				
