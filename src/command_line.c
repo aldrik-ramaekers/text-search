@@ -92,6 +92,7 @@ static bool is_valid_argument(char *arg)
 	return false;
 }
 
+#ifdef OS_WIN
 static void open_console()
 {
 	int hConHandle;
@@ -109,13 +110,16 @@ static void open_console()
 
     setvbuf(stdout, NULL, _IONBF, 0);
 }
+#endif
 
 static void wait_for_user_close()
 {
+	#ifdef OS_WIN
 	while(true) {
 		thread_sleep(10);
 		getc(stdin);
 	}
+	#endif
 }
 
 void handle_command_line_arguments(int argc, char **argv)

@@ -1,5 +1,7 @@
 1.5
 - fix small ui issues
+- fix command line crash
+- fix command line output not printing in release on windows
 1.4
 - show project-base version in settings page
 - cursor change when dragging tab
