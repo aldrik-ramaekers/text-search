@@ -1151,7 +1151,7 @@ int main(int argc, char **argv)
 	startup_stamp = platform_get_time(TIME_FULL, TIME_US);
 #endif
 	
-	//settings_page_create();
+	settings_page_create();
 	
 	debug_print_elapsed(startup_stamp, "settings page");
 	
@@ -1222,13 +1222,13 @@ int main(int argc, char **argv)
 		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
-		//settings_page_update_render();
+		settings_page_update_render();
 		platform_window_make_current(&window);
 		platform_set_icon(&window, logo_small_img);
 		
-		//global_ui_context.layout.active_window = &window;
-		//global_ui_context.keyboard = &keyboard;
-		//global_ui_context.mouse = &mouse;
+		global_ui_context.layout.active_window = &window;
+		global_ui_context.keyboard = &keyboard;
+		global_ui_context.mouse = &mouse;
 		
 		if (assets_do_post_process())
 			window.do_draw = true;
@@ -1251,7 +1251,7 @@ int main(int argc, char **argv)
 			render_clear(&window);
 			camera_apply_transformations(&window, &camera);
 			
-			//global_ui_context.layout.width = global_ui_context.layout.active_window->width;
+			global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 			// begin ui
 		
 			ui_begin(1);
