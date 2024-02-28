@@ -6,7 +6,7 @@
 
 #include "config.h"
 #include "asset_definitions.h"
-#include "../../project-base/src/project_base.h"
+#include "lib/project_base.h"
 
 typedef struct t_status_bar
 {
@@ -80,12 +80,47 @@ static void* find_text_in_file_worker(void *arg)
 		mutex_lock(&result_buffer->work_queue.mutex);
 		if (result_buffer->work_queue.length)
 		{
+			int count = 1;
+			int total = 1;
 			find_text_args args = *(find_text_args*)array_at(&result_buffer->work_queue, 0);
 			array_remove_at(&result_buffer->work_queue, 0);
+			
+			find_text_args args1 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args1.search_result_buffer == 0) ? 0 : 1;
+			if (args1.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+			
+			find_text_args args2 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args2.search_result_buffer == 0) ? 0 : 1;
+			if (args2.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args3 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args3.search_result_buffer == 0) ? 0 : 1;
+			if (args3.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args4 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args4.search_result_buffer == 0) ? 0 : 1;
+			if (args4.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args5 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args5.search_result_buffer == 0) ? 0 : 1;
+			if (args5.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args6 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args6.search_result_buffer == 0) ? 0 : 1;
+			if (args6.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args7 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args7.search_result_buffer == 0) ? 0 : 1;
+			if (args7.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
+			find_text_args args8 = result_buffer->work_queue.length ? *(find_text_args*)array_at(&result_buffer->work_queue, 0) : (find_text_args){0};
+			total += (args8.search_result_buffer == 0) ? 0 : 1;
+			if (args8.search_result_buffer != 0) array_remove_at(&result_buffer->work_queue, 0);
+
 			mutex_unlock(&result_buffer->work_queue.mutex);
 			
 			mutex_lock(&result_buffer->mutex);
-			result_buffer->files_searched++;
+			result_buffer->files_searched+=3;
 			mutex_unlock(&result_buffer->mutex);
 			
 			retry_search:;
@@ -208,6 +243,25 @@ static void* find_text_in_file_worker(void *arg)
 			}
 			
 			platform_destroy_file_content(&content);
+
+			if (count == 1 && total > 1) args = args1;
+			else if (count == 2  && total > 2) args = args2;
+			else if (count == 3  && total > 3) args = args3;
+			else if (count == 4  && total > 4) args = args4;
+			else if (count == 5  && total > 5) args = args5;
+			else if (count == 6  && total > 6) args = args6;
+			else if (count == 7  && total > 7) args = args7;
+			else if (count == 8  && total > 8) args = args7;
+
+			else if (count == 9) {
+				// done
+			}
+
+			count++;
+
+			if (count >= 9) {
+				goto retry_search;
+			}
 		}
 		else
 		{
@@ -432,6 +486,7 @@ static s32 pattern_width = 150;
 
 static bool dragging_path = false;
 static bool dragging_pattern = false;
+
 
 static bool render_update_result_header_entry(s32 x, s32 y, s32 w, platform_window *window, font *font_small, mouse_input *mouse, bool dragging, bool can_drag, s32 *ww, char *text)
 {
@@ -1005,7 +1060,7 @@ void load_config(settings_config *config)
 		string_copyn(textbox_search_text.buffer, search_text, MAX_INPUT_LENGTH);
 	else
 		string_copyn(textbox_search_text.buffer, "*hello world*", MAX_INPUT_LENGTH);
-	
+
 	if (locale_id)
 		set_locale(locale_id);
 	else
@@ -1026,9 +1081,11 @@ void load_config(settings_config *config)
 		
 		if (global_settings_page.max_file_size > 999999999)
 			global_settings_page.max_file_size = DEFAULT_MAX_FILE_SIZE;
+	
 	}
 	else
 	{
+	
 		checkbox_recursive.state = DEFAULT_RECURSIVE_STATE;
 		global_settings_page.max_thread_count = DEFAULT_THREAD_COUNT;
 		global_settings_page.max_file_size = DEFAULT_MAX_FILE_SIZE;
@@ -1095,7 +1152,7 @@ int main(int argc, char **argv)
 	startup_stamp = platform_get_time(TIME_FULL, TIME_US);
 #endif
 	
-	settings_page_create();
+	//settings_page_create();
 	
 	debug_print_elapsed(startup_stamp, "settings page");
 	
@@ -1143,7 +1200,7 @@ int main(int argc, char **argv)
 	button_find_text = ui_create_button();
 	button_cancel = ui_create_button();
 	debug_print_elapsed(startup_stamp, "ui widgets");
-	
+
 	load_config(&config);
 	debug_print_elapsed(startup_stamp, "apply config");
 	
@@ -1166,13 +1223,13 @@ int main(int argc, char **argv)
 		platform_handle_events(&window, &mouse, &keyboard);
 		platform_set_cursor(&window, CURSOR_DEFAULT);
 		
-		settings_page_update_render();
+		//settings_page_update_render();
 		platform_window_make_current(&window);
 		platform_set_icon(&window, logo_small_img);
 		
-		global_ui_context.layout.active_window = &window;
-		global_ui_context.keyboard = &keyboard;
-		global_ui_context.mouse = &mouse;
+		//global_ui_context.layout.active_window = &window;
+		//global_ui_context.keyboard = &keyboard;
+		//global_ui_context.mouse = &mouse;
 		
 		if (assets_do_post_process())
 			window.do_draw = true;
@@ -1195,9 +1252,9 @@ int main(int argc, char **argv)
 			render_clear(&window);
 			camera_apply_transformations(&window, &camera);
 			
-			global_ui_context.layout.width = global_ui_context.layout.active_window->width;
+			//global_ui_context.layout.width = global_ui_context.layout.active_window->width;
 			// begin ui
-			
+		
 			ui_begin(1);
 			{
 				ui_begin_menu_bar();
@@ -1318,9 +1375,11 @@ int main(int argc, char **argv)
 				ui_push_separator();
 			}
 			ui_end();
+		
 			// end ui
 			
 			// draw info or results
+		
 			{
 				render_status_bar(&window, font_small);
 				

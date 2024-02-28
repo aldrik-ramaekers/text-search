@@ -3,6 +3,17 @@
 #include <winuser.h>
 
 RC_LOGO ICON "logo_512.ico"
+
+IMG_EN BOOBA "data/imgs/en.bmp"
+IMG_ERR BOOBA "data/imgs/error.bmp"
+IMG_FOLD BOOBA "data/imgs/folder.bmp"
+IMG_NL BOOBA "data/imgs/nl.bmp"
+IMG_SRC BOOBA "data/imgs/search.bmp"
+IMG_LOGO BOOBA "data/imgs/logo_64.bmp"
+IMG_MONOTTF BOOBA "data/fonts/mono.ttf"
+TR_EN BOOBA "data/translations/en-English.mo"
+TR_NL BOOBA "data/translations/nl-Dutch.mo"
+
 1 VERSIONINFO
 FILEVERSION     0,1,0,0
 PRODUCTVERSION  0,1,0,0
