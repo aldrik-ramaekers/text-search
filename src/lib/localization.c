@@ -114,22 +114,20 @@ void load_available_localizations()
 {
 	global_localization.mo_files = array_create(sizeof(mo_file));
 	array_reserve(&global_localization.mo_files, 10);
-	/*
-	mo_file en = load_localization_file(_binary_data_translations_en_English_mo_start,
-										_binary_data_translations_en_English_mo_end,
-										_binary_data_imgs_en_bmp_start,
-										_binary_data_imgs_en_bmp_end,
+	mo_file en = load_localization_file(_binary____data_translations_en_English_mo_start,
+										_binary____data_translations_en_English_mo_end,
+										_binary____data_imgs_en_bmp_start,
+										_binary____data_imgs_en_bmp_end,
 										"en", "English");
 	
-	mo_file nl = load_localization_file(_binary_data_translations_nl_Dutch_mo_start,
-										_binary_data_translations_nl_Dutch_mo_end,
-										_binary_data_imgs_nl_bmp_start,
-										_binary_data_imgs_nl_bmp_end,
+	mo_file nl = load_localization_file(_binary____data_translations_nl_Dutch_mo_start,
+										_binary____data_translations_nl_Dutch_mo_end,
+										_binary____data_imgs_nl_bmp_start,
+										_binary____data_imgs_nl_bmp_end,
 										"nl", "Dutch");
 	
 	array_push(&global_localization.mo_files, &en);
 	array_push(&global_localization.mo_files, &nl);
-	*/
 }
 
 void destroy_available_localizations()

@@ -1038,7 +1038,6 @@ void load_config(settings_config *config)
 	s32 max_thread_count = settings_config_get_number(config, "MAX_THEAD_COUNT");
 	s32 max_file_size = settings_config_get_number(config, "MAX_FILE_SIZE");
 	char *locale_id = settings_config_get_string(config, "LOCALE");
-	u32 style = settings_config_get_number(config, "STYLE");
 	u32 double_click_action = settings_config_get_number(config, "DOUBLE_CLICK_ACTION");
 	
 	s32 tab1 = settings_config_get_number(config, "TAB_PATH");
