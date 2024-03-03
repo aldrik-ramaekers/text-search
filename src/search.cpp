@@ -1,6 +1,10 @@
 #include "search.h"
 #include "platform.h"
 
+#include <stdio.h>
+
+search_result* current_search_result = nullptr;
+
 array get_filters(char *pattern)
 {
 	array result = array_create(MAX_INPUT_LENGTH);
@@ -87,6 +91,7 @@ search_result *create_empty_search_result()
 	new_result_buffer->max_thread_count = 4;
 	new_result_buffer->match_count = 0;
 	new_result_buffer->file_count = 0;
+	new_result_buffer->cancel_search = false;
 	new_result_buffer->max_file_size = megabytes(1000);
 	
 	new_result_buffer->files = array_create(sizeof(found_file));
@@ -234,4 +239,102 @@ bool string_contains_ex(char *text_to_search, utf8_int8_t *text_to_find, array *
 	
 	set_info_and_return_failure:
 	return false;
+}
+
+static void _ts_search_file(found_file* ref, file_content content, search_result* result) {
+	if (content.content && !content.file_error)
+	{
+		array text_matches = array_create(sizeof(text_match));
+		int search_len = strlen(result->search_text);
+		if (string_contains_ex((char*)content.content, result->search_text, &text_matches))
+		{
+			mutex_lock(&result->matches.mutex);
+			for (int i = 0; i < text_matches.length; i++)
+			{
+				text_match *m = (text_match *)array_at(&text_matches, i);
+
+				file_match file_match;
+				file_match.file = ref;
+				file_match.line_nr = m->line_nr;
+				file_match.word_match_offset = m->word_offset;
+				file_match.word_match_length = m->word_match_len;
+				file_match.line_info = (char*)malloc(MAX_INPUT_LENGTH);
+
+				int text_pad_lr = 25;
+				if (file_match.word_match_offset > text_pad_lr) {
+					m->line_start += file_match.word_match_offset - text_pad_lr;
+					file_match.word_match_offset = text_pad_lr;
+				}
+				int total_len = text_pad_lr + search_len + text_pad_lr;
+
+				snprintf(file_match.line_info, MAX_INPUT_LENGTH, "%.*s", total_len, m->line_start);
+				for (int i = 0; i < total_len; i++) {
+					if (file_match.line_info[i] == '\n') file_match.line_info[i] = ' ';
+					if (file_match.line_info[i] == '\t') file_match.line_info[i] = ' ';
+					if (file_match.line_info[i] == '\r') file_match.line_info[i] = ' ';
+					if (file_match.line_info[i] == '\x0B') file_match.line_info[i] = ' ';
+				}
+				
+				array_push_size(&result->matches, &file_match, sizeof(file_match));
+				ref->match_count++;
+				result->match_count = result->matches.length;
+			}
+			mutex_unlock(&result->matches.mutex);
+		}
+		
+		array_destroy(&text_matches);
+	}
+}
+
+static void* _ts_search_thread(void* args) {
+	search_result* new_result = (search_result *)args;
+
+	keep_going:;
+	while (new_result->file_list_read_cursor < new_result->files.length)
+	{
+		if (new_result->cancel_search) goto finish_early;
+
+		mutex_lock(&new_result->files.mutex);
+		int read_cursor = new_result->file_list_read_cursor++;
+		new_result->file_count++;
+		mutex_unlock(&new_result->files.mutex);
+
+		if (read_cursor >= new_result->files.length) continue;
+
+		found_file* f = (found_file*)array_at(&new_result->files, read_cursor);
+		file_content content = platform_read_file(f->path, "rb, ccs=UTF-8");
+
+		_ts_search_file(f, content, new_result);
+
+		free(content.content);
+	}
+
+	if (!new_result->done_finding_files)
+		goto keep_going;
+
+	finish_early:;
+	mutex_lock(&new_result->files.mutex);
+	new_result->completed_match_threads++;
+	mutex_unlock(&new_result->files.mutex);
+
+	return 0;
+}
+
+void ts_start_search(utf8_int8_t* path, utf8_int8_t* filter, utf8_int8_t* query) {
+	if (current_search_result) {
+		current_search_result->cancel_search = true;
+	}
+
+	search_result* new_result = create_empty_search_result();
+	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
+	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
+	
+	platform_list_files(new_result);
+	//new_result->max_thread_count
+	for (int i = 0; i < 1; i++) {
+		thread thr = thread_start(_ts_search_thread, new_result);
+		thread_detach(&thr);
+	}
+
+	current_search_result = new_result;
 }

@@ -19,6 +19,7 @@
 #include "mutex.h"
 #include "array.h"
 #include "memory_bucket.h"
+#include "image.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -30,6 +31,7 @@
 
 void ts_create_gui(int window_w, int window_h);
 void ts_load_images();
+void ts_init();
 
 // Data stored per platform window
 struct WGL_WindowData { HDC hDC; };
@@ -89,6 +91,7 @@ int main(int, char**)
     ImGui_ImplWin32_InitForOpenGL(hwnd);
     ImGui_ImplOpenGL3_Init();
 
+	ts_init();
 	ts_load_images();
 
     // Load Fonts
@@ -332,6 +335,8 @@ void platform_list_files_block(search_result* result, wchar_t* start_dir)
 	
 	do
 	{
+		if (result->cancel_search) return;
+
 		//if (*is_cancelled) break;
 		const wchar_t *name = (const wchar_t *)file_info.cFileName;
 		

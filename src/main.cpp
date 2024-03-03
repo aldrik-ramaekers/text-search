@@ -1,27 +1,19 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
+#include "../utf8.h"
 #include "definitions.h"
 #include "search.h"
 #include "platform.h"
-#include "../utf8.h"
+#include "image.h"
+
 #include <stdio.h>
-
-typedef struct t_ts_image {
-	GLuint id;
-	int width;
-	int height;
-} ts_image;
-
-ts_image img_logo;
 
 #define SEARCH_BUFFER_SIZE 2048
 
-search_result* current_search_result = nullptr;
-
-char path_buffer[SEARCH_BUFFER_SIZE];
-char filter_buffer[SEARCH_BUFFER_SIZE];
-char query_buffer[SEARCH_BUFFER_SIZE];
+utf8_int8_t path_buffer[SEARCH_BUFFER_SIZE];
+utf8_int8_t filter_buffer[SEARCH_BUFFER_SIZE];
+utf8_int8_t query_buffer[SEARCH_BUFFER_SIZE];
 
 bool open_settings_window = false;
 bool open_about_window = false;
@@ -33,143 +25,6 @@ char* locales[] = {
 	"English",
 	"Dutch"
 };
-
-#define STB_IMAGE_IMPLEMENTATION
-#include "../stb_image.h"
-
-// Simple helper function to load an image into a OpenGL texture with common settings
-bool LoadTexture(unsigned char* data, unsigned long size, GLuint* out_texture, int* out_width, int* out_height)
-{
-    // Load from file
-    int image_width = 0;
-    int image_height = 0;
-    unsigned char* image_data = stbi_load_from_memory(data, size, &image_width, &image_height, NULL, 4);
-    if (image_data == NULL) {
-		printf("Failed to load %s\n", stbi_failure_reason());
-        return false;
-	}
-
-    // Create a OpenGL texture identifier
-    GLuint image_texture;
-    glGenTextures(1, &image_texture);
-    glBindTexture(GL_TEXTURE_2D, image_texture);
-
-    // Setup filtering parameters for display
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Upload pixels into texture
-#if defined(GL_UNPACK_ROW_LENGTH) && !defined(__EMSCRIPTEN__)
-    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-#endif
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image_width, image_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-    stbi_image_free(image_data);
-
-    *out_texture = image_texture;
-    *out_width = image_width;
-    *out_height = image_height;
-
-    return true;
-}
-
-static ts_image _ts_load_image(unsigned char* data, unsigned long size) {
-	int w = 0;
-	int h = 0;
-	GLuint id = 0;
-	bool ret = LoadTexture(data, size, &id, &w, &h);
-
-	return ts_image {id, w, h};
-}
-
-static void _ts_search_file(found_file* ref, file_content content, search_result* result) {
-	if (content.content && !content.file_error)
-	{
-		array text_matches = array_create(sizeof(text_match));
-		int search_len = strlen(result->search_text);
-		if (string_contains_ex((char*)content.content, result->search_text, &text_matches))
-		{
-			mutex_lock(&result->matches.mutex);
-			for (int i = 0; i < text_matches.length; i++)
-			{
-				text_match *m = (text_match *)array_at(&text_matches, i);
-
-				file_match file_match;
-				file_match.file = ref;
-				file_match.line_nr = m->line_nr;
-				file_match.word_match_offset = m->word_offset;
-				file_match.word_match_length = m->word_match_len;
-				file_match.line_info = (char*)malloc(MAX_INPUT_LENGTH);
-
-				int text_pad_lr = 25;
-				if (file_match.word_match_offset > text_pad_lr) {
-					m->line_start += file_match.word_match_offset - text_pad_lr;
-					file_match.word_match_offset = text_pad_lr;
-				}
-				int total_len = text_pad_lr + search_len + text_pad_lr;
-
-				snprintf(file_match.line_info, MAX_INPUT_LENGTH, "%.*s", total_len, m->line_start);
-				for (int i = 0; i < total_len; i++) {
-					if (file_match.line_info[i] == '\n') file_match.line_info[i] = ' ';
-					if (file_match.line_info[i] == '\t') file_match.line_info[i] = ' ';
-					if (file_match.line_info[i] == '\r') file_match.line_info[i] = ' ';
-					if (file_match.line_info[i] == '\x0B') file_match.line_info[i] = ' ';
-				}
-				
-				array_push_size(&result->matches, &file_match, sizeof(file_match));
-				ref->match_count++;
-				result->match_count = result->matches.length;
-			}
-			mutex_unlock(&result->matches.mutex);
-		}
-		
-		array_destroy(&text_matches);
-	}
-}
-
-static void* _ts_search_thread(void* args) {
-	search_result* new_result = (search_result *)args;
-
-	keep_going:;
-	while (new_result->file_list_read_cursor < new_result->files.length)
-	{
-		mutex_lock(&new_result->files.mutex);
-		int read_cursor = new_result->file_list_read_cursor++;
-		new_result->file_count++;
-		mutex_unlock(&new_result->files.mutex);
-
-		if (read_cursor >= new_result->files.length) continue;
-
-		found_file* f = (found_file*)array_at(&new_result->files, read_cursor);
-		file_content content = platform_read_file(f->path, "rb, ccs=UTF-8");
-
-		_ts_search_file(f, content, new_result);
-
-		free(content.content);
-	}
-
-	if (!new_result->done_finding_files)
-		goto keep_going;
-
-	new_result->completed_match_threads++;
-
-	return 0;
-}
-
-static void _ts_start_search() {
-	search_result* new_result = create_empty_search_result();
-	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path_buffer);
-	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query_buffer);
-	
-
-	platform_list_files(new_result);
-	//new_result->max_thread_count
-	for (int i = 0; i < 1; i++) {
-		thread thr = thread_start(_ts_search_thread, new_result);
-		thread_detach(&thr);
-	}
-
-	current_search_result = new_result;
-}
 
 static void _ts_create_popups() {
 	ImGuiIO& io = ImGui::GetIO();
@@ -262,14 +117,10 @@ static int _ts_create_menu() {
 	return menu_bar_h;
 }
 
-void ts_load_images() {
+void ts_init() {
 	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5");
 	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.h");
 	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
-
-	int size = _binary_misc_logo_64_png_end - _binary_misc_logo_64_png_start;
-	unsigned char* data = (unsigned char *)_binary_misc_logo_64_png_start;
-	img_logo = _ts_load_image(data, size);
 }
 
 void ts_create_gui(int window_w, int window_h) {
@@ -327,7 +178,7 @@ void ts_create_gui(int window_w, int window_h) {
 
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			if (ImGui::Button("Search")) {
-				_ts_start_search();
+				ts_start_search(path_buffer, filter_buffer, query_buffer);
 			}
 			ImGui::PopStyleVar();
 		}

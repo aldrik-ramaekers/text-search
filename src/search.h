@@ -29,6 +29,7 @@ typedef struct t_search_result
 	int completed_match_threads;
 	int done_finding_files;
 	int file_list_read_cursor;
+	bool cancel_search;
 
 	// search query
 	utf8_int8_t *directory_to_search;
@@ -55,10 +56,14 @@ typedef struct t_text_match
 	char *line_info;
 } text_match;
 
+extern search_result* current_search_result;
+
 array get_filters(char *pattern);
 int filter_matches(array *filters, char *string, char **matched_filter);
 int string_match(char *first, char *second);
 search_result *create_empty_search_result();
 bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_matches);
+
+void ts_start_search(utf8_int8_t* path, utf8_int8_t* filter, utf8_int8_t* query);
 
 #endif
