@@ -328,6 +328,27 @@ finish_early:;
 	return 0;
 }
 
+static void *_ts_list_files_thread(void *args)
+{
+	ts_search_result *info = (ts_search_result *)args;
+	ts_platform_list_files_block(info, nullptr);
+	info->done_finding_files = true;
+
+	// Use this thread to cleanup.
+	while (!info->search_completed) {
+		if (info->completed_match_threads == info->max_ts_thread_count) {
+			info->search_completed = true; // No memory is written after this point.
+		}
+	}
+	return 0;
+}
+
+static void _ts_list_files(ts_search_result* result)
+{
+	ts_thread thr = ts_thread_start(_ts_list_files_thread, (void*)result);
+	ts_thread_detach(&thr);
+}
+
 void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 {
 	if (current_search_result)
@@ -339,7 +360,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
 
-	ts_platform_list_files(new_result);
+	_ts_list_files(new_result);
 	for (int i = 0; i < new_result->max_ts_thread_count; i++)
 	{
 		ts_thread thr = ts_thread_start(_ts_search_thread, new_result);

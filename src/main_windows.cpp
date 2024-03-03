@@ -1,13 +1,3 @@
-// Dear ImGui: standalone example application for Win32 + OpenGL 3
-
-// Learn about Dear ImGui:
-// - FAQ                  https://dearimgui.com/faq
-// - Getting Started      https://dearimgui.com/getting-started
-// - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
-// - Introduction, links and more at the top of imgui.cpp
-
-// This is provided for completeness, however it is strongly recommended you use OpenGL with SDL or GLFW.
-
 #include <stdio.h>
 
 #include "../imgui/imgui.h"
@@ -33,7 +23,6 @@ void ts_create_gui(int window_w, int window_h);
 void ts_load_images();
 void ts_init();
 
-// Data stored per platform window
 struct WGL_WindowData { HDC hDC; };
 
 // Data
@@ -42,13 +31,11 @@ static WGL_WindowData   g_MainWindow;
 static int              g_Width;
 static int              g_Height;
 
-// Forward declarations of helper functions
 bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void ResetDeviceWGL();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-// Main code
 int main(int, char**)
 {
     // Create application window
@@ -138,7 +125,6 @@ int main(int, char**)
     return 0;
 }
 
-// Helper functions
 bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data)
 {
     HDC hDc = ::GetDC(hWnd);
@@ -168,14 +154,7 @@ void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data)
     ::ReleaseDC(hWnd, data->hDC);
 }
 
-// Forward declare message handler from imgui_impl_win32.cpp
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-// Win32 message handler
-// You can read the io.WantCaptureMouse, io.WantCaptureKeyboard flags to tell if dear imgui wants to use your inputs.
-// - When io.WantCaptureMouse is true, do not dispatch mouse input data to your main application, or clear/overwrite your copy of the mouse data.
-// - When io.WantCaptureKeyboard is true, do not dispatch keyboard input data to your main application, or clear/overwrite your copy of the keyboard data.
-// Generally you may always pass all inputs to dear imgui, and hide them from your application based on those two flags.
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
@@ -277,26 +256,6 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 	fclose(file);
 	done_failure:
 	return result;
-}
-
-static void *_list_files_thread(void *args)
-{
-	ts_search_result *info = (ts_search_result *)args;
-	ts_platform_list_files_block(info, nullptr);
-	info->done_finding_files = true;
-
-	while (!info->search_completed) {
-		if (info->completed_match_threads == info->max_ts_thread_count) {
-			info->search_completed = true;
-		}
-	}
-	return 0;
-}
-
-void ts_platform_list_files(ts_search_result* result)
-{
-	ts_thread thr = ts_thread_start(_list_files_thread, (void*)result);
-	ts_thread_detach(&thr);
 }
 
 void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
