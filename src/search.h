@@ -43,8 +43,8 @@ typedef struct t_ts_file_match
 {
 	ts_found_file* file;
 	int line_nr;
-	int word_match_offset;
-	int word_match_length;
+	int word_match_offset; // nr of bytes, not codepoints.
+	int word_match_length; // nr of bytes, not codepoints.
 	utf8_int8_t *line_info;
 } ts_file_match;
 
