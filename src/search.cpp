@@ -238,9 +238,6 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 	}
 
 	return final_result;
-
-set_info_and_return_failure:
-	return false;
 }
 
 static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_search_result *result)
