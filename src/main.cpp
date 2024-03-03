@@ -165,11 +165,11 @@ void ts_create_gui(int window_w, int window_h) {
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
-			ImGui::InputTextWithHint("path-ti", "Path", path_buffer, 4000);
+			ImGui::InputTextWithHint("path-ti", "Path", path_buffer, MAX_INPUT_LENGTH);
 			ImGui::PopItemWidth();		
 
 			ImGui::PushItemWidth(-1);
-			if (ImGui::InputTextWithHint("query", "Query", query_buffer, 4000, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
+			if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
 				ts_start_search(path_buffer, filter_buffer, query_buffer);
 			}
 			ImGui::PopItemWidth();
@@ -182,7 +182,9 @@ void ts_create_gui(int window_w, int window_h) {
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
-			ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, 4000);
+			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
+				ts_start_search(path_buffer, filter_buffer, query_buffer);
+			}
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
 
