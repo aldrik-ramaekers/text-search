@@ -9,6 +9,6 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary
 windres misc/icon.rc -O coff -o bin/debug/icon.res
 ld -r -b binary -o bin/debug/data.obj LICENSE misc/logo_64.png
 mkdir %OUT_DIR%
-cl /nologo /Zi /MD /utf-8 %INCLUDES% /D UNICODE /D _UNICODE %SOURCES% /Fe%OUT_DIR%/%OUT_EXE%.exe /Fd%OUT_DIR%/vc140.pdb /Fo%OUT_DIR%/ /link %LIBS%
+cl /nologo /Zi /MD /EHsc /utf-8 %INCLUDES% /D UNICODE /D _UNICODE %SOURCES% /Fe%OUT_DIR%/%OUT_EXE%.exe /Fd%OUT_DIR%/vc140.pdb /Fo%OUT_DIR%/ /link %LIBS%
 if "%1"=="-r" call "bin/debug/text-search.exe"
 if "%1"=="-d" call devenv "bin/debug/text-search.exe"

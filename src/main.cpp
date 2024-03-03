@@ -1,6 +1,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
+#include "../imgui/imspinner.h"
 #include "../utf8.h"
 #include "definitions.h"
 #include "search.h"
@@ -9,11 +10,9 @@
 
 #include <stdio.h>
 
-#define SEARCH_BUFFER_SIZE 2048
-
-utf8_int8_t path_buffer[SEARCH_BUFFER_SIZE];
-utf8_int8_t filter_buffer[SEARCH_BUFFER_SIZE];
-utf8_int8_t query_buffer[SEARCH_BUFFER_SIZE];
+utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
+utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
+utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
 
 bool open_settings_window = false;
 bool open_about_window = false;
@@ -123,6 +122,15 @@ void ts_init() {
 	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
 }
 
+int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
+	if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
+		utf8ncpy(query_buffer, data->Buf, MAX_INPUT_LENGTH);
+		ts_start_search(path_buffer, filter_buffer, query_buffer);
+	}
+
+	return 0;
+}
+
 void ts_create_gui(int window_w, int window_h) {
 	static float f = 0.0f;
 	static int counter = 0;
@@ -161,7 +169,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PopItemWidth();		
 
 			ImGui::PushItemWidth(-1);
-			ImGui::InputTextWithHint("query", "Query", query_buffer, 4000);
+			ImGui::InputTextWithHint("query", "Query", query_buffer, 4000, ImGuiInputTextFlags_CallbackEdit, _tb_query_input_cb);
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
 		}
@@ -176,11 +184,9 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
 
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			if (ImGui::Button("Search")) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer);
+			if (current_search_result && !current_search_result->search_completed) {
+				ImSpinner::SpinnerIncScaleDots("Spinner", 10.0f, 2.0f, ImColor(70,70,70), 5.0f);
 			}
-			ImGui::PopStyleVar();
 		}
 		ImGui::EndChild();
 

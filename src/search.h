@@ -30,6 +30,7 @@ typedef struct t_ts_search_result
 	int done_finding_files;
 	int file_list_read_cursor;
 	bool cancel_search;
+	bool search_completed;
 
 	// search query
 	utf8_int8_t *directory_to_search;

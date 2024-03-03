@@ -87,8 +87,9 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->mutex = ts_mutex_create();
 	new_result_buffer->done_finding_files = false;
 	new_result_buffer->file_list_read_cursor = 0;
-	new_result_buffer->max_ts_thread_count = 4;
+	new_result_buffer->max_ts_thread_count = 1;
 	new_result_buffer->match_count = 0;
+	new_result_buffer->search_completed = false;
 	new_result_buffer->file_count = 0;
 	new_result_buffer->cancel_search = false;
 	new_result_buffer->max_file_size = megabytes(1000);
@@ -342,8 +343,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
 
 	ts_platform_list_files(new_result);
-	// new_result->max_ts_thread_count
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < new_result->max_ts_thread_count; i++)
 	{
 		ts_thread thr = ts_thread_start(_ts_search_thread, new_result);
 		ts_thread_detach(&thr);

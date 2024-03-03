@@ -300,6 +300,12 @@ static void *_list_files_thread(void *args)
 	ts_search_result *info = (ts_search_result *)args;
 	ts_platform_list_files_block(info, nullptr);
 	info->done_finding_files = true;
+
+	while (!info->search_completed) {
+		if (info->completed_match_threads == info->max_ts_thread_count) {
+			info->search_completed = true;
+		}
+	}
 	return 0;
 }
 
