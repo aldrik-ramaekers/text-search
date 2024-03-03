@@ -117,9 +117,9 @@ static int _ts_create_menu() {
 }
 
 void ts_init() {
-	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5");
+	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\test");
 	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.h");
-	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
+	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "あいうえお");
 }
 
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
