@@ -10,22 +10,22 @@
 #include "memory_bucket.h"
 #include "../utf8.h"
 
-typedef struct t_found_file
+typedef struct t_ts_found_file
 {
 	utf8_int8_t *path;
 	int match_count;
-} found_file;
+} ts_found_file;
 
-typedef struct t_search_result
+typedef struct t_ts_search_result
 {
 	// data
-	array files;
-	array matches;
+	ts_array files;
+	ts_array matches;
 	int match_count;
 	int file_count;
 
 	// thread syncing
-	mutex mutex;
+	ts_mutex mutex;
 	int completed_match_threads;
 	int done_finding_files;
 	int file_list_read_cursor;
@@ -34,36 +34,35 @@ typedef struct t_search_result
 	// search query
 	utf8_int8_t *directory_to_search;
 	utf8_int8_t *search_text;
-	int max_thread_count;
+	int max_ts_thread_count;
 	int max_file_size;
-} search_result;
+} ts_search_result;
 
-typedef struct t_file_match
+typedef struct t_ts_file_match
 {
-	found_file* file;
+	ts_found_file* file;
 	int line_nr;
 	int word_match_offset;
 	int word_match_length;
-	utf8_int8_t *line_info; // will be null when no match is found
-} file_match;
+	utf8_int8_t *line_info;
+} ts_file_match;
 
-typedef struct t_text_match
+typedef struct t_ts_text_match
 {
 	int line_nr;
 	int word_offset;
 	int word_match_len;
 	char *line_start;
 	char *line_info;
-} text_match;
+} ts_text_match;
 
-extern search_result* current_search_result;
+extern ts_search_result* current_search_result;
 
-array get_filters(char *pattern);
-int filter_matches(array *filters, char *string, char **matched_filter);
-int string_match(char *first, char *second);
-search_result *create_empty_search_result();
-bool string_contains_ex(char *text_to_search, char *text_to_find, array *text_matches);
-
-void ts_start_search(utf8_int8_t* path, utf8_int8_t* filter, utf8_int8_t* query);
+ts_array 			ts_get_filters(char *pattern);
+int 				ts_filter_matches(ts_array *filters, char *string, char **matched_filter);
+int 				ts_string_match(char *first, char *second);
+ts_search_result* 	ts_create_empty_search_result();
+bool 				ts_string_contains(char *text_to_search, char *text_to_find, ts_array *text_matches);
+void 				ts_start_search(utf8_int8_t* path, utf8_int8_t* filter, utf8_int8_t* query);
 
 #endif

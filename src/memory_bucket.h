@@ -7,22 +7,22 @@
 #include "mutex.h"
 #include "array.h"
 
-typedef struct t_memory_bucket_entry
+typedef struct t_ts_memory_bucket_entry
 {
 	char *data;
 	int length;
 	int cursor;
-} memory_bucket_entry;
+} ts_memory_bucket_entry;
 
-typedef struct t_memory_bucket
+typedef struct t_ts_memory_bucket
 {
-	mutex bucket_mutex;
-	array buckets;
-} memory_bucket;
+	ts_mutex bucket_mutex;
+	ts_array buckets;
+} ts_memory_bucket;
 
-memory_bucket memory_bucket_init(int bucket_size);
-void* memory_bucket_reserve(memory_bucket *bucket, int reserve_length);
-void memory_bucket_reset(memory_bucket *bucket);
-void memory_bucket_destroy(memory_bucket *bucket);
+ts_memory_bucket 	ts_memory_bucket_init(int bucket_size);
+void* 				ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length);
+void 				ts_memory_bucket_reset(ts_memory_bucket *bucket);
+void 				ts_memory_bucket_destroy(ts_memory_bucket *bucket);
 
 #endif

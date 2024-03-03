@@ -224,9 +224,9 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
-file_content platform_read_file(char *path, const char *mode)
+ts_file_content ts_platform_read_file(char *path, const char *mode)
 {
-	file_content result;
+	ts_file_content result;
 	result.content = 0;
 	result.content_length = 0;
 	result.file_error = 0;
@@ -297,19 +297,19 @@ file_content platform_read_file(char *path, const char *mode)
 
 static void *_list_files_thread(void *args)
 {
-	search_result *info = (search_result *)args;
-	platform_list_files_block(info, nullptr);
+	ts_search_result *info = (ts_search_result *)args;
+	ts_platform_list_files_block(info, nullptr);
 	info->done_finding_files = true;
 	return 0;
 }
 
-void platform_list_files(search_result* result)
+void ts_platform_list_files(ts_search_result* result)
 {
-	thread thr = thread_start(_list_files_thread, (void*)result);
-	thread_detach(&thr);
+	ts_thread thr = ts_thread_start(_list_files_thread, (void*)result);
+	ts_thread_detach(&thr);
 }
 
-void platform_list_files_block(search_result* result, wchar_t* start_dir)
+void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 {
     // Utf8 to wchar str
 	wchar_t* search_dir = (wchar_t*)malloc(MAX_INPUT_LENGTH);
@@ -354,7 +354,7 @@ void platform_list_files_block(search_result* result, wchar_t* start_dir)
 			wcscpy(subdir_buffer_path, search_dir);
 			wcscat(subdir_buffer_path, L"\\");
 			wcscat(subdir_buffer_path, name);
-			platform_list_files_block(result, subdir_buffer_path);
+			ts_platform_list_files_block(result, subdir_buffer_path);
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ENCRYPTED) ||
@@ -368,14 +368,14 @@ void platform_list_files_block(search_result* result, wchar_t* start_dir)
 			wcscat(complete_file_path, L"\\");
 			wcscat(complete_file_path, name);
 
-			found_file f;
+			ts_found_file f;
 			f.path = (utf8_int8_t*)malloc(MAX_INPUT_LENGTH);
 			f.match_count = 0;
 			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f.path,MAX_INPUT_LENGTH, NULL, NULL);
 				
-			mutex_lock(&result->files.mutex);
-			array_push_size(&result->files, &f, sizeof(found_file));
-			mutex_unlock(&result->files.mutex);
+			ts_mutex_lock(&result->files.mutex);
+			ts_array_push_size(&result->files, &f, sizeof(ts_found_file));
+			ts_mutex_unlock(&result->files.mutex);
 			
 		}
 	}

@@ -1,186 +1,186 @@
 #include "array.h"
 
-array array_create(int entry_size)
+ts_array ts_array_create(int entry_size)
 {
-	array new_array;
-	new_array.length = 0;
-	new_array.reserved_length = 0;
-	new_array.entry_size = entry_size;
-	new_array.data = 0;
-	new_array.reserve_jump = 1;
-	new_array.mutex = mutex_create_recursive();
+	ts_array new_ts_array;
+	new_ts_array.length = 0;
+	new_ts_array.reserved_length = 0;
+	new_ts_array.entry_size = entry_size;
+	new_ts_array.data = 0;
+	new_ts_array.reserve_jump = 1;
+	new_ts_array.mutex = ts_mutex_create_recursive();
 	
-	return new_array;
+	return new_ts_array;
 }
 
-int array_push(array *array, void *data)
+int ts_array_push(ts_array *ts_array, void *data)
 {
-	ASSERT(array);
+	ASSERT(ts_array);
 	ASSERT(data);
-	ASSERT(array->reserve_jump >= 1);
+	ASSERT(ts_array->reserve_jump >= 1);
 	
-	mutex_lock(&array->mutex);
-	array->length++;
+	ts_mutex_lock(&ts_array->mutex);
+	ts_array->length++;
 	
-	if (!array->data)
+	if (!ts_array->data)
 	{
-		array->data = malloc(array->entry_size * array->reserve_jump);
-		array->reserved_length = array->reserve_jump;
+		ts_array->data = malloc(ts_array->entry_size * ts_array->reserve_jump);
+		ts_array->reserved_length = ts_array->reserve_jump;
 	}
 	
-	if (array->reserved_length < array->length)
+	if (ts_array->reserved_length < ts_array->length)
 	{
-		array->reserved_length += array->reserve_jump;
-		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+		ts_array->reserved_length += ts_array->reserve_jump;
+		ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
 	}
 	
-	memcpy((char*)array->data + ((array->length-1) * array->entry_size),
-		   data, array->entry_size);
+	memcpy((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size),
+		   data, ts_array->entry_size);
 	
-	int result = array->length -1;
-	mutex_unlock(&array->mutex);
+	int result = ts_array->length -1;
+	ts_mutex_unlock(&ts_array->mutex);
 	return result;
 }
 
-int array_push_size(array *array, void *data, int data_size)
+int ts_array_push_size(ts_array *ts_array, void *data, int data_size)
 {
-	ASSERT(array);
+	ASSERT(ts_array);
 	ASSERT(data);
-	ASSERT(array->reserve_jump >= 1);
+	ASSERT(ts_array->reserve_jump >= 1);
 	
-	mutex_lock(&array->mutex);
-	array->length++;
+	ts_mutex_lock(&ts_array->mutex);
+	ts_array->length++;
 	
-	if (!array->data)
+	if (!ts_array->data)
 	{
-		array->data = malloc(array->entry_size * array->reserve_jump);
-		array->reserved_length = array->reserve_jump;
+		ts_array->data = malloc(ts_array->entry_size * ts_array->reserve_jump);
+		ts_array->reserved_length = ts_array->reserve_jump;
 	}
 	
-	if (array->reserved_length < array->length)
+	if (ts_array->reserved_length < ts_array->length)
 	{
-		array->reserved_length += array->reserve_jump;
-		array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+		ts_array->reserved_length += ts_array->reserve_jump;
+		ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
 	}
 	
-	memcpy((char*)array->data + ((array->length-1) * array->entry_size),
+	memcpy((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size),
 		   data, data_size);
 	
 	// fill remaining space with 0
-	if (array->entry_size > data_size)
+	if (ts_array->entry_size > data_size)
 	{
-		int remaining = array->entry_size - data_size;
-		memset((char*)array->data + ((array->length-1) * array->entry_size) + data_size,
+		int remaining = ts_array->entry_size - data_size;
+		memset((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size) + data_size,
 			   0, remaining);
 	}
 	
-	int result = array->length -1;
-	mutex_unlock(&array->mutex);
+	int result = ts_array->length -1;
+	ts_mutex_unlock(&ts_array->mutex);
 	return result;
 }
 
-void array_reserve(array *array, int reserve_count)
+void ts_array_reserve(ts_array *ts_array, int reserve_count)
 {
-	ASSERT(array);
+	ASSERT(ts_array);
 	
-	mutex_lock(&array->mutex);
-	int reserved_count = array->reserved_length - array->length;
+	ts_mutex_lock(&ts_array->mutex);
+	int reserved_count = ts_array->reserved_length - ts_array->length;
 	reserve_count -= reserved_count;
 	
 	if (reserve_count > 0)
 	{
-		array->reserved_length += reserve_count;
+		ts_array->reserved_length += reserve_count;
 		
-		if (array->data)
+		if (ts_array->data)
 		{
-			array->data = realloc(array->data, (array->reserved_length*array->entry_size));
+			ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
 		}
 		else
 		{
-			array->data = malloc(array->reserved_length*array->entry_size);
+			ts_array->data = malloc(ts_array->reserved_length*ts_array->entry_size);
 		}
 	}
-	mutex_unlock(&array->mutex);
+	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void array_remove_at(array *array, int at)
+void ts_array_remove_at(ts_array *ts_array, int at)
 {
-	ASSERT(array);
+	ASSERT(ts_array);
 	ASSERT(at >= 0);
-	ASSERT(at < array->length);
+	ASSERT(at < ts_array->length);
 	
-	mutex_lock(&array->mutex);
-	if (array->length > 1)
+	ts_mutex_lock(&ts_array->mutex);
+	if (ts_array->length > 1)
 	{
-		int offset = at * array->entry_size;
-		int size = (array->length - at - 1) * array->entry_size;
-		memcpy((char*)array->data + offset,
-			   (char*)array->data + offset + array->entry_size,
+		int offset = at * ts_array->entry_size;
+		int size = (ts_array->length - at - 1) * ts_array->entry_size;
+		memcpy((char*)ts_array->data + offset,
+			   (char*)ts_array->data + offset + ts_array->entry_size,
 			   size);
 		
-		//array->data = realloc(array->data, array->length * array->entry_size);
+		//ts_array->data = realloc(ts_array->data, ts_array->length * ts_array->entry_size);
 	}
 	
-	array->length--;
-	mutex_unlock(&array->mutex);
+	ts_array->length--;
+	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void array_remove(array *array, void *ptr)
+void ts_array_remove(ts_array *ts_array, void *ptr)
 {
-	mutex_lock(&array->mutex);
-	int offset = (char*)ptr - (char*)array->data;
-	int at = offset / array->entry_size;
-	array_remove_at(array, at);
-	mutex_unlock(&array->mutex);
+	ts_mutex_lock(&ts_array->mutex);
+	int offset = (char*)ptr - (char*)ts_array->data;
+	int at = offset / ts_array->entry_size;
+	ts_array_remove_at(ts_array, at);
+	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void array_remove_by(array *array, void *data)
+void ts_array_remove_by(ts_array *ts_array, void *data)
 {
-	ASSERT(array);
+	ASSERT(ts_array);
 	
-	mutex_lock(&array->mutex);
-	for (int i = 0; i < array->length; i++)
+	ts_mutex_lock(&ts_array->mutex);
+	for (int i = 0; i < ts_array->length; i++)
 	{
-		void *d = array_at(array, i);
-		if (memcmp(d, data, array->entry_size) == 0)
+		void *d = ts_array_at(ts_array, i);
+		if (memcmp(d, data, ts_array->entry_size) == 0)
 		{
-			array_remove_at(array, i);
+			ts_array_remove_at(ts_array, i);
 			return;
 		}
 	}
-	mutex_unlock(&array->mutex);
+	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void *array_at(array *array, int at)
+void *ts_array_at(ts_array *ts_array, int at)
 {
-	mutex_lock(&array->mutex);
-	ASSERT(array);
+	ts_mutex_lock(&ts_array->mutex);
+	ASSERT(ts_array);
 	ASSERT(at >= 0);
-	ASSERT(at < array->length);
+	ASSERT(at < ts_array->length);
 	
-	void *result =  (char*)array->data + (at * array->entry_size);
-	mutex_unlock(&array->mutex);
+	void *result =  (char*)ts_array->data + (at * ts_array->entry_size);
+	ts_mutex_unlock(&ts_array->mutex);
 	return result;
 }
 
-void array_destroy(array *array)
+void ts_array_destroy(ts_array *ts_array)
 {
-	ASSERT(array);
-	free(array->data);
-	mutex_destroy(&array->mutex);
+	ASSERT(ts_array);
+	free(ts_array->data);
+	ts_mutex_destroy(&ts_array->mutex);
 }
 
-array array_copy(array *arr)
+ts_array ts_array_copy(ts_array *arr)
 {
-	array new_array;
-	new_array.length = arr->length;
-	new_array.reserved_length = arr->reserved_length;
-	new_array.entry_size = arr->entry_size;
-	new_array.data = malloc(new_array.entry_size*new_array.reserved_length);
-	new_array.mutex = mutex_create();
+	ts_array new_ts_array;
+	new_ts_array.length = arr->length;
+	new_ts_array.reserved_length = arr->reserved_length;
+	new_ts_array.entry_size = arr->entry_size;
+	new_ts_array.data = malloc(new_ts_array.entry_size*new_ts_array.reserved_length);
+	new_ts_array.mutex = ts_mutex_create();
 	
-	mutex_lock(&arr->mutex);
-	memcpy(new_array.data, arr->data, new_array.entry_size*new_array.reserved_length);
-	mutex_unlock(&arr->mutex);
-	return new_array;
+	ts_mutex_lock(&arr->mutex);
+	memcpy(new_ts_array.data, arr->data, new_ts_array.entry_size*new_ts_array.reserved_length);
+	ts_mutex_unlock(&arr->mutex);
+	return new_ts_array;
 }

@@ -18,7 +18,7 @@ utf8_int8_t query_buffer[SEARCH_BUFFER_SIZE];
 bool open_settings_window = false;
 bool open_about_window = false;
 
-int thread_count = 4;
+int ts_thread_count = 4;
 int current_locale_index = 0;
 int locales_count = 2;
 char* locales[] = {
@@ -36,7 +36,7 @@ static void _ts_create_popups() {
 	// Settings window
 	if (ImGui::BeginPopupModal("Text-Search settings", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
-		ImGui::DragInt("Threads", &thread_count, 1.0f, 1, 64);
+		ImGui::DragInt("Threads", &ts_thread_count, 1.0f, 1, 64);
 		ImGui::Combo("Language", &current_locale_index, locales, locales_count);
 
 		ImGui::Dummy({0, 70});
@@ -203,10 +203,10 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableHeadersRow();
 
 			int itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
-			found_file* prev_file = nullptr;
+			ts_found_file* prev_file = nullptr;
 			for (int item = 0; item < itemcount; item++)
 			{
-				file_match *file = (file_match *)array_at(&current_search_result->matches, item);
+				ts_file_match *file = (ts_file_match *)ts_array_at(&current_search_result->matches, item);
 
 				if (prev_file != file->file) {
 					prev_file = file->file;

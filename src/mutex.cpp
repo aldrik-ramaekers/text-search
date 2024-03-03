@@ -1,47 +1,47 @@
 #include "mutex.h"
 
-mutex mutex_create()
+ts_mutex ts_mutex_create()
 {
-	mutex result;
+	ts_mutex result;
 	result.mutex = CreateMutex( 
         NULL,              // default security attributes
         FALSE,             // initially not owned
-        NULL);             // unnamed mutex
+        NULL);             // unnamed ts_mutex
 	
 	return result;
 }
 
-mutex mutex_create_recursive()
+ts_mutex ts_mutex_create_recursive()
 {
-	return mutex_create();
+	return ts_mutex_create();
 }
 
-void mutex_lock(mutex *mutex)
+void ts_mutex_lock(ts_mutex *ts_mutex)
 {
 	WaitForSingleObject( 
-		mutex->mutex,    // handle to mutex
+		ts_mutex->mutex,    // handle to ts_mutex
 		INFINITE);  // no time-out interval
 }
 
-int mutex_trylock(mutex *mutex)
+int ts_mutex_trylock(ts_mutex *ts_mutex)
 {
-	return WaitForSingleObject(mutex->mutex, 1) == WAIT_OBJECT_0;
+	return WaitForSingleObject(ts_mutex->mutex, 1) == WAIT_OBJECT_0;
 }
 
-void mutex_unlock(mutex *mutex)
+void ts_mutex_unlock(ts_mutex *ts_mutex)
 {
-	ReleaseMutex(mutex->mutex);
+	ReleaseMutex(ts_mutex->mutex);
 }
 
-void mutex_destroy(mutex *mutex)
+void ts_mutex_destroy(ts_mutex *ts_mutex)
 {
-	CloseHandle(mutex->mutex);
+	CloseHandle(ts_mutex->mutex);
 }
 
 
-thread thread_start(void *(*start_routine) (void *), void *arg)
+ts_thread ts_thread_start(void *(*start_routine) (void *), void *arg)
 {
-	thread result;
+	ts_thread result;
 	result.valid = 0;
 	
 	result.thread = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)start_routine, 
@@ -51,52 +51,52 @@ thread thread_start(void *(*start_routine) (void *), void *arg)
 	return result;
 }
 
-void thread_join(thread *thread)
+void ts_thread_join(ts_thread *ts_thread)
 {
-	if (thread->valid)
+	if (ts_thread->valid)
 	{
-		WaitForSingleObject(thread->thread, INFINITE);
-		CloseHandle(thread->thread);
+		WaitForSingleObject(ts_thread->thread, INFINITE);
+		CloseHandle(ts_thread->thread);
 	}
 }
 
-int thread_tryjoin(thread *thread)
+int ts_thread_tryjoin(ts_thread *ts_thread)
 {
-	if (thread->valid)
+	if (ts_thread->valid)
 	{
-		int result = WaitForSingleObject(thread->thread, 0);
+		int result = WaitForSingleObject(ts_thread->thread, 0);
 		return result == WAIT_OBJECT_0;
 	}
 	return 0;
 }
 
-void thread_detach(thread *thread)
+void ts_thread_detach(ts_thread *ts_thread)
 {
-	if (thread->valid)
+	if (ts_thread->valid)
 	{
-		CloseHandle(thread->thread);
+		CloseHandle(ts_thread->thread);
 	}
 }
 
-void thread_stop(thread *thread)
+void ts_thread_stop(ts_thread *ts_thread)
 {
-	if (thread->valid)
+	if (ts_thread->valid)
 	{
-		SuspendThread(thread->thread);
+		SuspendThread(ts_thread->thread);
 	}
 }
 
-int thread_get_id()
+int ts_thread_get_id()
 {
 	return GetCurrentThreadId();
 }
 
-void thread_exit()
+void ts_thread_exit()
 {
 	ExitThread(0);
 }
 
-void thread_sleep(int microseconds)
+void ts_thread_sleep(int microseconds)
 {
 	Sleep(microseconds/1000);
 }
