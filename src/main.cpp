@@ -117,9 +117,9 @@ static int _ts_create_menu() {
 }
 
 void ts_init() {
-	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\test");
+	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5\\build\\tests");
 	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.h");
-	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "あいうえお");
+	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
 }
 
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
@@ -236,9 +236,9 @@ void ts_create_gui(int window_w, int window_h) {
 							
 				ImGui::TableNextColumn();
 				ImGui::Text("%.*s", file->word_match_offset, file->line_info);
-				ImGui::SameLine();
+				ImGui::SameLine(0.0f, 0.0f);
 				ImGui::TextColored({255,0,0,255}, "%.*s", file->word_match_length, file->line_info + file->word_match_offset); 
-				ImGui::SameLine();
+				ImGui::SameLine(0.0f, 0.0f);
 				ImGui::TextUnformatted(file->line_info + file->word_match_offset + file->word_match_length);	
 				
 				ImGui::TableNextColumn();

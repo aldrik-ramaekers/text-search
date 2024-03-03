@@ -209,13 +209,12 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 			// text to find has reached 0byte, word has been found
 			if (text_to_find_ch == 0)
 			{
-				word_offset_val -= utf8codepointsize(text_to_search_ch); // first codepoint was also added..
 			done:
 				if (save_info)
 				{
 					ts_text_match new_match;
 					new_match.line_nr = line_nr_val;
-					new_match.word_offset = word_offset_val;
+					new_match.word_offset = word_offset_val - utf8codepointsize(text_to_search_ch); // first codepoint was also added..
 					new_match.word_match_len = word_match_len_val;
 					new_match.line_start = line_start_ptr;
 					new_match.line_info = 0;
@@ -267,17 +266,16 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 					file_match.word_match_offset = text_pad_lr;
 				}
 				int total_len = text_pad_lr + search_len + text_pad_lr;
-
 				snprintf(file_match.line_info, MAX_INPUT_LENGTH, "%.*s", total_len, m->line_start);
 
 				utf8_int32_t ch;
 				utf8_int8_t* iter = file_match.line_info;
 				while ((iter = utf8codepoint(iter, &ch)) && ch)
 				{
-					if (ch == '\n') iter[0] = ' ';
-					if (ch == '\t') iter[0] = ' ';
-					if (ch == '\r') iter[0] = ' ';
-					if (ch == '\x0B') iter[0] = ' ';
+					if (ch == '\n') iter[-1] = ' ';
+					if (ch == '\t') iter[-1] = ' ';
+					if (ch == '\r') iter[-1] = ' ';
+					if (ch == '\x0B') iter[-1] = ' ';
 				}
 
 				ts_array_push_size(&result->matches, &file_match, sizeof(file_match));
@@ -309,7 +307,7 @@ keep_going:;
 		if (read_cursor >= new_result->files.length)
 			continue;
 
-		ts_found_file *f = (ts_found_file *)ts_array_at(&new_result->files, read_cursor);
+		ts_found_file *f = *(ts_found_file **)ts_array_at(&new_result->files, read_cursor);
 		ts_file_content content = ts_platform_read_file(f->path, "rb, ccs=UTF-8");
 
 		_ts_search_file(f, content, new_result);

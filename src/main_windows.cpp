@@ -317,13 +317,13 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			wcscat(complete_file_path, L"\\");
 			wcscat(complete_file_path, name);
 
-			ts_found_file f;
-			f.path = (utf8_int8_t*)malloc(MAX_INPUT_LENGTH);
-			f.match_count = 0;
-			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f.path,MAX_INPUT_LENGTH, NULL, NULL);
+			ts_found_file* f = (ts_found_file*)malloc(MAX_INPUT_LENGTH);
+			f->path = (utf8_int8_t*)malloc(MAX_INPUT_LENGTH);
+			f->match_count = 0;
+			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f->path,MAX_INPUT_LENGTH, NULL, NULL);
 				
 			ts_mutex_lock(&result->files.mutex);
-			ts_array_push_size(&result->files, &f, sizeof(ts_found_file));
+			ts_array_push_size(&result->files, &f, sizeof(ts_found_file*));
 			ts_mutex_unlock(&result->files.mutex);
 			
 		}
