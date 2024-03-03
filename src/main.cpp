@@ -140,7 +140,7 @@ static void* _ts_search_thread(void* args) {
 		if (read_cursor >= new_result->files.length) continue;
 
 		found_file* f = (found_file*)array_at(&new_result->files, read_cursor);
-		file_content content = platform_read_file(f->path, "rb");
+		file_content content = platform_read_file(f->path, "rb, ccs=UTF-8");
 
 		_ts_search_file(f, content, new_result);
 

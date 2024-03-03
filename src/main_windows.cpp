@@ -227,8 +227,16 @@ file_content platform_read_file(char *path, const char *mode)
 	result.content = 0;
 	result.content_length = 0;
 	result.file_error = 0;
+
+	// convert utf8 to wchar path.
+	wchar_t wchar_buffer[MAX_INPUT_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, (wchar_t*)wchar_buffer, MAX_INPUT_LENGTH);
 	
-	FILE *file = fopen(path, mode);
+	const size_t cSize = strlen(mode)+1;
+    wchar_t* wc = new wchar_t[cSize];
+    mbstowcs (wc, mode, cSize);
+
+	FILE *file = _wfopen(wchar_buffer, wc);
 	if (!file) 
 	{
 		if (errno == EMFILE)
@@ -287,7 +295,7 @@ file_content platform_read_file(char *path, const char *mode)
 static void *_list_files_thread(void *args)
 {
 	search_result *info = (search_result *)args;
-	platform_list_files_block(info);
+	platform_list_files_block(info, nullptr);
 	info->done_finding_files = true;
 	return 0;
 }
@@ -303,7 +311,7 @@ void platform_list_files_block(search_result* result, wchar_t* start_dir)
     // Utf8 to wchar str
 	wchar_t* search_dir = (wchar_t*)malloc(MAX_INPUT_LENGTH);
 	if (start_dir == nullptr) {
-		MultiByteToWideChar(CP_UTF8, 0, result->directory_to_search, strlen(result->directory_to_search), search_dir, MAX_INPUT_LENGTH);
+		MultiByteToWideChar(CP_UTF8, 0, result->directory_to_search, -1, search_dir, MAX_INPUT_LENGTH);
 	}
 	else {
 		wcscpy(search_dir, start_dir);
@@ -311,8 +319,8 @@ void platform_list_files_block(search_result* result, wchar_t* start_dir)
 
 	// Append wildcard
 	wchar_t* search_dir_fix = (wchar_t*)malloc(MAX_INPUT_LENGTH);
-    wcscpy(search_dir_fix, search_dir);
-    wcscat(search_dir_fix, L"\\*");
+    wcscpy_s(search_dir_fix, MAX_INPUT_LENGTH, search_dir);
+    wcscat_s(search_dir_fix, MAX_INPUT_LENGTH, L"\\*");
 
 	WIN32_FIND_DATAW file_info;
 	HANDLE handle = FindFirstFileW(search_dir_fix, &file_info);
