@@ -42,7 +42,7 @@ void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length)
 	return new_bucket.data;
 }
 
-inline void ts_memory_bucket_reset(ts_memory_bucket *bucket)
+void ts_memory_bucket_reset(ts_memory_bucket *bucket)
 {
 	ts_mutex_lock(&bucket->bucket_mutex);
 	for (int i = 0; i < bucket->buckets.length; i++)
@@ -53,7 +53,7 @@ inline void ts_memory_bucket_reset(ts_memory_bucket *bucket)
 	ts_mutex_unlock(&bucket->bucket_mutex);
 }
 
-inline void ts_memory_bucket_destroy(ts_memory_bucket *bucket)
+void ts_memory_bucket_destroy(ts_memory_bucket *bucket)
 {
 	ts_mutex_lock(&bucket->bucket_mutex);
 	for (int i = 0; i < bucket->buckets.length; i++)

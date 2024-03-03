@@ -261,7 +261,7 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 {
     // Utf8 to wchar str
-	wchar_t* search_dir = (wchar_t*)malloc(MAX_INPUT_LENGTH);
+	wchar_t* search_dir = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 	if (start_dir == nullptr) {
 		MultiByteToWideChar(CP_UTF8, 0, result->directory_to_search, -1, search_dir, MAX_INPUT_LENGTH);
 	}
@@ -270,7 +270,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 	}
 
 	// Append wildcard
-	wchar_t* search_dir_fix = (wchar_t*)malloc(MAX_INPUT_LENGTH);
+	wchar_t* search_dir_fix = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
     wcscpy_s(search_dir_fix, MAX_INPUT_LENGTH, search_dir);
     wcscat_s(search_dir_fix, MAX_INPUT_LENGTH, L"\\*");
 
@@ -299,7 +299,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			if ((wcscmp(name, L".") == 0) || (wcscmp(name, L"..") == 0))
 				continue;
 			
-			wchar_t* subdir_buffer_path = (wchar_t*)malloc(MAX_INPUT_LENGTH);
+			wchar_t* subdir_buffer_path = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			wcscpy(subdir_buffer_path, search_dir);
 			wcscat(subdir_buffer_path, L"\\");
 			wcscat(subdir_buffer_path, name);
@@ -325,8 +325,8 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			wcscat(complete_file_path, L"\\");
 			wcscat(complete_file_path, name);
 
-			ts_found_file* f = (ts_found_file*)malloc(MAX_INPUT_LENGTH);
-			f->path = (utf8_int8_t*)malloc(MAX_INPUT_LENGTH);
+			ts_found_file* f = (ts_found_file*)ts_memory_bucket_reserve(&result->memory, sizeof(ts_found_file));
+			f->path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			f->match_count = 0;
 			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f->path,MAX_INPUT_LENGTH, NULL, NULL);
 				

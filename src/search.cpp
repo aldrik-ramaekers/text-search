@@ -96,6 +96,8 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->file_count = 0;
 	new_result_buffer->cancel_search = false;
 	new_result_buffer->max_file_size = megabytes(1000);
+	new_result_buffer->memory = ts_memory_bucket_init(megabytes(1));
+	new_result_buffer->prev_result = current_search_result;
 
 	new_result_buffer->files = ts_array_create(sizeof(ts_found_file));
 	new_result_buffer->files.reserve_jump = FILE_RESERVE_COUNT;
@@ -106,8 +108,8 @@ ts_search_result *ts_create_empty_search_result()
 	ts_array_reserve(&new_result_buffer->matches, FILE_RESERVE_COUNT);
 
 	// filter buffers
-	new_result_buffer->directory_to_search = (char *)malloc(MAX_INPUT_LENGTH);
-	new_result_buffer->search_text = (char *)malloc(MAX_INPUT_LENGTH);
+	new_result_buffer->directory_to_search = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
+	new_result_buffer->search_text = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
 
 	return new_result_buffer;
 }
@@ -260,7 +262,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				file_match.line_nr = m->line_nr;
 				file_match.word_match_offset = m->word_offset;
 				file_match.word_match_length = m->word_match_len;
-				file_match.line_info = (char *)malloc(MAX_INPUT_LENGTH);
+				file_match.line_info = (char *)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 
 				int text_pad_lr = 25;
 				if (file_match.word_match_offset > text_pad_lr)
@@ -335,12 +337,24 @@ static void *_ts_list_files_thread(void *args)
 	ts_platform_list_files_block(info, nullptr);
 	info->done_finding_files = true;
 
-	// Use this thread to cleanup.
+	// Use this thread to cleanup previous result.
+	if (info->prev_result) {
+		while (!info->prev_result->search_completed) {
+			ts_thread_sleep(10);
+		}
+		ts_memory_bucket_destroy(&info->prev_result->memory);
+		free(info->prev_result);
+		info->prev_result = nullptr;
+	}
+
+	// Use this thread to sync.
 	while (!info->search_completed) {
 		if (info->completed_match_threads == info->max_ts_thread_count) {
 			info->search_completed = true; // No memory is written after this point.
 		}
+		ts_thread_sleep(10);
 	}
+
 	return 0;
 }
 

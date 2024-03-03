@@ -24,6 +24,8 @@ typedef struct t_ts_search_result
 	ts_array filters;
 	int match_count;
 	int file_count;
+	ts_memory_bucket memory;
+	struct t_ts_search_result* prev_result;
 
 	// thread syncing
 	ts_mutex mutex;
