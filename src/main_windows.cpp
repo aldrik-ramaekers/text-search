@@ -312,6 +312,14 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_READONLY) ||
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
 		{
+			char *matched_filter = 0;
+			utf8_int8_t uni_name[MAX_INPUT_LENGTH];
+			WideCharToMultiByte(CP_UTF8,0,name,-1,(LPSTR)uni_name,MAX_INPUT_LENGTH, NULL, NULL);
+			if (ts_filter_matches(&result->filters, uni_name, &matched_filter) == -1) {
+				continue;
+			}
+			(void)matched_filter;
+
 			wchar_t complete_file_path[MAX_INPUT_LENGTH];
 			wcscpy(complete_file_path, search_dir);
 			wcscat(complete_file_path, L"\\");

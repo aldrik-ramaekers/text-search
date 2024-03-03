@@ -117,8 +117,8 @@ static int _ts_create_menu() {
 }
 
 void ts_init() {
-	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5\\build\\tests");
-	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.h");
+	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5");
+	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.c,.h,.cpp");
 	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
 }
 
@@ -169,7 +169,9 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PopItemWidth();		
 
 			ImGui::PushItemWidth(-1);
-			ImGui::InputTextWithHint("query", "Query", query_buffer, 4000, ImGuiInputTextFlags_CallbackEdit, _tb_query_input_cb);
+			if (ImGui::InputTextWithHint("query", "Query", query_buffer, 4000, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
+				ts_start_search(path_buffer, filter_buffer, query_buffer);
+			}
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
 		}
@@ -186,6 +188,13 @@ void ts_create_gui(int window_w, int window_h) {
 
 			if (current_search_result && !current_search_result->search_completed) {
 				ImSpinner::SpinnerIncScaleDots("Spinner", 10.0f, 2.0f, ImColor(70,70,70), 5.0f);
+			}
+			else {
+				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+				if (ImGui::Button("Search")) {
+					ts_start_search(path_buffer, filter_buffer, query_buffer);
+				}
+				ImGui::PopStyleVar();
 			}
 		}
 		ImGui::EndChild();

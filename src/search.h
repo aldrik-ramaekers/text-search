@@ -21,6 +21,7 @@ typedef struct t_ts_search_result
 	// data
 	ts_array files;
 	ts_array matches;
+	ts_array filters;
 	int match_count;
 	int file_count;
 
@@ -34,6 +35,7 @@ typedef struct t_ts_search_result
 
 	// search query
 	utf8_int8_t *directory_to_search;
+	utf8_int8_t *file_filter;
 	utf8_int8_t *search_text;
 	int max_ts_thread_count;
 	int max_file_size;

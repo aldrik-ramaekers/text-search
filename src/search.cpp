@@ -71,7 +71,10 @@ int ts_filter_matches(ts_array *filters, char *string, char **matched_filter)
 	for (int i = 0; i < filters->length; i++)
 	{
 		char *filter = (char *)ts_array_at(filters, i);
-		if (ts_string_match(filter, string))
+
+		char wildcard_filter[MAX_INPUT_LENGTH];
+		snprintf(wildcard_filter, MAX_INPUT_LENGTH, "*%s", filter);
+		if (ts_string_match(wildcard_filter, string))
 		{
 			*matched_filter = filter;
 			return strlen(filter);
@@ -357,6 +360,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 	ts_search_result *new_result = ts_create_empty_search_result();
 	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
+	new_result->filters = ts_get_filters(filter);
 
 	_ts_list_files(new_result);
 	for (int i = 0; i < new_result->max_ts_thread_count; i++)
