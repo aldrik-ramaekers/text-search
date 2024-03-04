@@ -35,7 +35,7 @@ void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length)
 	ts_memory_bucket_entry new_bucket;
 	new_bucket.data = (char*)malloc(bucket_entry->length);
 	new_bucket.length = bucket_entry->length;
-	new_bucket.cursor = 0;
+	new_bucket.cursor = reserve_length;
 	ts_array_push(&bucket->buckets, &new_bucket);
 	ts_mutex_unlock(&bucket->bucket_mutex);
 	
