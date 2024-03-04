@@ -266,7 +266,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 		MultiByteToWideChar(CP_UTF8, 0, result->directory_to_search, -1, search_dir, MAX_INPUT_LENGTH);
 	}
 	else {
-		wcscpy(search_dir, start_dir);
+		wcscpy_s(search_dir, MAX_INPUT_LENGTH, start_dir);
 	}
 
 	// Append wildcard
@@ -300,9 +300,9 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 				continue;
 			
 			wchar_t* subdir_buffer_path = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
-			wcscpy(subdir_buffer_path, search_dir);
-			wcscat(subdir_buffer_path, L"\\");
-			wcscat(subdir_buffer_path, name);
+			wcscpy_s(subdir_buffer_path, MAX_INPUT_LENGTH, search_dir);
+			wcscat_s(subdir_buffer_path, MAX_INPUT_LENGTH, L"\\");
+			wcscat_s(subdir_buffer_path, MAX_INPUT_LENGTH, name);
 			ts_platform_list_files_block(result, subdir_buffer_path);
 		}
 		else if ((file_info.dwFileAttributes & FILE_ATTRIBUTE_COMPRESSED) ||
@@ -321,9 +321,9 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			(void)matched_filter;
 
 			wchar_t complete_file_path[MAX_INPUT_LENGTH];
-			wcscpy(complete_file_path, search_dir);
-			wcscat(complete_file_path, L"\\");
-			wcscat(complete_file_path, name);
+			wcscpy_s(complete_file_path, MAX_INPUT_LENGTH, search_dir);
+			wcscat_s(complete_file_path, MAX_INPUT_LENGTH, L"\\");
+			wcscat_s(complete_file_path, MAX_INPUT_LENGTH, name);
 
 			ts_found_file* f = (ts_found_file*)ts_memory_bucket_reserve(&result->memory, sizeof(ts_found_file));
 			f->path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);

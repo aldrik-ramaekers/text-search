@@ -271,7 +271,8 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 					file_match.word_match_offset = text_pad_lr;
 				}
 				int total_len = text_pad_lr + search_len + text_pad_lr;
-				snprintf(file_match.line_info, MAX_INPUT_LENGTH, "%.*s", total_len, m->line_start);
+				if (total_len > MAX_INPUT_LENGTH) total_len = MAX_INPUT_LENGTH;
+				utf8ncpy(file_match.line_info, m->line_start, total_len);
 
 				utf8_int32_t ch;
 				utf8_int8_t* iter = file_match.line_info;
@@ -367,6 +368,10 @@ static void _ts_list_files(ts_search_result* result)
 
 void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 {
+	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
+		return;
+	}
+
 	if (current_search_result)
 	{
 		current_search_result->cancel_search = true;
