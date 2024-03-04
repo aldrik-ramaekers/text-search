@@ -131,6 +131,66 @@ int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
 	return 0;
 }
 
+void _ts_ceate_file_match_rows() {
+	int itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
+	for (int item = 0; item < itemcount; item++)
+	{
+		ts_found_file *file = *(ts_found_file **)ts_array_at(&current_search_result->files, item);
+
+		char match_info_txt[20];
+		snprintf(match_info_txt, 20, "#%d", item+1);
+		
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::TableHeader(match_info_txt);
+
+		ImGui::TableNextColumn();
+		ImGui::TableHeader(file->path);
+
+		ImGui::TableNextColumn();	
+		ImGui::TableHeader("");
+	}
+}
+
+void _ts_create_text_match_rows() {
+	int itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
+	ts_found_file* prev_file = nullptr;
+	for (int item = 0; item < itemcount; item++)
+	{
+		ts_file_match *file = (ts_file_match *)ts_array_at(&current_search_result->matches, item);
+
+		if (prev_file != file->file) {
+			prev_file = file->file;
+			char match_info_txt[20];
+
+			ImGui::TableNextRow();
+			ImGui::TableNextColumn();
+			ImGui::TableHeader("");
+
+			ImGui::TableNextColumn();
+			ImGui::TableHeader(file->file->path);
+
+			ImGui::TableNextColumn();	
+			snprintf(match_info_txt, 20, "%d match(es)", file->file->match_count);
+			ImGui::TableHeader(match_info_txt);
+		}
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::Text("#%d", item+1);
+					
+		ImGui::TableNextColumn();
+		ImGui::Text("%.*s", file->word_match_offset, file->line_info);
+		ImGui::SameLine(0.0f, 0.0f);
+		ImGui::TextColored({255,0,0,255}, "%.*s", file->word_match_length, file->line_info + file->word_match_offset); 
+		ImGui::SameLine(0.0f, 0.0f);
+		ImGui::TextUnformatted(file->line_info + file->word_match_offset + file->word_match_length);	
+		
+		ImGui::TableNextColumn();
+		ImGui::Text("line %d", file->line_nr);	
+	}
+}
+
 void ts_create_gui(int window_w, int window_h) {
 	static float f = 0.0f;
 	static int counter = 0;
@@ -219,42 +279,14 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableSetupColumn("Match", 0, line_w);			
 			ImGui::TableHeadersRow();
 
-			int itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
-			ts_found_file* prev_file = nullptr;
-			for (int item = 0; item < itemcount; item++)
-			{
-				ts_file_match *file = (ts_file_match *)ts_array_at(&current_search_result->matches, item);
-
-				if (prev_file != file->file) {
-					prev_file = file->file;
-					char match_info_txt[20];
-
-					ImGui::TableNextRow();
-					ImGui::TableNextColumn();
-					ImGui::TableHeader("");
-
-					ImGui::TableNextColumn();
-					ImGui::TableHeader(file->file->path);
-
-					ImGui::TableNextColumn();	
-					snprintf(match_info_txt, 20, "%d match(es)", file->file->match_count);
-					ImGui::TableHeader(match_info_txt);
-				}
-
-				ImGui::TableNextRow();
-				ImGui::TableNextColumn();
-				ImGui::Text("#%d", item+1);
-							
-				ImGui::TableNextColumn();
-				ImGui::Text("%.*s", file->word_match_offset, file->line_info);
-				ImGui::SameLine(0.0f, 0.0f);
-				ImGui::TextColored({255,0,0,255}, "%.*s", file->word_match_length, file->line_info + file->word_match_offset); 
-				ImGui::SameLine(0.0f, 0.0f);
-				ImGui::TextUnformatted(file->line_info + file->word_match_offset + file->word_match_length);	
-				
-				ImGui::TableNextColumn();
-				ImGui::Text("line %d", file->line_nr);	
+			if (current_search_result) {
+				if (current_search_result->search_text == nullptr) _ts_ceate_file_match_rows();
+				else _ts_create_text_match_rows();
 			}
+			else {
+				// show info text.
+			}
+		
 			ImGui::EndTable();
 		}
 	}
@@ -267,7 +299,10 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::BeginChild("search-statusbar", ImVec2(window_w, statusbar_area_height), ImGuiChildFlags_None, ImGuiWindowFlags_None);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7.0f);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
-		if (current_search_result) ImGui::Text("Found %d matches in %d files", current_search_result->match_count, current_search_result->file_count);
+		if (current_search_result) {
+			if (current_search_result->search_text) ImGui::Text("Found %d matches in %d files", current_search_result->match_count, current_search_result->file_count);
+			else ImGui::Text("Found %d files", current_search_result->files.length);
+		}
 		else ImGui::Text("No search completed");
 
 		ImGui::SameLine();

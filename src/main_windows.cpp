@@ -224,7 +224,7 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 		else
 		{
 			result.file_error = FILE_ERROR_GENERIC;
-			printf("ERROR: %d\n", errno);
+			printf("ERROR: %d %s\n", errno, path);
 		}
 		
 		goto done_failure;

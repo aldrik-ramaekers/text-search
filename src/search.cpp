@@ -297,6 +297,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 static void *_ts_search_thread(void *args)
 {
 	ts_search_result *new_result = (ts_search_result *)args;
+	if (new_result->search_text == nullptr) goto finish_early;
 
 keep_going:;
 	while (new_result->file_list_read_cursor < new_result->files.length)
@@ -375,6 +376,10 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
 	new_result->filters = ts_get_filters(filter);
+
+	if (utf8len(query) == 0) {
+		new_result->search_text = nullptr;
+	}
 
 	_ts_list_files(new_result);
 	for (int i = 0; i < new_result->max_ts_thread_count; i++)
