@@ -303,16 +303,19 @@ static void *_ts_search_thread(void *args)
 keep_going:;
 	while (new_result->file_list_read_cursor < new_result->files.length)
 	{
+		ts_thread_sleep(10);
 		if (new_result->cancel_search)
 			goto finish_early;
 
 		ts_mutex_lock(&new_result->files.mutex);
-		int read_cursor = new_result->file_list_read_cursor++;
-		new_result->file_count++;
-		ts_mutex_unlock(&new_result->files.mutex);
-
-		if (read_cursor >= new_result->files.length)
+		int read_cursor = new_result->file_list_read_cursor+1;
+		if (read_cursor >= new_result->files.length) {
+			ts_mutex_unlock(&new_result->files.mutex);
 			continue;
+		}
+		new_result->file_count++;
+		new_result->file_list_read_cursor++;
+		ts_mutex_unlock(&new_result->files.mutex);
 
 		ts_found_file *f = *(ts_found_file **)ts_array_at(&new_result->files, read_cursor);
 		ts_file_content content = ts_platform_read_file(f->path, "rb, ccs=UTF-8");
@@ -366,7 +369,7 @@ static void _ts_list_files(ts_search_result* result)
 	ts_thread_detach(&thr);
 }
 
-void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
+void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, int thread_count, int max_file_size)
 {
 	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
 		return;
@@ -381,6 +384,8 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query)
 	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
 	new_result->filters = ts_get_filters(filter);
+	new_result->max_ts_thread_count = thread_count;
+	new_result->max_file_size = max_file_size;
 
 	if (utf8len(query) == 0) {
 		new_result->search_text = nullptr;

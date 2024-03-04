@@ -10,14 +10,18 @@
 
 #include <stdio.h>
 
+// Search params.
 utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
+int ts_thread_count = 4;
+int max_file_size = megabytes(1000);
 
+// Popups
 bool open_settings_window = false;
 bool open_about_window = false;
 
-int ts_thread_count = 4;
+// Localization
 int current_locale_index = 0;
 int locales_count = 2;
 char* locales[] = {
@@ -35,7 +39,7 @@ static void _ts_create_popups() {
 	// Settings window
 	if (ImGui::BeginPopupModal("Text-Search settings", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
-		ImGui::DragInt("Threads", &ts_thread_count, 1.0f, 1, 64);
+		ImGui::DragInt("Threads", &ts_thread_count, 1.0f, 1, 4);
 		ImGui::Combo("Language", &current_locale_index, locales, locales_count);
 
 		ImGui::Dummy({0, 70});
@@ -125,7 +129,7 @@ void ts_init() {
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
 	if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
 		utf8ncpy(query_buffer, data->Buf, MAX_INPUT_LENGTH);
-		ts_start_search(path_buffer, filter_buffer, query_buffer);
+		ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 	}
 
 	return 0;
@@ -230,7 +234,7 @@ void ts_create_gui(int window_w, int window_h) {
 
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer);
+				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 			}
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
@@ -243,7 +247,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer);
+				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 			}
 			ImGui::PopItemWidth();
 			ImGui::PopStyleVar();
@@ -254,7 +258,7 @@ void ts_create_gui(int window_w, int window_h) {
 			else {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 				if (ImGui::Button("Search")) {
-					ts_start_search(path_buffer, filter_buffer, query_buffer);
+					ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 				}
 				ImGui::PopStyleVar();
 			}
