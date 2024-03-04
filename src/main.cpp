@@ -15,7 +15,7 @@ utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
 int ts_thread_count = 4;
-int max_file_size = megabytes(1000);
+int max_file_size = 100; // in MBs
 
 // Popups
 bool open_settings_window = false;
@@ -40,6 +40,11 @@ static void _ts_create_popups() {
 	if (ImGui::BeginPopupModal("Text-Search settings", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
 		ImGui::DragInt("Threads", &ts_thread_count, 1.0f, 1, 4);
+		ImGui::SetItemTooltip("Number of threads used to search for text matches");
+
+		ImGui::DragInt("File Size", &max_file_size, 50.0f, 1, 10000, "%dMB");
+		ImGui::SetItemTooltip("Files larger than this will not be searched");
+
 		ImGui::Combo("Language", &current_locale_index, locales, locales_count);
 
 		ImGui::Dummy({0, 70});
@@ -135,7 +140,7 @@ int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
 	return 0;
 }
 
-void _ts_ceate_file_match_rows() {
+void _ts_create_file_match_rows() {
 	int itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
 	for (int item = 0; item < itemcount; item++)
 	{
@@ -153,6 +158,44 @@ void _ts_ceate_file_match_rows() {
 
 		ImGui::TableNextColumn();	
 		ImGui::TableHeader("");
+	}
+}
+
+utf8_int8_t* _ts_file_error_to_message(ts_file_open_error err) {
+	switch (err) {
+		case FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS: return u8"Too many open files";
+		case FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM: return u8"Too many open files";
+		case FILE_ERROR_NO_ACCESS: return u8"No permissions";
+		case FILE_ERROR_NOT_FOUND: return u8"File not found";
+		case FILE_ERROR_CONNECTION_ABORTED: return u8"Connection aborted";
+		case FILE_ERROR_CONNECTION_REFUSED: return u8"Failed to connect";
+		case FILE_ERROR_NETWORK_DOWN: return u8"Drive disconnected";
+		case FILE_ERROR_REMOTE_IO_ERROR: return u8"Remote IO error";
+		case FILE_ERROR_STALE: return u8"Server file moved";
+		case FILE_ERROR_GENERIC: return u8"Failed to open file";
+		case FILE_ERROR_TOO_BIG: return u8"File too big";
+	}
+	return "";
+}
+
+void _ts_create_file_error_rows() {
+	int itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
+	for (int item = 0; item < itemcount; item++)
+	{
+		ts_found_file *file = *(ts_found_file **)ts_array_at(&current_search_result->files, item);
+		if (file->error == FILE_ERROR_NONE) continue;
+
+		ImGui::TableNextRow();
+		ImGui::TableNextColumn();
+		ImGui::PushStyleColor(ImGuiCol_Text, ImGui::Spectrum::Color(0xFF0000));
+		ImGui::TableHeader("ERROR");
+		ImGui::PopStyleColor();
+
+		ImGui::TableNextColumn();
+		ImGui::TableHeader(file->path);
+
+		ImGui::TableNextColumn();	
+		ImGui::TableHeader(_ts_file_error_to_message((ts_file_open_error)file->error));
 	}
 }
 
@@ -193,6 +236,7 @@ void _ts_create_text_match_rows() {
 		ImGui::TableNextColumn();
 		ImGui::Text("line %d", file->line_nr);	
 	}
+	_ts_create_file_error_rows();
 }
 
 void ts_create_gui(int window_w, int window_h) {
@@ -276,7 +320,7 @@ void ts_create_gui(int window_w, int window_h) {
 			{(float)window_w-7.0f, (float)result_area_height}))
 		{
 			int nr_w = 50;
-			int line_w = 120;
+			int line_w = 180;
 			int file_w = ImGui::GetWindowWidth() - line_w - nr_w;
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel, nr_w);
 			ImGui::TableSetupColumn("File", 0, file_w);
@@ -284,7 +328,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableHeadersRow();
 
 			if (current_search_result) {
-				if (current_search_result->search_text == nullptr) _ts_ceate_file_match_rows();
+				if (current_search_result->search_text == nullptr) _ts_create_file_match_rows();
 				else _ts_create_text_match_rows();
 			}
 			else {

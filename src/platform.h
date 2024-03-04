@@ -15,6 +15,7 @@ typedef struct t_ts_file_content
 
 typedef enum t_ts_file_open_error
 {
+	FILE_ERROR_NONE,
 	FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS = 1,
 	FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM = 2,
 	FILE_ERROR_NO_ACCESS = 3,

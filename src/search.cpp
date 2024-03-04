@@ -311,7 +311,9 @@ keep_going:;
 		int read_cursor = new_result->file_list_read_cursor+1;
 		if (read_cursor >= new_result->files.length) {
 			ts_mutex_unlock(&new_result->files.mutex);
-			continue;
+
+			if (!new_result->done_finding_files) continue;
+			else break;
 		}
 		new_result->file_count++;
 		new_result->file_list_read_cursor++;
@@ -320,7 +322,14 @@ keep_going:;
 		ts_found_file *f = *(ts_found_file **)ts_array_at(&new_result->files, read_cursor);
 		ts_file_content content = ts_platform_read_file(f->path, "rb, ccs=UTF-8");
 
-		_ts_search_file(f, content, new_result);
+		if (content.file_error != FILE_ERROR_NONE) {
+			f->error = content.file_error;
+		}
+		if (content.content_length > megabytes(new_result->max_file_size)) {
+			f->error = FILE_ERROR_TOO_BIG;
+		}
+
+		if (f->error == FILE_ERROR_NONE) _ts_search_file(f, content, new_result);
 
 		free(content.content);
 	}

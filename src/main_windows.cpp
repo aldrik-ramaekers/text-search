@@ -328,6 +328,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			ts_found_file* f = (ts_found_file*)ts_memory_bucket_reserve(&result->memory, sizeof(ts_found_file));
 			f->path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			f->match_count = 0;
+			f->error = 0;
 			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f->path,MAX_INPUT_LENGTH, NULL, NULL);
 				
 			ts_mutex_lock(&result->files.mutex);
