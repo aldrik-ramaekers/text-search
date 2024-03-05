@@ -10,6 +10,7 @@
 #include "array.h"
 #include "memory_bucket.h"
 #include "image.h"
+#include "config.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -107,6 +108,7 @@ int main(int, char**)
 
 	ts_init();
 	ts_load_images();
+	ts_load_config();
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;

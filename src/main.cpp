@@ -7,27 +7,13 @@
 #include "search.h"
 #include "platform.h"
 #include "image.h"
+#include "config.h"
 
 #include <stdio.h>
-
-// Search params.
-utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
-utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
-utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
-int ts_thread_count = 4;
-int max_file_size = 100; // in MBs
 
 // Popups
 bool open_settings_window = false;
 bool open_about_window = false;
-
-// Localization
-int current_locale_index = 0;
-int locales_count = 2;
-char* locales[] = {
-	"English",
-	"Dutch"
-};
 
 static void _ts_create_popups() {
 	ImGuiIO& io = ImGui::GetIO();
@@ -44,8 +30,6 @@ static void _ts_create_popups() {
 
 		ImGui::DragInt("File Size", &max_file_size, 50.0f, 1, 10000, "%dMB");
 		ImGui::SetItemTooltip("Files larger than this will not be searched");
-
-		ImGui::Combo("Language", &current_locale_index, locales, locales_count);
 
 		ImGui::Dummy({0, 70});
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -128,9 +112,7 @@ static int _ts_create_menu() {
 }
 
 void ts_init() {
-	snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", "C:\\Users\\aldri\\Desktop\\Vault\\Projects\\allegro5");
-	snprintf(filter_buffer, MAX_INPUT_LENGTH, "%s", "*.c,.h,.cpp");
-	snprintf(query_buffer, MAX_INPUT_LENGTH, "%s", "test");
+	// idk
 }
 
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {

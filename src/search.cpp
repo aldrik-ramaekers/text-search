@@ -1,5 +1,6 @@
 #include "search.h"
 #include "platform.h"
+#include "config.h"
 
 #include <stdio.h>
 

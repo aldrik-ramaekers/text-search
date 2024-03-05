@@ -1,11 +1,6 @@
 #ifndef INCLUDE_SEARCH
 #define INCLUDE_SEARCH
 
-#define MAX_INPUT_LENGTH 4096
-#define MAX_ERROR_MESSAGE_LENGTH (MAX_INPUT_LENGTH)
-#define FILE_RESERVE_COUNT 1000
-#define ERROR_RESERVE_COUNT 100
-
 #include "array.h"
 #include "memory_bucket.h"
 #include "../utf8.h"
