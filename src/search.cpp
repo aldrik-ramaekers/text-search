@@ -161,6 +161,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 	int index = 0;
 	while ((text_to_search = utf8codepoint(text_to_search, &text_to_search_ch)) && text_to_search_ch)
 	{
+		text_to_search_ch = utf8lwrcodepoint(text_to_search_ch);
 		word_offset_val += utf8codepointsize(text_to_search_ch);
 		if (text_to_search_ch == '\n')
 		{
@@ -175,6 +176,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 		bool in_wildcard = false;
 
 		text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
+		text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 		// text_to_search_current_attempt = utf8codepoint(text_to_search_current_attempt,
 		//&text_to_search_current_attempt_ch);
 
@@ -193,6 +195,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 			if (text_to_find_ch == '*')
 			{
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
+				text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 				in_wildcard = true;
 			}
 
@@ -201,13 +204,16 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 				break;
 
 		continue_search:
-			if (!in_wildcard)
+			if (!in_wildcard) {
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
+				text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+			}
 
 			word_match_len_val += utf8codepointsize(text_to_search_current_attempt_ch);
 			text_to_search_current_attempt = utf8codepoint(
 				text_to_search_current_attempt,
 				&text_to_search_current_attempt_ch);
+			text_to_search_current_attempt_ch = utf8lwrcodepoint(text_to_search_current_attempt_ch);
 
 			if (!text_to_search_current_attempt_ch && !text_to_find_ch)
 				goto done;
