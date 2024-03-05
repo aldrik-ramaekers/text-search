@@ -27,6 +27,7 @@ typedef struct t_ts_search_result
 	int file_count;
 	ts_memory_bucket memory;
 	struct t_ts_search_result* prev_result;
+	uint64_t timestamp;
 
 	// thread syncing
 	ts_mutex mutex;

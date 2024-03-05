@@ -33,6 +33,7 @@ static HGLRC            g_hRC;
 static WGL_WindowData   g_MainWindow;
 static int              g_Width;
 static int              g_Height;
+LARGE_INTEGER 			Frequency;
 
 bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
@@ -48,6 +49,16 @@ static const char* _ts_platform_get_config_file_path(char* buffer) {
 	}
 	
 	return 0;
+}
+
+uint64_t ts_platform_get_time(uint64_t compare)
+{
+	LARGE_INTEGER stamp;
+	QueryPerformanceCounter(&stamp);
+	if (compare != 0) {
+		return (stamp.QuadPart - compare) * 1000 / Frequency.QuadPart;
+	}
+	return stamp.QuadPart;
 }
 
 int main(int, char**)
@@ -91,6 +102,8 @@ int main(int, char**)
     // Setup Platform/Renderer backends
     ImGui_ImplWin32_InitForOpenGL(hwnd);
     ImGui_ImplOpenGL3_Init();
+
+	QueryPerformanceFrequency(&Frequency);
 
 	ts_init();
 	ts_load_images();

@@ -355,8 +355,10 @@ void ts_create_gui(int window_w, int window_h) {
 
 		ImGui::SameLine();
 
-		ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("no search completed").x);
-		ImGui::Text("no search completed");
+		if (current_search_result && current_search_result->search_completed) {
+			ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("999.999s elapsed").x);
+			ImGui::Text("%.3fs elapsed", current_search_result->timestamp/1000.0f);
+		}
 		ImGui::EndChild();
 		ImGui::PopStyleVar();
 	}

@@ -98,6 +98,7 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->max_file_size = megabytes(1000);
 	new_result_buffer->memory = ts_memory_bucket_init(megabytes(1));
 	new_result_buffer->prev_result = current_search_result;
+	new_result_buffer->timestamp = ts_platform_get_time();
 
 	new_result_buffer->files = ts_array_create(sizeof(ts_found_file));
 	new_result_buffer->files.reserve_jump = FILE_RESERVE_COUNT;
@@ -365,6 +366,7 @@ static void *_ts_list_files_thread(void *args)
 	while (!info->search_completed) {
 		if (info->completed_match_threads == info->max_ts_thread_count) {
 			info->search_completed = true; // No memory is written after this point.
+			info->timestamp = ts_platform_get_time(info->timestamp);
 		}
 		ts_thread_sleep(10);
 	}
