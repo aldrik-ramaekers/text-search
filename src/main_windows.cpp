@@ -34,6 +34,7 @@ static WGL_WindowData   g_MainWindow;
 static int              g_Width;
 static int              g_Height;
 LARGE_INTEGER 			Frequency;
+bool 					program_running = true;
 
 bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
@@ -44,7 +45,6 @@ static const char* _ts_platform_get_config_file_path(char* buffer) {
 	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer)))
 	{
 		strcat_s(buffer, MAX_INPUT_LENGTH, "\\text-search\\config.ini");
-		printf("%s\n", buffer);
 		return buffer;
 	}
 	
@@ -110,7 +110,7 @@ int main(int, char**)
 
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     bool done = false;
-    while (!done)
+    while (program_running)
     {
         MSG msg;
         while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
@@ -118,9 +118,9 @@ int main(int, char**)
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
             if (msg.message == WM_QUIT)
-                done = true;
+                program_running = false;
         }
-        if (done)
+        if (!program_running)
             break;
 
         ImGui_ImplOpenGL3_NewFrame();

@@ -42,7 +42,7 @@ typedef struct t_ts_search_result
 	utf8_int8_t *file_filter;
 	utf8_int8_t *search_text;
 	int max_ts_thread_count;
-	int max_file_size;
+	uint64_t max_file_size;
 } ts_search_result;
 
 typedef struct t_ts_file_match

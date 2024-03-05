@@ -39,7 +39,7 @@ static void _ts_create_popups() {
 	// Settings window
 	if (ImGui::BeginPopupModal("Text-Search settings", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
-		ImGui::DragInt("Threads", &ts_thread_count, 1.0f, 1, 4);
+		ImGui::DragInt("Threads", &ts_thread_count, 0.1f, 1, 8);
 		ImGui::SetItemTooltip("Number of threads used to search for text matches");
 
 		ImGui::DragInt("File Size", &max_file_size, 50.0f, 1, 10000, "%dMB");
@@ -96,10 +96,12 @@ static int _ts_create_menu() {
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			ImGui::MenuItem("Open", "CTRL+O");
-			ImGui::MenuItem("Save", "CTRL+S");
+			//ImGui::MenuItem("Open", "CTRL+O");
+			//ImGui::MenuItem("Save", "CTRL+S");
 			ImGui::Separator();
-			ImGui::MenuItem("Exit", "CTRL+Q");
+			if (ImGui::MenuItem("Exit")) {
+				program_running = false;
+			}
 			ImGui::EndMenu();
 		}
 		if (ImGui::BeginMenu("Program"))

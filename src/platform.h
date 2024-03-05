@@ -29,6 +29,8 @@ typedef enum t_ts_file_open_error
 	FILE_ERROR_TOO_BIG = 11,
 } ts_file_open_error;
 
+extern bool program_running;
+
 ts_file_content ts_platform_read_file(char *path, const char *mode);
 void 			ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir = nullptr);
 void 			ts_platform_list_files(ts_search_result* result);
