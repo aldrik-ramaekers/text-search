@@ -5,7 +5,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary
 @set OUT_EXE=text-search
 @set INCLUDES=/I..\.. /I..\..\backends
 @set SOURCES=imgui/imgui*.cpp src/*.cpp
-@set LIBS=opengl32.lib Advapi32.lib bin/debug/data.obj bin/debug/icon.res
+@set LIBS=opengl32.lib Advapi32.lib Shell32.lib bin/debug/data.obj bin/debug/icon.res
 windres misc/icon.rc -O coff -o bin/debug/icon.res
 ld -r -b binary -o bin/debug/data.obj LICENSE misc/logo_64.png
 mkdir %OUT_DIR%

@@ -14,10 +14,13 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
+#include <Shlobj.h>
 #include <GL/GL.h>
 #include <tchar.h>
 
 #define IDI_LOGO 123
+
+char config_path[MAX_INPUT_LENGTH];
 
 void ts_create_gui(int window_w, int window_h);
 void ts_load_images();
@@ -35,6 +38,17 @@ bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void ResetDeviceWGL();
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+static const char* _ts_platform_get_config_file_path(char* buffer) {
+	if(SUCCEEDED(SHGetFolderPathA(0, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer)))
+	{
+		strcat_s(buffer, MAX_INPUT_LENGTH, "\\text-search\\config.ini");
+		printf("%s\n", buffer);
+		return buffer;
+	}
+	
+	return 0;
+}
 
 int main(int, char**)
 {
@@ -67,7 +81,7 @@ int main(int, char**)
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
-	io.IniFilename = NULL;
+	io.IniFilename = _ts_platform_get_config_file_path(config_path);
 
     // Setup Dear ImGui style
     ImGui::Spectrum::StyleColorsSpectrum();
