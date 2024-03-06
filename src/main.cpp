@@ -268,13 +268,15 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
 			ImGui::InputTextWithHint("path-ti", "Path", path_buffer, MAX_INPUT_LENGTH);
-			ImGui::PopItemWidth();		
+			ImGui::PopItemWidth();
+			ImGui::SetItemTooltip("Absolute path to directory to search");
 
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
 				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 			}
 			ImGui::PopItemWidth();
+			ImGui::SetItemTooltip("Text to search within files, supports '*' & '?' wildcards");
 			ImGui::PopStyleVar();
 		}
 		ImGui::EndChild();
@@ -288,6 +290,7 @@ void ts_create_gui(int window_w, int window_h) {
 				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 			}
 			ImGui::PopItemWidth();
+			ImGui::SetItemTooltip("Files to filter, supports '*' & '?' wildcards");
 			ImGui::PopStyleVar();
 
 			if (current_search_result && !current_search_result->search_completed) {
@@ -322,13 +325,19 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableSetupColumn("Match", 0, line_w);			
 			ImGui::TableHeadersRow();
 
-			if (current_search_result) {
-				if (current_search_result->search_text == nullptr) _ts_create_file_match_rows();
-				else _ts_create_text_match_rows();
-			}
-			else {
-				// show info text.
-			}
+			if (current_search_result->search_text == nullptr) _ts_create_file_match_rows();
+			else _ts_create_text_match_rows();
+
+			if (current_search_result->search_completed && (current_search_result->files.length == 0 || current_search_result->match_count == 0)) {
+				ImGui::TableNextRow();
+				ImGui::TableNextColumn();
+				ImGui::Text("");			
+				ImGui::TableNextColumn();
+
+				char* msg = "No matches found.";
+				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(msg).x)/2.0f);
+				ImGui::TextWrapped(msg);
+			}		
 		
 			ImGui::EndTable();
 		}
