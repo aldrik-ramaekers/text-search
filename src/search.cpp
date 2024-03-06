@@ -264,7 +264,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				file_match.line_info = (char *)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 
 				// Trim some text infront of match.
-				int text_pad_lr = 25;
+				int text_pad_lr = 35;
 				if (file_match.word_match_offset > text_pad_lr)
 				{
 					int bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
@@ -289,7 +289,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				utf8_int8_t* iter = file_match.line_info;
 				while ((iter = utf8codepoint(iter, &ch)) && ch)
 				{
-					if (ch == '\n') iter[-1] = ' ';
+					if (ch == '\n') iter[-1] = 0;
 					if (ch == '\t') iter[-1] = ' ';
 					if (ch == '\r') iter[-1] = ' ';
 					if (ch == '\x0B') iter[-1] = ' ';
