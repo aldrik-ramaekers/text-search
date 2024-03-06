@@ -31,6 +31,7 @@ typedef enum t_ts_file_open_error
 
 extern bool program_running;
 
+bool 			ts_platform_dir_exists(utf8_int8_t* dir);
 ts_file_content ts_platform_read_file(char *path, const char *mode);
 void 			ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir = nullptr);
 void 			ts_platform_list_files(ts_search_result* result);

@@ -267,7 +267,11 @@ void ts_create_gui(int window_w, int window_h) {
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
+
+			bool dir_exists = ts_platform_dir_exists(path_buffer);
+			if (!dir_exists) ImGui::PushStyleColor(ImGuiCol_Border, ImGui::Spectrum::Color(0xCC2222));
 			ImGui::InputTextWithHint("path-ti", "Path", path_buffer, MAX_INPUT_LENGTH);
+			if (!dir_exists) ImGui::PopStyleColor();
 			ImGui::PopItemWidth();
 			ImGui::SetItemTooltip("Absolute path to directory to search");
 

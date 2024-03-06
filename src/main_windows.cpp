@@ -52,6 +52,16 @@ static const char* _ts_platform_get_config_file_path(char* buffer) {
 	return 0;
 }
 
+bool ts_platform_dir_exists(utf8_int8_t* dir)
+{
+  DWORD ftyp = GetFileAttributesA(dir);
+  if (ftyp == INVALID_FILE_ATTRIBUTES)
+    return false;
+  if (ftyp & FILE_ATTRIBUTE_DIRECTORY)
+    return true;
+  return false;
+}
+
 uint64_t ts_platform_get_time(uint64_t compare)
 {
 	LARGE_INTEGER stamp;
