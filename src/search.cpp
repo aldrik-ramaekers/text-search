@@ -6,43 +6,34 @@
 
 ts_search_result *current_search_result = nullptr;
 
-ts_array ts_get_filters(char *pattern)
+ts_array ts_get_filters(utf8_int8_t *pattern)
 {
 	ts_array result = ts_array_create(MAX_INPUT_LENGTH);
 
-	char current_filter[MAX_INPUT_LENGTH];
-	int filter_len = 0;
-	while (*pattern)
-	{
-		char ch = *pattern;
+	utf8_int8_t current_filter[MAX_INPUT_LENGTH];
+	utf8_int8_t* current_filter_cursor = current_filter;
+	memset(current_filter, 0, MAX_INPUT_LENGTH);
 
+	utf8_int32_t ch;
+	while ((pattern = utf8codepoint(pattern, &ch)) && ch)
+	{
 		if (ch == ',')
 		{
-			current_filter[filter_len] = 0;
 			ts_array_push(&result, current_filter);
-			filter_len = 0;
+			memset(current_filter, 0, MAX_INPUT_LENGTH);
+			current_filter_cursor = current_filter;
 		}
 		else
 		{
-			if (filter_len < MAX_INPUT_LENGTH - 1)
-			{
-				current_filter[filter_len++] = ch;
-			}
-			else
-			{
-				current_filter[filter_len] = ch;
-			}
+			current_filter_cursor = utf8catcodepoint(current_filter_cursor, ch, MAX_INPUT_LENGTH);
 		}
-
-		pattern++;
 	}
-	current_filter[filter_len] = 0;
 	ts_array_push(&result, current_filter);
 
 	return result;
 }
 
-int ts_string_match(char *first, char *second)
+int ts_string_match(utf8_int8_t *first, utf8_int8_t *second)
 {
 	// If we reach at the end of both strings, we are done
 	if (*first == '\0' && *second == '\0')
@@ -357,6 +348,7 @@ void ts_destroy_result(ts_search_result* result) {
 	ts_memory_bucket_destroy(&result->memory);
 	ts_array_destroy(&result->files);
 	ts_array_destroy(&result->matches);
+	ts_array_destroy(&result->filters);
 	free(result);
 }
 
