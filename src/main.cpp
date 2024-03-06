@@ -15,6 +15,16 @@
 bool open_settings_window = false;
 bool open_about_window = false;
 
+char* help_text = 
+				"1. Search directory\n"
+				"	- The absolute path to the folder to search.\n"
+				"2. File filter\n"
+				"	- Filter files that should be included in file search\n"
+				"	- Multiple filters can be declared separated by comma ','\n"
+				"	- Supports wildcards '*' & '?' in filter\n"
+				"3. Text to search\n"
+				"	- Supports wildcards '*' & '?' in text\n";
+
 static void _ts_create_popups() {
 	ImGuiIO& io = ImGui::GetIO();
 	if (open_settings_window) {
@@ -297,6 +307,7 @@ void ts_create_gui(int window_w, int window_h) {
 	}
 	pos_y += textbox_area_height + 7;
 
+	if (current_search_result)
 	{ // Results
 		ImGui::SetNextWindowPos({5, pos_y});
 
@@ -321,6 +332,12 @@ void ts_create_gui(int window_w, int window_h) {
 		
 			ImGui::EndTable();
 		}
+	}
+	else { // Help text
+		ImGui::Separator();
+		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20.0f);
+		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20.0f);
+		ImGui::TextWrapped(help_text);
 	}
 	pos_y += result_area_height;
 
