@@ -263,16 +263,28 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				file_match.word_match_length = m->word_match_len;
 				file_match.line_info = (char *)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 
+				// Trim some text infront of match.
 				int text_pad_lr = 25;
 				if (file_match.word_match_offset > text_pad_lr)
 				{
-					m->line_start += file_match.word_match_offset - text_pad_lr;
-					file_match.word_match_offset = text_pad_lr;
+					int bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
+					int bytes_trimmed = 0;
+					utf8_int8_t* line_start_before_trim = m->line_start;
+					for (int i = 0; i < bytes_to_trim; i++) {
+						utf8_int32_t ch;
+						m->line_start = utf8codepoint(m->line_start, &ch);
+						bytes_trimmed = (m->line_start - line_start_before_trim);
+						if (bytes_trimmed >= bytes_to_trim) break;
+					}
+					file_match.word_match_offset = file_match.word_match_offset - bytes_trimmed;
 				}
+
+				// Copy relevant line part.
 				int total_len = text_pad_lr + search_len + text_pad_lr;
 				if (total_len > MAX_INPUT_LENGTH) total_len = MAX_INPUT_LENGTH;
 				utf8ncpy(file_match.line_info, m->line_start, total_len);
 
+				// Remove formatting.
 				utf8_int32_t ch;
 				utf8_int8_t* iter = file_match.line_info;
 				while ((iter = utf8codepoint(iter, &ch)) && ch)
