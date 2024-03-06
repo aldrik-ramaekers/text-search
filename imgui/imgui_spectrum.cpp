@@ -27,22 +27,17 @@ namespace ImGui {
 				io.FontDefault = font;
 				
 			}
+			
+			// Uncomment if you want these glyphs. Fonts can be found in fonts/ folder.
+			// io.Fonts->AddFontFromMemoryCompressedTTF(
+			// 		GmarketSans_compressed_data, 
+			// 		GmarketSans_compressed_size, 
+			// 		size, &config, io.Fonts->GetGlyphRangesKorean());
 
-			io.Fonts->AddFontFromMemoryCompressedTTF(
-					GmarketSans_compressed_data, 
-					GmarketSans_compressed_size, 
-					size, &config, io.Fonts->GetGlyphRangesKorean());
-
-			io.Fonts->AddFontFromMemoryCompressedTTF(
-					NotoSansJP_compressed_data, 
-					NotoSansJP_compressed_size, 
-					size, &config, io.Fonts->GetGlyphRangesJapanese());
-
-			//builder.AddRanges(io.Fonts->GetGlyphRangesChineseFull());
-			//builder.AddRanges(io.Fonts->GetGlyphRangesChineseSimplifiedCommon());
-			//builder.AddRanges(io.Fonts->GetGlyphRangesCyrillic());
-			//builder.AddRanges(io.Fonts->GetGlyphRangesThai());
-			//builder.AddRanges(io.Fonts->GetGlyphRangesVietnamese());
+			// io.Fonts->AddFontFromMemoryCompressedTTF(
+			// 		NotoSansJP_compressed_data, 
+			// 		NotoSansJP_compressed_size, 
+			// 		size, &config, io.Fonts->GetGlyphRangesJapanese());
 			
 
             io.Fonts->Build();          
