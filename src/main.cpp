@@ -62,7 +62,7 @@ static void _ts_create_popups() {
 		ImGui::SetWindowSize({600, 400});
 
 		char* name = "Text-Search";
-		char* link = "https://github.com/aldrik-ramaekers/text-search";
+		char* link = "created by Aldrik Ramaekers <aldrik.ramaekers@gmail.com>";
 
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 64) / 2.0f);
 		ImGui::Image((void*)(intptr_t)img_logo.id, {64, 64});
@@ -107,7 +107,7 @@ static void _ts_create_popups() {
 			}
 		}
 
-		ImGui::Dummy({0, 70});
+		ImGui::Dummy({0, 10});
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		if (ImGui::Button("Close")) {
 			open_about_window = false;
