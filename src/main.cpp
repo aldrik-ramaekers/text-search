@@ -1,7 +1,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
-#include "../imgui/imspinner.h"
+#include "../imspinner/imspinner.h"
 #include "../utf8.h"
 #include "definitions.h"
 #include "search.h"
@@ -59,14 +59,53 @@ static void _ts_create_popups() {
 
 	// About window
 	if (ImGui::BeginPopupModal("About Text-Search", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
-		ImGui::SetWindowSize({600, 0});
+		ImGui::SetWindowSize({600, 400});
 
-		//ImGui::SetCursorPosX(ImGui::GetWindowWidth() - 64 - 10);
-		//ImGui::Image((void*)(intptr_t)img_logo.id, {64, 64});
+		char* name = "Text-Search";
+		char* link = "https://github.com/aldrik-ramaekers/text-search";
+
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 64) / 2.0f);
+		ImGui::Image((void*)(intptr_t)img_logo.id, {64, 64});
+		ImGui::Dummy({0, 20});
+
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(name).x)/2.0f);
+		ImGui::Text(name);
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(link).x)/2.0f);
+		ImGui::Text(link);
+		ImGui::Dummy({0, 20});
 		
-		char* license = (char*)_binary_LICENSE_start;
-		int license_length = _binary_LICENSE_end - _binary_LICENSE_start;
-		ImGui::Text("%.*s", license_length, license);
+		if (ImGui::CollapsingHeader("License")) {
+			char* license = (char*)_binary_LICENSE_start;
+			int license_length = _binary_LICENSE_end - _binary_LICENSE_start;
+			ImGui::Text("%.*s", license_length, license);
+		}
+
+		ImGui::SeparatorText("Dependencies");
+		{
+			if (ImGui::TreeNode("https://github.com/ocornut/imgui")) {
+				char* license = (char*)_binary_imgui_LICENSE_start;
+				int license_length = _binary_imgui_LICENSE_end - _binary_imgui_LICENSE_start;
+				ImGui::Text("%.*s", license_length, license);
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("https://github.com/dalerank/imspinner")) {
+				char* license = (char*)_binary_imspinner_LICENSE_start;
+				int license_length = _binary_imspinner_LICENSE_end - _binary_imspinner_LICENSE_start;
+				ImGui::Text("%.*s", license_length, license);
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("https://github.com/nothings/stb/blob/master/stb_image.h")) {
+				ImGui::Text("public domain");
+				ImGui::TreePop();
+			}
+
+			if (ImGui::TreeNode("https://github.com/sheredom/utf8.h")) {
+				ImGui::Text("public domain");
+				ImGui::TreePop();
+			}
+		}
 
 		ImGui::Dummy({0, 70});
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -74,7 +113,7 @@ static void _ts_create_popups() {
 			open_about_window = false;
 			ImGui::CloseCurrentPopup();
 		}
-		ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize(TS_VERSION).x - 15);
+		ImGui::SameLine(ImGui::GetWindowWidth() - ImGui::CalcTextSize(TS_VERSION).x - 25);
 		ImGui::Text(TS_VERSION);
 		ImGui::PopStyleVar();
 
