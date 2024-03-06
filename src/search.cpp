@@ -316,7 +316,7 @@ keep_going:;
 			goto finish_early;
 
 		ts_mutex_lock(&new_result->files.mutex);
-		int read_cursor = new_result->file_list_read_cursor+1;
+		int read_cursor = new_result->file_list_read_cursor;
 		if (read_cursor >= new_result->files.length) {
 			ts_mutex_unlock(&new_result->files.mutex);
 
