@@ -66,5 +66,6 @@ int 				ts_string_match(utf8_int8_t *first, utf8_int8_t *second);
 ts_search_result* 	ts_create_empty_search_result();
 bool 				ts_string_contains(utf8_int8_t *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches);
 void 				ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, int thread_count, int max_file_size);
+void				ts_destroy_result(ts_search_result* result);
 
 #endif

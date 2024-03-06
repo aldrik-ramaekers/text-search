@@ -353,6 +353,13 @@ finish_early:;
 	return 0;
 }
 
+void ts_destroy_result(ts_search_result* result) {
+	ts_memory_bucket_destroy(&result->memory);
+	ts_array_destroy(&result->files);
+	ts_array_destroy(&result->matches);
+	free(result);
+}
+
 static void *_ts_list_files_thread(void *args)
 {
 	ts_search_result *info = (ts_search_result *)args;
@@ -364,8 +371,7 @@ static void *_ts_list_files_thread(void *args)
 		while (!info->prev_result->search_completed) {
 			ts_thread_sleep(10);
 		}
-		ts_memory_bucket_destroy(&info->prev_result->memory);
-		free(info->prev_result);
+		ts_destroy_result(info->prev_result);
 		info->prev_result = nullptr;
 	}
 
