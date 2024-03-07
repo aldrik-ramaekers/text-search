@@ -19,6 +19,8 @@
 #include <GL/GL.h>
 #include <tchar.h>
 
+#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+
 #define IDI_LOGO 123
 
 char config_path[MAX_INPUT_LENGTH];
