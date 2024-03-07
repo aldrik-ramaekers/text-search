@@ -17,6 +17,12 @@ extern unsigned char _binary_imspinner_LICENSE_end[];
 
 extern unsigned char _binary_misc_logo_64_png_start[];
 extern unsigned char _binary_misc_logo_64_png_end[];
+
+extern unsigned char _binary_misc_search_png_start[];
+extern unsigned char _binary_misc_search_png_end[];
+
+extern unsigned char _binary_misc_folder_png_start[];
+extern unsigned char _binary_misc_folder_png_end[];
 }
 
 #endif

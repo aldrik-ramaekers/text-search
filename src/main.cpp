@@ -328,6 +328,8 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::BeginChild("search-boxes2", ImVec2(frame_w, textbox_area_height), false);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f));
+			ImGui::SameLine();
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
 				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
@@ -341,7 +343,7 @@ void ts_create_gui(int window_w, int window_h) {
 			}
 			else {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-				if (ImGui::Button("Search")) {
+				if (ImGui::ImageButton("Search", (void*)(intptr_t)img_search.id, ImVec2(18.0f, 18.0f))) {
 					ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
 				}
 				ImGui::PopStyleVar();

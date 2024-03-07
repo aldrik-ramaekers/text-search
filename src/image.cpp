@@ -5,6 +5,8 @@
 #include "../stb_image.h"
 
 ts_image img_logo;
+ts_image img_search;
+ts_image img_folder;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 static bool _ts_load_texture(unsigned char* data, unsigned long size, GLuint* out_texture, int* out_width, int* out_height)
@@ -54,4 +56,12 @@ void ts_load_images() {
 	int size = _binary_misc_logo_64_png_end - _binary_misc_logo_64_png_start;
 	unsigned char* data = (unsigned char *)_binary_misc_logo_64_png_start;
 	img_logo = _ts_load_image(data, size);
+
+	size = _binary_misc_search_png_end - _binary_misc_search_png_start;
+	data = (unsigned char *)_binary_misc_search_png_start;
+	img_search = _ts_load_image(data, size);
+
+	size = _binary_misc_folder_png_end - _binary_misc_folder_png_start;
+	data = (unsigned char *)_binary_misc_folder_png_start;
+	img_folder = _ts_load_image(data, size);
 }

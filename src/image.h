@@ -15,6 +15,8 @@ typedef struct t_ts_image {
 } ts_image;
 
 extern ts_image img_logo;
+extern ts_image img_search;
+extern ts_image img_folder;
 
 void ts_load_images();
 
