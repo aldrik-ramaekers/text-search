@@ -2,6 +2,7 @@
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
 #include "../imspinner/imspinner.h"
+#include "../imfiledialog/imFileDialog.h"
 #include "../utf8.h"
 #include "definitions.h"
 #include "search.h"
@@ -328,7 +329,17 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::BeginChild("search-boxes2", ImVec2(frame_w, textbox_area_height), false);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f));
+			if (ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f))) {
+				ifd::FileDialog::Instance().Open("FolderSelectDialog", "Select a directory", "");
+			}
+			if (ifd::FileDialog::Instance().IsDone("FolderSelectDialog", window_w, window_h)) {
+				if (ifd::FileDialog::Instance().HasResult()) {
+					std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+					snprintf(path_buffer, MAX_INPUT_LENGTH, res.c_str());
+				}
+				ifd::FileDialog::Instance().Close();
+			}
+
 			ImGui::SameLine();
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
