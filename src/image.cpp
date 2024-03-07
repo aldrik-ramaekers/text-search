@@ -80,7 +80,7 @@ void ts_load_images() {
 		return (void*)(intptr_t)tex;
 	};
 	ifd::FileDialog::Instance().DeleteTexture = [](void* tex) {
-		GLuint texID = (GLuint)tex;
+		GLuint texID = (GLuint)(intptr_t)tex;
 		glDeleteTextures(1, &texID);
 	};
 }
