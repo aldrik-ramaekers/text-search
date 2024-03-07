@@ -60,7 +60,7 @@ static void _ts_create_popups() {
 
 	// About window
 	if (ImGui::BeginPopupModal("About Text-Search", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
-		ImGui::SetWindowSize({600, 400});
+		ImGui::SetWindowSize({600, 420});
 
 		char* name = "Text-Search";
 		char* link = "created by Aldrik Ramaekers <aldrik.ramaekers@gmail.com>";
@@ -97,6 +97,13 @@ static void _ts_create_popups() {
 				ImGui::TreePop();
 			}
 
+			if (ImGui::TreeNode("https://github.com/dfranx/ImFileDialog")) {
+				char* license = (char*)_binary_imfiledialog_LICENSE_start;
+				int license_length = _binary_imfiledialog_LICENSE_end - _binary_imfiledialog_LICENSE_start;
+				ImGui::Text("%.*s", license_length, license);
+				ImGui::TreePop();
+			}
+
 			if (ImGui::TreeNode("https://github.com/nothings/stb/blob/master/stb_image.h")) {
 				ImGui::Text("public domain");
 				ImGui::TreePop();
@@ -105,7 +112,7 @@ static void _ts_create_popups() {
 			if (ImGui::TreeNode("https://github.com/sheredom/utf8.h")) {
 				ImGui::Text("public domain");
 				ImGui::TreePop();
-			}
+			}		
 		}
 
 		ImGui::Dummy({0, 10});

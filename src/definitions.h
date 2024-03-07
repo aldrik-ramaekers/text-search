@@ -15,6 +15,9 @@ extern unsigned char _binary_imgui_LICENSE_end[];
 extern unsigned char _binary_imspinner_LICENSE_start[];
 extern unsigned char _binary_imspinner_LICENSE_end[];
 
+extern unsigned char _binary_imfiledialog_LICENSE_start[];
+extern unsigned char _binary_imfiledialog_LICENSE_end[];
+
 extern unsigned char _binary_misc_logo_64_png_start[];
 extern unsigned char _binary_misc_logo_64_png_end[];
 
