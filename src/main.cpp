@@ -34,7 +34,7 @@ static void _ts_create_popups() {
 	}
 
 	// Settings window
-	if (ImGui::BeginPopupModal("Text-Search settings", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+	if (ImGui::BeginPopupModal("Text-Search settings", &open_settings_window, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
 		ImGui::DragInt("Threads", &ts_thread_count, 0.1f, 1, 8);
 		ImGui::SetItemTooltip("Number of threads used to search for text matches");
@@ -59,7 +59,7 @@ static void _ts_create_popups() {
 	}
 
 	// About window
-	if (ImGui::BeginPopupModal("About Text-Search", NULL, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+	if (ImGui::BeginPopupModal("About Text-Search", &open_about_window, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({600, 420});
 
 		char* name = "Text-Search";
