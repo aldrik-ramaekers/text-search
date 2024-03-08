@@ -241,9 +241,11 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 	
 	const size_t cSize = strlen(mode)+1;
     wchar_t* wc = new wchar_t[cSize];
-    mbstowcs (wc, mode, cSize);
+	size_t outSize;
+    mbstowcs_s(&outSize, wc, cSize, mode, cSize);
 
-	FILE *file = _wfopen(wchar_buffer, wc);
+	FILE *file;
+	_wfopen_s(&file, wchar_buffer, wc);
 	if (!file) 
 	{
 		if (errno == EMFILE)
@@ -281,7 +283,7 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 	if (!result.content) goto done;
 	
 	memset(result.content, 0, length);
-	int read_result = fread(result.content, 1, length, file);
+	size_t read_result = fread(result.content, 1, length, file);
 	if (read_result == 0 && length != 0)
 	{
 		free(result.content);

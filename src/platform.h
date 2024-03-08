@@ -8,7 +8,7 @@
 
 typedef struct t_ts_file_content
 {
-	int content_length;
+	size_t content_length;
 	void *content;
 	int file_error;
 } ts_file_content;

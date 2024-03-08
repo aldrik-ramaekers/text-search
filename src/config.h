@@ -8,7 +8,6 @@
 
 #define MAX_ERROR_MESSAGE_LENGTH (MAX_INPUT_LENGTH)
 #define FILE_RESERVE_COUNT 1000
-#define ERROR_RESERVE_COUNT 100
 
 #include "../imgui/imgui.h"
 #include "../utf8.h"

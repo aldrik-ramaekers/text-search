@@ -58,7 +58,7 @@ int ts_string_match(utf8_int8_t *first, utf8_int8_t *second)
 	return 0;
 }
 
-int ts_filter_matches(ts_array *filters, char *string, char **matched_filter)
+size_t ts_filter_matches(ts_array *filters, char *string, char **matched_filter)
 {
 	for (int i = 0; i < filters->length; i++)
 	{
@@ -142,11 +142,10 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 
 	utf8_int32_t text_to_search_ch = 0;
 	utf8_int32_t text_to_find_ch = 0;
-	size_t text_to_find_char_len = utf8len(text_to_find);
 
 	int line_nr_val = 1;
-	int word_offset_val = 0;
-	int word_match_len_val = 0;
+	size_t word_offset_val = 0;
+	size_t word_match_len_val = 0;
 	char *line_start_ptr = text_to_search;
 
 	int index = 0;
@@ -248,7 +247,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 	if (content.content && !content.file_error)
 	{
 		ts_array text_matches = ts_array_create(sizeof(ts_text_match));
-		int search_len = strlen(result->search_text);
+		size_t search_len = strlen(result->search_text);
 		if (ts_string_contains((char *)content.content, result->search_text, &text_matches))
 		{
 			ts_mutex_lock(&result->matches.mutex);
@@ -268,8 +267,8 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				int text_pad_lr = 35;
 				if (file_match.word_match_offset > text_pad_lr)
 				{
-					int bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
-					int bytes_trimmed = 0;
+					size_t bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
+					size_t bytes_trimmed = 0;
 					utf8_int8_t* line_start_before_trim = m->line_start;
 					for (int i = 0; i < bytes_to_trim; i++) {
 						utf8_int32_t ch;
@@ -277,11 +276,11 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 						bytes_trimmed = (m->line_start - line_start_before_trim);
 						if (bytes_trimmed >= bytes_to_trim) break;
 					}
-					file_match.word_match_offset = file_match.word_match_offset - bytes_trimmed;
+					file_match.word_match_offset = (size_t)(file_match.word_match_offset - bytes_trimmed);
 				}
 
 				// Copy relevant line part.
-				int total_len = text_pad_lr + search_len + text_pad_lr;
+				size_t total_len = text_pad_lr + search_len + text_pad_lr;
 				if (total_len > MAX_INPUT_LENGTH) total_len = MAX_INPUT_LENGTH;
 				utf8ncpy(file_match.line_info, m->line_start, total_len);
 

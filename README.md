@@ -10,7 +10,6 @@ External libraries used:
 - stb_image.h
 - ImGui
 - ImFileDialog
-- ImSpinner
 
 # Config
 config.ini is stored at __%appdata%/local/text-search/config.ini__

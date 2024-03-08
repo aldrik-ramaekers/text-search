@@ -131,9 +131,9 @@ void ts_array_remove_at(ts_array *ts_array, int at)
 void ts_array_remove(ts_array *ts_array, void *ptr)
 {
 	ts_mutex_lock(&ts_array->mutex);
-	int offset = (char*)ptr - (char*)ts_array->data;
-	int at = offset / ts_array->entry_size;
-	ts_array_remove_at(ts_array, at);
+	size_t offset = (char*)ptr - (char*)ts_array->data;
+	size_t at = offset / ts_array->entry_size;
+	ts_array_remove_at(ts_array, (int)at);
 	ts_mutex_unlock(&ts_array->mutex);
 }
 

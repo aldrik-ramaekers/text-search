@@ -10,12 +10,12 @@ ts_image img_search;
 ts_image img_folder;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
-static bool _ts_load_texture(unsigned char* data, unsigned long size, GLuint* out_texture, int* out_width, int* out_height)
+static bool _ts_load_texture(unsigned char* data, size_t size, GLuint* out_texture, int* out_width, int* out_height)
 {
     // Load from file
     int image_width = 0;
     int image_height = 0;
-    unsigned char* image_data = stbi_load_from_memory(data, size, &image_width, &image_height, NULL, 4);
+    unsigned char* image_data = stbi_load_from_memory(data, (int)size, &image_width, &image_height, NULL, 4);
     if (image_data == NULL) {
 		printf("Failed to load %s\n", stbi_failure_reason());
         return false;
@@ -44,7 +44,7 @@ static bool _ts_load_texture(unsigned char* data, unsigned long size, GLuint* ou
     return true;
 }
 
-static ts_image _ts_load_image(unsigned char* data, unsigned long size) {
+static ts_image _ts_load_image(unsigned char* data, size_t size) {
 	int w = 0;
 	int h = 0;
 	GLuint id = 0;
@@ -54,7 +54,7 @@ static ts_image _ts_load_image(unsigned char* data, unsigned long size) {
 }
 
 void ts_load_images() {
-	int size = _binary_misc_logo_64_png_end - _binary_misc_logo_64_png_start;
+	size_t size = _binary_misc_logo_64_png_end - _binary_misc_logo_64_png_start;
 	unsigned char* data = (unsigned char *)_binary_misc_logo_64_png_start;
 	img_logo = _ts_load_image(data, size);
 

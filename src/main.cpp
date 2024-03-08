@@ -1,7 +1,6 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
-#include "../imspinner/imspinner.h"
 #include "../imfiledialog/imFileDialog.h"
 #include "../utf8.h"
 #include "definitions.h"
@@ -16,7 +15,7 @@
 bool open_settings_window = false;
 bool open_about_window = false;
 
-char* help_text = 
+const char* help_text = 
 				"1. Search directory\n"
 				"	- The absolute path to the folder to search.\n"
 				"2. File filter\n"
@@ -62,8 +61,8 @@ static void _ts_create_popups() {
 	if (ImGui::BeginPopupModal("About Text-Search", &open_about_window, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({600, 420});
 
-		char* name = "Text-Search";
-		char* link = "created by Aldrik Ramaekers <aldrik.ramaekers@gmail.com>";
+		const char* name = "Text-Search";
+		const char* link = "created by Aldrik Ramaekers <aldrik.ramaekers@gmail.com>";
 
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 64) / 2.0f);
 		ImGui::Image((void*)(intptr_t)img_logo.id, {64, 64});
@@ -77,7 +76,7 @@ static void _ts_create_popups() {
 		
 		if (ImGui::CollapsingHeader("License")) {
 			char* license = (char*)_binary_LICENSE_start;
-			int license_length = _binary_LICENSE_end - _binary_LICENSE_start;
+			int64_t license_length = _binary_LICENSE_end - _binary_LICENSE_start;
 			ImGui::Text("%.*s", license_length, license);
 		}
 
@@ -85,21 +84,14 @@ static void _ts_create_popups() {
 		{
 			if (ImGui::TreeNode("https://github.com/ocornut/imgui")) {
 				char* license = (char*)_binary_imgui_LICENSE_start;
-				int license_length = _binary_imgui_LICENSE_end - _binary_imgui_LICENSE_start;
-				ImGui::Text("%.*s", license_length, license);
-				ImGui::TreePop();
-			}
-
-			if (ImGui::TreeNode("https://github.com/dalerank/imspinner")) {
-				char* license = (char*)_binary_imspinner_LICENSE_start;
-				int license_length = _binary_imspinner_LICENSE_end - _binary_imspinner_LICENSE_start;
+				int64_t license_length = _binary_imgui_LICENSE_end - _binary_imgui_LICENSE_start;
 				ImGui::Text("%.*s", license_length, license);
 				ImGui::TreePop();
 			}
 
 			if (ImGui::TreeNode("https://github.com/dfranx/ImFileDialog")) {
 				char* license = (char*)_binary_imfiledialog_LICENSE_start;
-				int license_length = _binary_imfiledialog_LICENSE_end - _binary_imfiledialog_LICENSE_start;
+				int64_t license_length = _binary_imfiledialog_LICENSE_end - _binary_imfiledialog_LICENSE_start;
 				ImGui::Text("%.*s", license_length, license);
 				ImGui::TreePop();
 			}
@@ -281,8 +273,6 @@ void _ts_create_text_match_rows() {
 }
 
 void ts_create_gui(int window_w, int window_h) {
-	static float f = 0.0f;
-	static int counter = 0;
 	int window_pad = 50;
 	int textbox_area_height = 80;
 	int statusbar_area_height = 30;
@@ -297,11 +287,10 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGuiWindowFlags_MenuBar);
 	ImGui::PopStyleVar();
 
-	float menu_bar_h = _ts_create_menu();
+	int menu_bar_h = _ts_create_menu();
 
 	float pos_y = 0;
-
-	pos_y += menu_bar_h + 15;
+	pos_y += menu_bar_h + 15.0f;
 
 	{ // Search boxes
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
@@ -310,7 +299,7 @@ void ts_create_gui(int window_w, int window_h) {
 		float separator_w = 10.0f;
 		float frame_w = window_w/2.5f - offset - separator_w/2.0f;
 		ImGui::SetNextWindowPos({offset, pos_y});
-		ImGui::BeginChild("search-boxes", ImVec2(frame_w, textbox_area_height), false);
+		ImGui::BeginChild("search-boxes", ImVec2((float)frame_w, (float)textbox_area_height), false);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			ImGui::PushItemWidth(-1);
@@ -333,7 +322,7 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::EndChild();
 
 		ImGui::SetNextWindowPos({offset + frame_w + separator_w, pos_y});
-		ImGui::BeginChild("search-boxes2", ImVec2(frame_w, textbox_area_height), false);
+		ImGui::BeginChild("search-boxes2", ImVec2((float)frame_w, (float)textbox_area_height), false);
 		{
 			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 			if (ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f))) {
@@ -357,7 +346,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::PopStyleVar();
 
 			if (current_search_result && !current_search_result->search_completed) {
-				ImSpinner::SpinnerIncScaleDots("Spinner", 10.0f, 2.0f, ImColor(70,70,70), 5.0f);
+				ImGui::Text("%c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
 			}
 			else {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
@@ -380,9 +369,9 @@ void ts_create_gui(int window_w, int window_h) {
 		if (ImGui::BeginTable("results-table", 3, ImGuiTableFlags_BordersH|ImGuiTableFlags_ScrollY|ImGuiTableFlags_RowBg|ImGuiTableFlags_SizingFixedFit,
 			{(float)window_w-7.0f, (float)result_area_height}))
 		{
-			int nr_w = 50;
-			int line_w = 180;
-			int file_w = ImGui::GetWindowWidth() - line_w - nr_w;
+			float nr_w = 50.0f;
+			float line_w = 180.0f;
+			float file_w = ImGui::GetWindowWidth() - line_w - nr_w;
 			ImGui::TableSetupColumn("", ImGuiTableColumnFlags_NoHeaderLabel, nr_w);
 			ImGui::TableSetupColumn("File", 0, file_w);
 			ImGui::TableSetupColumn("Match", 0, line_w);			
@@ -417,7 +406,7 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::SetNextWindowPos({0, pos_y});
 
 		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
-		ImGui::BeginChild("search-statusbar", ImVec2(window_w, statusbar_area_height), ImGuiChildFlags_None, ImGuiWindowFlags_None);
+		ImGui::BeginChild("search-statusbar", ImVec2((float)window_w, (float)statusbar_area_height), ImGuiChildFlags_None, ImGuiWindowFlags_None);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7.0f);
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
 		if (current_search_result) {
