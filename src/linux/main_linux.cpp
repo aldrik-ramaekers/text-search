@@ -29,8 +29,10 @@ bool program_running = true;
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
-	char *env = getenv("HOME");
-	snprintf(buffer, MAX_INPUT_LENGTH, "%s%s", env, "text-search/imgui.ini");
+	snprintf(buffer, MAX_INPUT_LENGTH, "%s", "/etc/opt/text-search/imgui.ini");
+	if (!ts_platform_dir_exists(buffer)) {
+		mkdir(buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	}
 	return buffer;
 }
 
@@ -88,7 +90,7 @@ int main(int, char**)
 
     // Setup Dear ImGui style
     ImGui::Spectrum::StyleColorsSpectrum();
-	//ImGui::Spectrum::LoadFont(18.0f);
+	ImGui::Spectrum::LoadFont(18.0f);
 
 	ts_init();
 	ts_load_images();
@@ -100,7 +102,6 @@ int main(int, char**)
     {
         glfwPollEvents();
 
-        // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();

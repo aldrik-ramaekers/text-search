@@ -11,22 +11,14 @@ namespace ImGui {
 			ImFontConfig config;
 			config.MergeMode = true;
 			
-			{
-				ImFontGlyphRangesBuilder builder;
-				ImVector<ImWchar> ranges;
-				builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-				builder.AddRanges(io.Fonts->GetGlyphRangesGreek());
-				builder.BuildRanges(&ranges);
+			ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
+				SourceSansProRegular_compressed_data, 
+				SourceSansProRegular_compressed_size, 
+				size, nullptr, nullptr);
 
-				ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
-					SourceSansProRegular_compressed_data, 
-					SourceSansProRegular_compressed_size, 
-					size, nullptr, ranges.Data);
-
-				IM_ASSERT(font != nullptr);
-				io.FontDefault = font;
-				
-			}
+			IM_ASSERT(font != nullptr);
+			io.FontDefault = font;
+			io.Fonts->Build();
 			
 			// Uncomment if you want these glyphs. Fonts can be found in fonts/ folder.
 			// io.Fonts->AddFontFromMemoryCompressedTTF(
@@ -40,7 +32,7 @@ namespace ImGui {
 			// 		size, &config, io.Fonts->GetGlyphRangesJapanese());
 			
 
-            io.Fonts->Build();          
+                 
         }
 
         void StyleColorsSpectrum() {
