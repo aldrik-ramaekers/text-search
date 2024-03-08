@@ -1,9 +1,9 @@
 #include <stdio.h>
 
-#include "../imgui/imgui.h"
-#include "../imgui/imgui_spectrum.h"
-#include "../imgui/imgui_impl_opengl3.h"
-#include "../imgui/imgui_impl_win32.h"
+#include "imgui.h"
+#include "imgui_spectrum.h"
+#include "imgui_impl_opengl3.h"
+#include "imgui_impl_win32.h"
 #include "../utf8.h"
 #include "platform.h"
 #include "mutex.h"

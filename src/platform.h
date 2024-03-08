@@ -34,7 +34,6 @@ extern bool program_running;
 bool 			ts_platform_dir_exists(utf8_int8_t* dir);
 ts_file_content ts_platform_read_file(char *path, const char *mode);
 void 			ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir = nullptr);
-void 			ts_platform_list_files(ts_search_result* result);
 uint64_t 		ts_platform_get_time(uint64_t compare = 0); // if compare is not 0, return difference between timestamp and now, in milliseconds.
 
 #endif

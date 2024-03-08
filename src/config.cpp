@@ -3,6 +3,8 @@
 #include "search.h"
 
 #include <stdio.h>
+#include <string.h>
+#include <cstring>
 
 utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
@@ -19,9 +21,9 @@ static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entr
 
 	int threads, maxSize;
 
-    if (sscanf(line, "Path=%s", &path) == 1) { strcpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path); }
-    else if (sscanf(line, "Filter=%s", &filter) == 1) { strcpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter); }
-    else if (sscanf(line, "Query=%s", &query) == 1) { strcpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query); }
+    if (sscanf(line, "Path=%s", &path) == 1) { strcpy(path_buffer, (char*)path); }
+    else if (sscanf(line, "Filter=%s", &filter) == 1) { strcpy(filter_buffer, (char*)filter); }
+    else if (sscanf(line, "Query=%s", &query) == 1) { strcpy(query_buffer, (char*)query); }
 	else if (sscanf(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
 	else if (sscanf(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
 }

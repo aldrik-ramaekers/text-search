@@ -23,7 +23,7 @@ void ts_mutex_lock(ts_mutex *ts_mutex)
 		INFINITE);  // no time-out interval
 }
 
-int ts_mutex_trylock(ts_mutex *ts_mutex)
+bool ts_mutex_trylock(ts_mutex *ts_mutex)
 {
 	return WaitForSingleObject(ts_mutex->mutex, 1) == WAIT_OBJECT_0;
 }
@@ -60,7 +60,7 @@ void ts_thread_join(ts_thread *ts_thread)
 	}
 }
 
-int ts_thread_tryjoin(ts_thread *ts_thread)
+bool ts_thread_tryjoin(ts_thread *ts_thread)
 {
 	if (ts_thread->valid)
 	{

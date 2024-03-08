@@ -1,6 +1,6 @@
 #include "imgui_spectrum.h"
-#include "../fonts/GmarketSans.h"
-#include "../fonts/NotoSansJP.h"
+//#include "../fonts/GmarketSans.h"
+//#include "../fonts/NotoSansJP.h"
 #include "../fonts/SourceSansProRegular.h"
 #include "imgui.h"
 

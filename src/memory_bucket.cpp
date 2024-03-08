@@ -1,4 +1,5 @@
 #include "memory_bucket.h"
+#include <stdlib.h>
 
 ts_memory_bucket ts_memory_bucket_init(int bucket_size)
 {

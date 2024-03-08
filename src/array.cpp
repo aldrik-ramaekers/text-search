@@ -1,5 +1,8 @@
 #include "array.h"
 
+#include <stdlib.h>
+#include <cstring>
+
 ts_array ts_array_create(int entry_size)
 {
 	ts_array new_ts_array;
