@@ -88,7 +88,7 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->file_count = 0;
 	new_result_buffer->cancel_search = false;
 	new_result_buffer->max_file_size = megabytes(1000);
-	new_result_buffer->memory = ts_memory_bucket_init(megabytes(1));
+	new_result_buffer->memory = ts_memory_bucket_init(megabytes(10));
 	new_result_buffer->prev_result = current_search_result;
 	new_result_buffer->timestamp = ts_platform_get_time();
 
@@ -262,6 +262,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				file_match.word_match_offset = m->word_offset;
 				file_match.word_match_length = m->word_match_len;
 				file_match.line_info = (char *)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
+				memset(file_match.line_info, 0, MAX_INPUT_LENGTH);
 
 				// Trim some text infront of match.
 				int text_pad_lr = 35;

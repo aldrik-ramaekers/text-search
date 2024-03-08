@@ -1,6 +1,11 @@
 #pragma once
 
+#if defined(_WIN32)
+#define MAX_INPUT_LENGTH 32767
+#elif defined(__linux__)
 #define MAX_INPUT_LENGTH 4096
+#endif
+
 #define MAX_ERROR_MESSAGE_LENGTH (MAX_INPUT_LENGTH)
 #define FILE_RESERVE_COUNT 1000
 #define ERROR_RESERVE_COUNT 100
