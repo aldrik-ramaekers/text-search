@@ -282,15 +282,12 @@ uint64_t ts_platform_get_time(uint64_t compare) {
 	if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&tms)) {
 		return -1;
 	}
-	long result = 0;
-	result = tms.tv_sec * 1000000;
-	result += tms.tv_nsec/1000;
-	if (tms.tv_nsec % 1000 >= 500) {
-		++result;
-	}
+	uint64_t result = 0;
+	result = tms.tv_sec * 1000;
+	result += tms.tv_nsec / 1000000;
 
 	if (compare != 0) {
-		return result - compare;
+		return (result - compare);
 	}
 
 	return result;
