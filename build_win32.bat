@@ -4,7 +4,7 @@ call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary
 @set OUT_DIR=bin\\debug
 @set OUT_EXE=text-search
 @set INCLUDES=/I..\.. /I..\..\backends
-@set SOURCES=imgui/imgui*.cpp src/*.cpp imfiledialog/*.cpp src/windows/*.cpp imgui/backends/imgui_impl_win32.cpp
+@set SOURCES=imgui/imgui*.cpp src/*.cpp imfiledialog/*.cpp src/windows/*.cpp imgui/backends/imgui_impl_win32.cpp src/widgets/*.cpp
 @set LIBS=opengl32.lib Advapi32.lib Shell32.lib bin/debug/data.obj bin/debug/icon.res
 @set FLAGS=
 windres misc/icon.rc -O coff -o bin/debug/icon.res

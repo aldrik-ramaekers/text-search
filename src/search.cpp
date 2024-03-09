@@ -118,7 +118,7 @@ bool string_is_asteriks(char *text)
 	return true;
 }
 
-bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches)
+bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches, bool respect_capitalization)
 {
 	bool final_result = false;
 	bool is_asteriks_only = false;
@@ -151,7 +151,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 	int index = 0;
 	while ((text_to_search = utf8codepoint(text_to_search, &text_to_search_ch)) && text_to_search_ch)
 	{
-		text_to_search_ch = utf8lwrcodepoint(text_to_search_ch);
+		if (!respect_capitalization) text_to_search_ch = utf8lwrcodepoint(text_to_search_ch);
 		word_offset_val += utf8codepointsize(text_to_search_ch);
 		if (text_to_search_ch == '\n')
 		{
@@ -166,7 +166,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 		bool in_wildcard = false;
 
 		text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-		text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+		if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 		// text_to_search_current_attempt = utf8codepoint(text_to_search_current_attempt,
 		//&text_to_search_current_attempt_ch);
 
@@ -185,7 +185,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 			if (text_to_find_ch == '*')
 			{
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-				text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+				if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 				in_wildcard = true;
 			}
 
@@ -196,14 +196,14 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 		continue_search:
 			if (!in_wildcard) {
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-				text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+				if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 			}
 
 			word_match_len_val += utf8codepointsize(text_to_search_current_attempt_ch);
 			text_to_search_current_attempt = utf8codepoint(
 				text_to_search_current_attempt,
 				&text_to_search_current_attempt_ch);
-			text_to_search_current_attempt_ch = utf8lwrcodepoint(text_to_search_current_attempt_ch);
+			if (!respect_capitalization) text_to_search_current_attempt_ch = utf8lwrcodepoint(text_to_search_current_attempt_ch);
 
 			if (!text_to_search_current_attempt_ch && !text_to_find_ch)
 				goto done;
@@ -248,7 +248,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 	{
 		ts_array text_matches = ts_array_create(sizeof(ts_text_match));
 		size_t search_len = strlen(result->search_text);
-		if (ts_string_contains((char *)content.content, result->search_text, &text_matches))
+		if (ts_string_contains((char *)content.content, result->search_text, &text_matches, result->respect_capitalization))
 		{
 			ts_mutex_lock(&result->matches.mutex);
 			for (int i = 0; i < text_matches.length; i++)
@@ -393,7 +393,7 @@ static void _ts_list_files(ts_search_result* result)
 	ts_thread_detach(&thr);
 }
 
-void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, int thread_count, int max_file_size)
+void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, int thread_count, int max_file_size, bool respect_capitalization)
 {
 	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
 		return;
@@ -410,6 +410,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 	new_result->filters = ts_get_filters(filter);
 	new_result->max_ts_thread_count = thread_count;
 	new_result->max_file_size = max_file_size;
+	new_result->respect_capitalization = respect_capitalization;
 
 	if (utf8len(query) == 0) {
 		new_result->search_text = nullptr;

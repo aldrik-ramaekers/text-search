@@ -11,6 +11,7 @@ utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
 int ts_thread_count = 4;
 int max_file_size = 100; // in MBs
+bool respect_capitalization = false;
 
 static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
 {
@@ -18,7 +19,7 @@ static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entr
 	uint8_t filter[MAX_INPUT_LENGTH];
 	uint8_t query[MAX_INPUT_LENGTH];
 
-	int threads = 1, maxSize = 100;
+	int threads = 1, maxSize = 100, matchCase = 0;
 
 #if defined(_WIN32)
     if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH); }
@@ -26,12 +27,14 @@ static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entr
     else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH); }
 	else if (sscanf_s(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
 	else if (sscanf_s(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
+	else if (sscanf_s(line, "MatchCase=%d", &matchCase) == 1) { respect_capitalization = matchCase; }
 #elif defined(__linux__)
 	if (sscanf(line, "Path=%s", (char*)&path) == 1) { strncpy(path_buffer, (char*)path, MAX_INPUT_LENGTH); }
     else if (sscanf(line, "Filter=%s", (char*)&filter) == 1) { strncpy(filter_buffer, (char*)filter, MAX_INPUT_LENGTH); }
     else if (sscanf(line, "Query=%s", (char*)&query) == 1) { strncpy(query_buffer, (char*)query, MAX_INPUT_LENGTH); }
 	else if (sscanf(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
 	else if (sscanf(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
+	else if (sscanf(line, "MatchCase=%d", &matchCase) == 1) { respect_capitalization = matchCase; }
 #endif
 }
 
@@ -45,6 +48,7 @@ static void _ts_config_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler
 	buf->appendf("Query=%s\n", query_buffer);
 	buf->appendf("Threads=%d\n", ts_thread_count);
 	buf->appendf("MaxSize=%d\n", max_file_size);
+	buf->appendf("MatchCase=%d\n", respect_capitalization);
 	buf->append("\n");
 }
 

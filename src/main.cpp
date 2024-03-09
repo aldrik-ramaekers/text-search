@@ -3,6 +3,7 @@
 #include "../imgui/imgui_impl_opengl3_loader.h"
 #include "../imfiledialog/imFileDialog.h"
 #include "../utf8.h"
+#include "widgets/imgui_toggle.h"
 #include "definitions.h"
 #include "search.h"
 #include "platform.h"
@@ -167,7 +168,7 @@ void ts_init() {
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
 	if (data->EventFlag == ImGuiInputTextFlags_CallbackEdit) {
 		utf8ncpy(query_buffer, data->Buf, MAX_INPUT_LENGTH);
-		ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
+		ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
 	}
 
 	return 0;
@@ -313,7 +314,7 @@ void ts_create_gui(int window_w, int window_h) {
 
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
+				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
 			}
 			ImGui::PopItemWidth();
 			ImGui::SetItemTooltip("Text to search within files, supports '*' & '?' wildcards");
@@ -339,7 +340,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::SameLine();
 			ImGui::PushItemWidth(-1);
 			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
+				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
 			}
 			ImGui::PopItemWidth();
 			ImGui::SetItemTooltip("Files to filter, supports '*' & '?' wildcards");
@@ -351,10 +352,15 @@ void ts_create_gui(int window_w, int window_h) {
 			else {
 				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 				if (ImGui::ImageButton("Search", (void*)(intptr_t)img_search.id, ImVec2(18.0f, 18.0f))) {
-					ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size);
+					ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
 				}
 				ImGui::PopStyleVar();
 			}
+			
+			ImGui::SameLine();
+			ImGui::SetCursorPosX(36);
+			ImGui::ToggleButton("Aa", &respect_capitalization);
+			ImGui::SetItemTooltip("Match Case");
 		}
 		ImGui::EndChild();
 
