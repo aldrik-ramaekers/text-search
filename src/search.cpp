@@ -264,13 +264,13 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 				memset(file_match.line_info, 0, MAX_INPUT_LENGTH);
 
 				// Trim some text infront of match.
-				int text_pad_lr = 35;
+				size_t text_pad_lr = 35;
 				if (file_match.word_match_offset > text_pad_lr)
 				{
 					size_t bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
 					size_t bytes_trimmed = 0;
 					utf8_int8_t* line_start_before_trim = m->line_start;
-					for (int i = 0; i < bytes_to_trim; i++) {
+					for (size_t i = 0; i < bytes_to_trim; i++) {
 						utf8_int32_t ch;
 						m->line_start = utf8codepoint(m->line_start, &ch);
 						bytes_trimmed = (m->line_start - line_start_before_trim);

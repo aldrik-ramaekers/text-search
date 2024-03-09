@@ -48,7 +48,7 @@ static ts_image _ts_load_image(unsigned char* data, size_t size) {
 	int w = 0;
 	int h = 0;
 	GLuint id = 0;
-	bool ret = _ts_load_texture(data, size, &id, &w, &h);
+	_ts_load_texture(data, size, &id, &w, &h);
 
 	return ts_image {id, w, h};
 }

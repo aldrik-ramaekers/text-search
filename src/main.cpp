@@ -69,15 +69,15 @@ static void _ts_create_popups() {
 		ImGui::Dummy({0, 20});
 
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(name).x)/2.0f);
-		ImGui::Text(name);
+		ImGui::Text("%s", name);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(link).x)/2.0f);
-		ImGui::Text(link);
+		ImGui::Text("%s", link);
 		ImGui::Dummy({0, 20});
 		
 		if (ImGui::CollapsingHeader("License")) {
 			char* license = (char*)_binary_LICENSE_start;
 			int64_t license_length = _binary_LICENSE_end - _binary_LICENSE_start;
-			ImGui::Text("%.*s", license_length, license);
+			ImGui::Text("%.*s", (int)license_length, license);
 		}
 
 		ImGui::SeparatorText("Dependencies");
@@ -85,14 +85,14 @@ static void _ts_create_popups() {
 			if (ImGui::TreeNode("https://github.com/ocornut/imgui")) {
 				char* license = (char*)_binary_imgui_LICENSE_start;
 				int64_t license_length = _binary_imgui_LICENSE_end - _binary_imgui_LICENSE_start;
-				ImGui::Text("%.*s", license_length, license);
+				ImGui::Text("%.*s", (int)license_length, license);
 				ImGui::TreePop();
 			}
 
 			if (ImGui::TreeNode("https://github.com/dfranx/ImFileDialog")) {
 				char* license = (char*)_binary_imfiledialog_LICENSE_start;
 				int64_t license_length = _binary_imfiledialog_LICENSE_end - _binary_imfiledialog_LICENSE_start;
-				ImGui::Text("%.*s", license_length, license);
+				ImGui::Text("%.*s", (int)license_length, license);
 				ImGui::TreePop();
 			}
 
@@ -194,7 +194,7 @@ void _ts_create_file_match_rows() {
 	}
 }
 
-utf8_int8_t* _ts_file_error_to_message(ts_file_open_error err) {
+const utf8_int8_t* _ts_file_error_to_message(ts_file_open_error err) {
 	switch (err) {
 		case FILE_ERROR_TOO_MANY_OPEN_FILES_PROCESS: return u8"Too many open files";
 		case FILE_ERROR_TOO_MANY_OPEN_FILES_SYSTEM: return u8"Too many open files";
@@ -207,8 +207,8 @@ utf8_int8_t* _ts_file_error_to_message(ts_file_open_error err) {
 		case FILE_ERROR_STALE: return u8"Server file moved";
 		case FILE_ERROR_GENERIC: return u8"Failed to open file";
 		case FILE_ERROR_TOO_BIG: return u8"File too big";
+		default: return "";
 	}
-	return "";
 }
 
 void _ts_create_file_error_rows() {
@@ -260,9 +260,9 @@ void _ts_create_text_match_rows() {
 		ImGui::Text("#%d", item+1);
 					
 		ImGui::TableNextColumn();
-		ImGui::Text("%.*s", file->word_match_offset, file->line_info);
+		ImGui::Text("%.*s", (int)file->word_match_offset, file->line_info);
 		ImGui::SameLine(0.0f, 0.0f);
-		ImGui::TextColored({255,0,0,255}, "%.*s", file->word_match_length, file->line_info + file->word_match_offset); 
+		ImGui::TextColored({255,0,0,255}, "%.*s", (int)file->word_match_length, file->line_info + file->word_match_offset); 
 		ImGui::SameLine(0.0f, 0.0f);
 		ImGui::TextUnformatted(file->line_info + file->word_match_offset + file->word_match_length);	
 		
@@ -331,7 +331,7 @@ void ts_create_gui(int window_w, int window_h) {
 			if (ifd::FileDialog::Instance().IsDone("FolderSelectDialog", window_w, window_h)) {
 				if (ifd::FileDialog::Instance().HasResult()) {
 					std::string res = ifd::FileDialog::Instance().GetResult().u8string();
-					snprintf(path_buffer, MAX_INPUT_LENGTH, res.c_str());
+					snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", res.c_str());
 				}
 				ifd::FileDialog::Instance().Close();
 			}
@@ -383,12 +383,12 @@ void ts_create_gui(int window_w, int window_h) {
 			if (current_search_result->search_completed && (current_search_result->files.length == 0 || current_search_result->match_count == 0)) {
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
-				ImGui::Text("");			
+				ImGui::Text("%s", "");			
 				ImGui::TableNextColumn();
 
-				char* msg = "No matches found.";
+				const char* msg = "No matches found.";
 				ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(msg).x)/2.0f);
-				ImGui::TextWrapped(msg);
+				ImGui::TextWrapped("%s", msg);
 			}		
 		
 			ImGui::EndTable();
@@ -398,7 +398,7 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGui::Separator();
 		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 20.0f);
 		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 20.0f);
-		ImGui::TextWrapped(help_text);
+		ImGui::TextWrapped("%s", help_text);
 	}
 	pos_y += result_area_height;
 

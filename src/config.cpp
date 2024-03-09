@@ -14,18 +14,25 @@ int max_file_size = 100; // in MBs
 
 static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
 {
-    ImGuiWindowSettings* settings = (ImGuiWindowSettings*)entry;
     uint8_t path[MAX_INPUT_LENGTH];
 	uint8_t filter[MAX_INPUT_LENGTH];
 	uint8_t query[MAX_INPUT_LENGTH];
 
-	int threads, maxSize;
+	int threads = 1, maxSize = 100;
 
-    if (sscanf(line, "Path=%s", &path) == 1) { strcpy(path_buffer, (char*)path); }
-    else if (sscanf(line, "Filter=%s", &filter) == 1) { strcpy(filter_buffer, (char*)filter); }
-    else if (sscanf(line, "Query=%s", &query) == 1) { strcpy(query_buffer, (char*)query); }
+#if defined(_WIN32)
+    if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH); }
+    else if (sscanf_s(line, "Filter=%s", (char*)&filter, MAX_INPUT_LENGTH) == 1) { strncpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter, MAX_INPUT_LENGTH); }
+    else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH); }
+	else if (sscanf_s(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
+	else if (sscanf_s(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
+#elif defined(__linux__)
+	if (sscanf(line, "Path=%s", (char*)&path) == 1) { strncpy(path_buffer, (char*)path, MAX_INPUT_LENGTH); }
+    else if (sscanf(line, "Filter=%s", (char*)&filter) == 1) { strncpy(filter_buffer, (char*)filter, MAX_INPUT_LENGTH); }
+    else if (sscanf(line, "Query=%s", (char*)&query) == 1) { strncpy(query_buffer, (char*)query, MAX_INPUT_LENGTH); }
 	else if (sscanf(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
 	else if (sscanf(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
+#endif
 }
 
 static void _ts_config_WriteAll(ImGuiContext* ctx, ImGuiSettingsHandler* handler, ImGuiTextBuffer* buf)

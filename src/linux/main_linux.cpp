@@ -32,7 +32,7 @@ static const char* _ts_platform_get_config_file_path(char* buffer) {
 	char* env = getenv("HOME");
 	char path_buf[MAX_INPUT_LENGTH];
 	snprintf(path_buf, MAX_INPUT_LENGTH, "%s%s", env, "/text-search/");
-	snprintf(buffer, MAX_INPUT_LENGTH, "%s%s", path_buf, "imgui.ini");
+	snprintf(buffer, MAX_INPUT_LENGTH, "%.*s%s", MAX_INPUT_LENGTH-10, path_buf, "imgui.ini");
 	if (!ts_platform_dir_exists(path_buf)) {
 		mkdir(path_buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
@@ -232,10 +232,10 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 	struct dirent *dir;
 	d = opendir(search_dir);
 	if (d) {
-		chdir(search_dir);
+		if (chdir(search_dir) != 0) return;
 		while ((dir = readdir(d)) != NULL) {
 			if (result->cancel_search) return;
-			chdir(search_dir);
+			if (chdir(search_dir) != 0) continue;
 			
 			if (dir->d_type == DT_DIR)
 			{
@@ -254,7 +254,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 			else if (dir->d_type == DT_REG || dir->d_type == DT_UNKNOWN)
 			{
 				char *matched_filter = 0;
-				if (ts_filter_matches(&result->filters, dir->d_name, &matched_filter) == -1) {
+				if (ts_filter_matches(&result->filters, dir->d_name, &matched_filter) == (size_t)-1) {
 					continue;
 				}
 				(void)matched_filter;
