@@ -261,7 +261,23 @@ void _ts_create_text_match_rows() {
 		ImGui::Text("#%d", item+1);
 					
 		ImGui::TableNextColumn();
-		ImGui::Text("%.*s", (int)file->word_match_offset, file->line_info);
+		
+		utf8_int32_t iter_ch = 0;
+		utf8_int8_t* iter = file->line_info;
+		size_t whitespace_size = 0;
+		while ((iter = utf8codepoint(iter, &iter_ch)) && iter_ch)
+		{
+			if (iter_ch == ' ') {
+				ImGui::TextColored({0,0,0,0.2f}, "%s", "→");
+				ImGui::SameLine(0.0f, 5.0f);
+				whitespace_size++;
+			}
+			else {
+				break;
+			}
+		}
+
+		ImGui::Text("%.*s", (int)(file->word_match_offset - whitespace_size), file->line_info + whitespace_size);
 		ImGui::SameLine(0.0f, 0.0f);
 		ImGui::TextColored({255,0,0,255}, "%.*s", (int)file->word_match_length, file->line_info + file->word_match_offset); 
 		ImGui::SameLine(0.0f, 0.0f);

@@ -10,11 +10,23 @@ namespace ImGui {
             ImGuiIO& io = ImGui::GetIO();
 			ImFontConfig config;
 			config.MergeMode = true;
+
+			static const ImWchar rr[] =
+			{
+				0x2192, 0x2193, // Basic Latin + Latin Supplement
+				0,
+			};
+
+			ImFontGlyphRangesBuilder builder;
+			ImVector<ImWchar> ranges;
+			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
+			builder.AddRanges(rr);
+			builder.BuildRanges(&ranges);
 			
 			ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
 				SourceSansProRegular_compressed_data, 
 				SourceSansProRegular_compressed_size, 
-				size, nullptr, nullptr);
+				size, nullptr, ranges.Data);
 
 			IM_ASSERT(font != nullptr);
 			io.FontDefault = font;
