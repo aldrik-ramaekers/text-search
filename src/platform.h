@@ -35,5 +35,8 @@ bool 			ts_platform_dir_exists(utf8_int8_t* dir);
 ts_file_content ts_platform_read_file(char *path, const char *mode);
 void 			ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir = nullptr);
 uint64_t 		ts_platform_get_time(uint64_t compare = 0); // if compare is not 0, return difference between timestamp and now, in milliseconds.
+bool			ts_platform_copy_to_clipboard(utf8_int8_t* str);
+void			ts_platform_open_file_as(utf8_int8_t* str);
+void			ts_platform_open_file_in_folder(utf8_int8_t* file);
 
 #endif

@@ -256,9 +256,12 @@ void _ts_create_text_match_rows() {
 			ImGui::TableHeader(match_info_txt);
 		}
 
+		char match_nr[20];
+		snprintf(match_nr, 20, "#%d", item+1);
+
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
-		ImGui::Text("#%d", item+1);
+		ImGui::Text("%s", match_nr);
 					
 		ImGui::TableNextColumn();
 		
@@ -282,7 +285,37 @@ void _ts_create_text_match_rows() {
 		ImGui::TextColored({255,0,0,255}, "%.*s", (int)file->word_match_length, file->line_info + file->word_match_offset); 
 		ImGui::SameLine(0.0f, 0.0f);
 		ImGui::TextUnformatted(file->line_info + file->word_match_offset + file->word_match_length);	
-		
+
+		ImGui::SameLine();
+		ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+
+		static bool context_menu_open = false;
+		if (ImGui::IsItemClicked(ImGuiPopupFlags_MouseButtonRight)) {
+			ImGui::OpenPopup(match_nr);
+			context_menu_open = true;
+		}
+
+		if (ImGui::BeginPopup(match_nr)) {
+#if defined(_WIN32)
+			if (ImGui::MenuItem("Open as"))
+			{
+				ts_platform_open_file_as(file->file->path);
+			}
+			if (ImGui::MenuItem("Open folder")) {
+				ts_platform_open_file_in_folder(file->file->path); 
+			}
+#endif
+			if (ImGui::MenuItem("Copy path"))
+			{
+				ts_platform_copy_to_clipboard(file->file->path);
+			}
+			if (ImGui::MenuItem("Copy line"))
+			{
+				ts_platform_copy_to_clipboard(file->line_info);
+			}
+			ImGui::EndPopup();
+		}
+
 		ImGui::TableNextColumn();
 		ImGui::Text("line %d", file->line_nr);	
 	}

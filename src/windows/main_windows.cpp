@@ -14,6 +14,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#include <pathcch.h>
 #include <windows.h>
 #include <Shlobj.h>
 #include <GL/GL.h>
@@ -76,6 +77,8 @@ uint64_t ts_platform_get_time(uint64_t compare)
 
 int main(int, char**)
 {
+	CoInitializeEx(0, COINIT_MULTITHREADED|COINIT_DISABLE_OLE1DDE);
+
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
@@ -162,6 +165,8 @@ int main(int, char**)
     wglDeleteContext(g_hRC);
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
+
+	CoUninitialize();
 
     return 0;
 }
@@ -267,7 +272,6 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 		else
 		{
 			result.file_error = FILE_ERROR_GENERIC;
-			printf("ERROR: %d %s\n", errno, path);
 		}
 		
 		goto done_failure;
@@ -383,4 +387,59 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 	while (FindNextFile(handle, (LPWIN32_FIND_DATAW)&file_info) != 0);
 	
 	FindClose(handle);
+}
+
+void ts_platform_open_file_as(utf8_int8_t* str) {
+	OPENASINFO info;
+
+	wchar_t convstr[MAX_INPUT_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, str, -1, convstr, MAX_INPUT_LENGTH);
+
+	info.pcszFile = convstr;
+	info.pcszClass = nullptr;
+	info.oaifInFlags = OAIF_EXEC;
+
+	SHOpenWithDialog(nullptr, &info);
+}
+
+void ts_platform_open_file_in_folder(utf8_int8_t* file) {
+
+	wchar_t convstr[MAX_INPUT_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, file, -1, convstr, MAX_INPUT_LENGTH);
+	PathCchRemoveFileSpec(convstr, MAX_INPUT_LENGTH);
+	ShellExecuteW(NULL, L"open", convstr, NULL, NULL, SW_SHOWDEFAULT);
+}
+
+bool ts_platform_copy_to_clipboard(utf8_int8_t* str) {
+	HANDLE clipboard_data;
+	
+	wchar_t convstr[MAX_INPUT_LENGTH];
+	memset(convstr, 0, sizeof(convstr));
+	int result = MultiByteToWideChar(CP_UTF8, 0, str, -1, convstr, MAX_INPUT_LENGTH);
+	
+	size_t len = result;
+	size_t size = (len+1) * sizeof(wchar_t);
+	LPSTR dst;
+	
+	if (!OpenClipboard(NULL))
+		return false;
+	
+	clipboard_data = GlobalAlloc(GMEM_MOVEABLE, size);
+	if (clipboard_data)
+	{
+		dst = (LPSTR)GlobalLock(clipboard_data);
+		memmove(dst, convstr, size);
+		dst[len*2] = 0;
+		GlobalUnlock(clipboard_data);
+		
+		SetClipboardData(CF_UNICODETEXT, clipboard_data);
+	}
+	else
+	{
+		CloseClipboard();
+		return false;
+	}
+	
+	CloseClipboard();
+	return true;
 }

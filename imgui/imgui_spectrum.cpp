@@ -13,7 +13,7 @@ namespace ImGui {
 
 			static const ImWchar rr[] =
 			{
-				0x2192, 0x2193, // Basic Latin + Latin Supplement
+				0x2192, 0x2193, // → character.
 				0,
 			};
 
