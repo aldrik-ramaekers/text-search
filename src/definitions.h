@@ -1,7 +1,7 @@
 #ifndef INCLUDE_EMBEDDED_RESOURCES
 #define INCLUDE_EMBEDDED_RESOURCES
 
-#define TS_VERSION "v2.0.0"
+#define TS_VERSION "v2.1.0"
 
 // Find these with dumpbin [objfile] /SYMBOLS
 extern "C"
