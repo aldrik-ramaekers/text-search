@@ -5,7 +5,7 @@ FLAGS="-g3 -Wall"
 
 if [[ $* == *-release* ]]; then
 	OUT_DIR="bin/release"
-	FLAGS="-g3 -O3"
+	FLAGS="-O3"
 fi
 
 mkdir -p $OUT_DIR

@@ -311,8 +311,7 @@ static void *_ts_search_thread(void *args)
 	ts_search_result *new_result = (ts_search_result *)args;
 	if (new_result->search_text == nullptr) goto finish_early;
 
-keep_going:;
-	while (new_result->file_list_read_cursor < new_result->files.length)
+	while (new_result->file_list_read_cursor < new_result->files.length || !new_result->done_finding_files)
 	{
 		ts_thread_sleep(10);
 		if (new_result->cancel_search)
@@ -345,10 +344,7 @@ keep_going:;
 		free(content.content);
 	}
 
-	if (!new_result->done_finding_files)
-		goto keep_going;
-
-finish_early:;
+finish_early:
 	ts_mutex_lock(&new_result->files.mutex);
 	new_result->completed_match_threads++;
 	ts_mutex_unlock(&new_result->files.mutex);
