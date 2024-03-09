@@ -29,9 +29,12 @@ bool program_running = true;
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
-	snprintf(buffer, MAX_INPUT_LENGTH, "%s", "/etc/opt/text-search/imgui.ini");
-	if (!ts_platform_dir_exists(buffer)) {
-		mkdir(buffer, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	char* env = getenv("HOME");
+	char path_buf[MAX_INPUT_LENGTH];
+	snprintf(path_buf, MAX_INPUT_LENGTH, "%s%s", env, "/text-search/");
+	snprintf(buffer, MAX_INPUT_LENGTH, "%s%s", path_buf, "imgui.ini");
+	if (!ts_platform_dir_exists(path_buf)) {
+		mkdir(path_buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	return buffer;
 }
