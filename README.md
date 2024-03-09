@@ -1,5 +1,5 @@
 # text-search
-Text-search is a GUI Program to find files and text within files for x64 Windows. <br>
+Text-search is a GUI Program to find files and text within files for x64 Windows and x64 Linux. <br>
 text-search is a single and small executable.
 
 ![Screenshot_1](https://github.com/aldrik-ramaekers/text-search/assets/22401766/35c40946-58ee-4079-a1ec-b925075dad16)
@@ -12,4 +12,4 @@ External libraries used:
 - ImFileDialog
 
 # Config
-config.ini is stored at __%appdata%/local/text-search/config.ini__
+config.ini is stored at __%appdata%/local/text-search/config.ini__ and __~/text-search/config.ini__
