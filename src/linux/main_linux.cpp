@@ -269,6 +269,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 				f->path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 				f->match_count = 0;
 				f->error = 0;
+				f->collapsed = false;
 				strcpy(f->path, complete_file_path);
 				
 				ts_mutex_lock(&result->files.mutex);

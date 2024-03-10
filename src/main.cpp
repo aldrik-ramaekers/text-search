@@ -246,7 +246,17 @@ void _ts_create_text_match_rows() {
 
 			ImGui::TableNextRow();
 			ImGui::TableNextColumn();
-			ImGui::TableHeader("");
+			
+			ImGui::SetCursorPosX(5);
+			ImGui::PushStyleColor(ImGuiCol_Text, {0,0,0,0.1f});
+			ImGui::TableHeader(file->file->collapsed ? "▶" : "▼");
+
+			ImGui::SameLine();
+			ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+			if (ImGui::IsItemClicked(ImGuiPopupFlags_MouseButtonLeft)) {
+				file->file->collapsed = !file->file->collapsed;
+			}
+			ImGui::PopStyleColor();
 
 			ImGui::TableNextColumn();
 			ImGui::TableHeader(file->file->path);
@@ -255,6 +265,8 @@ void _ts_create_text_match_rows() {
 			snprintf(match_info_txt, 20, "%d match(es)", file->file->match_count);
 			ImGui::TableHeader(match_info_txt);
 		}
+
+		if (file->file->collapsed) continue;
 
 		char match_nr[20];
 		snprintf(match_nr, 20, "#%d", item+1);

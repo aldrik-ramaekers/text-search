@@ -1,5 +1,3 @@
-@REM Build for Visual Studio compiler. Run your copy of vcvars32.bat or vcvarsall.bat to setup command-line compiler.
-set __VSCMD_ARG_no_logo=""
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 @set OUT_DIR=bin\\debug
 @set OUT_EXE=text-search

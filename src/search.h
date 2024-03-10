@@ -10,6 +10,7 @@ typedef struct t_ts_found_file
 	utf8_int8_t *path;
 	int match_count;
 	int error;
+	bool collapsed;
 } ts_found_file;
 
 typedef struct t_ts_search_result

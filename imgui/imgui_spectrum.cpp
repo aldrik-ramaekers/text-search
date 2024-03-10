@@ -11,16 +11,23 @@ namespace ImGui {
 			ImFontConfig config;
 			config.MergeMode = true;
 
-			static const ImWchar rr[] =
+			static const ImWchar arrow_r[] =
 			{
 				0x2192, 0x2193, // → character.
+				0,
+			};
+
+			static const ImWchar triangles[] =
+			{
+				0x25B6, 0x25BC, // ▶ ▼ characters.
 				0,
 			};
 
 			ImFontGlyphRangesBuilder builder;
 			ImVector<ImWchar> ranges;
 			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-			builder.AddRanges(rr);
+			builder.AddRanges(arrow_r);
+			builder.AddRanges(triangles);
 			builder.BuildRanges(&ranges);
 			
 			ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
@@ -96,8 +103,8 @@ namespace ImGui {
 		    colors[ImGuiCol_Border] = ColorConvertU32ToFloat4(Color(0xCCCCCC));
 			colors[ImGuiCol_MenuBarBg] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
 			colors[ImGuiCol_Header] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
-            colors[ImGuiCol_HeaderHovered] = ColorConvertU32ToFloat4(Spectrum::GRAY200);
-            colors[ImGuiCol_HeaderActive] = ColorConvertU32ToFloat4(Spectrum::GRAY200);
+            colors[ImGuiCol_HeaderHovered] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
+            colors[ImGuiCol_HeaderActive] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
 			colors[ImGuiCol_TableBorderStrong] = ColorConvertU32ToFloat4(Color(0xE7E7E7));
 			colors[ImGuiCol_TableBorderLight] = ColorConvertU32ToFloat4(Color(0xE7E7E7));
 			colors[ImGuiCol_TableHeaderBg] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
