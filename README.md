@@ -12,4 +12,4 @@ External libraries used:
 - ImFileDialog
 
 # Config
-config.ini is stored at __%appdata%/local/text-search/config.ini__ and __~/text-search/config.ini__
+config.ini is stored at __%appdata%/local/text-search/config.ini__ / __~/text-search/config.ini__ / __/Library/Application Support/text-search/config.ini__
