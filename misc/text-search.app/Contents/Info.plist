@@ -15,7 +15,7 @@
     <key>CFBundleSignature</key>
     <string>FOOZ</string>
     <key>CFBundleVersion</key>
-    <string>2.1.0</string>
+    <string>2.2.0</string>
     <key>CFBundleIconFile</key>
 	<string>text-search.icns</string>
 </dict>
