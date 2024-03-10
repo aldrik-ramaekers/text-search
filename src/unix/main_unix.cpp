@@ -29,6 +29,7 @@ bool program_running = true;
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
+	// TODO: this can be easily merged.
 #ifdef __APPLE__
 	char* env = getenv("HOME");
 	char path_buf[MAX_INPUT_LENGTH];
@@ -45,7 +46,6 @@ static const char* _ts_platform_get_config_file_path(char* buffer) {
 	char path_buf[MAX_INPUT_LENGTH];
 	snprintf(path_buf, MAX_INPUT_LENGTH, "%s%s", env, "/text-search/");
 	snprintf(buffer, MAX_INPUT_LENGTH, "%.*s%s", MAX_INPUT_LENGTH-10, path_buf, "imgui.ini");
-	printf();
 	if (!ts_platform_dir_exists(path_buf)) {
 		mkdir(path_buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
