@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Text-Search</string>
+    <key>CFBundleExecutable</key>
+    <string>text-search</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.aldrikramaekers.text-search</string>
+    <key>CFBundleName</key>
+    <string>Text-Search</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleSignature</key>
+    <string>FOOZ</string>
+    <key>CFBundleVersion</key>
+    <string>2.1.0</string>
+    <key>CFBundleIconFile</key>
+	<string>text-search.icns</string>
+</dict>
+</plist>
