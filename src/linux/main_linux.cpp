@@ -295,3 +295,11 @@ uint64_t ts_platform_get_time(uint64_t compare) {
 
 	return result;
 }
+
+void ts_platform_open_file_as(utf8_int8_t* str) {
+	// not implemented
+}
+
+void ts_platform_open_file_in_folder(utf8_int8_t* file) {
+	// not implemented
+}

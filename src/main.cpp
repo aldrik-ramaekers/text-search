@@ -289,10 +289,8 @@ void _ts_create_text_match_rows() {
 		ImGui::SameLine();
 		ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
 
-		static bool context_menu_open = false;
 		if (ImGui::IsItemClicked(ImGuiPopupFlags_MouseButtonRight)) {
 			ImGui::OpenPopup(match_nr);
-			context_menu_open = true;
 		}
 
 		if (ImGui::BeginPopup(match_nr)) {
@@ -307,11 +305,11 @@ void _ts_create_text_match_rows() {
 #endif
 			if (ImGui::MenuItem("Copy path"))
 			{
-				ts_platform_copy_to_clipboard(file->file->path);
+				ImGui::SetClipboardText(file->file->path);
 			}
 			if (ImGui::MenuItem("Copy line"))
 			{
-				ts_platform_copy_to_clipboard(file->line_info);
+				ImGui::SetClipboardText(file->line_info);
 			}
 			ImGui::EndPopup();
 		}

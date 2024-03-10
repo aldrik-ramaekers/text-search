@@ -432,37 +432,3 @@ void ts_platform_open_file_in_folder(utf8_int8_t* file) {
 	PathCchRemoveFileSpec(convstr, MAX_INPUT_LENGTH);
 	ShellExecuteW(NULL, L"open", convstr, NULL, NULL, SW_SHOWDEFAULT);
 }
-
-bool ts_platform_copy_to_clipboard(utf8_int8_t* str) {
-	HANDLE clipboard_data;
-	
-	wchar_t convstr[MAX_INPUT_LENGTH];
-	memset(convstr, 0, sizeof(convstr));
-	int result = MultiByteToWideChar(CP_UTF8, 0, str, -1, convstr, MAX_INPUT_LENGTH);
-	
-	size_t len = result;
-	size_t size = (len+1) * sizeof(wchar_t);
-	LPSTR dst;
-	
-	if (!OpenClipboard(NULL))
-		return false;
-	
-	clipboard_data = GlobalAlloc(GMEM_MOVEABLE, size);
-	if (clipboard_data)
-	{
-		dst = (LPSTR)GlobalLock(clipboard_data);
-		memmove(dst, convstr, size);
-		dst[len*2] = 0;
-		GlobalUnlock(clipboard_data);
-		
-		SetClipboardData(CF_UNICODETEXT, clipboard_data);
-	}
-	else
-	{
-		CloseClipboard();
-		return false;
-	}
-	
-	CloseClipboard();
-	return true;
-}
