@@ -20,7 +20,7 @@ typedef struct t_ts_thread
 	int valid;
 } ts_thread;
 
-#elif defined(__linux__)
+#elif defined(__linux__) || defined(__APPLE__)
 #include <pthread.h>
 #include <unistd.h>
 #include <sys/types.h>

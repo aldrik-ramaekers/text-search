@@ -1,7 +1,7 @@
 #include "../imgui/imgui.h"
 #include "../imgui/imgui_spectrum.h"
 #include "../imgui/imgui_impl_opengl3_loader.h"
-#include "../imfiledialog/imFileDialog.h"
+#include "../imfiledialog/ImFileDialog.h"
 #include "../utf8.h"
 #include "widgets/imgui_toggle.h"
 #include "definitions.h"

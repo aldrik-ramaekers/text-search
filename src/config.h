@@ -4,6 +4,8 @@
 #define MAX_INPUT_LENGTH 32767
 #elif defined(__linux__)
 #define MAX_INPUT_LENGTH 4096
+#elif defined(__APPLE__)
+#define MAX_INPUT_LENGTH 1024
 #endif
 
 #define MAX_ERROR_MESSAGE_LENGTH (MAX_INPUT_LENGTH)
