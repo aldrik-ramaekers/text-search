@@ -99,6 +99,13 @@ static void _ts_create_popups() {
 				ImGui::TreePop();
 			}
 
+			if (ImGui::TreeNode("https://github.com/glfw/glfw")) {
+				char* license = (char*)_binary_glfw_LICENSE_start;
+				int64_t license_length = _binary_glfw_LICENSE_end - _binary_glfw_LICENSE_start;
+				ImGui::Text("%.*s", (int)license_length, license);
+				ImGui::TreePop();
+			}
+
 			if (ImGui::TreeNode("https://github.com/nothings/stb/blob/master/stb_image.h")) {
 				ImGui::Text("public domain");
 				ImGui::TreePop();

@@ -11,6 +11,9 @@ extern unsigned char* _binary_LICENSE_end;
 extern unsigned char* _binary_imgui_LICENSE_start;
 extern unsigned char* _binary_imgui_LICENSE_end;
 
+extern unsigned char* _binary_glfw_LICENSE_start;
+extern unsigned char* _binary_glfw_LICENSE_end;
+
 extern unsigned char* _binary_imfiledialog_LICENSE_start;
 extern unsigned char* _binary_imfiledialog_LICENSE_end;
 

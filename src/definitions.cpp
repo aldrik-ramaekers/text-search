@@ -8,6 +8,10 @@ unsigned char* _binary_LICENSE_end = _binary_LICENSE_start + LICENSE_len;
 unsigned char* _binary_imgui_LICENSE_start = imgui_LICENSE;
 unsigned char* _binary_imgui_LICENSE_end = imgui_LICENSE + imgui_LICENSE_len;
 
+#include "../misc/generated/glfw_LICENSE.h"
+unsigned char* _binary_glfw_LICENSE_start = glfw_LICENSE;
+unsigned char* _binary_glfw_LICENSE_end = glfw_LICENSE + glfw_LICENSE_len;
+
 #include "../misc/generated/imfiledialog_LICENSE.h"
 unsigned char* _binary_imfiledialog_LICENSE_start = imfiledialog_LICENSE;
 unsigned char* _binary_imfiledialog_LICENSE_end = imfiledialog_LICENSE + imfiledialog_LICENSE_len;
