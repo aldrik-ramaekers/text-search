@@ -20,7 +20,9 @@
 #include <GL/GL.h>
 #include <tchar.h>
 
+#ifdef TS_RELEASE
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+#endif
 
 #define IDI_LOGO 123
 
@@ -75,6 +77,26 @@ uint64_t ts_platform_get_time(uint64_t compare)
 	return stamp.QuadPart;
 }
 
+static void _ts_platform_draw_frame() {
+	ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.00f);
+
+	ImGui_ImplOpenGL3_NewFrame();
+	ImGui_ImplWin32_NewFrame();
+	ImGui::NewFrame();
+
+	ts_create_gui(g_Width, g_Height);
+
+	// Rendering
+	ImGui::Render();
+	glViewport(0, 0, g_Width, g_Height);
+	glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
+	glClear(GL_COLOR_BUFFER_BIT);
+	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+	// Present
+	::SwapBuffers(g_MainWindow.hDC);
+}
+
 int main(int, char**)
 {
 	CoInitializeEx(0, COINIT_MULTITHREADED|COINIT_DISABLE_OLE1DDE);
@@ -125,8 +147,6 @@ int main(int, char**)
 	ts_load_images();
 	ts_load_config();
 
-    ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    bool done = false;
     while (program_running)
     {
         MSG msg;
@@ -140,21 +160,7 @@ int main(int, char**)
         if (!program_running)
             break;
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplWin32_NewFrame();
-        ImGui::NewFrame();
-
-        ts_create_gui(g_Width, g_Height);
-
-        // Rendering
-        ImGui::Render();
-        glViewport(0, 0, g_Width, g_Height);
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);
-        glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-        // Present
-        ::SwapBuffers(g_MainWindow.hDC);
+		_ts_platform_draw_frame();
     }
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -203,33 +209,50 @@ void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data)
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+	static bool moveResizeLoop;
+
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
         return true;
 
     switch (msg)
     {
-	case WM_GETMINMAXINFO:
-    {
-        MINMAXINFO *minmax = (MINMAXINFO *)lParam;
-        minmax->ptMinTrackSize.x = 800;
-        minmax->ptMinTrackSize.y = 600;
-        break;
-    }
-    case WM_SIZE:
-        if (wParam != SIZE_MINIMIZED)
-        {
-            g_Width = LOWORD(lParam);
-            g_Height = HIWORD(lParam);
-        }
-        return 0;
-    case WM_SYSCOMMAND:
-        if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
-            return 0;
-        break;
-    case WM_DESTROY:
-        ::PostQuitMessage(0);
-        return 0;
-    }
+		case WM_GETMINMAXINFO: {
+			MINMAXINFO *minmax = (MINMAXINFO *)lParam;
+			minmax->ptMinTrackSize.x = 800;
+			minmax->ptMinTrackSize.y = 600;
+			break;
+		}
+		case WM_SIZE: {
+			if (wParam != SIZE_MINIMIZED)
+			{
+				g_Width = LOWORD(lParam);
+				g_Height = HIWORD(lParam);
+			}
+			return 0;
+		}
+		case WM_SYSCOMMAND: {
+			if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
+				return 0;
+		} break;
+		case WM_DESTROY: {
+			::PostQuitMessage(0);
+			return 0;
+		} break;
+		case WM_ENTERSIZEMOVE:
+		case WM_ENTERMENULOOP: {
+			SetTimer(hWnd, (UINT_PTR)&moveResizeLoop, USER_TIMER_MINIMUM, NULL);
+		} break;
+		case WM_TIMER: {
+			if (wParam == (UINT_PTR)&moveResizeLoop) {
+				_ts_platform_draw_frame();
+				return 0;
+			}
+		} break;
+		case WM_EXITSIZEMOVE:
+		case WM_EXITMENULOOP: {
+			KillTimer(hWnd, (UINT_PTR)&moveResizeLoop);
+		} break;
+	}
     return ::DefWindowProcW(hWnd, msg, wParam, lParam);
 }
 
