@@ -1,3 +1,4 @@
 bin/*
 TODO
 .vscode/*
+.DS_Store

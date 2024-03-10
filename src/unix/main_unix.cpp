@@ -29,14 +29,28 @@ bool program_running = true;
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
+#ifdef __APPLE__
+	char* env = getenv("HOME");
+	char path_buf[MAX_INPUT_LENGTH];
+	snprintf(path_buf, MAX_INPUT_LENGTH, "%s%s", env, "/Library/Application Support/text-search");
+	snprintf(buffer, MAX_INPUT_LENGTH, "%s%s", path_buf, "/imgui.ini");
+
+	if (!ts_platform_dir_exists(path_buf)) {
+		
+		mkdir(path_buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+	}
+	return buffer;
+#else
 	char* env = getenv("HOME");
 	char path_buf[MAX_INPUT_LENGTH];
 	snprintf(path_buf, MAX_INPUT_LENGTH, "%s%s", env, "/text-search/");
 	snprintf(buffer, MAX_INPUT_LENGTH, "%.*s%s", MAX_INPUT_LENGTH-10, path_buf, "imgui.ini");
+	printf();
 	if (!ts_platform_dir_exists(path_buf)) {
 		mkdir(path_buf, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 	}
 	return buffer;
+#endif
 }
 
 static void glfw_error_callback(int error, const char* description)

@@ -115,12 +115,6 @@ void ts_mutex_destroy(ts_mutex *ts_mutex)
 	pthread_mutex_destroy(&ts_mutex->mutex);
 }
 
-int ts_thread_get_id()
-{
-	//return (int)syscall(SYS_gettid);
-	return -1;
-}
-
 void ts_thread_sleep(int microseconds)
 {
 	usleep(microseconds);

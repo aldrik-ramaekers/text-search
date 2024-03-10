@@ -43,7 +43,6 @@ void 		ts_thread_join(ts_thread *ts_thread);
 bool 		ts_thread_tryjoin(ts_thread *ts_thread);
 void 		ts_thread_detach(ts_thread *ts_thread);
 void 		ts_thread_stop(ts_thread *ts_thread);
-int 		ts_thread_get_id();
 void 		ts_thread_sleep(int microseconds);
 void 		ts_thread_exit();
 
