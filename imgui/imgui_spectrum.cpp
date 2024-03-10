@@ -103,8 +103,8 @@ namespace ImGui {
 		    colors[ImGuiCol_Border] = ColorConvertU32ToFloat4(Color(0xCCCCCC));
 			colors[ImGuiCol_MenuBarBg] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
 			colors[ImGuiCol_Header] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
-            colors[ImGuiCol_HeaderHovered] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
-            colors[ImGuiCol_HeaderActive] = ColorConvertU32ToFloat4(Spectrum::GRAY300);
+            colors[ImGuiCol_HeaderHovered] = ColorConvertU32ToFloat4(Spectrum::GRAY200);
+            colors[ImGuiCol_HeaderActive] = ColorConvertU32ToFloat4(Spectrum::GRAY200);
 			colors[ImGuiCol_TableBorderStrong] = ColorConvertU32ToFloat4(Color(0xE7E7E7));
 			colors[ImGuiCol_TableBorderLight] = ColorConvertU32ToFloat4(Color(0xE7E7E7));
 			colors[ImGuiCol_TableHeaderBg] = ColorConvertU32ToFloat4(Spectrum::GRAY300);

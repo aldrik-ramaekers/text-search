@@ -8,6 +8,9 @@
 #define MAX_INPUT_LENGTH 1024
 #endif
 
+#define AUTHOR "created by Aldrik Ramaekers"
+#define CONTACT "<aldrik.ramaekers@gmail.com>"
+
 #define MAX_ERROR_MESSAGE_LENGTH (MAX_INPUT_LENGTH)
 #define FILE_RESERVE_COUNT 1000
 

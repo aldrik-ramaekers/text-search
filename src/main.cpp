@@ -63,7 +63,7 @@ static void _ts_create_popups() {
 		ImGui::SetWindowSize({600, 420});
 
 		const char* name = "Text-Search";
-		const char* link = "created by Aldrik Ramaekers <aldrik.ramaekers@gmail.com>";
+		const char* link = AUTHOR " " CONTACT;
 
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - 64) / 2.0f);
 		ImGui::Image((void*)(intptr_t)img_logo.id, {64, 64});
@@ -72,7 +72,9 @@ static void _ts_create_popups() {
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(name).x)/2.0f);
 		ImGui::Text("%s", name);
 		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - ImGui::CalcTextSize(link).x)/2.0f);
-		ImGui::Text("%s", link);
+		ImGui::Text("%s", AUTHOR);
+		ImGui::SameLine();
+		ImGui::TextColored({0,0,0,0.4f}, "%s", CONTACT);
 		ImGui::Dummy({0, 20});
 		
 		if (ImGui::CollapsingHeader("License")) {
@@ -250,12 +252,6 @@ void _ts_create_text_match_rows() {
 			ImGui::SetCursorPosX(5);
 			ImGui::PushStyleColor(ImGuiCol_Text, {0,0,0,0.1f});
 			ImGui::TableHeader(file->file->collapsed ? "▶" : "▼");
-
-			ImGui::SameLine();
-			ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
-			if (ImGui::IsItemClicked(ImGuiPopupFlags_MouseButtonLeft)) {
-				file->file->collapsed = !file->file->collapsed;
-			}
 			ImGui::PopStyleColor();
 
 			ImGui::TableNextColumn();
@@ -264,6 +260,12 @@ void _ts_create_text_match_rows() {
 			ImGui::TableNextColumn();	
 			snprintf(match_info_txt, 20, "%d match(es)", file->file->match_count);
 			ImGui::TableHeader(match_info_txt);
+
+			ImGui::SameLine();
+			ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
+			if (ImGui::IsItemClicked(ImGuiPopupFlags_MouseButtonLeft)) {
+				file->file->collapsed = !file->file->collapsed;
+			}
 		}
 
 		if (file->file->collapsed) continue;
@@ -431,6 +433,7 @@ void ts_create_gui(int window_w, int window_h) {
 	{ // Results
 		ImGui::SetNextWindowPos({5, pos_y});
 
+		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::ColorConvertU32ToFloat4(0xEAEAEA));
 		if (ImGui::BeginTable("results-table", 3, ImGuiTableFlags_BordersH|ImGuiTableFlags_ScrollY|ImGuiTableFlags_RowBg|ImGuiTableFlags_SizingFixedFit,
 			{(float)window_w-7.0f, (float)result_area_height}))
 		{
@@ -442,13 +445,14 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableSetupColumn("Match", 0, line_w);			
 			ImGui::TableHeadersRow();
 
+			
 			if (current_search_result->search_text == nullptr) _ts_create_file_match_rows();
 			else _ts_create_text_match_rows();
 
 			if (current_search_result->search_completed && (current_search_result->files.length == 0 || current_search_result->match_count == 0)) {
 				ImGui::TableNextRow();
 				ImGui::TableNextColumn();
-				ImGui::Text("%s", "");			
+				ImGui::Text("%s", "");
 				ImGui::TableNextColumn();
 
 				const char* msg = "No matches found.";
@@ -458,6 +462,7 @@ void ts_create_gui(int window_w, int window_h) {
 		
 			ImGui::EndTable();
 		}
+		ImGui::PopStyleColor();
 	}
 	else { // Help text
 		ImGui::Separator();
