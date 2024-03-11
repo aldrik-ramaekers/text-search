@@ -91,6 +91,7 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->memory = ts_memory_bucket_init(megabytes(10));
 	new_result_buffer->prev_result = current_search_result;
 	new_result_buffer->timestamp = ts_platform_get_time();
+	new_result_buffer->is_saving = false;
 
 	new_result_buffer->files = ts_array_create(sizeof(ts_found_file));
 	new_result_buffer->files.reserve_jump = FILE_RESERVE_COUNT;
@@ -103,6 +104,7 @@ ts_search_result *ts_create_empty_search_result()
 	// filter buffers
 	new_result_buffer->directory_to_search = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
 	new_result_buffer->search_text = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
+	new_result_buffer->file_filter = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
 
 	return new_result_buffer;
 }
@@ -368,7 +370,7 @@ static void *_ts_list_files_thread(void *args)
 
 	// Use this thread to cleanup previous result.
 	if (info->prev_result) {
-		while (!info->prev_result->search_completed) {
+		while (!info->prev_result->search_completed && !info->prev_result->is_saving) {
 			ts_thread_sleep(10);
 		}
 		ts_destroy_result(info->prev_result);
@@ -407,6 +409,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 	ts_search_result *new_result = ts_create_empty_search_result();
 	snprintf(new_result->directory_to_search, MAX_INPUT_LENGTH, "%s", path);
 	snprintf(new_result->search_text, MAX_INPUT_LENGTH, "%s", query);
+	snprintf(new_result->file_filter, MAX_INPUT_LENGTH, "%s", filter);
 	new_result->filters = ts_get_filters(filter);
 	new_result->max_ts_thread_count = thread_count;
 	new_result->max_file_size = max_file_size;

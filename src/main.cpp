@@ -9,6 +9,7 @@
 #include "platform.h"
 #include "image.h"
 #include "config.h"
+#include "export.h"
 
 #include <stdio.h>
 
@@ -131,7 +132,7 @@ static void _ts_create_popups() {
 	}
 }
 
-static int _ts_create_menu() {
+static int _ts_create_menu(int window_w, int window_h) {
 	int menu_bar_h = 0;
 	ImGui::PushStyleColor(ImGuiCol_PopupBg, ImGui::Spectrum::Color(0xDDDDDD));
 	ImGui::PushStyleVar(ImGuiStyleVar_PopupBorderSize, 1.0f);
@@ -140,7 +141,9 @@ static int _ts_create_menu() {
 		if (ImGui::BeginMenu("File"))
 		{
 			//ImGui::MenuItem("Open", "CTRL+O");
-			//ImGui::MenuItem("Save", "CTRL+S");
+			if (ImGui::MenuItem("Save As")) {
+				ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
+			}
 			ImGui::Separator();
 			if (ImGui::MenuItem("Exit")) {
 				program_running = false;
@@ -166,6 +169,14 @@ static int _ts_create_menu() {
 	ImGui::PopStyleColor();
 
 	_ts_create_popups();
+
+	if (ifd::FileDialog::Instance().IsDone("FileSaveAsDialog", window_w, window_h)) {
+		if (ifd::FileDialog::Instance().HasResult()) {
+			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+			ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
+		}
+		ifd::FileDialog::Instance().Close();
+	}
 
 	return menu_bar_h;
 }
@@ -356,7 +367,7 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGuiWindowFlags_MenuBar);
 	ImGui::PopStyleVar();
 
-	int menu_bar_h = _ts_create_menu();
+	int menu_bar_h = _ts_create_menu(window_w, window_h);
 
 	float pos_y = 0;
 	pos_y += menu_bar_h + 15.0f;
