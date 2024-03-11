@@ -25,6 +25,7 @@ void ts_create_gui(int window_w, int window_h);
 void ts_load_images();
 void ts_init();
 
+GLFWwindow* glfw_window;
 bool program_running = true;
 
 char config_path[MAX_INPUT_LENGTH];
@@ -62,8 +63,9 @@ static void glfw_error_callback(int error, const char* description)
 int main(int, char**)
 {
     glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit())
+    if (!glfwInit()) {
         return 1;
+	}
 
 	ts_init();
 
@@ -95,6 +97,7 @@ int main(int, char**)
     if (window == nullptr) {
         return 1;
 	}
+	glfw_window = window;
 	
 	glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);
@@ -165,7 +168,7 @@ bool ts_platform_dir_exists(utf8_int8_t* path) {
 }
 
 void ts_platform_set_window_title(utf8_int8_t* str) {
-	// TODO
+	glfwSetWindowTitle(glfw_window, str);
 }
 
 ts_file_content ts_platform_read_file(char *path, const char *mode) {

@@ -3,6 +3,19 @@
 #include "config.h"
 #include <stdio.h>
 
+#ifndef _WIN32
+#include <errno.h>
+static int fopen_s(FILE **f, const char *name, const char *mode) {
+    int ret = 0;
+    assert(f);
+    *f = fopen(name, mode);
+    /* Can't be sure about 1-to-1 mapping of errno and MS' errno_t */
+    if (!*f)
+        ret = errno;
+    return ret;
+}
+#endif
+
 static bool _str_has_extension(const utf8_int8_t *str, const utf8_int8_t *suffix)
 {
     if (!str || !suffix)
