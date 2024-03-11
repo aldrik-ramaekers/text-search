@@ -90,8 +90,11 @@ int main(int, char**)
 
     // Create window with graphics context
     GLFWwindow* window = glfwCreateWindow(1280, 720, "Text-Search", nullptr, nullptr);
-    if (window == nullptr)
+    if (window == nullptr) {
         return 1;
+	}
+	
+	glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);
     glfwSwapInterval(1); // Enable vsync
 
