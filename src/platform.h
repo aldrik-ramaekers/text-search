@@ -37,5 +37,6 @@ void 			ts_platform_list_files_block(ts_search_result* result, wchar_t* start_di
 uint64_t 		ts_platform_get_time(uint64_t compare = 0); // if compare is not 0, return difference between timestamp and now, in milliseconds.
 void			ts_platform_open_file_as(utf8_int8_t* str);
 void			ts_platform_open_file_in_folder(utf8_int8_t* file);
+void			ts_platform_set_window_title(utf8_int8_t* str);
 
 #endif

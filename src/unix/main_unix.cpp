@@ -65,6 +65,8 @@ int main(int, char**)
     if (!glfwInit())
         return 1;
 
+	ts_init();
+
     // Decide GL+GLSL versions
 #if defined(IMGUI_IMPL_OPENGL_ES2)
     // GL ES 2.0 + GLSL 100
@@ -112,7 +114,6 @@ int main(int, char**)
     ImGui::Spectrum::StyleColorsSpectrum();
 	ImGui::Spectrum::LoadFont(18.0f);
 
-	ts_init();
 	ts_load_images();
 	ts_load_config();
 
@@ -161,6 +162,10 @@ bool ts_platform_dir_exists(utf8_int8_t* path) {
 	} else {
 		return false; // error opening dir
 	}
+}
+
+void ts_platform_set_window_title(utf8_int8_t* str) {
+	// TODO
 }
 
 ts_file_content ts_platform_read_file(char *path, const char *mode) {

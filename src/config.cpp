@@ -6,6 +6,7 @@
 #include <string.h>
 #include <cstring>
 
+utf8_int8_t save_path[MAX_INPUT_LENGTH];
 utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t query_buffer[MAX_INPUT_LENGTH];

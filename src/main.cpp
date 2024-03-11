@@ -141,6 +141,12 @@ static int _ts_create_menu(int window_w, int window_h) {
 		if (ImGui::BeginMenu("File"))
 		{
 			//ImGui::MenuItem("Open", "CTRL+O");
+			if (ImGui::MenuItem("Save")) {
+				if (strlen(save_path) == 0)
+					ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
+				else 
+					ts_export_result(current_search_result, (const utf8_int8_t *)save_path);
+			}
 			if (ImGui::MenuItem("Save As")) {
 				ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
 			}
@@ -174,6 +180,12 @@ static int _ts_create_menu(int window_w, int window_h) {
 		if (ifd::FileDialog::Instance().HasResult()) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
 			ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
+			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
+
+			// Set titlebar name.
+			utf8_int8_t new_name[MAX_INPUT_LENGTH];
+			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
+			ts_platform_set_window_title(new_name);
 		}
 		ifd::FileDialog::Instance().Close();
 	}
@@ -182,7 +194,10 @@ static int _ts_create_menu(int window_w, int window_h) {
 }
 
 void ts_init() {
-	// idk
+	memset(save_path, 0, sizeof(save_path));
+	memset(path_buffer, 0, sizeof(path_buffer));
+	memset(filter_buffer, 0, sizeof(filter_buffer));
+	memset(query_buffer, 0, sizeof(query_buffer));
 }
 
 int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {

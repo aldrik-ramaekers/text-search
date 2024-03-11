@@ -17,6 +17,10 @@
 #include "../imgui/imgui.h"
 #include "../utf8.h"
 
+// Current session only.
+extern utf8_int8_t save_path[MAX_INPUT_LENGTH];
+
+// Stored in config.
 extern utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 extern utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 extern utf8_int8_t query_buffer[MAX_INPUT_LENGTH];

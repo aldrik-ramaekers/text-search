@@ -41,6 +41,7 @@ static int              g_Width;
 static int              g_Height;
 LARGE_INTEGER 			Frequency;
 bool 					program_running = true;
+HWND 					window_handle;
 
 bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data);
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data);
@@ -97,15 +98,25 @@ static void _ts_platform_draw_frame() {
 	::SwapBuffers(g_MainWindow.hDC);
 }
 
+void ts_platform_set_window_title(utf8_int8_t* str) {
+	// convert utf8 to wchar path.
+	wchar_t wchar_buffer[MAX_INPUT_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, str, -1, (wchar_t*)wchar_buffer, MAX_INPUT_LENGTH);
+	
+	SetWindowTextW(window_handle, wchar_buffer);
+}
+
 int main(int, char**)
 {
 	CoInitializeEx(0, COINIT_MULTITHREADED|COINIT_DISABLE_OLE1DDE);
+	ts_init();
 
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
     WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
     ::RegisterClassExW(&wc);
     HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Text-Search", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+	window_handle = hwnd;
 
     // Initialize OpenGL
     if (!CreateDeviceWGL(hwnd, &g_MainWindow))
@@ -143,7 +154,6 @@ int main(int, char**)
 
 	QueryPerformanceFrequency(&Frequency);
 
-	ts_init();
 	ts_load_images();
 	ts_load_config();
 
