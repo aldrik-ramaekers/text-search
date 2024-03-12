@@ -71,35 +71,50 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 
 	fprintf(write_file, "\"files\": [\n");
 
+	// Empty files.
 	for (int i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
-
+		if (file->match_count != 0) continue;
 		fprintf(write_file, "{\n");
 		fprintf(write_file, "\"path\": \"%s\",\n", _json_escape_str(file->path, escape_buffer, escape_size));
 
-		fprintf(write_file, "\"matches\": [\n");
+		fprintf(write_file, "\"matches\": []}\n");
 
-		bool first_match_of_file = true;
-		for (int i = 0; i < result->matches.length; i++) {
-			ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
-			if (match->file != file) continue;
-
-			if (!first_match_of_file) fprintf(write_file, ",\n");
-			first_match_of_file = false;
-			fprintf(write_file, "{\n");
-			fprintf(write_file, "\"line_nr\": %d,\n", match->line_nr);
-			fprintf(write_file, "\"match_length\": %zu,\n", match->word_match_length);
-			fprintf(write_file, "\"match_offset\": %zu,\n", match->word_match_offset);
-			fprintf(write_file, "\"line\": \"%s\"\n", _json_escape_str(match->line_info, escape_buffer, escape_size));
-			fprintf(write_file, "}\n");
-		}
-
-		fprintf(write_file, "]\n");
-		if (i == result->files.length-1) fprintf(write_file, "}\n"); else fprintf(write_file, "},\n");
+		if (result->matches.length) fprintf(write_file, ",\n");
 	}
 
-	fprintf(write_file, "]\n");
+	// Files with matches.
+	bool first_match_of_file = true;
+	ts_found_file* prev_file = NULL;
+	for (int i = 0; i < result->matches.length; i++) {
+		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
 
+		if (match->file != prev_file) {
+			first_match_of_file = true;
+			if (prev_file != NULL) {
+				fprintf(write_file, "]\n");
+				if (i == result->files.length-1) fprintf(write_file, "}\n"); else fprintf(write_file, "},\n");
+			}
+			prev_file = match->file;
+
+			fprintf(write_file, "{\n");
+			fprintf(write_file, "\"path\": \"%s\",\n", _json_escape_str(match->file->path, escape_buffer, escape_size));
+			fprintf(write_file, "\"matches\": [\n");
+		}
+
+		if (!first_match_of_file) fprintf(write_file, ",\n");
+		first_match_of_file = false;
+		fprintf(write_file, "{\n");
+		fprintf(write_file, "\"line_nr\": %d,\n", match->line_nr);
+		fprintf(write_file, "\"match_length\": %zu,\n", match->word_match_length);
+		fprintf(write_file, "\"match_offset\": %zu,\n", match->word_match_offset);
+		fprintf(write_file, "\"line\": \"%s\"\n", _json_escape_str(match->line_info, escape_buffer, escape_size));
+		fprintf(write_file, "}\n");
+	}
+	fprintf(write_file, "]\n");
+	fprintf(write_file, "}\n");
+
+	fprintf(write_file, "]\n");
 	fprintf(write_file, "}\n");
 
 	fclose(write_file);
@@ -120,15 +135,24 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "FILE_COUNT,%d\n", result->file_count);
 	fprintf(write_file, "TIMESTAMP,%llu\n", result->timestamp);
 
+	// Empty files.
 	for (int i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
+		if (file->match_count != 0) continue;
 		fprintf(write_file, "FILE,%s\n", file->path);
+	}
 
-		for (int i = 0; i < result->matches.length; i++) {
-			ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
-			if (match->file != file) continue;
-			fprintf(write_file, "MATCH,%d,%zu,%zu,%s\n", match->line_nr, match->word_match_length, match->word_match_offset, match->line_info);
+	// Files with matches.
+	ts_found_file* prev_file = NULL;
+	for (int i = 0; i < result->matches.length; i++) {
+		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
+
+		if (match->file != prev_file) {
+			prev_file = match->file;
+			fprintf(write_file, "FILE,%s\n", match->file->path);
 		}
+
+		fprintf(write_file, "MATCH,%d,%zu,%zu,%s\n", match->line_nr, match->word_match_length, match->word_match_offset, match->line_info);
 	}
 
 	fclose(write_file);
@@ -174,26 +198,38 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "<FILE_COUNT>%d</FILE_COUNT>\n", result->file_count);
 	fprintf(write_file, "<TIMESTAMP>%llu</TIMESTAMP>\n", result->timestamp);
 
+	// Empty files.
 	for (int i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
-
+		if (file->match_count != 0) continue;
 		fprintf(write_file, "<FILE>\n");
 		fprintf(write_file, "<PATH>%s</PATH>\n", _xml_escape_str(file->path, escape_buffer, escape_size));
-
-		for (int i = 0; i < result->matches.length; i++) {
-			ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
-			if (match->file != file) continue;
-
-			fprintf(write_file, "<MATCH>\n");
-			fprintf(write_file, "<LINENR>%d</LINENR>\n", match->line_nr);
-			fprintf(write_file, "<MATCH_LENGTH>%zu</MATCH_LENGTH>\n", match->word_match_length);
-			fprintf(write_file, "<MATCH_OFFSET>%zu</MATCH_OFFSET>\n", match->word_match_offset);
-			fprintf(write_file, "<LINE>%s</LINE>\n", _xml_escape_str(match->line_info, escape_buffer, escape_size));
-			fprintf(write_file, "</MATCH>\n");
-		}
-
 		fprintf(write_file, "</FILE>\n");
 	}
+
+	// Files with matches.
+	ts_found_file* prev_file = NULL;
+	for (int i = 0; i < result->matches.length; i++) {
+		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
+
+		if (match->file != prev_file) {
+			if (prev_file != NULL) {
+				fprintf(write_file, "</FILE>\n");
+			}
+			prev_file = match->file;
+
+			fprintf(write_file, "<FILE>\n");
+			fprintf(write_file, "<PATH>%s</PATH>\n", _xml_escape_str(match->file->path, escape_buffer, escape_size));
+		}
+
+		fprintf(write_file, "<MATCH>\n");
+		fprintf(write_file, "<LINENR>%d</LINENR>\n", match->line_nr);
+		fprintf(write_file, "<MATCH_LENGTH>%zu</MATCH_LENGTH>\n", match->word_match_length);
+		fprintf(write_file, "<MATCH_OFFSET>%zu</MATCH_OFFSET>\n", match->word_match_offset);
+		fprintf(write_file, "<LINE>%s</LINE>\n", _xml_escape_str(match->line_info, escape_buffer, escape_size));
+		fprintf(write_file, "</MATCH>\n");
+	}
+	fprintf(write_file, "</FILE>\n");
 
 	fprintf(write_file, "</SEARCHRESULT>\n");
 
