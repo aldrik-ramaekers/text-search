@@ -19,6 +19,7 @@
 #include <Shlobj.h>
 #include <GL/GL.h>
 #include <tchar.h>
+#include "DropManager.h"
 
 #ifdef TS_RELEASE
 #pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
@@ -27,6 +28,7 @@
 #define IDI_LOGO 123
 
 char config_path[MAX_INPUT_LENGTH];
+ts_dragdrop_data dragdrop_data = {0};
 
 void ts_create_gui(int window_w, int window_h);
 void ts_load_images();
@@ -108,7 +110,9 @@ void ts_platform_set_window_title(utf8_int8_t* str) {
 
 int main(int, char**)
 {
+	OleInitialize(NULL);
 	CoInitializeEx(0, COINIT_MULTITHREADED|COINIT_DISABLE_OLE1DDE);
+
 	ts_init();
 
     // Create application window
@@ -157,6 +161,9 @@ int main(int, char**)
 	ts_load_images();
 	ts_load_config();
 
+	DropManager dm;
+    RegisterDragDrop(hwnd, &dm);
+
     while (program_running)
     {
         MSG msg;
@@ -177,11 +184,14 @@ int main(int, char**)
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();
 
+	RevokeDragDrop(hwnd);
+
     CleanupDeviceWGL(hwnd, &g_MainWindow);
     wglDeleteContext(g_hRC);
     ::DestroyWindow(hwnd);
     ::UnregisterClassW(wc.lpszClassName, wc.hInstance);
 
+	OleUninitialize();
 	CoUninitialize();
 
     return 0;

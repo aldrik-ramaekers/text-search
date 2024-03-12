@@ -500,7 +500,25 @@ void ts_create_gui(int window_w, int window_h) {
 	}
 	pos_y += textbox_area_height + 7;
 
-	if (current_search_result)
+	if (dragdrop_data.did_drop) {
+		printf("Do loading..\n");
+		dragdrop_data.did_drop = false;
+	}
+
+	if (dragdrop_data.is_dragging_file)
+	{
+		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))	// we use an external source (i.e. not ImGui-created)
+		{
+			ImGui::SetDragDropPayload("FILES", nullptr, 0);
+			ImGui::BeginTooltip();
+			ImGui::Text("Drop to load file");
+			ImGui::EndTooltip();
+			ImGui::EndDragDropSource();
+		}
+
+		ImGui::Text("Drag test");
+	}
+	else if (current_search_result)
 	{ // Results
 		ImGui::SetNextWindowPos({5, pos_y});
 

@@ -4,6 +4,7 @@
 #include "array.h"
 #include "memory_bucket.h"
 #include "search.h"
+#include "config.h"
 #include "../utf8.h"
 
 typedef struct t_ts_file_content
@@ -29,7 +30,16 @@ typedef enum t_ts_file_open_error
 	FILE_ERROR_TOO_BIG = 11,
 } ts_file_open_error;
 
+typedef struct t_ts_dragdrop_data
+{
+	bool did_drop;
+	utf8_int8_t path[MAX_INPUT_LENGTH];
+	bool is_dragging_file;
+} ts_dragdrop_data;
+
+
 extern bool program_running;
+extern ts_dragdrop_data dragdrop_data;
 
 bool 			ts_platform_dir_exists(utf8_int8_t* dir);
 ts_file_content ts_platform_read_file(char *path, const char *mode);
