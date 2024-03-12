@@ -29,6 +29,7 @@ static bool _str_has_extension(const utf8_int8_t *str, const utf8_int8_t *suffix
 
 static utf8_int8_t* _json_escape_str(utf8_int8_t* str, utf8_int8_t* buffer, size_t buffer_size) {
 	memset(buffer, 0, buffer_size);
+	if (str == NULL) return buffer;
 
 	utf8_int8_t* buffer_orig = buffer;
 	utf8_int32_t ch;
@@ -136,6 +137,7 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 
 static utf8_int8_t* _xml_escape_str(utf8_int8_t* str, utf8_int8_t* buffer, size_t buffer_size) {
 	memset(buffer, 0, buffer_size);
+	if (str == NULL) return buffer;
 
 	utf8_int8_t* buffer_orig = buffer;
 	utf8_int32_t ch;
@@ -199,22 +201,41 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 	return true;
 }
 
-bool ts_export_result(ts_search_result* result, const utf8_int8_t* path) {
-	if (result == NULL || path == NULL) return false;
-	if (!result->search_completed) return false;
+struct t_export_thread_args {
+	ts_search_result* result; 
+	const utf8_int8_t* path;
+};
+
+static void* _ts_export_thread(void* args) {
+	struct t_export_thread_args* arg = (struct t_export_thread_args*)args;
+
+	if (_str_has_extension(arg->path, ".json")) {
+		_ts_export_json(arg->result, arg->path);
+	}
+	if (_str_has_extension(arg->path, ".csv")) {
+		_ts_export_csv(arg->result, arg->path);
+	}
+	if (_str_has_extension(arg->path, ".xml")) {
+		_ts_export_xml(arg->result, arg->path);
+	}
+
+	arg->result->is_saving = false;
+	free(arg);
+
+	return 0;
+}
+
+export_result ts_export_result(ts_search_result* result, const utf8_int8_t* path) {
+	if (result == NULL || path == NULL) return EXPORT_NO_RESULT;
+	if (!result->search_completed) return EXPORT_SEARCH_ACTIVE;
+	if (result->is_saving) return EXPORT_SAVE_PENDING;
 	result->is_saving = true;
 
-	if (_str_has_extension(path, ".json")) {
-		return _ts_export_json(result, path);
-	}
-	if (_str_has_extension(path, ".csv")) {
-		return _ts_export_csv(result, path);
-	}
-	if (_str_has_extension(path, ".xml")) {
-		return _ts_export_xml(result, path);
-	}
+	struct t_export_thread_args* args = (struct t_export_thread_args*)malloc(sizeof(struct t_export_thread_args));
+	args->result = result;
+	args->path = path;
 
-	result->is_saving = false;
+	ts_thread_start(_ts_export_thread, args);
 
-	return false;
+	return EXPORT_NONE;
 }

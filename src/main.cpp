@@ -16,6 +16,7 @@
 // Popups
 bool open_settings_window = false;
 bool open_about_window = false;
+export_result last_export_result = EXPORT_NONE;
 
 const char* help_text = 
 				"1. Search directory\n"
@@ -145,7 +146,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 				if (strlen(save_path) == 0)
 					ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
 				else 
-					ts_export_result(current_search_result, (const utf8_int8_t *)save_path);
+					last_export_result = ts_export_result(current_search_result, (const utf8_int8_t *)save_path);
 			}
 			if (ImGui::MenuItem("Save As")) {
 				ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
@@ -179,7 +180,8 @@ static int _ts_create_menu(int window_w, int window_h) {
 	if (ifd::FileDialog::Instance().IsDone("FileSaveAsDialog", window_w, window_h)) {
 		if (ifd::FileDialog::Instance().HasResult()) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
-			ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
+			last_export_result = ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
+			printf("%d\n", last_export_result);
 			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
 
 			// Set titlebar name.
@@ -188,6 +190,37 @@ static int _ts_create_menu(int window_w, int window_h) {
 			ts_platform_set_window_title(new_name);
 		}
 		ifd::FileDialog::Instance().Close();
+	}
+
+	if (last_export_result != EXPORT_NONE) {
+		ImGui::OpenPopup("Export Failed");
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
+	}
+
+	// export error popup
+	if (ImGui::BeginPopupModal("Export Failed", (bool*)&last_export_result, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+		ImGui::SetWindowSize({300, 0});
+
+		switch (last_export_result)
+		{
+			case EXPORT_NO_RESULT: ImGui::Text("No results to export"); break;
+			case EXPORT_SEARCH_ACTIVE: ImGui::Text("Can't export while save is active"); break;
+			case EXPORT_SAVE_PENDING: ImGui::Text("Export is pending"); break;
+		
+		default:
+			break;
+		}
+
+		ImGui::Dummy({0, 70});
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		if (ImGui::Button("Close")) {
+			last_export_result = EXPORT_NONE;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::EndPopup();
 	}
 
 	return menu_bar_h;
@@ -520,9 +553,15 @@ void ts_create_gui(int window_w, int window_h) {
 
 		ImGui::SameLine();
 
-		if (current_search_result && current_search_result->search_completed) {
-			ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("999.999s elapsed").x);
-			ImGui::Text("%.3fs elapsed", current_search_result->timestamp/1000.0f);
+		if (current_search_result) {
+			if (current_search_result->is_saving) {
+				ImGui::SetCursorPosX(window_w - 20.0f - ImGui::CalcTextSize("Saving |").x);
+				ImGui::Text("Saving %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
+			}
+			else if (current_search_result->search_completed) {
+				ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("999.999s elapsed").x);
+				ImGui::Text("%.3fs elapsed", current_search_result->timestamp/1000.0f);
+			}		
 		}
 		ImGui::EndChild();
 		ImGui::PopStyleVar();

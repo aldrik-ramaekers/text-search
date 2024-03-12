@@ -370,7 +370,7 @@ static void *_ts_list_files_thread(void *args)
 
 	// Use this thread to cleanup previous result.
 	if (info->prev_result) {
-		while (!info->prev_result->search_completed && !info->prev_result->is_saving) {
+		while (!info->prev_result->search_completed || info->prev_result->is_saving) {
 			ts_thread_sleep(10);
 		}
 		ts_destroy_result(info->prev_result);
