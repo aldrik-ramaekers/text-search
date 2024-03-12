@@ -265,7 +265,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 				if ((strcmp(dir->d_name, ".") == 0) || (strcmp(dir->d_name, "..") == 0))
 					continue;
 				
-				utf8_int8_t complete_file_path[MAX_INPUT_LENGTH];
+				utf8_int8_t* complete_file_path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 				strcpy(complete_file_path, search_dir);
 				strcat(complete_file_path, "/");
 				strcat(complete_file_path, dir->d_name);
@@ -283,7 +283,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 				(void)matched_filter;
 
 				
-				utf8_int8_t complete_file_path[MAX_INPUT_LENGTH];
+				utf8_int8_t* complete_file_path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 				strcpy(complete_file_path, search_dir);
 				strcat(complete_file_path, "/");
 				strcat(complete_file_path, dir->d_name);

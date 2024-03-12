@@ -393,14 +393,14 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 				 (file_info.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
 		{
 			char *matched_filter = 0;
-			utf8_int8_t uni_name[MAX_INPUT_LENGTH];
+			utf8_int8_t* uni_name = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			WideCharToMultiByte(CP_UTF8,0,name,-1,(LPSTR)uni_name,MAX_INPUT_LENGTH, NULL, NULL);
 			if (ts_filter_matches(&result->filters, uni_name, &matched_filter) == (size_t)-1) {
 				continue;
 			}
 			(void)matched_filter;
 
-			wchar_t complete_file_path[MAX_INPUT_LENGTH];
+			wchar_t* complete_file_path = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			wcscpy_s(complete_file_path, MAX_INPUT_LENGTH, search_dir);
 			wcscat_s(complete_file_path, MAX_INPUT_LENGTH, L"\\");
 			wcscat_s(complete_file_path, MAX_INPUT_LENGTH, name);
