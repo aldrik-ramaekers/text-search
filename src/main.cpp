@@ -181,7 +181,6 @@ static int _ts_create_menu(int window_w, int window_h) {
 		if (ifd::FileDialog::Instance().HasResult()) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
 			last_export_result = ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
-			printf("%d\n", last_export_result);
 			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
 
 			// Set titlebar name.
@@ -212,7 +211,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 			break;
 		}
 
-		ImGui::Dummy({0, 70});
+		ImGui::Dummy({0, 20});
 		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
 		if (ImGui::Button("Close")) {
 			last_export_result = EXPORT_NONE;
@@ -260,6 +259,9 @@ void _ts_create_file_match_rows() {
 
 		ImGui::TableNextColumn();	
 		ImGui::TableHeader("");
+
+		ImGui::SameLine();
+		ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
 	}
 }
 
@@ -298,6 +300,9 @@ void _ts_create_file_error_rows() {
 
 		ImGui::TableNextColumn();	
 		ImGui::TableHeader(_ts_file_error_to_message((ts_file_open_error)file->error));
+
+		ImGui::SameLine();
+		ImGui::Selectable("##nolabel", false, ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowOverlap);
 	}
 }
 
@@ -499,7 +504,6 @@ void ts_create_gui(int window_w, int window_h) {
 	{ // Results
 		ImGui::SetNextWindowPos({5, pos_y});
 
-		ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImGui::ColorConvertU32ToFloat4(0xEAEAEA));
 		if (ImGui::BeginTable("results-table", 3, ImGuiTableFlags_BordersH|ImGuiTableFlags_ScrollY|ImGuiTableFlags_RowBg|ImGuiTableFlags_SizingFixedFit,
 			{(float)window_w-7.0f, (float)result_area_height}))
 		{
@@ -528,7 +532,6 @@ void ts_create_gui(int window_w, int window_h) {
 		
 			ImGui::EndTable();
 		}
-		ImGui::PopStyleColor();
 	}
 	else { // Help text
 		ImGui::Separator();
