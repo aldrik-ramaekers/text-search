@@ -8,6 +8,7 @@
 ts_image img_logo;
 ts_image img_search;
 ts_image img_folder;
+ts_image img_drop;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
 static bool _ts_load_texture(unsigned char* data, size_t size, GLuint* out_texture, int* out_width, int* out_height)
@@ -65,6 +66,10 @@ void ts_load_images() {
 	size = _binary_misc_folder_png_end - _binary_misc_folder_png_start;
 	data = (unsigned char *)_binary_misc_folder_png_start;
 	img_folder = _ts_load_image(data, size);
+
+	size = _binary_misc_drop_png_end - _binary_misc_drop_png_start;
+	data = (unsigned char *)_binary_misc_drop_png_start;
+	img_drop = _ts_load_image(data, size);
 
 	ifd::FileDialog::Instance().CreateTexture = [](uint8_t* data, int w, int h, char fmt) -> void* {
 		GLuint tex;

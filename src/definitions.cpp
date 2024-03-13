@@ -27,3 +27,7 @@ unsigned char* _binary_misc_search_png_end = misc_search_png + misc_search_png_l
 #include "../misc/generated/folder.h"
 unsigned char* _binary_misc_folder_png_start = misc_folder_png;
 unsigned char* _binary_misc_folder_png_end = misc_folder_png + misc_folder_png_len;
+
+#include "../misc/generated/drop.h"
+unsigned char* _binary_misc_drop_png_start = misc_drop_png;
+unsigned char* _binary_misc_drop_png_end = misc_drop_png + misc_drop_png_len;

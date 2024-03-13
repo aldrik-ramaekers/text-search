@@ -222,7 +222,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 		ImGui::EndPopup();
 	}
 
-	return menu_bar_h;
+	return menu_bar_h + 15;
 }
 
 void ts_init() {
@@ -405,10 +405,133 @@ void _ts_create_text_match_rows() {
 	_ts_create_file_error_rows();
 }
 
+int _ts_create_textbox_area(int window_w, int window_h, int textbox_area_height, float pos_y)
+{
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
+
+	float offset = 15.0f;
+	float separator_w = 10.0f;
+	float frame_w = window_w/2.5f - offset - separator_w/2.0f;
+	ImGui::SetNextWindowPos({offset, pos_y});
+	ImGui::BeginChild("search-boxes", ImVec2((float)frame_w, (float)textbox_area_height), false);
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		ImGui::PushItemWidth(-1);
+
+		bool dir_exists = ts_platform_dir_exists(path_buffer);
+		if (!dir_exists) ImGui::PushStyleColor(ImGuiCol_Border, ImGui::Spectrum::Color(0xCC2222));
+		ImGui::InputTextWithHint("path-ti", "Path", path_buffer, MAX_INPUT_LENGTH);
+		if (!dir_exists) ImGui::PopStyleColor();
+		ImGui::PopItemWidth();
+		ImGui::SetItemTooltip("Absolute path to directory to search");
+
+		ImGui::PushItemWidth(-1);
+		if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
+			ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
+		}
+		ImGui::PopItemWidth();
+		ImGui::SetItemTooltip("Text to search within files, supports '*' & '?' wildcards");
+		ImGui::PopStyleVar();
+	}
+	ImGui::EndChild();
+
+	ImGui::SetNextWindowPos({offset + frame_w + separator_w, pos_y});
+	ImGui::BeginChild("search-boxes2", ImVec2((float)frame_w, (float)textbox_area_height), false);
+	{
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		if (ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f))) {
+			ifd::FileDialog::Instance().Open("FolderSelectDialog", "Select a directory", "");
+		}
+		if (ifd::FileDialog::Instance().IsDone("FolderSelectDialog", window_w, window_h)) {
+			if (ifd::FileDialog::Instance().HasResult()) {
+				std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+				snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", res.c_str());
+			}
+			ifd::FileDialog::Instance().Close();
+		}
+
+		ImGui::SameLine();
+		ImGui::PushItemWidth(-1);
+		if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
+			ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
+		}
+		ImGui::PopItemWidth();
+		ImGui::SetItemTooltip("Files to filter, supports '*' & '?' wildcards");
+		ImGui::PopStyleVar();
+
+		if (current_search_result && !current_search_result->search_completed) {
+			ImGui::Text("%c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
+		}
+		else {
+			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+			if (ImGui::ImageButton("Search", (void*)(intptr_t)img_search.id, ImVec2(18.0f, 18.0f))) {
+				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
+			}
+			ImGui::PopStyleVar();
+		}
+		
+		ImGui::SameLine();
+		ImGui::SetCursorPosX(36);
+		ImGui::ToggleButton("Aa", &respect_capitalization);
+		ImGui::SetItemTooltip("Match Case");
+	}
+	ImGui::EndChild();
+
+	ImGui::PopStyleVar();
+
+	return textbox_area_height + 7;
+}
+
+void _ts_update_dragdrop() {
+	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))	// we use an external source (i.e. not ImGui-created)
+	{
+		ImGui::SetDragDropPayload("FILES", nullptr, 0);
+		ImGui::EndDragDropSource();
+	}
+
+	{
+		float img_size = 256.0f;
+		ImGui::Separator();
+		ImGui::SetCursorPosX((ImGui::GetWindowWidth() - img_size) / 2.0f);
+		ImGui::SetCursorPosY((ImGui::GetWindowHeight() - img_size) / 2.0f);
+		ImGui::Image((void*)(intptr_t)img_drop.id, {img_size, img_size}, ImVec2(0, 0), ImVec2(1, 1), ImVec4(1, 1, 1, 0.2f));
+	}
+}
+
+void _ts_create_statusbar(int window_w, int window_h, int statusbar_area_height, float pos_y) {
+	ImGui::SetNextWindowPos({0, pos_y});
+
+	ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
+	ImGui::BeginChild("search-statusbar", ImVec2((float)window_w, (float)statusbar_area_height), ImGuiChildFlags_None, ImGuiWindowFlags_None);
+	ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7.0f);
+	ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
+	if (current_search_result) {
+		if (current_search_result->search_text) ImGui::Text("Found %d matches in %d files", current_search_result->match_count, current_search_result->file_count);
+		else ImGui::Text("Found %d files", current_search_result->files.length);
+	}
+	else ImGui::Text("No search completed");
+
+	ImGui::SameLine();
+
+	if (current_search_result) {
+		if (current_search_result->is_saving) {
+			ImGui::SetCursorPosX(window_w - 20.0f - ImGui::CalcTextSize("Saving |").x);
+			ImGui::Text("Saving %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
+		}
+		else if (current_search_result->search_completed) {
+			ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("999.999s elapsed").x);
+			ImGui::Text("%.3fs elapsed", current_search_result->timestamp/1000.0f);
+		}		
+	}
+	ImGui::EndChild();
+	ImGui::PopStyleVar();
+}
+
 void ts_create_gui(int window_w, int window_h) {
 	int window_pad = 50;
 	int textbox_area_height = 80;
 	int statusbar_area_height = 30;
+	float pos_y = 0;
 	int result_area_height = window_h - textbox_area_height - statusbar_area_height - window_pad;
 
 	ImGui::SetNextWindowSize({(float)window_w, (float)window_h});
@@ -420,85 +543,8 @@ void ts_create_gui(int window_w, int window_h) {
 		ImGuiWindowFlags_MenuBar);
 	ImGui::PopStyleVar();
 
-	int menu_bar_h = _ts_create_menu(window_w, window_h);
-
-	float pos_y = 0;
-	pos_y += menu_bar_h + 15.0f;
-
-	{ // Search boxes
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(5, 5));
-
-		float offset = 15.0f;
-		float separator_w = 10.0f;
-		float frame_w = window_w/2.5f - offset - separator_w/2.0f;
-		ImGui::SetNextWindowPos({offset, pos_y});
-		ImGui::BeginChild("search-boxes", ImVec2((float)frame_w, (float)textbox_area_height), false);
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			ImGui::PushItemWidth(-1);
-
-			bool dir_exists = ts_platform_dir_exists(path_buffer);
-			if (!dir_exists) ImGui::PushStyleColor(ImGuiCol_Border, ImGui::Spectrum::Color(0xCC2222));
-			ImGui::InputTextWithHint("path-ti", "Path", path_buffer, MAX_INPUT_LENGTH);
-			if (!dir_exists) ImGui::PopStyleColor();
-			ImGui::PopItemWidth();
-			ImGui::SetItemTooltip("Absolute path to directory to search");
-
-			ImGui::PushItemWidth(-1);
-			if (ImGui::InputTextWithHint("query", "Query", query_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_CallbackEdit|ImGuiInputTextFlags_EnterReturnsTrue, _tb_query_input_cb)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
-			}
-			ImGui::PopItemWidth();
-			ImGui::SetItemTooltip("Text to search within files, supports '*' & '?' wildcards");
-			ImGui::PopStyleVar();
-		}
-		ImGui::EndChild();
-
-		ImGui::SetNextWindowPos({offset + frame_w + separator_w, pos_y});
-		ImGui::BeginChild("search-boxes2", ImVec2((float)frame_w, (float)textbox_area_height), false);
-		{
-			ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-			if (ImGui::ImageButton("Folder", (void*)(intptr_t)img_folder.id, ImVec2(18.0f, 18.0f))) {
-				ifd::FileDialog::Instance().Open("FolderSelectDialog", "Select a directory", "");
-			}
-			if (ifd::FileDialog::Instance().IsDone("FolderSelectDialog", window_w, window_h)) {
-				if (ifd::FileDialog::Instance().HasResult()) {
-					std::string res = ifd::FileDialog::Instance().GetResult().u8string();
-					snprintf(path_buffer, MAX_INPUT_LENGTH, "%s", res.c_str());
-				}
-				ifd::FileDialog::Instance().Close();
-			}
-
-			ImGui::SameLine();
-			ImGui::PushItemWidth(-1);
-			if (ImGui::InputTextWithHint("filter-ti", "Filter", filter_buffer, MAX_INPUT_LENGTH, ImGuiInputTextFlags_EnterReturnsTrue)) {
-				ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
-			}
-			ImGui::PopItemWidth();
-			ImGui::SetItemTooltip("Files to filter, supports '*' & '?' wildcards");
-			ImGui::PopStyleVar();
-
-			if (current_search_result && !current_search_result->search_completed) {
-				ImGui::Text("%c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
-			}
-			else {
-				ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
-				if (ImGui::ImageButton("Search", (void*)(intptr_t)img_search.id, ImVec2(18.0f, 18.0f))) {
-					ts_start_search(path_buffer, filter_buffer, query_buffer, ts_thread_count, max_file_size, respect_capitalization);
-				}
-				ImGui::PopStyleVar();
-			}
-			
-			ImGui::SameLine();
-			ImGui::SetCursorPosX(36);
-			ImGui::ToggleButton("Aa", &respect_capitalization);
-			ImGui::SetItemTooltip("Match Case");
-		}
-		ImGui::EndChild();
-
-		ImGui::PopStyleVar();
-	}
-	pos_y += textbox_area_height + 7;
+	pos_y += _ts_create_menu(window_w, window_h);
+	pos_y += _ts_create_textbox_area(window_w, window_h, textbox_area_height, pos_y);
 
 	if (dragdrop_data.did_drop) {
 		printf("Do loading..\n");
@@ -507,16 +553,7 @@ void ts_create_gui(int window_w, int window_h) {
 
 	if (dragdrop_data.is_dragging_file)
 	{
-		if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))	// we use an external source (i.e. not ImGui-created)
-		{
-			ImGui::SetDragDropPayload("FILES", nullptr, 0);
-			ImGui::BeginTooltip();
-			ImGui::Text("Drop to load file");
-			ImGui::EndTooltip();
-			ImGui::EndDragDropSource();
-		}
-
-		ImGui::Text("Drag test");
+		_ts_update_dragdrop();
 	}
 	else if (current_search_result)
 	{ // Results
@@ -559,36 +596,8 @@ void ts_create_gui(int window_w, int window_h) {
 	}
 	pos_y += result_area_height;
 
-	{ // Statusbar
-		ImGui::SetNextWindowPos({0, pos_y});
-
-		ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6, 6));
-		ImGui::BeginChild("search-statusbar", ImVec2((float)window_w, (float)statusbar_area_height), ImGuiChildFlags_None, ImGuiWindowFlags_None);
-		ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 7.0f);
-		ImGui::SetCursorPosX(ImGui::GetCursorPosX() + 10.0f);
-		if (current_search_result) {
-			if (current_search_result->search_text) ImGui::Text("Found %d matches in %d files", current_search_result->match_count, current_search_result->file_count);
-			else ImGui::Text("Found %d files", current_search_result->files.length);
-		}
-		else ImGui::Text("No search completed");
-
-		ImGui::SameLine();
-
-		if (current_search_result) {
-			if (current_search_result->is_saving) {
-				ImGui::SetCursorPosX(window_w - 20.0f - ImGui::CalcTextSize("Saving |").x);
-				ImGui::Text("Saving %c", "|/-\\"[(int)(ImGui::GetTime() / 0.05f) & 3]);
-			}
-			else if (current_search_result->search_completed) {
-				ImGui::SetCursorPosX(window_w - 10.0f - ImGui::CalcTextSize("999.999s elapsed").x);
-				ImGui::Text("%.3fs elapsed", current_search_result->timestamp/1000.0f);
-			}		
-		}
-		ImGui::EndChild();
-		ImGui::PopStyleVar();
-	}
+	_ts_create_statusbar(window_w, window_h, statusbar_area_height, pos_y);
 
 	ImGui::PopStyleVar();
-
 	ImGui::End();
 }
