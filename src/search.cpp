@@ -105,6 +105,9 @@ ts_search_result *ts_create_empty_search_result()
 	new_result_buffer->directory_to_search = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
 	new_result_buffer->search_text = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
 	new_result_buffer->file_filter = (char *)ts_memory_bucket_reserve(&new_result_buffer->memory, MAX_INPUT_LENGTH);
+	memset(new_result_buffer->directory_to_search, 0, MAX_INPUT_LENGTH);
+	memset(new_result_buffer->search_text, 0, MAX_INPUT_LENGTH);
+	memset(new_result_buffer->file_filter, 0, MAX_INPUT_LENGTH);
 
 	return new_result_buffer;
 }

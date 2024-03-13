@@ -5,7 +5,7 @@
 
 #ifndef _WIN32
 #include <errno.h>
-static int fopen_s(FILE **f, const char *name, const char *mode) {
+int fopen_s(FILE **f, const char *name, const char *mode) {
     int ret = 0;
     assert(f);
     *f = fopen(name, mode);
@@ -16,7 +16,7 @@ static int fopen_s(FILE **f, const char *name, const char *mode) {
 }
 #endif
 
-static bool _str_has_extension(const utf8_int8_t *str, const utf8_int8_t *suffix)
+bool ts_str_has_extension(const utf8_int8_t *str, const utf8_int8_t *suffix)
 {
     if (!str || !suffix)
         return 0;
@@ -245,13 +245,13 @@ struct t_export_thread_args {
 static void* _ts_export_thread(void* args) {
 	struct t_export_thread_args* arg = (struct t_export_thread_args*)args;
 
-	if (_str_has_extension(arg->path, ".json")) {
+	if (ts_str_has_extension(arg->path, ".json")) {
 		_ts_export_json(arg->result, arg->path);
 	}
-	if (_str_has_extension(arg->path, ".csv")) {
+	if (ts_str_has_extension(arg->path, ".csv")) {
 		_ts_export_csv(arg->result, arg->path);
 	}
-	if (_str_has_extension(arg->path, ".xml")) {
+	if (ts_str_has_extension(arg->path, ".xml")) {
 		_ts_export_xml(arg->result, arg->path);
 	}
 

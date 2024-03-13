@@ -10,4 +10,5 @@ typedef enum ts_export_result {
 	EXPORT_SAVE_PENDING,
 } export_result;
 
-export_result ts_export_result(ts_search_result* result, const utf8_int8_t* path);
+bool 			ts_str_has_extension(const utf8_int8_t *str, const utf8_int8_t *suffix);
+export_result 	ts_export_result(ts_search_result* result, const utf8_int8_t* path);

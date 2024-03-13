@@ -10,6 +10,7 @@
 #include "image.h"
 #include "config.h"
 #include "export.h"
+#include "import.h"
 
 #include <stdio.h>
 
@@ -547,7 +548,7 @@ void ts_create_gui(int window_w, int window_h) {
 	pos_y += _ts_create_textbox_area(window_w, window_h, textbox_area_height, pos_y);
 
 	if (dragdrop_data.did_drop) {
-		printf("Do loading..\n");
+		current_search_result = ts_import_result(dragdrop_data.path);
 		dragdrop_data.did_drop = false;
 	}
 

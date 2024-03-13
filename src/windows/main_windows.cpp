@@ -14,6 +14,7 @@
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
+#define _CRT_SECURE_NO_WARNINGS
 #include <pathcch.h>
 #include <windows.h>
 #include <Shlobj.h>
@@ -424,8 +425,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 				
 			ts_mutex_lock(&result->files.mutex);
 			ts_array_push_size(&result->files, &f, sizeof(ts_found_file*));
-			ts_mutex_unlock(&result->files.mutex);
-			
+			ts_mutex_unlock(&result->files.mutex);		
 		}
 	}
 	while (FindNextFile(handle, (LPWIN32_FIND_DATAW)&file_info) != 0);

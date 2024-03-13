@@ -2,6 +2,7 @@
 #define INCLUDE_MUTEX
 
 #if defined(_WIN32)
+#define _CRT_SECURE_NO_WARNINGS
 #include <windows.h>
 #include <process.h>    /* _beginthread, _endthread */
 #include <stddef.h>
