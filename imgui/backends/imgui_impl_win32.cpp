@@ -16,9 +16,9 @@
 // - Documentation        https://dearimgui.com/docs (same as your local docs/ folder).
 // - Introduction, links and more at the top of imgui.cpp
 
-#include "imgui.h"
+#include <imgui.h>
 #ifndef IMGUI_DISABLE
-#include "imgui_impl_win32.h"
+#include <imgui_impl_win32.h>
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif

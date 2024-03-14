@@ -152,7 +152,7 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 			fprintf(write_file, "FILE,%s\n", match->file->path);
 		}
 
-		fprintf(write_file, "MATCH,%d,%zu,%zu,%s\n", match->line_nr, match->word_match_length, match->word_match_offset, match->line_info);
+		fprintf(write_file, "MATCH,%u,%zu,%zu,%s\n", match->line_nr, match->word_match_length, match->word_match_offset, match->line_info);
 	}
 
 	fclose(write_file);

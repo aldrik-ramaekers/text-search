@@ -28,6 +28,7 @@ uint32_t ts_array_push(ts_array *ts_array, void *data)
 	if (!ts_array->data)
 	{
 		ts_array->data = malloc(ts_array->entry_size * ts_array->reserve_jump);
+		if (!ts_array->data) exit_oom();
 		ts_array->reserved_length = ts_array->reserve_jump;
 	}
 	
@@ -35,6 +36,7 @@ uint32_t ts_array_push(ts_array *ts_array, void *data)
 	{
 		ts_array->reserved_length += ts_array->reserve_jump;
 		ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
+		if (!ts_array->data) exit_oom();
 	}
 	
 	memcpy((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size),
@@ -57,6 +59,7 @@ uint32_t ts_array_push_size(ts_array *ts_array, void *data, uint32_t data_size)
 	if (!ts_array->data)
 	{
 		ts_array->data = malloc(ts_array->entry_size * ts_array->reserve_jump);
+		if (!ts_array->data) exit_oom();
 		ts_array->reserved_length = ts_array->reserve_jump;
 	}
 	
@@ -64,6 +67,7 @@ uint32_t ts_array_push_size(ts_array *ts_array, void *data, uint32_t data_size)
 	{
 		ts_array->reserved_length += ts_array->reserve_jump;
 		ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
+		if (!ts_array->data) exit_oom();
 	}
 	
 	memcpy((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size),
@@ -97,10 +101,12 @@ void ts_array_reserve(ts_array *ts_array, uint32_t reserve_count)
 		if (ts_array->data)
 		{
 			ts_array->data = realloc(ts_array->data, (ts_array->reserved_length*ts_array->entry_size));
+			if (!ts_array->data) exit_oom();
 		}
 		else
 		{
 			ts_array->data = malloc(ts_array->reserved_length*ts_array->entry_size);
+			if (!ts_array->data) exit_oom();
 		}
 	}
 	ts_mutex_unlock(&ts_array->mutex);
@@ -180,7 +186,7 @@ ts_array ts_array_copy(ts_array *arr)
 	new_ts_array.reserved_length = arr->reserved_length;
 	new_ts_array.entry_size = arr->entry_size;
 	new_ts_array.data = malloc(new_ts_array.entry_size*new_ts_array.reserved_length);
-	if (!new_bucket.data) exit_oom();
+	if (!new_ts_array.data) exit_oom();
 
 	new_ts_array.mutex = ts_mutex_create();
 	

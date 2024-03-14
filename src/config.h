@@ -3,6 +3,7 @@
 #if defined(_WIN32)
 #define MAX_INPUT_LENGTH 4096
 #elif defined(__linux__)
+#include <stdio.h>
 #define MAX_INPUT_LENGTH 4096
 #elif defined(__APPLE__)
 #define MAX_INPUT_LENGTH 1024

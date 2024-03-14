@@ -32,6 +32,10 @@ void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, uint32_t reserve_length
 		
 		return space;
 	}
+
+	if (bucket_entry == NULL) {
+		return NULL; // Should never happen.
+	}
 	
 	// failed to find suitable space, allocate new bucket
 	ts_memory_bucket_entry new_bucket;

@@ -16,16 +16,16 @@ bool respect_capitalization = false;
 
 static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const utf8_int8_t* line)
 {
-    utf8_int8_t path[MAX_INPUT_LENGTH];
-	utf8_int8_t filter[MAX_INPUT_LENGTH];
-	utf8_int8_t query[MAX_INPUT_LENGTH];
+    utf8_int8_t path[MAX_INPUT_LENGTH] = {0};
+	utf8_int8_t filter[MAX_INPUT_LENGTH] = {0};
+	utf8_int8_t query[MAX_INPUT_LENGTH] = {0};
 
 	uint32_t threads = 1, maxSize = 100, matchCase = 0;
 
 #if defined(_WIN32)
-    if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH-1); }
-    else if (sscanf_s(line, "Filter=%s", (char*)&filter, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter, MAX_INPUT_LENGTH-1); }
-    else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH-1); }
+    if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH); }
+    else if (sscanf_s(line, "Filter=%s", (char*)&filter, MAX_INPUT_LENGTH) == 1) { strncpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter, MAX_INPUT_LENGTH); }
+    else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH); }
 	else if (sscanf_s(line, "Threads=%u", &threads) == 1) { ts_thread_count = threads; }
 	else if (sscanf_s(line, "MaxSize=%u", &maxSize) == 1) { max_file_size = maxSize; }
 	else if (sscanf_s(line, "MatchCase=%u", &matchCase) == 1) { respect_capitalization = matchCase; }

@@ -67,6 +67,7 @@ static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 		// New match within current_file
 		if (current_file && sscanf(line_buffer, "MATCH,%u,%zu,%zu\n", &match.line_nr, &match.word_match_length, &match.word_match_offset) == 3) {
 			match.file = current_file;
+			match.file->match_count++;
 
 			utf8_int8_t* iter = line_buffer;
 			int count = 0;
