@@ -145,6 +145,8 @@ int main(int, char**)
         glfwSwapBuffers(window);
     }
 
+	ts_destroy_result(current_search_result);
+
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();

@@ -183,6 +183,8 @@ int main(int, char**)
 		_ts_platform_draw_frame();
     }
 
+	ts_destroy_result(current_search_result);
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplWin32_Shutdown();
     ImGui::DestroyContext();

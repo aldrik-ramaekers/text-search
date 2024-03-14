@@ -359,6 +359,7 @@ finish_early:
 }
 
 void ts_destroy_result(ts_search_result* result) {
+	if (result == NULL) return;
 	ts_memory_bucket_destroy(&result->memory);
 	ts_array_destroy(&result->files);
 	ts_array_destroy(&result->matches);
