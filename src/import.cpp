@@ -26,8 +26,8 @@ static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 	fscanf_required(read_file, "FILTER,%s\n", 1, (char*)result->file_filter);
 	fscanf_required(read_file, "QUERY,%s\n", 1, (char*)result->search_text);
 	fscanf_required(read_file, "CASESENSITIVE,%d\n", 1, (int*)&result->respect_capitalization);
-	fscanf_required(read_file, "MATCH_COUNT,%d\n", 1, &result->match_count);
-	fscanf_required(read_file, "FILE_COUNT,%d\n", 1, &result->file_count);
+	fscanf_required(read_file, "MATCH_COUNT,%u\n", 1, &result->match_count);
+	fscanf_required(read_file, "FILE_COUNT,%u\n", 1, &result->file_count);
 	fscanf_required(read_file, "TIMESTAMP,%llu\n", 1, &result->timestamp);
 
 	utf8ncpy(path_buffer, result->directory_to_search, MAX_INPUT_LENGTH);
@@ -65,7 +65,7 @@ static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 		}
 
 		// New match within current_file
-		if (current_file && sscanf(line_buffer, "MATCH,%d,%zu,%zu\n", &match.line_nr, &match.word_match_length, &match.word_match_offset) == 3) {
+		if (current_file && sscanf(line_buffer, "MATCH,%u,%zu,%zu\n", &match.line_nr, &match.word_match_length, &match.word_match_offset) == 3) {
 			match.file = current_file;
 
 			utf8_int8_t* iter = line_buffer;
@@ -95,11 +95,13 @@ static bool _ts_import_csv(ts_search_result* result, const utf8_int8_t* path) {
 
 	int version = -1;
 	bool res = false;
-	fscanf(read_file, "VERSION,%d\n", &version);
+	if (fscanf(read_file, "VERSION,%d\n", &version) != 1) goto done;
 	switch(version) {
 		case 1: res = _ts_import_csv_v1(result, read_file); break;
 		default: break;
 	}
+
+	done:
 	fclose(read_file);
 	return res;
 }

@@ -1,12 +1,14 @@
 #pragma once
 
 #if defined(_WIN32)
-#define MAX_INPUT_LENGTH 32767
+#define MAX_INPUT_LENGTH 4096
 #elif defined(__linux__)
 #define MAX_INPUT_LENGTH 4096
 #elif defined(__APPLE__)
 #define MAX_INPUT_LENGTH 1024
 #endif
+
+#define exit_oom() { perror("Out of memory."); exit(-1); }
 
 #define AUTHOR "created by Aldrik Ramaekers"
 #define CONTACT "<aldrik.ramaekers@gmail.com>"

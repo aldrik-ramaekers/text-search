@@ -268,7 +268,7 @@ void _ts_create_file_match_rows() {
 		ts_found_file *file = *(ts_found_file **)ts_array_at(&current_search_result->files, item);
 
 		char match_info_txt[20];
-		snprintf(match_info_txt, 20, "#%d", item+1);
+		snprintf(match_info_txt, 20, "#%u", item+1);
 		
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();
@@ -349,7 +349,7 @@ void _ts_create_text_match_rows() {
 			ImGui::TableHeader(file->file->path);
 
 			ImGui::TableNextColumn();	
-			snprintf(match_info_txt, 20, "%d match(es)", file->file->match_count);
+			snprintf(match_info_txt, 20, "%u match(es)", file->file->match_count);
 			ImGui::TableHeader(match_info_txt);
 
 			ImGui::SameLine();
@@ -362,7 +362,7 @@ void _ts_create_text_match_rows() {
 		if (file->file->collapsed) continue;
 
 		char match_nr[20];
-		snprintf(match_nr, 20, "#%d", item+1);
+		snprintf(match_nr, 20, "#%u", item+1);
 
 		ImGui::TableNextRow();
 		ImGui::TableNextColumn();

@@ -23,19 +23,19 @@ static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entr
 	uint32_t threads = 1, maxSize = 100, matchCase = 0;
 
 #if defined(_WIN32)
-    if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH); }
-    else if (sscanf_s(line, "Filter=%s", (char*)&filter, MAX_INPUT_LENGTH) == 1) { strncpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter, MAX_INPUT_LENGTH); }
-    else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH); }
-	else if (sscanf_s(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
-	else if (sscanf_s(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
-	else if (sscanf_s(line, "MatchCase=%d", &matchCase) == 1) { respect_capitalization = matchCase; }
+    if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH-1); }
+    else if (sscanf_s(line, "Filter=%s", (char*)&filter, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(filter_buffer, MAX_INPUT_LENGTH, (char*)filter, MAX_INPUT_LENGTH-1); }
+    else if (sscanf_s(line, "Query=%s", (char*)&query, MAX_INPUT_LENGTH-1) == 1) { strncpy_s(query_buffer, MAX_INPUT_LENGTH, (char*)query, MAX_INPUT_LENGTH-1); }
+	else if (sscanf_s(line, "Threads=%u", &threads) == 1) { ts_thread_count = threads; }
+	else if (sscanf_s(line, "MaxSize=%u", &maxSize) == 1) { max_file_size = maxSize; }
+	else if (sscanf_s(line, "MatchCase=%u", &matchCase) == 1) { respect_capitalization = matchCase; }
 #elif defined(__linux__) || defined(__APPLE__)
 	if (sscanf(line, "Path=%s", (char*)&path) == 1) { strncpy(path_buffer, (char*)path, MAX_INPUT_LENGTH); }
     else if (sscanf(line, "Filter=%s", (char*)&filter) == 1) { strncpy(filter_buffer, (char*)filter, MAX_INPUT_LENGTH); }
     else if (sscanf(line, "Query=%s", (char*)&query) == 1) { strncpy(query_buffer, (char*)query, MAX_INPUT_LENGTH); }
-	else if (sscanf(line, "Threads=%d", &threads) == 1) { ts_thread_count = threads; }
-	else if (sscanf(line, "MaxSize=%d", &maxSize) == 1) { max_file_size = maxSize; }
-	else if (sscanf(line, "MatchCase=%d", &matchCase) == 1) { respect_capitalization = matchCase; }
+	else if (sscanf(line, "Threads=%u", &threads) == 1) { ts_thread_count = threads; }
+	else if (sscanf(line, "MaxSize=%u", &maxSize) == 1) { max_file_size = maxSize; }
+	else if (sscanf(line, "MatchCase=%u", &matchCase) == 1) { respect_capitalization = matchCase; }
 #endif
 }
 

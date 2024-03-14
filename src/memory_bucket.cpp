@@ -1,4 +1,5 @@
 #include "memory_bucket.h"
+#include "config.h"
 #include <stdlib.h>
 
 ts_memory_bucket ts_memory_bucket_init(uint32_t bucket_size)
@@ -35,6 +36,7 @@ void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, uint32_t reserve_length
 	// failed to find suitable space, allocate new bucket
 	ts_memory_bucket_entry new_bucket;
 	new_bucket.data = (char*)malloc(bucket_entry->length);
+	if (!new_bucket.data) exit_oom();
 	new_bucket.length = bucket_entry->length;
 	new_bucket.cursor = reserve_length;
 	ts_array_push(&bucket->buckets, &new_bucket);

@@ -1,9 +1,8 @@
 #ifndef INCLUDE_ts_array
 #define INCLUDE_ts_array
 
-#define ASSERT(e_) {if(!(e_)){*(int*)0=0;}}
-
 #include "mutex.h"
+#include <cassert>
 #include <cstdint>
 
 typedef struct t_ts_array

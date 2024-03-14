@@ -78,6 +78,7 @@ size_t ts_filter_matches(ts_array *filters, char *string, char **matched_filter)
 ts_search_result *ts_create_empty_search_result()
 {
 	ts_search_result *new_result_buffer = (ts_search_result *)malloc(sizeof(ts_search_result));
+	if (!new_result_buffer) exit_oom();
 	new_result_buffer->completed_match_threads = 0;
 	new_result_buffer->mutex = ts_mutex_create();
 	new_result_buffer->done_finding_files = false;
@@ -123,7 +124,7 @@ bool string_is_asteriks(char *text)
 	return true;
 }
 
-bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches, bool respect_capitalization)
+bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches, bool case_sensitive)
 {
 	bool final_result = false;
 	bool is_asteriks_only = false;
@@ -156,7 +157,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 	int index = 0;
 	while ((text_to_search = utf8codepoint(text_to_search, &text_to_search_ch)) && text_to_search_ch)
 	{
-		if (!respect_capitalization) text_to_search_ch = utf8lwrcodepoint(text_to_search_ch);
+		if (!case_sensitive) text_to_search_ch = utf8lwrcodepoint(text_to_search_ch);
 		word_offset_val += utf8codepointsize(text_to_search_ch);
 		if (text_to_search_ch == '\n')
 		{
@@ -171,7 +172,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 		bool in_wildcard = false;
 
 		text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-		if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+		if (!case_sensitive) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 		// text_to_search_current_attempt = utf8codepoint(text_to_search_current_attempt,
 		//&text_to_search_current_attempt_ch);
 
@@ -190,7 +191,7 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 			if (text_to_find_ch == '*')
 			{
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-				if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+				if (!case_sensitive) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 				in_wildcard = true;
 			}
 
@@ -201,14 +202,14 @@ bool ts_string_contains(char *text_to_search, utf8_int8_t *text_to_find, ts_arra
 		continue_search:
 			if (!in_wildcard) {
 				text_to_find = utf8codepoint(text_to_find, &text_to_find_ch);
-				if (!respect_capitalization) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
+				if (!case_sensitive) text_to_find_ch = utf8lwrcodepoint(text_to_find_ch);
 			}
 
 			word_match_len_val += utf8codepointsize(text_to_search_current_attempt_ch);
 			text_to_search_current_attempt = utf8codepoint(
 				text_to_search_current_attempt,
 				&text_to_search_current_attempt_ch);
-			if (!respect_capitalization) text_to_search_current_attempt_ch = utf8lwrcodepoint(text_to_search_current_attempt_ch);
+			if (!case_sensitive) text_to_search_current_attempt_ch = utf8lwrcodepoint(text_to_search_current_attempt_ch);
 
 			if (!text_to_search_current_attempt_ch && !text_to_find_ch)
 				goto done;
@@ -275,7 +276,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 					size_t bytes_to_trim = (file_match.word_match_offset - text_pad_lr);
 					size_t bytes_trimmed = 0;
 					utf8_int8_t* line_start_before_trim = m->line_start;
-					for (size_t i = 0; i < bytes_to_trim; i++) {
+					for (size_t x = 0; x < bytes_to_trim; x++) {
 						utf8_int32_t ch;
 						m->line_start = utf8codepoint(m->line_start, &ch);
 						bytes_trimmed = (m->line_start - line_start_before_trim);
@@ -398,7 +399,7 @@ static void _ts_list_files(ts_search_result* result)
 	ts_thread_detach(&thr);
 }
 
-void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,  uint16_t thread_count, uint32_t max_file_size, bool respect_capitalization)
+void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,  uint16_t thread_count, uint32_t max_fs, bool case_sensitive)
 {
 	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
 		return;
@@ -415,8 +416,8 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 	snprintf(new_result->file_filter, MAX_INPUT_LENGTH, "%s", filter);
 	new_result->filters = ts_get_filters(filter);
 	new_result->max_ts_thread_count = thread_count;
-	new_result->max_file_size = max_file_size;
-	new_result->respect_capitalization = respect_capitalization;
+	new_result->max_file_size = max_fs;
+	new_result->respect_capitalization = case_sensitive;
 
 	if (utf8len(query) == 0) {
 		new_result->search_text = nullptr;

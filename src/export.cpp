@@ -64,9 +64,9 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "\"path\": \"%s\",\n", _json_escape_str(result->directory_to_search, escape_buffer, escape_size));
 	fprintf(write_file, "\"filter\": \"%s\",\n", _json_escape_str(result->file_filter, escape_buffer, escape_size));
 	fprintf(write_file, "\"query\": \"%s\",\n", _json_escape_str(result->search_text, escape_buffer, escape_size));
-	fprintf(write_file, "\"casesensitive\": %d,\n", result->respect_capitalization);
-	fprintf(write_file, "\"match_count\": %d,\n", result->match_count);
-	fprintf(write_file, "\"file_count\": %d,\n", result->file_count);
+	fprintf(write_file, "\"casesensitive\": %u,\n", result->respect_capitalization);
+	fprintf(write_file, "\"match_count\": %u,\n", result->match_count);
+	fprintf(write_file, "\"file_count\": %u,\n", result->file_count);
 	fprintf(write_file, "\"timestamp\": %llu,\n", result->timestamp);
 
 	fprintf(write_file, "\"files\": [\n");
@@ -105,7 +105,7 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 		if (!first_match_of_file) fprintf(write_file, ",\n");
 		first_match_of_file = false;
 		fprintf(write_file, "{\n");
-		fprintf(write_file, "\"line_nr\": %d,\n", match->line_nr);
+		fprintf(write_file, "\"line_nr\": %u,\n", match->line_nr);
 		fprintf(write_file, "\"match_length\": %zu,\n", match->word_match_length);
 		fprintf(write_file, "\"match_offset\": %zu,\n", match->word_match_offset);
 		fprintf(write_file, "\"line\": \"%s\"\n", _json_escape_str(match->line_info, escape_buffer, escape_size));
@@ -130,9 +130,9 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "PATH,%s\n", result->directory_to_search);
 	fprintf(write_file, "FILTER,%s\n", result->file_filter);
 	fprintf(write_file, "QUERY,%s\n", result->search_text);
-	fprintf(write_file, "CASESENSITIVE,%d\n", result->respect_capitalization);
-	fprintf(write_file, "MATCH_COUNT,%d\n", result->match_count);
-	fprintf(write_file, "FILE_COUNT,%d\n", result->file_count);
+	fprintf(write_file, "CASESENSITIVE,%u\n", result->respect_capitalization);
+	fprintf(write_file, "MATCH_COUNT,%u\n", result->match_count);
+	fprintf(write_file, "FILE_COUNT,%u\n", result->file_count);
 	fprintf(write_file, "TIMESTAMP,%llu\n", result->timestamp);
 
 	// Empty files.
@@ -193,9 +193,9 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "<PATH>%s</PATH>\n", _xml_escape_str(result->directory_to_search, escape_buffer, escape_size));
 	fprintf(write_file, "<FILTER>%s</FILTER>\n", _xml_escape_str(result->file_filter, escape_buffer, escape_size));
 	fprintf(write_file, "<QUERY>%s</QUERY>\n", _xml_escape_str(result->search_text, escape_buffer, escape_size));
-	fprintf(write_file, "<CASESENSITIVE>%d</CASESENSITIVE>\n", result->respect_capitalization);
-	fprintf(write_file, "<MATCH_COUNT>%d</MATCH_COUNT>\n", result->match_count);
-	fprintf(write_file, "<FILE_COUNT>%d</FILE_COUNT>\n", result->file_count);
+	fprintf(write_file, "<CASESENSITIVE>%u</CASESENSITIVE>\n", result->respect_capitalization);
+	fprintf(write_file, "<MATCH_COUNT>%u</MATCH_COUNT>\n", result->match_count);
+	fprintf(write_file, "<FILE_COUNT>%u</FILE_COUNT>\n", result->file_count);
 	fprintf(write_file, "<TIMESTAMP>%llu</TIMESTAMP>\n", result->timestamp);
 
 	// Empty files.
@@ -223,7 +223,7 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 		}
 
 		fprintf(write_file, "<MATCH>\n");
-		fprintf(write_file, "<LINENR>%d</LINENR>\n", match->line_nr);
+		fprintf(write_file, "<LINENR>%u</LINENR>\n", match->line_nr);
 		fprintf(write_file, "<MATCH_LENGTH>%zu</MATCH_LENGTH>\n", match->word_match_length);
 		fprintf(write_file, "<MATCH_OFFSET>%zu</MATCH_OFFSET>\n", match->word_match_offset);
 		fprintf(write_file, "<LINE>%s</LINE>\n", _xml_escape_str(match->line_info, escape_buffer, escape_size));
@@ -268,6 +268,7 @@ export_result ts_export_result(ts_search_result* result, const utf8_int8_t* path
 	result->is_saving = true;
 
 	struct t_export_thread_args* args = (struct t_export_thread_args*)malloc(sizeof(struct t_export_thread_args));
+	if (!args) exit_oom();
 	args->result = result;
 	args->path = path;
 

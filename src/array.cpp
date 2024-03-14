@@ -1,5 +1,5 @@
 #include "array.h"
-
+#include "config.h"
 #include <stdlib.h>
 #include <cstring>
 
@@ -18,9 +18,9 @@ ts_array ts_array_create(uint32_t entry_size)
 
 uint32_t ts_array_push(ts_array *ts_array, void *data)
 {
-	ASSERT(ts_array);
-	ASSERT(data);
-	ASSERT(ts_array->reserve_jump >= 1);
+	assert(ts_array);
+	assert(data);
+	assert(ts_array->reserve_jump >= 1);
 	
 	ts_mutex_lock(&ts_array->mutex);
 	ts_array->length++;
@@ -47,9 +47,9 @@ uint32_t ts_array_push(ts_array *ts_array, void *data)
 
 uint32_t ts_array_push_size(ts_array *ts_array, void *data, uint32_t data_size)
 {
-	ASSERT(ts_array);
-	ASSERT(data);
-	ASSERT(ts_array->reserve_jump >= 1);
+	assert(ts_array);
+	assert(data);
+	assert(ts_array->reserve_jump >= 1);
 	
 	ts_mutex_lock(&ts_array->mutex);
 	ts_array->length++;
@@ -84,7 +84,7 @@ uint32_t ts_array_push_size(ts_array *ts_array, void *data, uint32_t data_size)
 
 void ts_array_reserve(ts_array *ts_array, uint32_t reserve_count)
 {
-	ASSERT(ts_array);
+	assert(ts_array);
 	
 	ts_mutex_lock(&ts_array->mutex);
 	uint32_t reserved_count = ts_array->reserved_length - ts_array->length;
@@ -108,9 +108,9 @@ void ts_array_reserve(ts_array *ts_array, uint32_t reserve_count)
 
 void ts_array_remove_at(ts_array *ts_array, uint32_t at)
 {
-	ASSERT(ts_array);
-	ASSERT(at >= 0);
-	ASSERT(at < ts_array->length);
+	assert(ts_array);
+	assert(at >= 0);
+	assert(at < ts_array->length);
 	
 	ts_mutex_lock(&ts_array->mutex);
 	if (ts_array->length > 1)
@@ -139,7 +139,7 @@ void ts_array_remove(ts_array *ts_array, void *ptr)
 
 void ts_array_remove_by(ts_array *ts_array, void *data)
 {
-	ASSERT(ts_array);
+	assert(ts_array);
 	
 	ts_mutex_lock(&ts_array->mutex);
 	for (uint32_t i = 0; i < ts_array->length; i++)
@@ -157,9 +157,9 @@ void ts_array_remove_by(ts_array *ts_array, void *data)
 void *ts_array_at(ts_array *ts_array, uint32_t at)
 {
 	ts_mutex_lock(&ts_array->mutex);
-	ASSERT(ts_array);
-	ASSERT(at >= 0);
-	ASSERT(at < ts_array->length);
+	assert(ts_array);
+	assert(at >= 0);
+	assert(at < ts_array->length);
 	
 	void *result =  (char*)ts_array->data + (at * ts_array->entry_size);
 	ts_mutex_unlock(&ts_array->mutex);
@@ -168,7 +168,7 @@ void *ts_array_at(ts_array *ts_array, uint32_t at)
 
 void ts_array_destroy(ts_array *ts_array)
 {
-	ASSERT(ts_array);
+	assert(ts_array);
 	free(ts_array->data);
 	ts_mutex_destroy(&ts_array->mutex);
 }
@@ -180,6 +180,8 @@ ts_array ts_array_copy(ts_array *arr)
 	new_ts_array.reserved_length = arr->reserved_length;
 	new_ts_array.entry_size = arr->entry_size;
 	new_ts_array.data = malloc(new_ts_array.entry_size*new_ts_array.reserved_length);
+	if (!new_bucket.data) exit_oom();
+
 	new_ts_array.mutex = ts_mutex_create();
 	
 	ts_mutex_lock(&arr->mutex);

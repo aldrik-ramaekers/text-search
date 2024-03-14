@@ -111,8 +111,9 @@ void ts_platform_set_window_title(utf8_int8_t* str) {
 
 int main(int, char**)
 {
-	OleInitialize(NULL);
-	CoInitializeEx(0, COINIT_MULTITHREADED|COINIT_DISABLE_OLE1DDE);
+	if (OleInitialize(NULL) != S_OK) {
+		return -1;
+	}
 
 	ts_init();
 
@@ -322,7 +323,8 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 	}
 	
 	fseek(file, 0 , SEEK_END);
-	int length = ftell(file);
+	long length = ftell(file);
+	if (length == -1L) goto done_failure;
 	fseek(file, 0, SEEK_SET);
 	
 	int length_to_alloc = length+1;
@@ -330,8 +332,8 @@ ts_file_content ts_platform_read_file(char *path, const char *mode)
 	result.content = malloc(length_to_alloc);
 	if (!result.content) goto done;
 	
-	memset(result.content, 0, length);
-	size_t read_result = fread(result.content, 1, length, file);
+	memset(result.content, 0, length_to_alloc);
+	size_t read_result = fread(result.content, 1, (size_t)length, file);
 	if (read_result == 0 && length != 0)
 	{
 		free(result.content);
