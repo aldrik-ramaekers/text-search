@@ -143,7 +143,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 		if (ImGui::BeginMenu("File"))
 		{
 			if (ImGui::MenuItem("Open")) {
-				ifd::FileDialog::Instance().Save("FileOpenDialog", "Open file", "File (*.csv){.csv}");
+				ifd::FileDialog::Instance().Open("FileOpenDialog", "Open file", "File (*.csv){.csv}");
 			}
 			if (ImGui::MenuItem("Save")) {
 				if (strlen(save_path) == 0)
