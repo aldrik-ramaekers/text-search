@@ -27,6 +27,7 @@ void ts_init();
 
 GLFWwindow* glfw_window;
 bool program_running = true;
+ts_dragdrop_data dragdrop_data = {0};
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
