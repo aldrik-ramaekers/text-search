@@ -8,6 +8,7 @@
 #include "platform.h"
 #include "mutex.h"
 #include "array.h"
+#include "mem.h"
 #include "memory_bucket.h"
 #include "image.h"
 #include "config.h"

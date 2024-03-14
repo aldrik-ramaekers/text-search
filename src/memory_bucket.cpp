@@ -1,5 +1,6 @@
 #include "memory_bucket.h"
 #include "config.h"
+#include "mem.h"
 #include <stdlib.h>
 
 ts_memory_bucket ts_memory_bucket_init(uint32_t bucket_size)

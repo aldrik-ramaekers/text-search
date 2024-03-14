@@ -1,6 +1,7 @@
 #include "export.h"
 #include "array.h"
 #include "config.h"
+#include "mem.h"
 #include <stdio.h>
 
 #ifndef _WIN32
