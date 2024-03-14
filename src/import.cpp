@@ -94,11 +94,14 @@ static bool _ts_import_csv(ts_search_result* result, const utf8_int8_t* path) {
 	if (read_file == NULL) return false;
 
 	int version = -1;
+	bool res = false;
 	fscanf(read_file, "VERSION,%d\n", &version);
 	switch(version) {
-		case 1: return _ts_import_csv_v1(result, read_file);
-		default: return false;
+		case 1: res = _ts_import_csv_v1(result, read_file); break;
+		default: break;
 	}
+	fclose(read_file);
+	return res;
 }
 
 ts_search_result* ts_import_result(const utf8_int8_t* path) {
