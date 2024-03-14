@@ -142,7 +142,9 @@ static int _ts_create_menu(int window_w, int window_h) {
 	{
 		if (ImGui::BeginMenu("File"))
 		{
-			//ImGui::MenuItem("Open", "CTRL+O");
+			if (ImGui::MenuItem("Open")) {
+				ifd::FileDialog::Instance().Save("FileOpenDialog", "Open file", "File (*.csv){.csv}");
+			}
 			if (ImGui::MenuItem("Save")) {
 				if (strlen(save_path) == 0)
 					ifd::FileDialog::Instance().Save("FileSaveAsDialog", "Save results to file", "File (*.csv;*.json;*.xml){.csv,.json,.xml}");
@@ -178,6 +180,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 
 	_ts_create_popups();
 
+	// File exporting.
 	if (ifd::FileDialog::Instance().IsDone("FileSaveAsDialog", window_w, window_h)) {
 		if (ifd::FileDialog::Instance().HasResult()) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
@@ -188,6 +191,22 @@ static int _ts_create_menu(int window_w, int window_h) {
 			utf8_int8_t new_name[MAX_INPUT_LENGTH];
 			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
 			ts_platform_set_window_title(new_name);
+		}
+		ifd::FileDialog::Instance().Close();
+	}
+
+	// File importing.
+	if (ifd::FileDialog::Instance().IsDone("FileOpenDialog", window_w, window_h)) {
+		if (ifd::FileDialog::Instance().HasResult()) {
+			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
+
+			// Set titlebar name.
+			utf8_int8_t new_name[MAX_INPUT_LENGTH];
+			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
+			ts_platform_set_window_title(new_name);
+
+			current_search_result = ts_import_result(save_path);
 		}
 		ifd::FileDialog::Instance().Close();
 	}
@@ -549,6 +568,7 @@ void ts_create_gui(int window_w, int window_h) {
 
 	if (dragdrop_data.did_drop) {
 		current_search_result = ts_import_result(dragdrop_data.path);
+		utf8ncpy(save_path, dragdrop_data.path, sizeof(save_path));
 		dragdrop_data.did_drop = false;
 	}
 
