@@ -37,8 +37,7 @@ namespace ImGui {
 
 			IM_ASSERT(font != nullptr);
 			io.FontDefault = font;
-			io.Fonts->Build();
-			
+						
 			// Uncomment if you want these glyphs. Fonts can be found in fonts/ folder.
 			// io.Fonts->AddFontFromMemoryCompressedTTF(
 			// 		GmarketSans_compressed_data, 
@@ -50,8 +49,7 @@ namespace ImGui {
 			// 		NotoSansJP_compressed_size, 
 			// 		size, &config, io.Fonts->GetGlyphRangesJapanese());
 			
-
-                 
+            io.Fonts->Build();    
         }
 
         void StyleColorsSpectrum() {
