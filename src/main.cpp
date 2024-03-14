@@ -39,10 +39,10 @@ static void _ts_create_popups() {
 	// Settings window
 	if (ImGui::BeginPopupModal("Text-Search settings", &open_settings_window, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
 		ImGui::SetWindowSize({300, 0});
-		ImGui::DragInt("Threads", &ts_thread_count, 0.1f, 1, 8);
+		ImGui::DragInt("Threads", (int*)&ts_thread_count, 0.1f, 1, 8);
 		ImGui::SetItemTooltip("Number of threads used to search for text matches");
 
-		ImGui::DragInt("File Size", &max_file_size, 50.0f, 1, 10000, "%dMB");
+		ImGui::DragInt("File Size", (int*)&max_file_size, 50.0f, 1, 10000, "%dMB");
 		ImGui::SetItemTooltip("Files larger than this will not be searched");
 
 		ImGui::Dummy({0, 70});
@@ -262,8 +262,8 @@ int _tb_query_input_cb(ImGuiInputTextCallbackData* data) {
 }
 
 void _ts_create_file_match_rows() {
-	int itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
-	for (int item = 0; item < itemcount; item++)
+	uint32_t itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
+	for (uint32_t item = 0; item < itemcount; item++)
 	{
 		ts_found_file *file = *(ts_found_file **)ts_array_at(&current_search_result->files, item);
 
@@ -303,8 +303,8 @@ const utf8_int8_t* _ts_file_error_to_message(ts_file_open_error err) {
 }
 
 void _ts_create_file_error_rows() {
-	int itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
-	for (int item = 0; item < itemcount; item++)
+	uint32_t itemcount = current_search_result == 0 ? 0 : current_search_result->files.length;
+	for (uint32_t item = 0; item < itemcount; item++)
 	{
 		ts_found_file *file = *(ts_found_file **)ts_array_at(&current_search_result->files, item);
 		if (file->error == FILE_ERROR_NONE) continue;
@@ -327,9 +327,9 @@ void _ts_create_file_error_rows() {
 }
 
 void _ts_create_text_match_rows() {
-	int itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
+	uint32_t itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
 	ts_found_file* prev_file = nullptr;
-	for (int item = 0; item < itemcount; item++)
+	for (uint32_t item = 0; item < itemcount; item++)
 	{
 		ts_file_match *file = (ts_file_match *)ts_array_at(&current_search_result->matches, item);
 

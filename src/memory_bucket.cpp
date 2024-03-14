@@ -1,7 +1,7 @@
 #include "memory_bucket.h"
 #include <stdlib.h>
 
-ts_memory_bucket ts_memory_bucket_init(int bucket_size)
+ts_memory_bucket ts_memory_bucket_init(uint32_t bucket_size)
 {
 	ts_memory_bucket collection;
 	collection.bucket_mutex = ts_mutex_create();
@@ -15,11 +15,11 @@ ts_memory_bucket ts_memory_bucket_init(int bucket_size)
 	return collection;
 }
 
-void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length)
+void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, uint32_t reserve_length)
 {
 	ts_mutex_lock(&bucket->bucket_mutex);
 	ts_memory_bucket_entry *bucket_entry = 0;
-	for (int i = 0; i < bucket->buckets.length; i++)
+	for (uint32_t i = 0; i < bucket->buckets.length; i++)
 	{
 		bucket_entry = (ts_memory_bucket_entry *)ts_array_at(&bucket->buckets, i);
 		
@@ -46,7 +46,7 @@ void* ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length)
 void ts_memory_bucket_reset(ts_memory_bucket *bucket)
 {
 	ts_mutex_lock(&bucket->bucket_mutex);
-	for (int i = 0; i < bucket->buckets.length; i++)
+	for (uint32_t i = 0; i < bucket->buckets.length; i++)
 	{
 		ts_memory_bucket_entry *bucket_entry = (ts_memory_bucket_entry *)ts_array_at(&bucket->buckets, i);
 		bucket_entry->cursor = 0;
@@ -57,7 +57,7 @@ void ts_memory_bucket_reset(ts_memory_bucket *bucket)
 void ts_memory_bucket_destroy(ts_memory_bucket *bucket)
 {
 	ts_mutex_lock(&bucket->bucket_mutex);
-	for (int i = 0; i < bucket->buckets.length; i++)
+	for (uint32_t i = 0; i < bucket->buckets.length; i++)
 	{
 		ts_memory_bucket_entry *bucket_entry = (ts_memory_bucket_entry *)ts_array_at(&bucket->buckets, i);
 		free(bucket_entry->data);

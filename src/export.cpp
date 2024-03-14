@@ -72,7 +72,7 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "\"files\": [\n");
 
 	// Empty files.
-	for (int i = 0; i < result->files.length; i++) {
+	for (uint32_t i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
 		if (file->match_count != 0) continue;
 		fprintf(write_file, "{\n");
@@ -86,7 +86,7 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 	// Files with matches.
 	bool first_match_of_file = true;
 	ts_found_file* prev_file = NULL;
-	for (int i = 0; i < result->matches.length; i++) {
+	for (uint32_t i = 0; i < result->matches.length; i++) {
 		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
 
 		if (match->file != prev_file) {
@@ -136,7 +136,7 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "TIMESTAMP,%llu\n", result->timestamp);
 
 	// Empty files.
-	for (int i = 0; i < result->files.length; i++) {
+	for (uint32_t i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
 		if (file->match_count != 0) continue;
 		fprintf(write_file, "FILE,%s\n", file->path);
@@ -144,7 +144,7 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 
 	// Files with matches.
 	ts_found_file* prev_file = NULL;
-	for (int i = 0; i < result->matches.length; i++) {
+	for (uint32_t i = 0; i < result->matches.length; i++) {
 		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
 
 		if (match->file != prev_file) {
@@ -199,7 +199,7 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "<TIMESTAMP>%llu</TIMESTAMP>\n", result->timestamp);
 
 	// Empty files.
-	for (int i = 0; i < result->files.length; i++) {
+	for (uint32_t i = 0; i < result->files.length; i++) {
 		ts_found_file* file = *(ts_found_file **)ts_array_at(&result->files, i);
 		if (file->match_count != 0) continue;
 		fprintf(write_file, "<FILE>\n");
@@ -209,7 +209,7 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 
 	// Files with matches.
 	ts_found_file* prev_file = NULL;
-	for (int i = 0; i < result->matches.length; i++) {
+	for (uint32_t i = 0; i < result->matches.length; i++) {
 		ts_file_match* match = (ts_file_match*)ts_array_at(&result->matches, i);
 
 		if (match->file != prev_file) {

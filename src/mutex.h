@@ -18,7 +18,7 @@ typedef struct t_ts_mutex
 typedef struct t_ts_thread
 {
 	HANDLE thread;
-	int valid;
+	bool valid;
 } ts_thread;
 
 #elif defined(__linux__) || defined(__APPLE__)

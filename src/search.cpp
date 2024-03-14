@@ -33,7 +33,7 @@ ts_array ts_get_filters(utf8_int8_t *pattern)
 	return result;
 }
 
-int ts_string_match(utf8_int8_t *first, utf8_int8_t *second)
+uint32_t ts_string_match(utf8_int8_t *first, utf8_int8_t *second)
 {
 	// If we reach at the end of both strings, we are done
 	if (*first == '\0' && *second == '\0')
@@ -60,7 +60,7 @@ int ts_string_match(utf8_int8_t *first, utf8_int8_t *second)
 
 size_t ts_filter_matches(ts_array *filters, char *string, char **matched_filter)
 {
-	for (int i = 0; i < filters->length; i++)
+	for (uint32_t i = 0; i < filters->length; i++)
 	{
 		char *filter = (char *)ts_array_at(filters, i);
 
@@ -256,7 +256,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 		if (ts_string_contains((char *)content.content, result->search_text, &text_matches, result->respect_capitalization))
 		{
 			ts_mutex_lock(&result->matches.mutex);
-			for (int i = 0; i < text_matches.length; i++)
+			for (uint32_t i = 0; i < text_matches.length; i++)
 			{
 				ts_text_match *m = (ts_text_match *)ts_array_at(&text_matches, i);
 
@@ -323,7 +323,7 @@ static void *_ts_search_thread(void *args)
 			goto finish_early;
 
 		ts_mutex_lock(&new_result->files.mutex);
-		int read_cursor = new_result->file_list_read_cursor;
+		uint32_t read_cursor = new_result->file_list_read_cursor;
 		if (read_cursor >= new_result->files.length) {
 			ts_mutex_unlock(&new_result->files.mutex);
 
@@ -398,7 +398,7 @@ static void _ts_list_files(ts_search_result* result)
 	ts_thread_detach(&thr);
 }
 
-void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, int thread_count, int max_file_size, bool respect_capitalization)
+void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,  uint16_t thread_count, uint32_t max_file_size, bool respect_capitalization)
 {
 	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
 		return;

@@ -24,8 +24,8 @@ extern utf8_int8_t save_path[MAX_INPUT_LENGTH];
 extern utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 extern utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 extern utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
-extern int ts_thread_count;
-extern int max_file_size; // in MBs
+extern uint16_t ts_thread_count;
+extern uint32_t max_file_size; // in MBs
 extern bool respect_capitalization;
 
 void ts_load_config();

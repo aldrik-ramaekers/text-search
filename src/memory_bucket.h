@@ -10,8 +10,8 @@
 typedef struct t_ts_memory_bucket_entry
 {
 	char *data;
-	int length;
-	int cursor;
+	uint32_t length;
+	uint32_t cursor;
 } ts_memory_bucket_entry;
 
 typedef struct t_ts_memory_bucket
@@ -20,8 +20,8 @@ typedef struct t_ts_memory_bucket
 	ts_array buckets;
 } ts_memory_bucket;
 
-ts_memory_bucket 	ts_memory_bucket_init(int bucket_size);
-void* 				ts_memory_bucket_reserve(ts_memory_bucket *bucket, int reserve_length);
+ts_memory_bucket 	ts_memory_bucket_init(uint32_t bucket_size);
+void* 				ts_memory_bucket_reserve(ts_memory_bucket *bucket, uint32_t reserve_length);
 void 				ts_memory_bucket_reset(ts_memory_bucket *bucket);
 void 				ts_memory_bucket_destroy(ts_memory_bucket *bucket);
 

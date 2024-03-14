@@ -8,11 +8,12 @@
 #include <windows.h>
 #include <GL/GL.h>
 #include <tchar.h>
+#include <cstdint>
 
 typedef struct t_ts_image {
 	GLuint id;
-	int width;
-	int height;
+	uint32_t width;
+	uint32_t height;
 } ts_image;
 #elif defined(__linux__) || defined(__APPLE__)
 
@@ -23,8 +24,8 @@ typedef struct t_ts_image {
 
 typedef struct t_ts_image {
 	GLuint id;
-	int width;
-	int height;
+	uint32_t width;
+	uint32_t height;
 } ts_image;
 #endif
 

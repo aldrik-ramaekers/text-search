@@ -11,7 +11,7 @@ ts_image img_folder;
 ts_image img_drop;
 
 // Simple helper function to load an image into a OpenGL texture with common settings
-static bool _ts_load_texture(unsigned char* data, size_t size, GLuint* out_texture, int* out_width, int* out_height)
+static bool _ts_load_texture(unsigned char* data, size_t size, GLuint* out_texture, uint32_t* out_width, uint32_t* out_height)
 {
     // Load from file
     int image_width = 0;
@@ -46,8 +46,8 @@ static bool _ts_load_texture(unsigned char* data, size_t size, GLuint* out_textu
 }
 
 static ts_image _ts_load_image(unsigned char* data, size_t size) {
-	int w = 0;
-	int h = 0;
+	uint32_t w = 0;
+	uint32_t h = 0;
 	GLuint id = 0;
 	_ts_load_texture(data, size, &id, &w, &h);
 

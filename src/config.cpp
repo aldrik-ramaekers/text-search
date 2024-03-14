@@ -10,17 +10,17 @@ utf8_int8_t save_path[MAX_INPUT_LENGTH];
 utf8_int8_t path_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t filter_buffer[MAX_INPUT_LENGTH];
 utf8_int8_t query_buffer[MAX_INPUT_LENGTH];
-int ts_thread_count = 4;
-int max_file_size = 100; // in MBs
+uint16_t ts_thread_count = 4;
+uint32_t max_file_size = 100; // in MBs
 bool respect_capitalization = false;
 
-static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const char* line)
+static void _ts_config_ReadLine(ImGuiContext*, ImGuiSettingsHandler*, void* entry, const utf8_int8_t* line)
 {
-    uint8_t path[MAX_INPUT_LENGTH];
-	uint8_t filter[MAX_INPUT_LENGTH];
-	uint8_t query[MAX_INPUT_LENGTH];
+    utf8_int8_t path[MAX_INPUT_LENGTH];
+	utf8_int8_t filter[MAX_INPUT_LENGTH];
+	utf8_int8_t query[MAX_INPUT_LENGTH];
 
-	int threads = 1, maxSize = 100, matchCase = 0;
+	uint32_t threads = 1, maxSize = 100, matchCase = 0;
 
 #if defined(_WIN32)
     if (sscanf_s(line, "Path=%s", (char*)&path, MAX_INPUT_LENGTH) == 1) { strncpy_s(path_buffer, MAX_INPUT_LENGTH, (char*)path, MAX_INPUT_LENGTH); }

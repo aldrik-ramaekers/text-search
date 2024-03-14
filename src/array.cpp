@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <cstring>
 
-ts_array ts_array_create(int entry_size)
+ts_array ts_array_create(uint32_t entry_size)
 {
 	ts_array new_ts_array;
 	new_ts_array.length = 0;
@@ -16,7 +16,7 @@ ts_array ts_array_create(int entry_size)
 	return new_ts_array;
 }
 
-int ts_array_push(ts_array *ts_array, void *data)
+uint32_t ts_array_push(ts_array *ts_array, void *data)
 {
 	ASSERT(ts_array);
 	ASSERT(data);
@@ -40,12 +40,12 @@ int ts_array_push(ts_array *ts_array, void *data)
 	memcpy((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size),
 		   data, ts_array->entry_size);
 	
-	int result = ts_array->length -1;
+	uint32_t result = ts_array->length -1;
 	ts_mutex_unlock(&ts_array->mutex);
 	return result;
 }
 
-int ts_array_push_size(ts_array *ts_array, void *data, int data_size)
+uint32_t ts_array_push_size(ts_array *ts_array, void *data, uint32_t data_size)
 {
 	ASSERT(ts_array);
 	ASSERT(data);
@@ -72,22 +72,22 @@ int ts_array_push_size(ts_array *ts_array, void *data, int data_size)
 	// fill remaining space with 0
 	if (ts_array->entry_size > data_size)
 	{
-		int remaining = ts_array->entry_size - data_size;
+		uint32_t remaining = ts_array->entry_size - data_size;
 		memset((char*)ts_array->data + ((ts_array->length-1) * ts_array->entry_size) + data_size,
 			   0, remaining);
 	}
 	
-	int result = ts_array->length -1;
+	uint32_t result = ts_array->length -1;
 	ts_mutex_unlock(&ts_array->mutex);
 	return result;
 }
 
-void ts_array_reserve(ts_array *ts_array, int reserve_count)
+void ts_array_reserve(ts_array *ts_array, uint32_t reserve_count)
 {
 	ASSERT(ts_array);
 	
 	ts_mutex_lock(&ts_array->mutex);
-	int reserved_count = ts_array->reserved_length - ts_array->length;
+	uint32_t reserved_count = ts_array->reserved_length - ts_array->length;
 	reserve_count -= reserved_count;
 	
 	if (reserve_count > 0)
@@ -106,7 +106,7 @@ void ts_array_reserve(ts_array *ts_array, int reserve_count)
 	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void ts_array_remove_at(ts_array *ts_array, int at)
+void ts_array_remove_at(ts_array *ts_array, uint32_t at)
 {
 	ASSERT(ts_array);
 	ASSERT(at >= 0);
@@ -115,8 +115,8 @@ void ts_array_remove_at(ts_array *ts_array, int at)
 	ts_mutex_lock(&ts_array->mutex);
 	if (ts_array->length > 1)
 	{
-		int offset = at * ts_array->entry_size;
-		int size = (ts_array->length - at - 1) * ts_array->entry_size;
+		uint32_t offset = at * ts_array->entry_size;
+		uint32_t size = (ts_array->length - at - 1) * ts_array->entry_size;
 		memcpy((char*)ts_array->data + offset,
 			   (char*)ts_array->data + offset + ts_array->entry_size,
 			   size);
@@ -133,7 +133,7 @@ void ts_array_remove(ts_array *ts_array, void *ptr)
 	ts_mutex_lock(&ts_array->mutex);
 	size_t offset = (char*)ptr - (char*)ts_array->data;
 	size_t at = offset / ts_array->entry_size;
-	ts_array_remove_at(ts_array, (int)at);
+	ts_array_remove_at(ts_array, (uint32_t)at);
 	ts_mutex_unlock(&ts_array->mutex);
 }
 
@@ -142,7 +142,7 @@ void ts_array_remove_by(ts_array *ts_array, void *data)
 	ASSERT(ts_array);
 	
 	ts_mutex_lock(&ts_array->mutex);
-	for (int i = 0; i < ts_array->length; i++)
+	for (uint32_t i = 0; i < ts_array->length; i++)
 	{
 		void *d = ts_array_at(ts_array, i);
 		if (memcmp(d, data, ts_array->entry_size) == 0)
@@ -154,7 +154,7 @@ void ts_array_remove_by(ts_array *ts_array, void *data)
 	ts_mutex_unlock(&ts_array->mutex);
 }
 
-void *ts_array_at(ts_array *ts_array, int at)
+void *ts_array_at(ts_array *ts_array, uint32_t at)
 {
 	ts_mutex_lock(&ts_array->mutex);
 	ASSERT(ts_array);
