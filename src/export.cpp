@@ -3,6 +3,8 @@
 #include "config.h"
 #include <stdio.h>
 
+export_result last_export_result = EXPORT_NONE;
+
 #ifndef _WIN32
 #include <errno.h>
 int fopen_s(FILE **f, const char *name, const char *mode) {

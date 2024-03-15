@@ -17,7 +17,6 @@
 // Popups
 bool open_settings_window = false;
 bool open_about_window = false;
-export_result last_export_result = EXPORT_NONE;
 
 const char* help_text = 
 				"1. Search directory\n"
@@ -209,6 +208,37 @@ static int _ts_create_menu(int window_w, int window_h) {
 			current_search_result = ts_import_result(save_path);
 		}
 		ifd::FileDialog::Instance().Close();
+	}
+
+	
+	if (last_import_result != EXPORT_NONE) {
+		ImGui::OpenPopup("Import Failed");
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
+	}
+
+	// import error popup
+	if (ImGui::BeginPopupModal("Import Failed", (bool*)&last_import_result, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+		ImGui::SetWindowSize({300, 0});
+
+		switch (last_import_result)
+		{
+			case IMPORT_INVALID_DATA: ImGui::Text("File has invalid format"); break;
+			case IMPORT_INVALID_VERSION: ImGui::Text("File has unknown version"); break;
+			case IMPORT_FILE_ERROR: ImGui::Text("Failed to open file"); break;
+		default:
+			break;
+		}
+
+		ImGui::Dummy({0, 20});
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		if (ImGui::Button("Close")) {
+			last_import_result = IMPORT_NONE;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::EndPopup();
 	}
 
 	if (last_export_result != EXPORT_NONE) {

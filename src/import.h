@@ -2,4 +2,13 @@
 
 #include "search.h"
 
+typedef enum t_import_result {
+	IMPORT_NONE,
+	IMPORT_INVALID_DATA,
+	IMPORT_INVALID_VERSION,
+	IMPORT_FILE_ERROR,
+} import_result;
+
+extern import_result last_import_result;
+
 ts_search_result* ts_import_result(const utf8_int8_t* path);

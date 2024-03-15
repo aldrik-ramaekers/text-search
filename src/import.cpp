@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+import_result last_import_result = IMPORT_NONE;
+
 #ifndef _WIN32
 int fopen_s(FILE **f, const char *name, const char *mode); // defined in export.cpp
 #endif
@@ -18,9 +20,9 @@ static utf8_int8_t* _ts_str_find(utf8_int8_t* text, utf8_int8_t token) {
 }
 
 #define fscanf_required(_file, _format, _expect, ...) \
-	if (fscanf(_file, _format, __VA_ARGS__) != _expect) { return false; }
+	if (fscanf(_file, _format, __VA_ARGS__) != _expect) { return IMPORT_INVALID_DATA; }
 
-static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
+static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 	// Read setup info.
 	fscanf_required(read_file, "PATH,%s\n", 1, (char*)result->directory_to_search);
 	fscanf_required(read_file, "FILTER,%s\n", 1, (char*)result->file_filter);
@@ -63,9 +65,8 @@ static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 
 			ts_array_push_size(&result->files, &current_file, sizeof(ts_found_file*));
 		}
-
 		// New match within current_file
-		if (current_file && sscanf(line_buffer, "MATCH,%u,%zu,%zu\n", &match.line_nr, &match.word_match_length, &match.word_match_offset) == 3) {
+		else if (current_file && sscanf(line_buffer, "MATCH,%u,%zu,%zu\n", &match.line_nr, &match.word_match_length, &match.word_match_offset) == 3) {
 			match.file = current_file;
 			match.file->match_count++;
 
@@ -84,27 +85,49 @@ static bool _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
 			match.line_info = (char *)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
 			memset(match.line_info, 0, MAX_INPUT_LENGTH);
 		}
+		else {
+			// Invalid data. skip.
+		}
 	}
 
-	return true;
+	return IMPORT_NONE;
 }
 
-static bool _ts_import_csv(ts_search_result* result, const utf8_int8_t* path) {
+static import_result _ts_import_csv(ts_search_result* result, const utf8_int8_t* path) {
 	FILE *read_file;
 	fopen_s(&read_file, path, "rb");
-	if (read_file == NULL) return false;
+	if (read_file == NULL) return IMPORT_FILE_ERROR;
 
 	int version = -1;
-	bool res = false;
+	import_result res = IMPORT_NONE;
 	if (fscanf(read_file, "VERSION,%d\n", &version) != 1) goto done;
 	switch(version) {
 		case 1: res = _ts_import_csv_v1(result, read_file); break;
-		default: break;
+		default: res = IMPORT_INVALID_VERSION; break;
 	}
 
 	done:
 	fclose(read_file);
 	return res;
+}
+
+struct t_import_thread_args {
+	ts_search_result* result; 
+	const utf8_int8_t* path;
+};
+
+static void* _ts_import_thread(void* args) {
+	struct t_import_thread_args* arg = (struct t_import_thread_args*)args;
+
+	if (ts_str_has_extension(arg->path, ".csv")) {
+		last_import_result = _ts_import_csv(arg->result, arg->path);
+	}
+
+	arg->result->done_finding_files = true;
+	arg->result->search_completed = true;
+	free(arg);
+
+	return 0;
 }
 
 ts_search_result* ts_import_result(const utf8_int8_t* path) {
@@ -113,12 +136,12 @@ ts_search_result* ts_import_result(const utf8_int8_t* path) {
 	res->search_completed = false;
 	res->cancel_search = false;
 	
-	if (ts_str_has_extension(path, ".csv")) {
-		_ts_import_csv(res, path);
-	}
+	struct t_import_thread_args* args = (struct t_import_thread_args*)malloc(sizeof(struct t_import_thread_args));
+	if (!args) exit_oom();
+	args->result = res;
+	args->path = path;
 
-	res->done_finding_files = true;
-	res->search_completed = true;
+	ts_thread_start(_ts_import_thread, args);
 
 	return res;
 }
