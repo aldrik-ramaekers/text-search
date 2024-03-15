@@ -11,4 +11,5 @@ typedef enum t_import_result {
 
 extern import_result last_import_result;
 
-ts_search_result* ts_import_result(const utf8_int8_t* path);
+ts_search_result* 	ts_import_result(const utf8_int8_t* path);
+void				ts_create_import_popup(int window_w, int window_h);

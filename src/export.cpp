@@ -1,6 +1,7 @@
 #include "export.h"
 #include "array.h"
 #include "config.h"
+#include "../imfiledialog/ImFileDialog.h"
 #include <stdio.h>
 
 export_result last_export_result = EXPORT_NONE;
@@ -277,4 +278,53 @@ export_result ts_export_result(ts_search_result* result, const utf8_int8_t* path
 	ts_thread_start(_ts_export_thread, args);
 
 	return EXPORT_NONE;
+}
+
+void ts_create_export_popup(int window_w, int window_h) {
+	// File exporting.
+	if (ifd::FileDialog::Instance().IsDone("FileSaveAsDialog", window_w, window_h)) {
+		if (ifd::FileDialog::Instance().HasResult()) {
+			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+			last_export_result = ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
+			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
+
+			// Set titlebar name.
+			utf8_int8_t new_name[MAX_INPUT_LENGTH];
+			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
+			ts_platform_set_window_title(new_name);
+		}
+		ifd::FileDialog::Instance().Close();
+	}
+
+
+	if (last_export_result != EXPORT_NONE) {
+		ImGui::OpenPopup("Export Failed");
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
+	}
+
+	// export error popup
+	if (ImGui::BeginPopupModal("Export Failed", (bool*)&last_export_result, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+		ImGui::SetWindowSize({300, 0});
+
+		switch (last_export_result)
+		{
+			case EXPORT_NO_RESULT: ImGui::Text("No results to export"); break;
+			case EXPORT_SEARCH_ACTIVE: ImGui::Text("Can't export while save is active"); break;
+			case EXPORT_SAVE_PENDING: ImGui::Text("Export is pending"); break;
+		
+		default:
+			break;
+		}
+
+		ImGui::Dummy({0, 20});
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		if (ImGui::Button("Close")) {
+			last_export_result = EXPORT_NONE;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::EndPopup();
+	}
 }

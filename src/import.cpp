@@ -1,6 +1,7 @@
 #include "import.h"
 #include "search.h"
 #include "export.h"
+#include "../imfiledialog/ImFileDialog.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -125,6 +126,16 @@ static void* _ts_import_thread(void* args) {
 
 	arg->result->done_finding_files = true;
 	arg->result->search_completed = true;
+
+	// Destroy previous result.
+	if (arg->result->prev_result) {
+		while (!arg->result->prev_result->search_completed || arg->result->prev_result->is_saving) {
+			ts_thread_sleep(10);
+		}
+		ts_destroy_result(arg->result->prev_result);
+		arg->result->prev_result = NULL;
+	}
+	
 	free(arg);
 
 	return 0;
@@ -135,6 +146,10 @@ ts_search_result* ts_import_result(const utf8_int8_t* path) {
 	res->done_finding_files = false;
 	res->search_completed = false;
 	res->cancel_search = false;
+
+	if (res->prev_result) res->prev_result->cancel_search = true;
+	
+	current_search_result = res; // set this now because old result will be destroyed in import thread.
 	
 	struct t_import_thread_args* args = (struct t_import_thread_args*)malloc(sizeof(struct t_import_thread_args));
 	if (!args) exit_oom();
@@ -144,4 +159,52 @@ ts_search_result* ts_import_result(const utf8_int8_t* path) {
 	ts_thread_start(_ts_import_thread, args);
 
 	return res;
+}
+
+void ts_create_import_popup(int window_w, int window_h) {
+	// File importing dialog.
+	if (ifd::FileDialog::Instance().IsDone("FileOpenDialog", window_w, window_h)) {
+		if (ifd::FileDialog::Instance().HasResult()) {
+			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
+			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
+
+			// Set titlebar name.
+			utf8_int8_t new_name[MAX_INPUT_LENGTH];
+			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
+			ts_platform_set_window_title(new_name);
+
+			current_search_result = ts_import_result(save_path);
+		}
+		ifd::FileDialog::Instance().Close();
+	}
+
+	if (last_import_result != EXPORT_NONE) {
+		ImGui::OpenPopup("Import Failed");
+		ImGuiIO& io = ImGui::GetIO();
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
+	}
+
+	// import error popup
+	if (ImGui::BeginPopupModal("Import Failed", (bool*)&last_import_result, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+		ImGui::SetWindowSize({300, 0});
+
+		switch (last_import_result)
+		{
+			case IMPORT_INVALID_DATA: ImGui::Text("File has invalid format"); break;
+			case IMPORT_INVALID_VERSION: ImGui::Text("File has unknown version"); break;
+			case IMPORT_FILE_ERROR: ImGui::Text("Failed to open file"); break;
+		default:
+			break;
+		}
+
+		ImGui::Dummy({0, 20});
+		ImGui::PushStyleVar(ImGuiStyleVar_FrameBorderSize, 1.0f);
+		if (ImGui::Button("Close")) {
+			last_import_result = IMPORT_NONE;
+			ImGui::CloseCurrentPopup();
+		}
+		ImGui::PopStyleVar();
+
+		ImGui::EndPopup();
+	}
 }
