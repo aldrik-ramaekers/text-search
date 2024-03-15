@@ -3,7 +3,7 @@
 #include "config.h"
 #include <stdio.h>
 
-ts_search_result *current_search_result = nullptr;
+ts_search_result *current_search_result = NULL;
 
 ts_array ts_get_filters(utf8_int8_t *pattern)
 {
@@ -314,7 +314,7 @@ static void _ts_search_file(ts_found_file *ref, ts_file_content content, ts_sear
 static void *_ts_search_thread(void *args)
 {
 	ts_search_result *new_result = (ts_search_result *)args;
-	if (new_result->search_text == nullptr) goto finish_early;
+	if (new_result->search_text == NULL) goto finish_early;
 
 	while (new_result->file_list_read_cursor < new_result->files.length || !new_result->done_finding_files)
 	{
@@ -369,7 +369,7 @@ void ts_destroy_result(ts_search_result* result) {
 static void *_ts_list_files_thread(void *args)
 {
 	ts_search_result *info = (ts_search_result *)args;
-	ts_platform_list_files_block(info, nullptr);
+	ts_platform_list_files_block(info, NULL);
 	info->done_finding_files = true;
 
 	// Use this thread to cleanup previous result.
@@ -378,7 +378,7 @@ static void *_ts_list_files_thread(void *args)
 			ts_thread_sleep(10);
 		}
 		ts_destroy_result(info->prev_result);
-		info->prev_result = nullptr;
+		info->prev_result = NULL;
 	}
 
 	// Use this thread to sync.
@@ -420,7 +420,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 	new_result->respect_capitalization = case_sensitive;
 
 	if (utf8len(query) == 0) {
-		new_result->search_text = nullptr;
+		new_result->search_text = NULL;
 	}
 
 	_ts_list_files(new_result);

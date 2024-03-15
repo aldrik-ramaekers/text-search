@@ -1,5 +1,4 @@
-#ifndef INCLUDE_IMAGE
-#define INCLUDE_IMAGE
+#pragma once
 
 #include <cstdint>
 
@@ -36,5 +35,3 @@ extern ts_image img_folder;
 extern ts_image img_drop;
 
 void ts_load_images();
-
-#endif

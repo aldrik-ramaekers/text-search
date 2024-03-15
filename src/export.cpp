@@ -3,6 +3,7 @@
 #include "config.h"
 #include "../imfiledialog/ImFileDialog.h"
 #include <stdio.h>
+#include <inttypes.h>
 
 export_result last_export_result = EXPORT_NONE;
 
@@ -70,7 +71,7 @@ static bool _ts_export_json(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "\"casesensitive\": %u,\n", result->respect_capitalization);
 	fprintf(write_file, "\"match_count\": %u,\n", result->match_count);
 	fprintf(write_file, "\"file_count\": %u,\n", result->file_count);
-	fprintf(write_file, "\"timestamp\": %llu,\n", result->timestamp);
+	fprintf(write_file, "\"timestamp\": %" PRId64 ",\n", result->timestamp);
 
 	fprintf(write_file, "\"files\": [\n");
 
@@ -136,7 +137,7 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "CASESENSITIVE,%u\n", result->respect_capitalization);
 	fprintf(write_file, "MATCH_COUNT,%u\n", result->match_count);
 	fprintf(write_file, "FILE_COUNT,%u\n", result->file_count);
-	fprintf(write_file, "TIMESTAMP,%llu\n", result->timestamp);
+	fprintf(write_file, "TIMESTAMP,%" PRId64 "\n", result->timestamp);
 
 	// Empty files.
 	for (uint32_t i = 0; i < result->files.length; i++) {
@@ -199,7 +200,7 @@ static bool _ts_export_xml(ts_search_result* result, const utf8_int8_t* path) {
 	fprintf(write_file, "<CASESENSITIVE>%u</CASESENSITIVE>\n", result->respect_capitalization);
 	fprintf(write_file, "<MATCH_COUNT>%u</MATCH_COUNT>\n", result->match_count);
 	fprintf(write_file, "<FILE_COUNT>%u</FILE_COUNT>\n", result->file_count);
-	fprintf(write_file, "<TIMESTAMP>%llu</TIMESTAMP>\n", result->timestamp);
+	fprintf(write_file, "<TIMESTAMP>%" PRId64 "</TIMESTAMP>\n", result->timestamp);
 
 	// Empty files.
 	for (uint32_t i = 0; i < result->files.length; i++) {

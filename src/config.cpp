@@ -66,7 +66,7 @@ void ts_load_config() {
 	ImGuiSettingsHandler ini_handler;
 	ini_handler.TypeName = "Query";
 	ini_handler.TypeHash = ImHashStr("Query");
-	ini_handler.ClearAllFn = nullptr;
+	ini_handler.ClearAllFn = NULL;
 	ini_handler.ReadOpenFn = _ts_config_ReadOpen;
 	ini_handler.ReadLineFn = _ts_config_ReadLine;
 	ini_handler.ApplyAllFn = _ts_config_ApplyAll;

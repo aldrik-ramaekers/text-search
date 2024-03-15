@@ -1,5 +1,4 @@
-#ifndef INCLUDE_MEMORY_BUCKET
-#define INCLUDE_MEMORY_BUCKET
+#pragma once
 
 #define kilobytes(num) num*1000
 #define megabytes(num) kilobytes(num*1000)
@@ -24,5 +23,3 @@ ts_memory_bucket 	ts_memory_bucket_init(uint32_t bucket_size);
 void* 				ts_memory_bucket_reserve(ts_memory_bucket *bucket, uint32_t reserve_length);
 void 				ts_memory_bucket_reset(ts_memory_bucket *bucket);
 void 				ts_memory_bucket_destroy(ts_memory_bucket *bucket);
-
-#endif

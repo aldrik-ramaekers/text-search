@@ -5,6 +5,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <inttypes.h>
 
 import_result last_import_result = IMPORT_NONE;
 
@@ -31,7 +32,7 @@ static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file
 	fscanf_required(read_file, "CASESENSITIVE,%d\n", 1, (int*)&result->respect_capitalization);
 	fscanf_required(read_file, "MATCH_COUNT,%u\n", 1, &result->match_count);
 	fscanf_required(read_file, "FILE_COUNT,%u\n", 1, &result->file_count);
-	fscanf_required(read_file, "TIMESTAMP,%llu\n", 1, &result->timestamp);
+	fscanf_required(read_file, "TIMESTAMP,%" PRId64 "\n", 1, &result->timestamp);
 
 	utf8ncpy(path_buffer, result->directory_to_search, MAX_INPUT_LENGTH);
 	utf8ncpy(filter_buffer, result->file_filter, MAX_INPUT_LENGTH);
@@ -39,7 +40,7 @@ static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file
 
 	result->filters = ts_get_filters(result->file_filter);
 	if (utf8len(result->search_text) == 0) {
-		result->search_text = nullptr;
+		result->search_text = NULL;
 	}
 
 	// Read results
@@ -178,7 +179,7 @@ void ts_create_import_popup(int window_w, int window_h) {
 		ifd::FileDialog::Instance().Close();
 	}
 
-	if (last_import_result != EXPORT_NONE) {
+	if (last_import_result != IMPORT_NONE) {
 		ImGui::OpenPopup("Import Failed");
 		ImGuiIO& io = ImGui::GetIO();
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));

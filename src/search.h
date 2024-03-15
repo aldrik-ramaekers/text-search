@@ -1,5 +1,4 @@
-#ifndef INCLUDE_SEARCH
-#define INCLUDE_SEARCH
+#pragma once
 
 #include "array.h"
 #include "memory_bucket.h"
@@ -70,5 +69,3 @@ ts_search_result* 	ts_create_empty_search_result();
 bool 				ts_string_contains(utf8_int8_t *text_to_search, utf8_int8_t *text_to_find, ts_array *text_matches, bool respect_capitalization);
 void 				ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query, uint16_t thread_count, uint32_t max_file_size, bool respect_capitalization);
 void				ts_destroy_result(ts_search_result* result);
-
-#endif

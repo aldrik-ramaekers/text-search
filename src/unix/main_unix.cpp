@@ -94,8 +94,8 @@ int main(int, char**)
 #endif
 
     // Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Text-Search", nullptr, nullptr);
-    if (window == nullptr) {
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Text-Search", NULL, NULL);
+    if (window == NULL) {
         return 1;
 	}
 	glfw_window = window;
@@ -242,7 +242,7 @@ ts_file_content ts_platform_read_file(char *path, const char *mode) {
 void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) {
 
 	utf8_int8_t* search_dir = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
-	if (start_dir == nullptr) {
+	if (start_dir == NULL) {
 		strcpy(search_dir, result->directory_to_search);
 	}
 	else {

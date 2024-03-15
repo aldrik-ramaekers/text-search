@@ -1,5 +1,4 @@
-#ifndef INCLUDE_MUTEX
-#define INCLUDE_MUTEX
+#pragma once
 
 #if defined(_WIN32)
 #define _CRT_SECURE_NO_WARNINGS
@@ -53,5 +52,3 @@ void 		ts_mutex_lock(ts_mutex *ts_mutex);
 bool 		ts_mutex_trylock(ts_mutex *ts_mutex);
 void 		ts_mutex_unlock(ts_mutex *ts_mutex);
 void 		ts_mutex_destroy(ts_mutex *ts_mutex);
-
-#endif

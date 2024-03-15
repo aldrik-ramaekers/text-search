@@ -119,9 +119,9 @@ int main(int, char**)
 
     // Create application window
     //ImGui_ImplWin32_EnableDpiAwareness();
-    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, WndProc, 0L, 0L, GetModuleHandle(nullptr), nullptr, nullptr, nullptr, nullptr, L"ImGui Example", nullptr };
+    WNDCLASSEXW wc = { sizeof(wc), CS_OWNDC, WndProc, 0L, 0L, GetModuleHandle(NULL), NULL, NULL, NULL, NULL, L"ImGui Example", NULL };
     ::RegisterClassExW(&wc);
-    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Text-Search", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, nullptr, nullptr, wc.hInstance, nullptr);
+    HWND hwnd = ::CreateWindowW(wc.lpszClassName, L"Text-Search", WS_OVERLAPPEDWINDOW, 100, 100, 1280, 800, NULL, NULL, wc.hInstance, NULL);
 	window_handle = hwnd;
 
     // Initialize OpenGL
@@ -169,7 +169,7 @@ int main(int, char**)
     while (program_running)
     {
         MSG msg;
-        while (::PeekMessage(&msg, nullptr, 0U, 0U, PM_REMOVE))
+        while (::PeekMessage(&msg, NULL, 0U, 0U, PM_REMOVE))
         {
             ::TranslateMessage(&msg);
             ::DispatchMessage(&msg);
@@ -226,7 +226,7 @@ bool CreateDeviceWGL(HWND hWnd, WGL_WindowData* data)
 
 void CleanupDeviceWGL(HWND hWnd, WGL_WindowData* data)
 {
-    wglMakeCurrent(nullptr, nullptr);
+    wglMakeCurrent(NULL, NULL);
     ::ReleaseDC(hWnd, data->hDC);
 }
 
@@ -357,7 +357,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 {
     // Utf8 to wchar str
 	wchar_t* search_dir = (wchar_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
-	if (start_dir == nullptr) {
+	if (start_dir == NULL) {
 		MultiByteToWideChar(CP_UTF8, 0, result->directory_to_search, -1, search_dir, MAX_INPUT_LENGTH);
 	}
 	else {
@@ -444,10 +444,10 @@ void ts_platform_open_file_as(utf8_int8_t* str) {
 	MultiByteToWideChar(CP_UTF8, 0, str, -1, convstr, MAX_INPUT_LENGTH);
 
 	info.pcszFile = convstr;
-	info.pcszClass = nullptr;
+	info.pcszClass = NULL;
 	info.oaifInFlags = OAIF_EXEC;
 
-	SHOpenWithDialog(nullptr, &info);
+	SHOpenWithDialog(NULL, &info);
 }
 
 void ts_platform_open_file_in_folder(utf8_int8_t* file) {

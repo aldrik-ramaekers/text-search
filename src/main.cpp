@@ -267,7 +267,7 @@ void _ts_create_file_error_rows() {
 
 void _ts_create_text_match_rows() {
 	uint32_t itemcount = current_search_result == 0 ? 0 : current_search_result->matches.length;
-	ts_found_file* prev_file = nullptr;
+	ts_found_file* prev_file = NULL;
 	for (uint32_t item = 0; item < itemcount; item++)
 	{
 		ts_file_match *match = (ts_file_match *)ts_array_at(&current_search_result->matches, item);
@@ -448,7 +448,7 @@ int _ts_create_textbox_area(int window_w, int window_h, int textbox_area_height,
 void _ts_update_dragdrop() {
 	if (ImGui::BeginDragDropSource(ImGuiDragDropFlags_SourceExtern))	// we use an external source (i.e. not ImGui-created)
 	{
-		ImGui::SetDragDropPayload("FILES", nullptr, 0);
+		ImGui::SetDragDropPayload("FILES", NULL, 0);
 		ImGui::EndDragDropSource();
 	}
 
@@ -535,7 +535,7 @@ void ts_create_gui(int window_w, int window_h) {
 			ImGui::TableHeadersRow();
 
 			
-			if (current_search_result->search_text == nullptr) _ts_create_file_match_rows();
+			if (current_search_result->search_text == NULL) _ts_create_file_match_rows();
 			else _ts_create_text_match_rows();
 
 			if (current_search_result->search_completed && (current_search_result->files.length == 0 || current_search_result->match_count == 0)) {

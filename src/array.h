@@ -1,5 +1,4 @@
-#ifndef INCLUDE_ts_array
-#define INCLUDE_ts_array
+#pragma once
 
 #include "mutex.h"
 #include <cassert>
@@ -25,5 +24,3 @@ void*		ts_array_at(ts_array *ts_array, uint32_t at);
 void 		ts_array_destroy(ts_array *ts_array);
 void 		ts_array_reserve(ts_array *ts_array, uint32_t reserve_count);
 ts_array 	ts_array_copy(ts_array *ts_array);
-
-#endif
