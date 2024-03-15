@@ -7,7 +7,6 @@
 #include "mutex.h"
 #include "array.h"
 #include "memory_bucket.h"
-#include "mem.h"
 #include "image.h"
 #include "config.h"
 #include <stdio.h>

@@ -14,7 +14,7 @@ mkdir -p $OUT_DIR
 
 # misc items are converted to header files, not embedded. (xxd -i LICENSE misc/osx/LICENSE.h)
 
-g++ -m64 -std=c++17 $FLAGS -DUNICODE -o $OUT_DIR/text-search imgui/imgui*.cpp imgui/backends/imgui_impl_glfw.cpp src/widgets/*.cpp src/*.cpp imfiledialog/*.cpp src/unix/*.cpp mem/mem.cpp -Iimgui -Imem -Iimgui/backends -Isrc -Isrc/unix -pthread -ldl -lglfw -lGL
+g++ -m64 -std=c++17 $FLAGS -DUNICODE -o $OUT_DIR/text-search imgui/imgui*.cpp imgui/backends/imgui_impl_glfw.cpp src/widgets/*.cpp src/*.cpp imfiledialog/*.cpp src/unix/*.cpp -Iimgui -Iimgui/backends -Isrc -Isrc/unix -pthread -ldl -lglfw -lGL
 
 if [[ $* == *-release* ]]; then
 	cp $OUT_DIR/text-search misc/text-search.app/Contents/MacOS/text-search

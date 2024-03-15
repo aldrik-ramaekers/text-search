@@ -1,6 +1,5 @@
 #include "array.h"
 #include "config.h"
-#include "mem.h"
 #include <stdlib.h>
 #include <cstring>
 

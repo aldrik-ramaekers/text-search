@@ -1,7 +1,6 @@
 #include "search.h"
 #include "platform.h"
 #include "config.h"
-#include "mem.h"
 #include <stdio.h>
 
 ts_search_result *current_search_result = nullptr;
