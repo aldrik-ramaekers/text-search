@@ -6,6 +6,7 @@
 #include <stdio.h>
 #define MAX_INPUT_LENGTH 4096
 #elif defined(__APPLE__)
+#include <stdio.h>
 #define MAX_INPUT_LENGTH 1024
 #endif
 
