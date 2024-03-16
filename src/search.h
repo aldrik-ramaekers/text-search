@@ -7,6 +7,7 @@
 typedef struct t_ts_found_file
 {
 	utf8_int8_t *path;
+	size_t file_size;
 	uint32_t match_count;
 	uint16_t error;
 	bool collapsed;

@@ -303,10 +303,14 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 				
 				ts_found_file* f = (ts_found_file*)ts_memory_bucket_reserve(&result->memory, sizeof(ts_found_file));
 				f->path = (utf8_int8_t*)ts_memory_bucket_reserve(&result->memory, MAX_INPUT_LENGTH);
+				strcpy(f->path, complete_file_path);
 				f->match_count = 0;
 				f->error = 0;
 				f->collapsed = false;
-				strcpy(f->path, complete_file_path);
+
+				struct stat file_stat;
+				stat(f->path, &file_stat);
+				f->file_size = file_stat.st_size;
 				
 				ts_mutex_lock(&result->files.mutex);
 				ts_array_push_size(&result->files, &f, sizeof(ts_found_file*));

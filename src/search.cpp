@@ -334,19 +334,21 @@ static void *_ts_search_thread(void *args)
 		new_result->file_list_read_cursor++;
 		ts_mutex_unlock(&new_result->files.mutex);
 
-		ts_found_file *f = *(ts_found_file **)ts_array_at(&new_result->files, read_cursor);
-		ts_file_content content = ts_platform_read_file(f->path, "rb, ccs=UTF-8");
 
-		if (content.file_error != FILE_ERROR_NONE) {
-			f->error = content.file_error;
-		}
-		if (content.content_length > megabytes(new_result->max_file_size)) {
+
+		ts_found_file *f = *(ts_found_file **)ts_array_at(&new_result->files, read_cursor);
+		if (f->file_size > megabytes(new_result->max_file_size)) {
 			f->error = FILE_ERROR_TOO_BIG;
 		}
+		else {
+			ts_file_content content = ts_platform_read_file(f->path, "rb, ccs=UTF-8");
+			if (content.file_error != FILE_ERROR_NONE) {
+				f->error = content.file_error;
+			}
 
-		if (f->error == FILE_ERROR_NONE) _ts_search_file(f, content, new_result);
-
-		free(content.content);
+			if (f->error == FILE_ERROR_NONE) _ts_search_file(f, content, new_result);
+			free(content.content);
+		}
 	}
 
 finish_early:

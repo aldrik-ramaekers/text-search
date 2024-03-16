@@ -425,6 +425,7 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir)
 			f->match_count = 0;
 			f->error = 0;
 			f->collapsed = false;
+			f->file_size = (file_info.nFileSizeHigh * (MAXDWORD+1)) + file_info.nFileSizeLow;
 			WideCharToMultiByte(CP_UTF8,0,complete_file_path,-1,(LPSTR)f->path,MAX_INPUT_LENGTH, NULL, NULL);
 				
 			ts_mutex_lock(&result->files.mutex);
