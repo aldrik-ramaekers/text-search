@@ -132,12 +132,12 @@ static bool _ts_export_csv(ts_search_result* result, const utf8_int8_t* path) {
 
 	fprintf(write_file, "VERSION,1\n");
 	fprintf(write_file, "PATH,%s\n", result->directory_to_search);
-	fprintf(write_file, "FILTER,%s\n", result->file_filter);
-	fprintf(write_file, "QUERY,%s\n", result->search_text);
 	fprintf(write_file, "CASESENSITIVE,%u\n", result->respect_capitalization);
 	fprintf(write_file, "MATCH_COUNT,%u\n", result->match_count);
 	fprintf(write_file, "FILE_COUNT,%u\n", result->file_count);
 	fprintf(write_file, "TIMESTAMP,%" PRId64 "\n", result->timestamp);
+	fprintf(write_file, "QUERY,%s\n", result->search_text);
+	fprintf(write_file, "FILTER,%s\n", result->file_filter);
 
 	// Empty files.
 	for (uint32_t i = 0; i < result->files.length; i++) {

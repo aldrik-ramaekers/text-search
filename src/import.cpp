@@ -25,23 +25,16 @@ static utf8_int8_t* _ts_str_find(utf8_int8_t* text, utf8_int8_t token) {
 	if (fscanf(_file, _format, __VA_ARGS__) != _expect) { return IMPORT_INVALID_DATA; }
 
 static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file) {
-	// Read setup info.
+	// Required query info.
 	fscanf_required(read_file, "PATH,%s\n", 1, (char*)result->directory_to_search);
-	fscanf_required(read_file, "FILTER,%s\n", 1, (char*)result->file_filter);
-	fscanf_required(read_file, "QUERY,%s\n", 1, (char*)result->search_text);
 	fscanf_required(read_file, "CASESENSITIVE,%d\n", 1, (int*)&result->respect_capitalization);
 	fscanf_required(read_file, "MATCH_COUNT,%u\n", 1, &result->match_count);
 	fscanf_required(read_file, "FILE_COUNT,%u\n", 1, &result->file_count);
 	fscanf_required(read_file, "TIMESTAMP,%" PRId64 "\n", 1, &result->timestamp);
 
 	utf8ncpy(path_buffer, result->directory_to_search, MAX_INPUT_LENGTH);
-	utf8ncpy(filter_buffer, result->file_filter, MAX_INPUT_LENGTH);
-	utf8ncpy(query_buffer, result->search_text, MAX_INPUT_LENGTH);
-
-	result->filters = ts_get_filters(result->file_filter);
-	if (utf8len(result->search_text) == 0) {
-		result->search_text = NULL;
-	}
+	utf8ncpy(filter_buffer, "", MAX_INPUT_LENGTH);
+	utf8ncpy(query_buffer, "", MAX_INPUT_LENGTH);
 
 	// Read results
 	ts_found_file* current_file = 0;
@@ -54,6 +47,17 @@ static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file
 
 	utf8_int8_t line_buffer[MAX_INPUT_LENGTH];
 	while(fgets(line_buffer, MAX_INPUT_LENGTH, read_file)) {
+		
+		// Optional query info.
+		if (sscanf(line_buffer, "FILTER,%s", (char*)result->file_filter) == 1) { 
+			utf8ncpy(filter_buffer, result->file_filter, MAX_INPUT_LENGTH);
+			if (utf8len(result->search_text) == 0) {
+				result->search_text = NULL;
+			}
+		}
+		if (sscanf(line_buffer, "QUERY,%s", (char*)result->search_text) == 1) { 
+			utf8ncpy(query_buffer, result->search_text, MAX_INPUT_LENGTH);
+		}
 		
 		// New file start.
 		if (sscanf(line_buffer, "FILE,%s", (char*)next_file->path) == 1) { 
@@ -91,6 +95,8 @@ static import_result _ts_import_csv_v1(ts_search_result* result, FILE *read_file
 			// Invalid data. skip.
 		}
 	}
+
+	result->filters = ts_get_filters(result->file_filter);
 
 	return IMPORT_NONE;
 }
