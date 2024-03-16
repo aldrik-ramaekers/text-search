@@ -1,5 +1,7 @@
 #pragma once
 
+#include <wchar.h>
+
 typedef enum t_ts_font_range {
 	FONT_RANGE_ENGLISH,
 	FONT_RANGE_GREEK,
@@ -12,4 +14,5 @@ typedef enum t_ts_font_range {
 	FONT_RANGE_VIETNAMESE,
 } ts_font_range;
 
-void ts_load_fonts(float size, ts_font_range locale);
+void 			ts_load_fonts(float size, ts_font_range locale);
+ts_font_range 	ts_locale_to_range(wchar_t* locale);

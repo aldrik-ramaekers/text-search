@@ -8,6 +8,7 @@
 #include "array.h"
 #include "memory_bucket.h"
 #include "image.h"
+#include "fonts.h"
 #include "config.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,6 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <dirent.h>
+#include <locale.h>
 #define GL_SILENCE_DEPRECATION
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
@@ -67,6 +69,22 @@ static void drop_callback(GLFWwindow* window, int count, const char** paths)
         utf8ncpy(dragdrop_data.path, paths[i], MAX_INPUT_LENGTH);
 		dragdrop_data.did_drop = true;
 	}
+}
+
+ts_font_range _ts_get_font_range_to_load() {
+	wchar_t buffer[50] = {0};
+	char* ll = setlocale(LC_ALL, NULL);
+	mbstowcs (buffer, ll, 50);
+
+	wchar_t* iter = buffer;
+	while (*iter) {
+		if (*iter == ' ') *iter = 0;
+		if (*iter == '.') *iter = 0;
+		if (*iter == '@') *iter = 0;
+		iter++;
+	}
+
+	return ts_locale_to_range(buffer);
 }
 
 // Main code
@@ -126,8 +144,8 @@ int main(int, char**)
 
     // Setup Dear ImGui style
     ImGui::Spectrum::StyleColorsSpectrum();
-	ImGui::Spectrum::LoadFont(18.0f);
 
+	ts_load_fonts(18.0f, _ts_get_font_range_to_load());
 	ts_load_images();
 	ts_load_config();
 
