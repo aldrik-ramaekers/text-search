@@ -403,7 +403,7 @@ static void _ts_list_files(ts_search_result* result)
 
 void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,  uint16_t thread_count, uint32_t max_fs, bool case_sensitive)
 {
-	if (utf8len(query) > 0 && utf8len(query) <= 2) { // need a string of atleast 3 characters
+	if (strlen(query) > 0 && strlen(query) <= 2) { // need a string of atleast 3 bytes. so 3 regular characters or 1 chinese character.
 		return;
 	}
 
