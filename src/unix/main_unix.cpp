@@ -74,7 +74,7 @@ static void drop_callback(GLFWwindow* window, int count, const char** paths)
 
 ts_font_range _ts_get_font_range_to_load() {
 	wchar_t buffer[50] = {0};
-	char* ll = setlocale(LC_ALL, NULL);
+	char* ll = setlocale(LC_CTYPE, NULL);
 	mbstowcs (buffer, ll, 50);
 
 	wchar_t* iter = buffer;
@@ -82,6 +82,7 @@ ts_font_range _ts_get_font_range_to_load() {
 		if (*iter == ' ') *iter = 0;
 		if (*iter == '.') *iter = 0;
 		if (*iter == '@') *iter = 0;
+		if (*iter == '_') *iter = '-';
 		iter++;
 	}
 
