@@ -30,6 +30,7 @@ void ts_init();
 GLFWwindow* glfw_window;
 bool program_running = true;
 ts_dragdrop_data dragdrop_data = {0};
+uint64_t frequency;
 
 char config_path[MAX_INPUT_LENGTH];
 static const char* _ts_platform_get_config_file_path(char* buffer) {
@@ -94,6 +95,8 @@ int main(int, char**)
     if (!glfwInit()) {
         return 1;
 	}
+
+	frequency = glfwGetTimerFrequency();
 
 	ts_init();
 
@@ -340,19 +343,11 @@ void ts_platform_list_files_block(ts_search_result* result, wchar_t* start_dir) 
 }
 
 uint64_t ts_platform_get_time(uint64_t compare) {
-	struct timespec tms;
-	if (clock_gettime(CLOCK_PROCESS_CPUTIME_ID,&tms)) {
-		return -1;
-	}
-	uint64_t result = 0;
-	result = tms.tv_sec * 1000;
-	result += tms.tv_nsec / 1000000;
-
+	uint64_t stamp = glfwGetTimerValue();
 	if (compare != 0) {
-		return (result - compare);
+		return (stamp - compare) * 1000 / frequency;
 	}
-
-	return result;
+	return stamp;
 }
 
 void ts_platform_open_file_as(utf8_int8_t* str) {
