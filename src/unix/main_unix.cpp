@@ -60,6 +60,15 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "GLFW Error %d: %s\n", error, description);
 }
 
+static void drop_callback(GLFWwindow* window, int count, const char** paths)
+{
+	// We only accept 1 file for now..
+    for (int i = 0;  i < 1;  i++) {
+        utf8ncpy(dragdrop_data.path, paths[i], MAX_INPUT_LENGTH);
+		dragdrop_data.did_drop = true;
+	}
+}
+
 // Main code
 int main(int, char**)
 {
@@ -102,6 +111,7 @@ int main(int, char**)
 	
 	glfwSetWindowSizeLimits(window, 800, 600, GLFW_DONT_CARE, GLFW_DONT_CARE);
     glfwMakeContextCurrent(window);
+	glfwSetDropCallback(window, drop_callback);
     glfwSwapInterval(1); // Enable vsync
 
     IMGUI_CHECKVERSION();
