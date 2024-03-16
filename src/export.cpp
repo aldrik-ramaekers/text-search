@@ -271,6 +271,11 @@ export_result ts_export_result(ts_search_result* result, const utf8_int8_t* path
 	if (result->is_saving) return EXPORT_SAVE_PENDING;
 	result->is_saving = true;
 
+	// Set titlebar name.
+	utf8_int8_t new_name[MAX_INPUT_LENGTH];
+	snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", path);
+	ts_platform_set_window_title(new_name);
+
 	struct t_export_thread_args* args = (struct t_export_thread_args*)malloc(sizeof(struct t_export_thread_args));
 	if (!args) exit_oom();
 	args->result = result;
@@ -288,11 +293,6 @@ void ts_create_export_popup(int window_w, int window_h) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
 			last_export_result = ts_export_result(current_search_result, (const utf8_int8_t *)res.c_str());
 			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
-
-			// Set titlebar name.
-			utf8_int8_t new_name[MAX_INPUT_LENGTH];
-			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
-			ts_platform_set_window_title(new_name);
 		}
 		ifd::FileDialog::Instance().Close();
 	}

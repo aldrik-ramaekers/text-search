@@ -154,6 +154,11 @@ ts_search_result* ts_import_result(const utf8_int8_t* path) {
 	res->search_completed = false;
 	res->cancel_search = false;
 
+	// Set titlebar name.
+	utf8_int8_t new_name[MAX_INPUT_LENGTH];
+	snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", path);
+	ts_platform_set_window_title(new_name);
+
 	if (res->prev_result) res->prev_result->cancel_search = true;
 	
 	current_search_result = res; // set this now because old result will be destroyed in import thread.
@@ -174,12 +179,6 @@ void ts_create_import_popup(int window_w, int window_h) {
 		if (ifd::FileDialog::Instance().HasResult()) {
 			std::string res = ifd::FileDialog::Instance().GetResult().u8string();
 			utf8ncpy(save_path, (const utf8_int8_t *)res.c_str(), sizeof(save_path));
-
-			// Set titlebar name.
-			utf8_int8_t new_name[MAX_INPUT_LENGTH];
-			snprintf(new_name, MAX_INPUT_LENGTH, "Text-Search > %s", res.c_str());
-			ts_platform_set_window_title(new_name);
-
 			current_search_result = ts_import_result(save_path);
 		}
 		ifd::FileDialog::Instance().Close();
