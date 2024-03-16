@@ -6,51 +6,6 @@
 
 namespace ImGui {
     namespace Spectrum {
-        void LoadFont(float size) {
-            ImGuiIO& io = ImGui::GetIO();
-			ImFontConfig config;
-			config.MergeMode = true;
-
-			static const ImWchar arrow_r[] =
-			{
-				0x2192, 0x2193, // → character.
-				0,
-			};
-
-			static const ImWchar triangles[] =
-			{
-				0x25B6, 0x25BC, // ▶ ▼ characters.
-				0,
-			};
-
-			ImFontGlyphRangesBuilder builder;
-			ImVector<ImWchar> ranges;
-			builder.AddRanges(io.Fonts->GetGlyphRangesDefault());
-			builder.AddRanges(arrow_r);
-			builder.AddRanges(triangles);
-			builder.BuildRanges(&ranges);
-			
-			ImFont* font = io.Fonts->AddFontFromMemoryCompressedTTF(
-				SourceSansProRegular_compressed_data, 
-				SourceSansProRegular_compressed_size, 
-				size, nullptr, ranges.Data);
-
-			IM_ASSERT(font != nullptr);
-			io.FontDefault = font;
-						
-			// Uncomment if you want these glyphs. Fonts can be found in fonts/ folder.
-			// io.Fonts->AddFontFromMemoryCompressedTTF(
-			// 		GmarketSans_compressed_data, 
-			// 		GmarketSans_compressed_size, 
-			// 		size, &config, io.Fonts->GetGlyphRangesKorean());
-
-			// io.Fonts->AddFontFromMemoryCompressedTTF(
-			// 		NotoSansJP_compressed_data, 
-			// 		NotoSansJP_compressed_size, 
-			// 		size, &config, io.Fonts->GetGlyphRangesJapanese());
-			
-            io.Fonts->Build();    
-        }
 
         void StyleColorsSpectrum() {
             ImGuiStyle* style = &ImGui::GetStyle();
@@ -109,8 +64,5 @@ namespace ImGui {
 			colors[ImGuiCol_TableRowBg] = ColorConvertU32ToFloat4(Color(0xFFFFFF));
 			colors[ImGuiCol_TableRowBgAlt] = ColorConvertU32ToFloat4(Spectrum::GRAY100);
         }
-
-        
-
     }
 }

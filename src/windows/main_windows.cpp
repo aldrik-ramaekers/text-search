@@ -11,6 +11,7 @@
 #include "memory_bucket.h"
 #include "image.h"
 #include "config.h"
+#include "fonts.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -109,6 +110,43 @@ void ts_platform_set_window_title(utf8_int8_t* str) {
 	SetWindowTextW(window_handle, wchar_buffer);
 }
 
+ts_font_range _ts_get_FONT_RANGE_to_load() {
+	wchar_t buffer[50];
+	GetUserDefaultLocaleName(buffer, 50);
+
+	ts_font_range result = FONT_RANGE_ENGLISH;
+	if (wcscmp(buffer, L"el-GR") == 0) result = FONT_RANGE_GREEK;
+	if (wcscmp(buffer, L"ko-KR") == 0) result = FONT_RANGE_KOREAN;
+	if (wcscmp(buffer, L"ja-JP") == 0) result = FONT_RANGE_JAPANESE;
+
+	if (wcscmp(buffer, L"be-BY") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"bg-BG") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"ru-RU") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"ru-MD") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"ro-MD") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"kk-KZ") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"tt-RU") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"ky-KG") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"mn-MN") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"az-Cyrl-AZ") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"uz-Cyrl-UZ") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"sr-Cyrl-CS") == 0) result = FONT_RANGE_CYRILLIC;
+	if (wcscmp(buffer, L"sr-Latn-CS") == 0) result = FONT_RANGE_CYRILLIC;
+
+	if (wcscmp(buffer, L"bo-CN") == 0) result = FONT_RANGE_CHINESE_SIMPLE;
+	if (wcscmp(buffer, L"zh-CN") == 0) result = FONT_RANGE_CHINESE_SIMPLE;
+	if (wcscmp(buffer, L"mn-Mong-CN") == 0) result = FONT_RANGE_CHINESE_SIMPLE;
+	if (wcscmp(buffer, L"zh-HK") == 0) result = FONT_RANGE_CHINESE_FULL;
+	if (wcscmp(buffer, L"zh-TW") == 0) result = FONT_RANGE_CHINESE_FULL;
+	if (wcscmp(buffer, L"zh-SG") == 0) result = FONT_RANGE_CHINESE_SIMPLE;
+	if (wcscmp(buffer, L"zh-MO") == 0) result = FONT_RANGE_CHINESE_FULL;
+
+	if (wcscmp(buffer, L"th-TH") == 0) result = FONT_RANGE_THAI;
+	if (wcscmp(buffer, L"vi-VN") == 0) result = FONT_RANGE_VIETNAMESE;
+
+	return result;
+}
+
 int main(int, char**)
 {
 	if (OleInitialize(NULL) != S_OK) {
@@ -149,17 +187,14 @@ int main(int, char**)
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;   // Enable Keyboard Controls
 	io.IniFilename = _ts_platform_get_config_file_path(config_path);
 
-    // Setup Dear ImGui style
     ImGui::Spectrum::StyleColorsSpectrum();
-	ImGui::Spectrum::LoadFont(18.0f);
-    //ImGui::StyleColorsLight();
 
-    // Setup Platform/Renderer backends
     ImGui_ImplWin32_InitForOpenGL(hwnd);
     ImGui_ImplOpenGL3_Init();
 
 	QueryPerformanceFrequency(&Frequency);
 
+	ts_load_fonts(18.0f, _ts_get_FONT_RANGE_to_load());
 	ts_load_images();
 	ts_load_config();
 
