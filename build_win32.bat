@@ -1,6 +1,6 @@
 call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat" x64
 @set OUT_DIR=bin\\debug
-@set OUT_EXE=text-search
+@set OUT_EXE=TextSearch
 @set INCLUDES=/I..\.. /I..\..\backends
 @set SOURCES=imgui/imgui*.cpp src/*.cpp imfiledialog/*.cpp src/windows/*.cpp imgui/backends/imgui_impl_win32.cpp src/widgets/*.cpp
 @set LIBS=opengl32.lib Advapi32.lib Shell32.lib Ole32.lib User32.lib Pathcch.lib bin/debug/icon.res
@@ -13,6 +13,7 @@ if "%1"=="-a" (
 
 if "%1"=="-release" (
 	@set OUT_DIR=bin\\release
+	@set OUT_EXE=TextSearch-x86_64
 	@set FLAGS=/GL /O2 /DTS_RELEASE
 )
 

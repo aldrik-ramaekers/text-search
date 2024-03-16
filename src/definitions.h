@@ -1,6 +1,6 @@
 #pragma once
 
-#define TS_VERSION "v2.2.0"
+#define TS_VERSION "v2.3.0"
 
 // Find these with dumpbin [objfile] /SYMBOLS
 extern "C"

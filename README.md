@@ -1,5 +1,5 @@
 # text-search
-Text-search is a GUI Program to find files and text within files for x64 Windows, Linux & MacOS.
+Text-search is a GUI Program to find files and text within files for Windows, Linux & MacOS.
 
 ![Screenshot_1](https://github.com/aldrik-ramaekers/text-search/assets/22401766/958fdd51-94ad-4623-8679-8364a4bf106b))
 
