@@ -11,12 +11,13 @@
 #include "config.h"
 #include "export.h"
 #include "import.h"
-
+#include "logging.h"
 #include <stdio.h>
 
 // Popups
 bool open_settings_window = false;
 bool open_about_window = false;
+bool open_log_window = false;
 
 const char* help_text = 
 				"1. Search directory\n"
@@ -28,8 +29,25 @@ const char* help_text =
 				"3. Text to search\n"
 				"	- Supports wildcards '*' & '?' in text\n";
 
-static void _ts_create_popups() {
+static void _ts_create_popups(int window_w, int window_h) {
 	ImGuiIO& io = ImGui::GetIO();
+
+	if (open_log_window) {
+		ImGui::OpenPopup("Text-Search Log");
+		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
+	}
+
+	// Settings window
+	if (ImGui::BeginPopupModal("Text-Search Log", &open_log_window, ImGuiWindowFlags_NoResize|ImGuiWindowFlags_NoMove)) {
+		ImGui::SetWindowSize({window_w*0.8f, window_h*0.8f});
+		for (uint32_t i = 0; i < logger.entries.length; i++) {
+			utf8_int8_t* entry = (utf8_int8_t*)ts_array_at(&logger.entries, i);
+			ImGui::Text("%s", entry);
+		}
+	
+		ImGui::EndPopup();
+	}
+
 	if (open_settings_window) {
 		ImGui::OpenPopup("Text-Search settings");
 		ImGui::SetNextWindowPos(ImVec2(io.DisplaySize.x * 0.5f, io.DisplaySize.y * 0.5f), ImGuiCond_Always, ImVec2(0.5f,0.5f));
@@ -164,6 +182,9 @@ static int _ts_create_menu(int window_w, int window_h) {
 			if (ImGui::MenuItem("Settings")) {
 				open_settings_window = true;
 			}
+			if (ImGui::MenuItem("Log")) {
+				open_log_window = true;
+			}
 			if (ImGui::MenuItem("About")) {
 				open_about_window = true;
 			}
@@ -177,7 +198,7 @@ static int _ts_create_menu(int window_w, int window_h) {
 	ImGui::PopStyleVar();
 	ImGui::PopStyleColor();
 
-	_ts_create_popups();
+	_ts_create_popups(window_w, window_h);
 	ts_create_import_popup(window_w, window_h);
 	ts_create_export_popup(window_w, window_h);
 
@@ -185,6 +206,8 @@ static int _ts_create_menu(int window_w, int window_h) {
 }
 
 void ts_init() {
+	TS_LOG_TRACE("Program started");
+	
 	memset(save_path, 0, sizeof(save_path));
 	memset(path_buffer, 0, sizeof(path_buffer));
 	memset(filter_buffer, 0, sizeof(filter_buffer));

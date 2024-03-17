@@ -12,6 +12,7 @@
 #include "image.h"
 #include "config.h"
 #include "fonts.h"
+#include "logging.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
@@ -118,10 +119,12 @@ ts_font_range _ts_get_font_range_to_load() {
 
 int main(int, char**)
 {
+
 	if (OleInitialize(NULL) != S_OK) {
 		return -1;
 	}
 
+	QueryPerformanceFrequency(&Frequency);
 	ts_init();
 
     // Create application window
@@ -160,8 +163,6 @@ int main(int, char**)
 
     ImGui_ImplWin32_InitForOpenGL(hwnd);
     ImGui_ImplOpenGL3_Init();
-
-	QueryPerformanceFrequency(&Frequency);
 
 	ts_load_fonts(18.0f, _ts_get_font_range_to_load());
 	ts_load_images();

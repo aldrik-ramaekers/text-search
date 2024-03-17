@@ -2,7 +2,7 @@
 #include "search.h"
 #include "export.h"
 #include "../imfiledialog/ImFileDialog.h"
-
+#include "logging.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <inttypes.h>
@@ -129,6 +129,13 @@ static void* _ts_import_thread(void* args) {
 
 	if (ts_str_has_extension(arg->path, ".csv")) {
 		last_import_result = _ts_import_csv(arg->result, arg->path);
+	}
+
+	switch(last_import_result) {
+		case IMPORT_NONE: TS_LOG_TRACE("Import success: %s", arg->path); break;
+		case IMPORT_FILE_ERROR: TS_LOG_TRACE("Import error: could not open file %s", arg->path); break;
+		case IMPORT_INVALID_VERSION: TS_LOG_TRACE("Import error: invalid version %s", arg->path); break;
+		case IMPORT_INVALID_DATA: TS_LOG_TRACE("Import error: invalid data %s", arg->path); break;
 	}
 
 	arg->result->done_finding_files = true;

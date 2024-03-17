@@ -19,5 +19,5 @@ if "%1"=="-release" (
 
 mkdir %OUT_DIR%
 cl  /std:c++17 /nologo %FLAGS% /W3 /MD /EHsc /Isrc/windows /external:W0 /external:Iimgui /external:Iimgui/backends /Isrc /utf-8 %INCLUDES% /D UNICODE /D _UNICODE %SOURCES% /Fe%OUT_DIR%/%OUT_EXE%.exe /Fd%OUT_DIR%/vc140.pdb /Fo%OUT_DIR%/ /link %LIBS%
-if "%1"=="-r" call "bin/debug/text-search.exe"
-if "%1"=="-d" call devenv "bin/debug/text-search.exe"
+if "%1"=="-r" call "%OUT_DIR%/%OUT_EXE%.exe"
+if "%1"=="-d" call devenv "%OUT_DIR%/%OUT_EXE%.exe"

@@ -1,7 +1,7 @@
 #include "image.h"
 #include "definitions.h"
 #include "../imfiledialog/ImFileDialog.h"
-
+#include "logging.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "../stb_image.h"
 
@@ -88,4 +88,5 @@ void ts_load_images() {
 		GLuint texID = (GLuint)(intptr_t)tex;
 		glDeleteTextures(1, &texID);
 	};
+	TS_LOG_TRACE("Loaded images"); 
 }

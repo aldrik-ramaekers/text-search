@@ -1,6 +1,7 @@
 #include "search.h"
 #include "platform.h"
 #include "config.h"
+#include "logging.h"
 #include <stdio.h>
 
 ts_search_result *current_search_result = NULL;
@@ -374,6 +375,8 @@ static void *_ts_list_files_thread(void *args)
 	ts_platform_list_files_block(info, NULL);
 	info->done_finding_files = true;
 
+	TS_LOG_TRACE("Search done listing files: %p", info);
+
 	// Use this thread to cleanup previous result.
 	if (info->prev_result) {
 		while (!info->prev_result->search_completed || info->prev_result->is_saving) {
@@ -388,6 +391,8 @@ static void *_ts_list_files_thread(void *args)
 		if (info->completed_match_threads == info->max_ts_thread_count) {
 			info->search_completed = true; // No memory is written after this point.
 			info->timestamp = ts_platform_get_time(info->timestamp);
+
+			TS_LOG_TRACE("Search completed: %p", info);
 		}
 		ts_thread_sleep(10);
 	}
@@ -407,6 +412,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 		return;
 	}
 
+
 	if (current_search_result)
 	{
 		current_search_result->cancel_search = true;
@@ -420,6 +426,7 @@ void ts_start_search(utf8_int8_t *path, utf8_int8_t *filter, utf8_int8_t *query,
 	new_result->max_ts_thread_count = thread_count;
 	new_result->max_file_size = max_fs;
 	new_result->respect_capitalization = case_sensitive;
+	TS_LOG_TRACE("Search started: %p %s -> %s", new_result, path, query);
 
 	if (utf8len(query) == 0) {
 		new_result->search_text = NULL;

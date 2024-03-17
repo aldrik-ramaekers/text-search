@@ -4,6 +4,7 @@
 #include "../imfiledialog/ImFileDialog.h"
 #include <stdio.h>
 #include <inttypes.h>
+#include "logging.h"
 
 export_result last_export_result = EXPORT_NONE;
 
@@ -249,15 +250,19 @@ struct t_export_thread_args {
 static void* _ts_export_thread(void* args) {
 	struct t_export_thread_args* arg = (struct t_export_thread_args*)args;
 
+	bool result = false;
 	if (ts_str_has_extension(arg->path, ".json")) {
-		_ts_export_json(arg->result, arg->path);
+		result = _ts_export_json(arg->result, arg->path);
 	}
 	if (ts_str_has_extension(arg->path, ".csv")) {
-		_ts_export_csv(arg->result, arg->path);
+		result = _ts_export_csv(arg->result, arg->path);
 	}
 	if (ts_str_has_extension(arg->path, ".xml")) {
-		_ts_export_xml(arg->result, arg->path);
+		result = _ts_export_xml(arg->result, arg->path);
 	}
+
+	if (!result) TS_LOG_TRACE("Export failed: cound not open file %s", arg->path)
+	else TS_LOG_TRACE("Export completed: %s", arg->path);
 
 	arg->result->is_saving = false;
 	free(arg);

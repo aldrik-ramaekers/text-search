@@ -1,7 +1,7 @@
 #include "config.h"
 #include "../imgui/imgui_internal.h"
 #include "search.h"
-
+#include "logging.h"
 #include <stdio.h>
 #include <string.h>
 #include <cstring>
@@ -72,4 +72,6 @@ void ts_load_config() {
 	ini_handler.ApplyAllFn = _ts_config_ApplyAll;
 	ini_handler.WriteAllFn = _ts_config_WriteAll;
 	ImGui::AddSettingsHandler(&ini_handler);
+
+	TS_LOG_TRACE("Loaded config"); 
 }

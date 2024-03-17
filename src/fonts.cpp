@@ -5,6 +5,7 @@
 #include "../fonts/NotoSerifTC.h"
 #include "../fonts/NotoSansSC.h"
 #include "../fonts/NotoSansThai.h"
+#include "logging.h"
 #include "imgui.h"
 
 #include <stdio.h>
@@ -42,6 +43,8 @@ ts_font_range ts_locale_to_range(wchar_t* buffer) {
 
 	if (wcscmp(buffer, L"th-TH") == 0) result = FONT_RANGE_THAI;
 	if (wcscmp(buffer, L"vi-VN") == 0) result = FONT_RANGE_VIETNAMESE;
+	
+	TS_LOG_TRACE("Loaded locale: %ls, alphabet: %s", buffer, FONT_RANGE_STRING[result]);
 	return result;
 }
 
@@ -126,5 +129,6 @@ void ts_load_fonts(float size, ts_font_range locale) {
 				size, &config, io.Fonts->GetGlyphRangesVietnamese());
 	}
 
-	io.Fonts->Build();    
+	io.Fonts->Build();
+	TS_LOG_TRACE("Loaded fonts"); 
 }
